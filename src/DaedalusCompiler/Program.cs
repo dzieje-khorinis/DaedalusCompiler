@@ -3,7 +3,7 @@ using Antlr4.Runtime.Tree;
 using System;
 using DaedalusParser;
 
-namespace DaedalusCompilerCsharp
+namespace DaedalusCompiler
 {
     class Program
     {

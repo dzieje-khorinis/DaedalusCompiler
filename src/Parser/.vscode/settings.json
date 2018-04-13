@@ -1,0 +1,10 @@
+{
+  "antlr4.generation": {
+    "mode": "internal",
+    "language": "CSharp",
+    "listeners": true,
+    "visitors": false,
+    "outputDir": "Output",
+    "package": "DaedalusParser"
+  }
+}

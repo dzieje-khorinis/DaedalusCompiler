@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Parser\Output\DaedalusParserBaseListener.cs" Link="AntlrOutput\DaedalusParserBaseListener.cs" />
+    <Compile Include="..\Parser\Output\DaedalusParserLexer.cs" Link="AntlrOutput\DaedalusParserLexer.cs" />
+    <Compile Include="..\Parser\Output\DaedalusParserListener.cs" Link="AntlrOutput\DaedalusParserListener.cs" />
+    <Compile Include="..\Parser\Output\DaedalusParserParser.cs" Link="AntlrOutput\DaedalusParserParser.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Antlr4.Runtime.Standard" Version="4.7.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="AntlrOutput\" />
+  </ItemGroup>
+
+</Project>
