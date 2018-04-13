@@ -9,7 +9,7 @@ namespace DaedalusCompiler
     {
         static void Main(string[] args)
         {
-            String inputPath = @"Parser/Inputs/script.txt";
+            String inputPath = @"test.d";
             ICharStream stream = CharStreams.fromPath(inputPath);
             ITokenSource lexer = new DaedalusParserLexer(stream);
             ITokenStream tokens = new CommonTokenStream(lexer);
