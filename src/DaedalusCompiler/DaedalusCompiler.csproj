@@ -15,4 +15,9 @@
   <ItemGroup>
     <Folder Include="AntlrOutput\" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="test.d">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

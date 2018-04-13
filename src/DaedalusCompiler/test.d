@@ -1,7 +1,7 @@
 const int a = 34;
 const int b = 120;
 
-func intk test( var int arg )
+func int test( var int arg )
 {
 
 	// some comments
