@@ -1,0 +1,138 @@
+tokens =
+[
+  //KEYWORDS
+  //{
+    CLASS = "class"
+    PROTOTYPE = "prototype"
+    INSTANCE = "instance"
+    CONST = "const"
+    VAR = "var"
+    FUNC = "func"
+    IF = "if"
+    ELSE = "else"
+    RETURN = "return"
+  //}
+  //BUILTIN_TYPES
+  //{
+    VOID = "void"
+    INT = "int"
+    FLOAT = "float"
+    STRING = "string"
+  //}
+  //BLOCK_BOUNDARIES
+  //{
+    LEFT_BRACE = "{"
+    RIGHT_BRACE = "}"
+    LEFT_PAREN = "("
+    RIGHT_PAREN = ")"
+    LEFT_BRACKET = "["
+    RIGHT_BRACKET = "]"
+  //}
+  //OPERATORS
+  //{
+    //MATH_OPS
+    //{
+      PLUS_OP = "+"
+      MINUS_OP = "-"
+      MUL_OP = "*"
+      DIV_OP = "/"
+      REM_OP = "%"
+    //}
+    //ASSIGNMENT_OPS
+    //{
+      ASSIGNMENT_OP = "="
+      ASSIGNMENT_PLUS_OP = "+="
+      ASSIGNMENT_MINUS_OP = "-="
+      ASSIGNMENT_MUL_OP = "*="
+      ASSIGNMENT_DIV_OP = "/="
+    //}
+    //COMPARISON_OPS
+    //{
+      LESS_THAN = "<"
+      GREATER_THAN = ">"
+      EQUALS_OP = "=="
+      NOT_EQUALS_OP = "!="
+      LESS_THAN_OR_EQUAL_OP = "<="
+      GREATER_THAN_OR_EQUAL_OP = ">="
+    //}
+    //BIT_OPS
+    //{
+      BIT_SHIFT_LEFT_OP = "<<"
+      BIT_SHIFT_RIGHT_OP = ">>"
+      BIT_OR_OP = "|"
+      BIT_AND_OP = "&"
+      //XOR_OP = "^"
+      BIT_NEGATION_OP = "~"
+    //}
+    //BOOL_OPS
+    //{
+      AND_OP = "&&"
+      OR_OP = "||"
+      NEGATION_OP = "!"
+    //}
+  //}
+  //MISC
+  //{
+    DOT = "."
+    COMMA = ","
+    SEMICOLON = ";"
+  //}
+  //REGEX_TOKENS
+  //{
+      NULL = "null"
+    IDENTIFIER_TOKEN = "regexp:[a-zA-Z_][:jletterdigit:]*"
+    STRING_LITERAL = "regexp:\"[^\r\n\"]*\""
+    INTEGER_LITERAL = "regexp:[0-9]+"
+    FLOAT_LITERAL = "regexp:[0-9]+\.[0-9]+"
+    LINE_COMMENT = "regexp://.*"
+    BLOCK_COMMENT = "regexp:/\*([^*]|\*+[^*/])*(\*+/)?"
+  //}
+]
+
+private DaedalusFile ::= { ( FunctionDef | ConstDef | VarDecl | ClassDef | PrototypeDef | InstanceDef | InstanceDecl ) ";" }*
+//{
+	FunctionDef ::= "func" TypeReference NameNode ParameterList StatementBlock {pin=1}
+	//{
+		private ParameterList  ::= "(" [ VarDecl { "," VarDecl }* ] ")" {pin=1}
+		StatementBlock ::= "{" { ( ( Statement ";" ) | ( IfBlock [ ";" ] ) ) }* "}" //Expression present because "gorn.aivar[aiv_findable]==true;", semicolon after if optional because "else if (Thorus_MordragKo == LOG_FAILED){}"
+		//{
+			private Statement       ::= FuncCall | Assignment | ReturnStatement | ConstDef | VarDecl | Expression
+			private FuncCall        ::= ReferenceNode "(" [ Expression { "," Expression }* ] ")" {pin=2} //Expression "PrintDebugInt(bodystate&(BS_MAX|BS_FLAG_INTERRUPTABLE|BS_FLAG_FREEHANDS));"
+			private Assignment      ::= ComplexReference ( "=" | "+=" | "-=" | "*=" | "/=" ) Expression {pin=2}
+			private IfBlock         ::= "if" Expression StatementBlock { "else" "if" Expression StatementBlock }* [ "else" StatementBlock ] {pin=1}
+			private ReturnStatement ::= "return" [ Expression ] {pin=1}
+		//}
+	//}
+	ConstDef ::= "const" TypeReference NameNode [ "[" SimpleValue "]" ] ConstAssignment {pin=1}
+	//{
+		private ConstAssignment ::= "=" ( Expression | ArrayLiteral )
+		private ArrayLiteral    ::= "{" [ Expression { "," Expression }* ] "}"
+	//}
+	VarDecl      ::= "var" TypeReference NameNode [ "[" SimpleValue "]" | { "," NameNode }* ] {pin=1} //multiple names: "var int guild, level;", var array used in ClassDefs: "VAR INT move[MAX_MOVE];"
+	ClassDef     ::= "class" NameNode "{" { VarDecl ";" }* "}" {pin=1}
+	PrototypeDef ::= "prototype" NameNode "(" ReferenceNode ")" "{" { ( Assignment | FuncCall ) ";" }* "}" {pin=1} //FuncCall: "prototype npc_default (c_npc) { npc_settalentvalue (self, npc_talent_1h, 0);"
+	InstanceDef  ::= "instance" NameNode "(" ReferenceNode ")" "{" { ( Assignment | FuncCall ) ";" }* "}" {pin=6} //FuncCall: "instance blackgobbomace (mst_default_blackgobbo) { set_blackgobbo_visuals();"
+	InstanceDecl ::= "instance" NameNode { "," NameNode }* "(" ReferenceNode ")" {pin=3} // multiple names and no body: "INSTANCE self,other (C_NPC);"
+//}
+
+private Expression ::= LogicAnd [ "||" Expression ]
+//{
+	private LogicAnd   ::= BitOr [ "&&" LogicAnd ]
+	private BitOr      ::= BitAnd [ "|" BitOr ]
+	private BitAnd     ::= Equal [ "&" BitAnd ]
+	private Equal      ::= Comparison [ ( "==" | "!=" ) Equal ]
+	private Comparison ::= BitShift [ ( "<" | ">" | "<=" | ">=" ) Comparison ]
+	private BitShift   ::= Add [ ( "<<" | ">>" ) BitShift ]
+	private Add        ::= Mult [ ( "+" | "-" ) Add ]
+	private Mult       ::= Unary [ ( "*" | "/" | "%" ) Mult ]
+	private Unary      ::= [ "-" | "!" | "~" | "+" ] Value
+//}
+private SimpleValue      ::= INTEGER_LITERAL | ReferenceNode
+private Value            ::= INTEGER_LITERAL | FLOAT_LITERAL | STRING_LITERAL | "null" | FuncCall | ComplexReference | ( "(" Expression ")" )
+private ComplexReference ::= ComplexReferenceNode [ "." ComplexReferenceNode ]
+//{
+	private ComplexReferenceNode ::= ReferenceNode [ "[" SimpleValue "]" ]
+	private TypeReference        ::= ReferenceNode | "void" | "int" | "float" | "string" | "func" | "instance" //func because "const func PLAYER_PERC_ASSESSMAGIC = B_AssessMagic;", instance because "VAR INSTANCE n0"
+	ReferenceNode                ::= IDENTIFIER_TOKEN
+//}
+NameNode ::= IDENTIFIER_TOKEN
