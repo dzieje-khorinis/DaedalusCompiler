@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-namespace DaedalusCompiler.DatFile
+namespace DaedalusCompiler.Dat
 {
     [DebuggerDisplay("Name = {name}")]
-    public class DatSymbol
+    public class DatSymbol_OLD
     {
         public static readonly int bitfield_ele = 4095;
         public static readonly int bitfield_type = 61440;
@@ -14,7 +14,7 @@ namespace DaedalusCompiler.DatFile
 
         public static int cID = 0;
 
-        public DatFileDef thedat;
+        public DatFileDef_OLD thedat;
         public int id;
         public int b_hasName;
         public String name;
@@ -32,7 +32,7 @@ namespace DaedalusCompiler.DatFile
         public Object[] content;
         public bool isLocal;
 
-        public DatSymbol(DatFileDef dat, DatFileStream s)
+        public DatSymbol_OLD(DatFileDef_OLD dat, BinaryFileStream s)
         {
             thedat = dat;
 
@@ -98,6 +98,16 @@ namespace DaedalusCompiler.DatFile
         public int Ele()
         {
             return bitfield & 0xFFF;
+        }
+
+        public bool HasFunction()
+        {
+            return ((HasFlags(0x1000)) && (Type() == 0x5000)) || (Type() == 0x7000) || (Type() == 0x6000);
+        }
+
+        public bool HasFlags(int v)
+        {
+            return (Flags() & v) > 0;
         }
     }
 }
