@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace DaedalusCompiler.Dat
 {
@@ -15,7 +13,7 @@ namespace DaedalusCompiler.Dat
 
         public IEnumerable<DatSymbol> Symbols { get; set; }
 
-        public byte[] Stack { get; set; }
+        public IEnumerable<DatToken> Tokens { get; set; }
 
         public void Load(string path)
         {
@@ -23,7 +21,7 @@ namespace DaedalusCompiler.Dat
             {
                 Version = stream.ReadChar();
                 Symbols = LoadSymbols(stream);
-                Stack = LoadStack(stream);
+                Tokens = LoadTokens(stream);
             }
         }
 
@@ -45,10 +43,22 @@ namespace DaedalusCompiler.Dat
             return symbols;
         }
 
-        private byte[] LoadStack(BinaryFileStream stream)
+        private IEnumerable<DatToken> LoadTokens(BinaryFileStream stream)
         {
             int stackLength = stream.ReadInt();
-            return stream.ReadBytes(stackLength);
+            var stack = stream.ReadBytes(stackLength);
+
+            return Enumerable.Empty<DatToken>();
+
+            // TODO : complete loading tokens from dat file
+
+            //List<DatToken> result = new List<DatToken>();
+            //while (stackLength > 0)
+            //{
+            //    var token = new DatToken(stream);
+            //    result.Add(token);
+            //    stackLength -= token.Size;
+            //}
         }
     }
 }
