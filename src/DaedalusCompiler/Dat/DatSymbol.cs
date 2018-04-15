@@ -7,19 +7,18 @@ namespace DaedalusCompiler.Dat
 {
     public enum DatSymbolType
     {
-        Void,
-        Float,
-        Int,
-        String,
-        Class,
-        Func,
-        Prototype,
-        Instance,
-        Unknown,
+        Void = 0x0000,
+        Float = 0x1000,
+        Int = 0x2000,
+        String = 0x3000,
+        Class = 0x4000,
+        Func = 0x5000,
+        Prototype = 0x6000,
+        Instance = 0x7000
     }
 
     [Flags]
-    public enum DatSymbolFlag : int
+    public enum DatSymbolFlag
     {
         Const = 0x10000,
         Return = 0x20000,
@@ -28,7 +27,7 @@ namespace DaedalusCompiler.Dat
         Merged = 0x100000,
     }
 
-    [DebuggerDisplay("Name = {name}")]
+    [DebuggerDisplay("{Type} {name} '{Flags}'")]
     public class DatSymbol
     {
         /// <summary>
@@ -47,7 +46,7 @@ namespace DaedalusCompiler.Dat
         private int offset;
 
         /// <summary>
-        /// Field containis informations about symbol type
+        /// Symbol type and flags encoded in bits 
         /// </summary>
         private int bitField;
 
@@ -77,14 +76,14 @@ namespace DaedalusCompiler.Dat
         private int positionsCount;
 
         /// <summary>
-        /// ???
-        /// </summary>
-        private int parent;
-
-        /// <summary>
-        /// ???
+        /// Content of const variable or array
         /// </summary>
         private object[] content;
+
+        /// <summary>
+        /// ??? Some kind of reference to parent symbol for nested symbols like class variables
+        /// </summary>
+        private int parent;
 
         public DatSymbol(BinaryFileStream stream)
         {
@@ -97,51 +96,18 @@ namespace DaedalusCompiler.Dat
             linesCount = stream.ReadInt();
             positionBegin = stream.ReadInt();
             positionsCount = stream.ReadInt();
-
-            if (Flags.HasFlag(DatSymbolFlag.Classvar) == false)
-            {
-                if(Type == DatSymbolType.Func || Type == DatSymbolType.Class || Type == DatSymbolType.Prototype)
-                {
-                    content = new object[1];
-                }
-                else
-                {
-                    content = new object[Ele];
-                }
-
-                if ((content.Length == 0) && (Type == DatSymbolType.Instance))
-                {
-                    content = new Object[1];
-                }
-
-                for (int i = 0; i < content.Length; i++)
-                {
-                    switch (Type)
-                    {
-                        case DatSymbolType.String:
-                            content[i] = stream.ReadString();
-                            break;
-                        case DatSymbolType.Float:
-                            content[i] = stream.ReadFloat();
-                            break;
-                        default:
-                            content[i] = stream.ReadInt();
-                            break;
-                    }
-                }
-            }
-
+            content = GetContentIfExists(stream);
             parent = stream.ReadInt();
         }
 
         public DatSymbolType Type
         {
-            get { return GetTypeFromBitField(); }
+            get { return (DatSymbolType)(bitField & 0xF000); }
         }
 
         public DatSymbolFlag Flags
         {
-            get { return GetFlagsFromBitField(); }
+            get { return (DatSymbolFlag)(bitField & 0x3F0000); }
         }
 
         public bool IsLocal
@@ -149,41 +115,49 @@ namespace DaedalusCompiler.Dat
             get { return name.Contains("."); }
         }
 
-        public int Ele
+        private object[] GetContentIfExists(BinaryFileStream stream)
         {
-            get { return bitField & 0xFFF; }
-        }
+            object[] result = null;
 
-        private DatSymbolType GetTypeFromBitField()
-        {
-            var type = bitField & 0xF000;
-
-            switch (type)
+            if (Flags.HasFlag(DatSymbolFlag.Classvar) == false)
             {
-                case 0x0:
-                    return DatSymbolType.Void;
-                case 0x1000:
-                    return DatSymbolType.Float;
-                case 0x2000:
-                    return DatSymbolType.Int;
-                case 0x3000:
-                    return DatSymbolType.String;
-                case 0x4000:
-                    return DatSymbolType.Class;
-                case 0x5000:
-                    return DatSymbolType.Func;
-                case 0x6000:
-                    return DatSymbolType.Prototype;
-                case 0x7000:
-                    return DatSymbolType.Instance;
-                default:
-                    return DatSymbolType.Unknown;
+                if (Type == DatSymbolType.Func || Type == DatSymbolType.Class || Type == DatSymbolType.Prototype)
+                {
+                    result = new object[1];
+                }
+                else
+                {
+                    result = new object[GetContentElementsCount()];
+                }
+
+                if ((result.Length == 0) && (Type == DatSymbolType.Instance))
+                {
+                    result = new object[1];
+                }
+
+                for (int i = 0; i < result.Length; i++)
+                {
+                    switch (Type)
+                    {
+                        case DatSymbolType.String:
+                            result[i] = stream.ReadString();
+                            break;
+                        case DatSymbolType.Float:
+                            result[i] = stream.ReadFloat();
+                            break;
+                        default:
+                            result[i] = stream.ReadInt();
+                            break;
+                    }
+                }
             }
+
+            return result;
         }
 
-        private DatSymbolFlag GetFlagsFromBitField()
+        private int GetContentElementsCount()
         {
-            return (DatSymbolFlag)(bitField & 0x3F0000);
+            return bitField & 0xFFF;
         }
     }
 }

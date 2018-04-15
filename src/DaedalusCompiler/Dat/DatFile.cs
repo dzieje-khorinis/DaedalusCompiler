@@ -14,12 +14,15 @@ namespace DaedalusCompiler.Dat
 
         public IEnumerable<DatSymbol> Symbols { get; set; }
 
+        public byte[] Stack { get; set; }
+
         public void Load(string path)
         {
             using (var stream = new BinaryFileStream(path, FileMode.Open))
             {
                 Version = stream.ReadChar();
                 Symbols = LoadSymbols(stream);
+                Stack = LoadStack(stream);
             }
         }
 
@@ -39,6 +42,12 @@ namespace DaedalusCompiler.Dat
             }
 
             return symbols;
+        }
+
+        private byte[] LoadStack(BinaryFileStream stream)
+        {
+            int stackLength = stream.ReadInt();
+            return stream.ReadBytes(stackLength);
         }
     }
 }

@@ -23,7 +23,7 @@ namespace DaedalusCompiler
 
             //Console.WriteLine($"\n\nParseTree result: {tree.ToStringTree()}");
 
-            //var dat_old = new DatFileDef_OLD(@"C:\Program Files (x86)\CDP Games\Gothic 2 Gold\_Work\data\Scripts\_compiled\GOTHIC.DAT");
+            //var dat_old = new DatFile_OLD(@"C:\Program Files (x86)\CDP Games\Gothic 2 Gold\_Work\data\Scripts\_compiled\GOTHIC.DAT");
 
             var dat = new DatFile();
             dat.Load(@"C:\Program Files (x86)\CDP Games\Gothic 2 Gold\_Work\data\Scripts\_compiled\GOTHIC.DAT");

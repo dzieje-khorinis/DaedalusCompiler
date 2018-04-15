@@ -14,7 +14,7 @@ namespace DaedalusCompiler.Dat
 
         public static int cID = 0;
 
-        public DatFileDef_OLD thedat;
+        public DatFile_OLD thedat;
         public int id;
         public int b_hasName;
         public String name;
@@ -32,7 +32,7 @@ namespace DaedalusCompiler.Dat
         public Object[] content;
         public bool isLocal;
 
-        public DatSymbol_OLD(DatFileDef_OLD dat, BinaryFileStream s)
+        public DatSymbol_OLD(DatFile_OLD dat, BinaryFileStream s)
         {
             thedat = dat;
 

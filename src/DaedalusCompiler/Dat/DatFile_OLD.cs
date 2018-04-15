@@ -6,7 +6,7 @@ using System.Text;
 
 namespace DaedalusCompiler.Dat
 {
-    public class DatFileDef_OLD
+    public class DatFile_OLD
     {
         private BinaryFileStream stream;
 
@@ -18,7 +18,7 @@ namespace DaedalusCompiler.Dat
         public List<int> functionOffsets;
         public List<DatSymbol_OLD> functionSymbols;
 
-        public DatFileDef_OLD(string filePath)
+        public DatFile_OLD(string filePath)
         {
             stream = new BinaryFileStream(filePath, FileMode.Open);
 
