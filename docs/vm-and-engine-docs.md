@@ -4,6 +4,8 @@ This is overview of Gothic I & II VM which runs Daedalus scipts
 
 ## DAT format specyfication
 
+If you want see code how DAT is loaded please analyze [this](https://github.com/ataulien/ZenLib/blob/76320437c8096b2d315c8b2f63eb9da4d86c4c79/zenload/DATFile.cpp#L71). So best would be reading that document with simultaneous looking on code to undestand all concepts ;)
+
 ### Data
 
 #### How interpret numbers saved in DAT?
@@ -34,7 +36,7 @@ Data types which we will be using in article:
 | Word               | 2             |                                                                                                                                          |
 | Byte               | 1             |                                                                                                                                          |
 | Float              | 4             |                                                                                                                                          |
-| String of N length | 1xN           | When parser load string he recognizes end of string when occur one of that signs: `\r`, `\n`, ` ` (space). Each byte represents one sign |
+| String of N length | 1xN           | When parser load string he recognizes end of string when occur one of that signs: `\r`, `\n`, ` ` (space). Each byte represents one sign |
 
 ### Header of DAT
 
@@ -44,7 +46,7 @@ Data types which we will be using in article:
 | Symbols Count ( SC - shortcut ) | 1                           | 4                 | Length of symbols which interpreter needs to load                                                                                                                   |
 | Symbols                         | 5                           | SC * Symbol Size  | Size of symbol is not fixed. For each symbol size is different, it depends for example from name of symbol                                                          |
 | Code Stack Size                 | Symbols End Address + 1     | 1                 | Size of code stack in bytes                                                                                                                                         |
-| Code Stack                      | Code Stack Size Address + 1 | Code Stack Size   | Size of single instruction depends from type of that instruction. For example instruction **RETURN** ( takes 0 args ) will be shorter then **JUMP** ( takes 1 arg ) |
+| Code Stack                      | Code Stack Size Address + 1 | Code Stack Size   | Size of single instruction depends from type of that instruction. For example instruction **RETURN** ( takes 0 args ) will be shorter then **JUMP** ( takes 1 arg ) |
 
 #### Example:
 
@@ -58,12 +60,10 @@ TODO
 
 ### Code Stack
 
-
-
 ## VM
 
-Gothic VM is simlar to other VMs. It has instruction pointer, stack, instructions  
+Gothic VM is simlar to other VMs. It has instruction pointer, stack, instructions  
 
 ## Tips
 
-- All 
+- All 
