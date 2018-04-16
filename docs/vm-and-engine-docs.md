@@ -4,7 +4,7 @@ This is overview of Gothic I & II VM which runs Daedalus scipts
 
 ## DAT format specyfication
 
-If you want see code how DAT is loaded please analyze [this](https://github.com/ataulien/ZenLib/blob/76320437c8096b2d315c8b2f63eb9da4d86c4c79/zenload/DATFile.cpp#L71). So best would be reading that document with simultaneous looking on code to undestand all concepts ;)
+If you want see code how DAT is loaded please analyze [this](https://github.com/ataulien/ZenLib/blob/76320437c8096b2d315c8b2f63eb9da4d86c4c79/zenload/DATFile.cpp#L71). So best would be reading that document with simultaneous looking on code to undestand all concepts ;)
 
 ### Data
 
@@ -40,13 +40,14 @@ Data types which we will be using in article:
 
 ### Header of DAT
 
-| Name                            | Start Address ( in bytes )  | Size ( in bytes ) | Remarks                                                                                                                                                             |
-| ------------------------------- | --------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Version                         | 0                           | 1                 | Version of DAT file. Not very useful information                                                                                                                    |
-| Symbols Count ( SC - shortcut ) | 1                           | 4                 | Length of symbols which interpreter needs to load                                                                                                                   |
-| Symbols                         | 5                           | SC * Symbol Size  | Size of symbol is not fixed. For each symbol size is different, it depends for example from name of symbol                                                          |
-| Code Stack Size                 | Symbols End Address + 1     | 1                 | Size of code stack in bytes                                                                                                                                         |
-| Code Stack                      | Code Stack Size Address + 1 | Code Stack Size   | Size of single instruction depends from type of that instruction. For example instruction **RETURN** ( takes 0 args ) will be shorter then **JUMP** ( takes 1 arg ) |
+| Name                            | Start Address ( in bytes )       | Size ( in bytes ) | Remarks                                                                                                                                                             |
+| ------------------------------- | -------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Version                         | 0                                | 1                 | Version of DAT file. Not very useful information                                                                                                                    |
+| Symbols Count ( SC - shortcut ) | 1                                | 4                 | Length of symbols which interpreter needs to load                                                                                                                   |
+| Sorted table                    | 5                                | SC * 4            | Some useless array with numbers ( TODO good will be make verify that )                                                                                              |
+| Symbols                         | SC * 4 + 1                       | SC * Symbol Size  | Size of symbol is not fixed. For each symbol size is different, it depends for example from name of symbol                                                          |
+| Code Stack Size                 | Symbols End Address + 1          | 4                 | Size of code stack in bytes                                                                                                                                         |
+| Code Stack                      | Code Stack Size  End Address + 1 | Code Stack Size   | Size of single instruction depends from type of that instruction. For example instruction **RETURN** ( takes 0 args ) will be shorter then **JUMP** ( takes 1 arg ) |
 
 #### Example:
 
@@ -62,7 +63,7 @@ Each symbol have following structure:
 | ----------------- | ---------------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Have name         | 0                                                    | 4                                                 | This works like flag. If value is different from 0 it means that symbol have name which we need load                                                                                                                                                       |
 | Name              | 4 [ **if** exists ]                                  | String * N ( in that case we look only for `\n` ) | Name of symbol, for example: `C_MISSION.RUNNING`, `C_ITEM`, `MAX_WISPSKILL`                                                                                                                                                                                |
-| Symbol Properties | 4 **if** name not exists **else** 4 + String * N + 1 | 28                                                | That field describes details of symbol. Most important thing is information of how many sub items have symbol ( needed for arrays ), what is type of symbol ( `string`, `int` e.t.c) and what modificator symbol have, ex ( `const`, `class`, `external` ) |
+| Symbol Properties | 4 **if** name not exists **else** 4 + String * N + 1 | 28                                                | That field describes details of symbol. Most important thing is information of how many sub items have symbol ( needed for arrays ), what is type of symbol ( `string`, `int` e.t.c) and what modificator symbol have, ex ( `const`, `class`, `external` ) |
 
 #### Properties in details
 
@@ -113,7 +114,7 @@ struct Properties
 } properties;
 ```
 
-That code is part of ZenLib. Let me descibe that a little bit. If you don't know C++ you maybe wonder what means that `:` in each field of struct. Number after `:` tells how many bits should be stored in field. We need use that cause symbol description have not standard fields lengths. Most important field in that strucute are in `elemProps` sub structure. First field, `offClsRet`,  is information which means something different depending from symbol type, for class variable it would be offset of that symbol, for class it's size and for function returned type (**TODO** make sure if that really usless thing, ZenLib does't use that) . That information is useless. Next thing is sub items **count**, it is stored in 12 bits. As I mentioned above **count** property tells how many sub items field have, for example for `const int items[23]`**count** would be 23, for variables which are not array **count** would be 1. Next imporatnt field is `type`, it's flag which tells type of field, it could be one of:
+That code is part of ZenLib. Let me descibe that a little bit. If you don't know C++ you maybe wonder what means that `:` in each field of struct. Number after `:` tells how many bits should be stored in field. We need use that cause symbol description have not standard fields lengths. Most important field in that strucute are in `elemProps` sub structure. First field, `offClsRet`,  is information which means something different depending from symbol type, for class variable it would be offset of that symbol, for class it's size and for function returned type (**TODO** make sure if that really usless thing, ZenLib does't use that) . That information is useless. Next thing is sub items **count**, it is stored in 12 bits. As I mentioned above **count** property tells how many sub items field have, for example for `const int items[23]`**count** would be 23, for variables which are not array **count** would be 1. Next imporatnt field is `type`, it's flag which tells type of field, it could be one of:
 
 | Name      | Flag value |
 | --------- | ---------- |
@@ -136,7 +137,7 @@ That code is part of ZenLib. Let me descibe that a little bit. If you don't know
 | External | 8          |
 | Merged   | 16         |
 
-Rest of fields in **Properties** struct is useless, names of that fields are pretty meaningfull. 
+Rest of fields in **Properties** struct is useless, names of that fields are pretty meaningfull. 
 
 #### Example:
 
