@@ -46,19 +46,15 @@ namespace DaedalusCompiler.Dat
         private IEnumerable<DatToken> LoadTokens(BinaryFileStream stream)
         {
             int stackLength = stream.ReadInt();
-            var stack = stream.ReadBytes(stackLength);
 
-            return Enumerable.Empty<DatToken>();
-
-            // TODO : complete loading tokens from dat file
-
-            //List<DatToken> result = new List<DatToken>();
-            //while (stackLength > 0)
-            //{
-            //    var token = new DatToken(stream);
-            //    result.Add(token);
-            //    stackLength -= token.Size;
-            //}
+            List<DatToken> result = new List<DatToken>();
+            while (stackLength > 0)
+            {
+                var token = DatToken.LoadToken(stream);
+                result.Add(token);
+                stackLength -= token.Size;
+            }
+            return result;
         }
     }
 }
