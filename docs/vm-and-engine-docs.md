@@ -47,7 +47,7 @@ Data types which we will be using in article:
 | Sort table                      | 5                                | SC * 4            | Some useless array with numbers ( TODO good will be make verify that )                                                                                              |
 | Symbols                         | SC * 4 + 1                       | SC * Symbol Size  | Size of symbol is not fixed. For each symbol size is different, it depends for example from name of symbol                                                          |
 | Code Stack Size                 | Symbols End Address + 1          | 4                 | Size of code stack in bytes                                                                                                                                         |
-| Code Stack                      | Code Stack Size  End Address + 1 | Code Stack Size   | Size of single instruction depends from type of that instruction. For example instruction **RETURN** ( takes 0 args ) will be shorter then **JUMP** ( takes 1 arg ) |
+| Code Stack                      | Code Stack Size  End Address + 1 | Code Stack Size   | Size of single instruction depends from type of that instruction. For example instruction **RETURN** ( takes 0 args ) will be shorter then **JUMP** ( takes 1 arg ) |
 
 #### Example:
 
@@ -59,13 +59,13 @@ TODO symbol overview
 
 Each symbol have following structure:
 
-| Name              | Start address (in bytes)                             | Size ( in bytes )                                 | Remarks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| ----------------- | ---------------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Has_name          | 0                                                    | 4                                                 | **if** `Has_name == 0` then `N = 0`, else nothing happens.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| Name              | 4                                                    | N (dynamic)                                       | Sequence of chars that ends with `\n` or `0` if `has_name == 0`.  Name of symbol, for example: `C_MISSION.RUNNING`, `C_ITEM`, `MAX_WISPSKILL`                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Properties        | 4 + N + 1                                            | 28                                                | That field describes details of symbol. Most important thing is information of how many sub items have symbol ( needed for arrays ), what is type of symbol ( `string`, `int` e.t.c) and what modificator symbol have, ex ( `const`, `class`, `external` )                                                                                                                                                                                                                                                                                                                                      |
-| Content           | 4 + N + 1 + 28                                       | X (dynamic)                                       | If `Properties.type == float` then it is `float`s array of `length == Properties.count` (`X = Properties.count * 4`).<br>If `Properties.type == int` then it is `int`s array of `length == Properties.count` (`X = Properties.count * 4`).<br>If `Properties.type == string` then it is `string`s array of `length == Properties.count` (`X = Properties.count * individual_string_length`).<br>If `Properties.type == class` then it is `int` and means `class_offset` (`X = 4`).<br>If `Properties.type == func or prototype or instance` then it is `int` and means `address` (`X = 4`).     |
-| Parent            | 4 + N + 1 + X + 28                                   | 4                                                 | It is `index` in symbols array.<br> `instance`'s parent is its `prototype` / `class`.<br>`prototype`'s parent is its `class`.<br>If `var` was defined inside `class`, that `class` will be its parent.<br>If `func`'s 1st parameter is `instance` then all other parameters will have the same parent as that `instance`.<br>If parent `class` isn't written in Deadalus (internal) and for all other cases `parent = -1`.                                                                                                                                                                      |
+| Name       | Start address (in bytes) | Size ( in bytes ) | Remarks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ---------- | ------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Has_name   | 0                        | 4                 | **if** `Has_name == 0` then `N = 0`, else nothing happens.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Name       | 4                        | N (dynamic)       | Sequence of chars that ends with `\n` or `0` if `has_name == 0`.  Name of symbol, for example: `C_MISSION.RUNNING`, `C_ITEM`, `MAX_WISPSKILL`                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Properties | 4 + N + 1                | 28                | That field describes details of symbol. Most important thing is information of how many sub items have symbol ( needed for arrays ), what is type of symbol ( `string`, `int` e.t.c) and what modificator symbol have, ex ( `const`, `class`, `external` )                                                                                                                                                                                                                                                                                                                                  |
+| Content    | 4 + N + 1 + 28           | X (dynamic)       | If `Properties.type == float` then it is `float`s array of `length == Properties.count` (`X = Properties.count * 4`).<br>If `Properties.type == int` then it is `int`s array of `length == Properties.count` (`X = Properties.count * 4`).<br>If `Properties.type == string` then it is `string`s array of `length == Properties.count` (`X = Properties.count * individual_string_length`).<br>If `Properties.type == class` then it is `int` and means `class_offset` (`X = 4`).<br>If `Properties.type == func or prototype or instance` then it is `int` and means `address` (`X = 4`). |
+| Parent     | 4 + N + 1 + X + 28       | 4                 | It is `index` in symbols array.<br> `instance`'s parent is its `prototype` / `class`.<br>`prototype`'s parent is its `class`.<br>If `var` was defined inside `class`, that `class` will be its parent.<br>If `func`'s 1st parameter is `instance` then all other parameters will have the same parent as that `instance`.<br>If parent `class` isn't written in Deadalus (internal) and for all other cases `parent = -1`.                                                                                                                                                                  |
 
 #### Properties in details
 
@@ -149,7 +149,105 @@ TODO
 
 ## VM
 
-Gothic VM is simlar to other VMs. It has instruction pointer, stack, instructions  
+Gothic VM is simlar to other VMs. It has instruction pointer, stack, instructions e.t.c. In that article we will focus on ZenLib VM which aim is to work similar to original Gothic VM.
+
+Let's take a look first how looks like assembler stored in DAT file:
+
+![sample1](sample1.png)
+
+Instructions are similar to that one from classic x86 assembler. That numbers on the left from opcode are addresses with information where instruction is stored. If you look into **JumpIf** you should notice that argument address of jump is **41**, this is condition jump, when condition is equel  ( we will analyze later how VM check condition ) to **true** we make jump to `PushVar - symbol: 944...`. Maybe you wonder what means that number after `symbol:`, it's index of symbol, when we load symbols from DAT file their index is simply determined according to the order of reading, very simple. 
+
+Let's take a look how works VM. To go through code we need pointer which tells where we are, it's called **program counter**, it's 32bit number( in ZenLib ). Counter is changing dynamically after traversing assembler code. Default behaviour of counter after executing instruction is to increment to next neighboring instruction. The exception is case when instruction is jump which I mentioned above.
+
+Another important thing is **stack**. Technically it's vector of **int**. Instruction which begin from **push** prefix, appends stack with new values, later **pop** operations can use that values and make for example some calculcation. Stack could be also used to invoke some external functions which are implemeneted in engine, in that case we need **push** to stack right arguments, external function will **pop** that values and use them. In general stack is created for communication purposes.
+
+### How works push ?
+
+Into stack we can push different things. ZenLib is pushing for example ints, strings and variables. For each number of items which we push on stack is different, last item on stack should be opcode of operation, thanks that later if someone want to pop value from stack he will be know how interprete things from stack. 
+
+#### Pushing int
+
+Best illustration how works pushing will be fragment of ZenLib VM:
+
+```c++
+void DaedalusVM::pushInt(uint32_t value)
+{
+    m_Stack.push(value);
+    m_Stack.push(EParOp_PushInt);
+}
+```
+
+We push on stack 2 things, value and opcode of operation. Nothing to explain.
+
+#### Pushing variable
+
+Code:
+
+```c++
+void DaedalusVM::pushVar(size_t index, uint32_t arrIdx)
+{
+    m_Stack.push(arrIdx);
+    m_Stack.push(static_cast<int32_t>(index));
+    m_Stack.push(EParOp_PushVar);
+}
+```
+
+In that case we push firstly index of variable. As I mentioned in chapter about loading symbols by design all variables are threated as a array, so something like that in daedalues: `var int test_var;`on the level of VM is treated as `var int test_var[1];`.
+
+#### Pushing string ( literal )
+
+That case is most interesting, I think you should study that case attentively to get know VM good. 
+
+**Imporatnt thing to notice**, pushing string not happen when we want push into stack variable which store string, in that we will use **pushVar**. Pushing string happen when we use literal.
+
+ZenLib create on initialization special extra symbols which are the same symbols which we load from DAT file, only difference is fact that their are created artificially by VM. Let's look on fragment of VM contructor:
+
+```c++
+class DaedalusVM
+{
+  ...
+    std::queue<size_t> m_FakeStringSymbols;
+  ...
+};
+...
+const int NUM_FAKE_STRING_SYMBOLS = 5;
+...
+DaedalusVM::DaedalusVM(/ ... /)
+{
+    ...
+    // Make fake-strings
+    for(size_t i=0;i<NUM_FAKE_STRING_SYMBOLS;i++)
+    {
+        auto symIndex = m_DATFile.addSymbol(); // add new symbol ( under the hood we add that symbol to other symbols, after that VM can access that symbol like other loaded from DAT )
+        // make sure there is enough space for 1 string
+        m_DATFile.getSymbolByIndex(symIndex).strData.resize(1); // in practise it's prepare symbol to store string
+        m_FakeStringSymbols.push(symIndex); // add symbol id to our fake string symbol id's
+    }
+        ...
+}
+```
+
+As you see we have special field, **m_FakeStringSymbols**, where we store symbol id's for string literals. Let's take a look now on pushString function:
+
+```c++
+void DaedalusVM::pushString(const std::string& str)
+{
+    size_t symIdx = m_FakeStringSymbols.front();
+    Daedalus::PARSymbol& s = m_DATFile.getSymbolByIndex(symIdx);
+    m_FakeStringSymbols.push(m_FakeStringSymbols.front());
+    m_FakeStringSymbols.pop();
+
+    s.getString(0) = str;
+
+    pushVar(symIdx, 0);
+}
+```
+
+First instruction takes id of symbol which we will be using for storing string literal. Next we look for that symbol by querying in all symbols ( so we access now that artificially symbols created by VM on initialization  ). Next we refresh **m_FakeStringSymbols**, so on back of queue we have lastly pushed string, on front oldest. Oldest pushed string in queue is losted when we push new value. Let's look into next instruction:  **s.getString(0)**, it returns pointer ( I don't want to go into implementation details how that pointer receiver works, it's not necessary at that point ) into place where we will store string of symbol. Lastly we invoke **pushVar** which I described above. Important thing to notice is fact that **pushString** method does't use directly stack, it's only prepare symbol where literal will be stored and next we push index of that symbol into stack with **pushVar**.
+
+### How works poping ?
+
+todo
 
 ## Tips
 
