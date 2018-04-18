@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using DaedalusParser;
 using DaedalusCompiler.Dat;
 using System.Linq;
+using DaedalusCompiler.Compilation;
 
 namespace DaedalusCompiler
 {
@@ -73,18 +74,23 @@ namespace DaedalusCompiler
 
         static void compileDaedalus(string path)
         {
-            ICharStream stream = CharStreams.fromPath(path);
-            ITokenSource lexer = new DaedalusParserLexer(stream);
-            ITokenStream tokens = new CommonTokenStream(lexer);
-            DaedalusParserParser parser = new DaedalusParserParser(tokens);
-            var fileContext = parser.file();
-            parser.Context = fileContext;
-            parser.BuildParseTree = true;
-            IParseTree tree = parser.expression();
+            var compiler = new Compiler(path);
+            compiler.Compile();
 
-            Console.WriteLine($"\n\nParseTree result: {tree.ToStringTree()}");
+            Console.WriteLine($"Compilation completed successfully");
+
+            //ICharStream stream = CharStreams.fromPath(path);
+            //ITokenSource lexer = new DaedalusParserLexer(stream);
+            //ITokenStream tokens = new CommonTokenStream(lexer);
+            //DaedalusParserParser parser = new DaedalusParserParser(tokens);
+            //var fileContext = parser.file();
+            //parser.Context = fileContext;
+            //parser.BuildParseTree = true;
+            //IParseTree tree = parser.expression();
+
+            //Console.WriteLine($"\n\nParseTree result: {tree.ToStringTree()}");
         }
-        
+
         static void Main(string[] args)
         {
             handleOptionsParser(args);
