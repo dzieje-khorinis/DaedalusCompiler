@@ -51,7 +51,7 @@ namespace DaedalusCompiler.Dat
         PushArrayVar = 245,
     }
 
-    [DebuggerDisplay("{TokenType} {Address} {Symbol} {Value} {Index}")]
+    [DebuggerDisplay("{TokenType} A:{Address} S:{Symbol} V:{Value} I:{Index}")]
     public class DatToken
     {
         public static DatToken LoadToken(BinaryFileStream stream)
