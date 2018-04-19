@@ -157,7 +157,7 @@ Let's take a look first how looks like assembler stored in DAT file:
 
 Instructions are similar to that one from classic x86 assembler. That numbers on the left from opcode are addresses with information where instruction is stored. If you look into **JumpIf** you should notice that argument address of jump is **41**, this is condition jump, when condition is equel  ( we will analyze later how VM check condition ) to **true** we make jump to `PushVar - symbol: 944...`. Maybe you wonder what means that number after `symbol:`, it's index of symbol, when we load symbols from DAT file their index is simply determined according to the order of reading, very simple. 
 
-Let's take a look how works VM. To go through code we need pointer which tells where we are, it's called **program counter**, it's 32bit number( in ZenLib ). Counter is changing dynamically after traversing assembler code. Default behaviour of counter after executing instruction is to increment to next neighboring instruction. The exception is case when instruction is jump which I mentioned above.
+Let's take a look how works VM. To go through code we need pointer which tells where we are, it's called **program counter**, it's 32bit number( in ZenLib ). Counter is changing dynamically after traversing assembler code. Default behaviour of counter after executing instruction is to increment to next neighboring instruction. The exception is case when instruction is jump ( also call operation ) which I mentioned above.
 
 Another important thing is **stack**. Technically it's vector of **int**. Instruction which begin from **push** prefix, appends stack with new values, later **pop** operations can use that values and make for example some calculcation. Stack could be also used to invoke some external functions which are implemeneted in engine, in that case we need **push** to stack right arguments, external function will **pop** that values and use them. In general stack is created for communication purposes.
 
@@ -243,12 +243,165 @@ void DaedalusVM::pushString(const std::string& str)
 }
 ```
 
-First instruction takes id of symbol which we will be using for storing string literal. Next we look for that symbol by querying in all symbols ( so we access now that artificially symbols created by VM on initialization  ). Next we refresh **m_FakeStringSymbols**, so on back of queue we have lastly pushed string, on front oldest. Oldest pushed string in queue is losted when we push new value. Let's look into next instruction:  **s.getString(0)**, it returns pointer ( I don't want to go into implementation details how that pointer receiver works, it's not necessary at that point ) into place where we will store string of symbol. Lastly we invoke **pushVar** which I described above. Important thing to notice is fact that **pushString** method does't use directly stack, it's only prepare symbol where literal will be stored and next we push index of that symbol into stack with **pushVar**.
+First instruction takes id of symbol which we will be using for storing string literal. Next we look for that symbol by querying in all symbols ( so we access now that artificially symbols created by VM on initialization  ). Next we refresh **m_FakeStringSymbols**, so on back of queue we have lastly pushed string, on front oldest. Oldest pushed string in queue is losted when we push new value. Let's look into next instruction:  **s.getString(0)**, it returns pointer ( I don't want to go into implementation details how that pointer receiver works, it's not necessary at that point ) into place where we will store string of symbol. Lastly we invoke **pushVar** which I described above. Important thing to notice is fact that **pushString** method does't use directly stack, it's only prepare symbol where literal will be stored and next we push index of that symbol into stack with **pushVar**.
 
-### How works poping ?
+### How works pop ?
+
+Now when we know how works pushing we should't have problems with **pop**. Thanks pop operation we can access eariler pushed values.
+
+#### Pop variable
+
+Let's check how it's coded:
+
+```c++
+template <typename T>
+T DaedalusVM::popDataValue()
+{
+    // Default behavior of the ZenGin is to pop a 0, if nothing is on the stack.
+    if(m_Stack.empty())
+        return static_cast<T>(0);
+
+    uint32_t tok = m_Stack.top();
+    m_Stack.pop(); // Pop token
+
+    uint32_t v = m_Stack.top();
+    m_Stack.pop(); // Pop value
+
+
+    uint32_t arrIdx = 0;
+    switch(tok)
+    {
+
+        case EParOp_PushInt:
+            return reinterpret_cast<T&>(v); // reinterpret as float for T=float
+
+        case EParOp_PushVar:
+            arrIdx = m_Stack.top();
+            m_Stack.pop(); // Pop array index
+            return m_DATFile.getSymbolByIndex(v).getValue<T>(arrIdx, getCurrentInstanceDataPtr());
+
+        default:
+            return static_cast<T>(0);
+    }
+
+}
+```
+
+Firstly we need **pop** 2 values, first one is opcode of operation which we pushed, second one it's pushed **int** value or index of symbol, it depends from opcode, in switch we split that 2 cases.  If you look into code all should be clear, since I made detailed description of **push**, pop is reverse action. 
+
+One thing which can be strange for you is invoking `getCurrentInstanceDataPtr`, that function return pointer to instance, in case where we **pop** value which is not member of instance that function return null, later we will tell more about instances.
+
+#### Pop string
+
+Code of operation:
+
+```c++
+std::string DaedalusVM::popString(bool toUpper)
+{
+    uint32_t arr;
+    uint32_t idx = popVar(arr);
+
+    std::string s = m_DATFile.getSymbolByIndex(idx).getString(arr, getCurrentInstanceDataPtr());
+
+    if(toUpper)
+        std::transform(s.begin(), s.end(), s.begin(), ::toupper);
+
+    return s;
+}
+```
+
+In fact **popString** fristly make **popVar** ( that method works the same like **popDataValue** but in case where someone pushed variable, it returns index of symbol instead value which is in that symbol  ) to get symbol index, after that we access value from that symbol and return string.
+
+#### Pop float
+
+```c++
+float DaedalusVM::popFloatValue()
+{
+    return popDataValue<float>();
+}
+```
+
+Nothing to comment, we make additionaly only projection to float.
+
+### How looks like runtime?
+
+To perform operation on VM, ZenLib created function called `doStack`, let's take a look declaration:
+
+```
+/**
+* @brief Performs a single instruction on the stack
+* @return True, if the program should continue, false if the end was reached
+*/
+bool doStack(bool verbose = false);
+```
+
+Description above the function is good. Only exception is when operation which is made is calling other function, in that case we exec fully that called function.
+
+Let's take a look into skeleton of that function:
+
+```c++
+bool DaedalusVM::doStack(bool verbose)
+{
+    static bool log = verbose;
+    size_t oldPC = m_PC;
+    PARStackOpCode op = getCurrentInstruction();
+
+    int32_t a;
+    int32_t b;
+    uint32_t arr, arr2;
+    int32_t* addr;
+    std::string* straddr, *straddr2;
+    static PARSymbol s;
+    PARSymbol& sym = s;
+    PARSymbol& sym2 = s;
+
+    if(log) LogInfo() << oldPC << ": " << OP_MAP[op.op];
+
+    switch(op.op)
+    {
+				...
+          // different operations which depend from opcode of current instruction
+        ...
+    }
+
+    return true;
+}
+```
+
+On the top of definition we have some helper variables, most important is operation of getting opcode, `getCurrentInstruction`, let's check code of that:
+
+```c++
+PARStackOpCode DaedalusVM::getCurrentInstruction()
+{
+    PARStackOpCode op = m_DATFile.getStackOpCode(m_PC);
+    m_PC += op.opSize;
+
+    return op;
+}
+```
+
+Firstly we need get know more about operation which is currently pointed by program counter, to get that info we need invoke `getStackOpCode` method which works on loaded DAT file. `PARStackOpCode`is simple structure which include opcode, additionaly if operation makes jump it have address of that jump place, if operation push variable to stack it have symbol index, if operation push **int** to stak it have literal value.
+
+Next we increment program counter to point in next instruction.
+
+On the end we return created instruction object.
+
+
+
+Going back to `doStack` method we should notice **switch** statement, it's most  interesting place, here depending from instuction type we make operation on stack, call external function e.t.c.
+
+### Basic operations ( add, divide, less, greater, e.t.c )
+
+todo
+
+### Assigment operation
+
+todo
+
+### Operation with jumps
 
 todo
 
 ## Tips
 
-- All 
+
