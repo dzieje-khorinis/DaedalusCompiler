@@ -19,7 +19,7 @@ namespace DaedalusCompiler.Compilation
         }
 
         public void Compile()
-        {
+        {            
             try
             {
                 SourceFilePaths.AddRange(SrcFileHelper.LoadScriptsFilePaths(SrcFilePath));

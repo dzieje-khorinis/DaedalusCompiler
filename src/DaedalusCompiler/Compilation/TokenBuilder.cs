@@ -7,28 +7,28 @@ namespace DaedalusCompiler.Compilation
     {
         public static DatSymbol BuildVariable(string name, DatSymbolType type)
         {
-            var symbol = new DatSymbol {};
+            var symbol = new DatSymbol { name = name};
 
             return symbol;
         }
 
         public static DatSymbol BuildArrOfVariables(string name, DatSymbolType type, int size)
         {
-            var symbol = new DatSymbol {};
+            var symbol = new DatSymbol { name = name};
 
             return symbol;
         }
 
         public static DatSymbol BuildConst(string name, DatSymbolType type, object value)
         {
-            var symbol = new DatSymbol {};
+            var symbol = new DatSymbol { name = name};
 
             return symbol;
         }
 
         public static DatSymbol BuildFunc(string name, DatSymbolType returnType)
         {
-            var symbol = new DatSymbol {  };
+            var symbol = new DatSymbol { name = name};
 
             return symbol;
         }
