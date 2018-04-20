@@ -4,21 +4,21 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\Parser\Output\DaedalusParserBaseListener.cs" Link="AntlrOutput\DaedalusParserBaseListener.cs" />
-    <Compile Include="..\Parser\Output\DaedalusParserLexer.cs" Link="AntlrOutput\DaedalusParserLexer.cs" />
-    <Compile Include="..\Parser\Output\DaedalusParserListener.cs" Link="AntlrOutput\DaedalusParserListener.cs" />
-    <Compile Include="..\Parser\Output\DaedalusParserParser.cs" Link="AntlrOutput\DaedalusParserParser.cs" />
+    <Compile Include="..\Parser\Output\DaedalusBaseListener.cs" Link="AntlrOutput\DaedalusBaseListener.cs" />
+    <Compile Include="..\Parser\Output\DaedalusLexer.cs" Link="AntlrOutput\DaedalusLexer.cs" />
+    <Compile Include="..\Parser\Output\DaedalusListener.cs" Link="AntlrOutput\DaedalusListener.cs" />
+    <Compile Include="..\Parser\Output\DaedalusParser.cs" Link="AntlrOutput\DaedalusParser.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Antlr4.Runtime.Standard" Version="4.7.1.1" />
     <PackageReference Include="NDesk.Options" Version="0.2.1" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="AntlrOutput\" />
-  </ItemGroup>
-  <ItemGroup>
     <None Update="test.d">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="AntlrOutput\" />
   </ItemGroup>
 </Project>

@@ -2,7 +2,6 @@
 using Antlr4.Runtime.Tree;
 using System;
 using System.Collections.Generic;
-using DaedalusParser;
 using DaedalusCompiler.Dat;
 using System.Linq;
 using DaedalusCompiler.Compilation;
