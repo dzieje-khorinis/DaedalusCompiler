@@ -280,4 +280,14 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitNameNode([NotNull] DaedalusParser.NameNodeContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.referenceNode"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterReferenceNode([NotNull] DaedalusParser.ReferenceNodeContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.referenceNode"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitReferenceNode([NotNull] DaedalusParser.ReferenceNodeContext context);
 }

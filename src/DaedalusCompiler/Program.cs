@@ -73,21 +73,10 @@ namespace DaedalusCompiler
 
         static void compileDaedalus(string path)
         {
-            var compiler = new Compiler(path);
-            compiler.Compile();
+            var compiler = new Compiler();
+            compiler.CompileFromSrc(path);
 
             Console.WriteLine($"Compilation completed successfully");
-
-            //ICharStream stream = CharStreams.fromPath(path);
-            //ITokenSource lexer = new DaedalusParserLexer(stream);
-            //ITokenStream tokens = new CommonTokenStream(lexer);
-            //DaedalusParserParser parser = new DaedalusParserParser(tokens);
-            //var fileContext = parser.file();
-            //parser.Context = fileContext;
-            //parser.BuildParseTree = true;
-            //IParseTree tree = parser.expression();
-
-            //Console.WriteLine($"\n\nParseTree result: {tree.ToStringTree()}");
         }
 
         static void Main(string[] args)

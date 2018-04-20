@@ -14,11 +14,6 @@
     <PackageReference Include="NDesk.Options" Version="0.2.1" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="test.d">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <Folder Include="AntlrOutput\" />
   </ItemGroup>
 </Project>
