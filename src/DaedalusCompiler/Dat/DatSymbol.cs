@@ -88,7 +88,10 @@ namespace DaedalusCompiler.Dat
         public DatSymbol(BinaryFileStream stream)
         {
             bHasName = stream.ReadInt();
-            name = stream.ReadString();
+            if (bHasName != 0)
+            {
+                name = stream.ReadString();   
+            }
             offset = stream.ReadInt();
             bitField = stream.ReadInt();
             fileNumber = stream.ReadInt();
