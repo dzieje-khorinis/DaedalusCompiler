@@ -100,6 +100,11 @@ namespace DaedalusCompiler.Dat
             parent = stream.ReadInt();
         }
 
+        public DatSymbol()
+        {
+            
+        }
+
         public DatSymbolType SymbolType
         {
             get { return (DatSymbolType)((bitField & 0xF000) >> 12); }
