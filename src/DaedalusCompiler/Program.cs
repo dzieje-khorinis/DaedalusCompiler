@@ -2,7 +2,6 @@
 using Antlr4.Runtime.Tree;
 using System;
 using System.Collections.Generic;
-using DaedalusParser;
 using DaedalusCompiler.Dat;
 using System.Linq;
 using DaedalusCompiler.Compilation;
@@ -14,7 +13,7 @@ namespace DaedalusCompiler
         private const string version = "0.1";
         private const string compiler_name = "daedalus-compiler";
 
-        static void showHelp()
+        static void ShowHelp()
         {
             Console.WriteLine("Daedalus Compiler Version {0}", version);
             Console.WriteLine(
@@ -26,7 +25,7 @@ namespace DaedalusCompiler
             );
         }
         
-        static void handleOptionsParser(string[] args)
+        static void HandleOptionsParser(string[] args)
         {
             var loadHelp = false;
             var loadDat = false;
@@ -47,7 +46,7 @@ namespace DaedalusCompiler
 
             if ( loadHelp || extra.Count == 0 )
             {
-                showHelp();
+                ShowHelp();
             }
             else
             {
@@ -55,45 +54,34 @@ namespace DaedalusCompiler
 
                 if (loadDat)
                 {
-                    analyzeDATFile(filePath);
+                    AnalyzeDATFile(filePath);
                 }
                 else
                 {
-                    compileDaedalus(filePath);
+                    CompileDaedalus(filePath);
                 }
             }
             
             return;
         }
 
-        static void analyzeDATFile(string path)
+        static void AnalyzeDATFile(string path)
         {
             var dat = new DatFile();
             dat.Load(path);
         }
 
-        static void compileDaedalus(string path)
+        static void CompileDaedalus(string path)
         {
-            var compiler = new Compiler(path);
-            compiler.Compile();
+            var compiler = new Compiler();
+            compiler.CompileFromSrc(path);
 
             Console.WriteLine($"Compilation completed successfully");
-
-            //ICharStream stream = CharStreams.fromPath(path);
-            //ITokenSource lexer = new DaedalusParserLexer(stream);
-            //ITokenStream tokens = new CommonTokenStream(lexer);
-            //DaedalusParserParser parser = new DaedalusParserParser(tokens);
-            //var fileContext = parser.file();
-            //parser.Context = fileContext;
-            //parser.BuildParseTree = true;
-            //IParseTree tree = parser.expression();
-
-            //Console.WriteLine($"\n\nParseTree result: {tree.ToStringTree()}");
         }
 
         static void Main(string[] args)
         {
-            handleOptionsParser(args);
+            HandleOptionsParser(args);
         }
     }
 }
