@@ -13,7 +13,7 @@ namespace DaedalusCompiler
         private const string version = "0.1";
         private const string compiler_name = "daedalus-compiler";
 
-        static void showHelp()
+        static void ShowHelp()
         {
             Console.WriteLine("Daedalus Compiler Version {0}", version);
             Console.WriteLine(
@@ -25,7 +25,7 @@ namespace DaedalusCompiler
             );
         }
         
-        static void handleOptionsParser(string[] args)
+        static void HandleOptionsParser(string[] args)
         {
             var loadHelp = false;
             var loadDat = false;
@@ -46,7 +46,7 @@ namespace DaedalusCompiler
 
             if ( loadHelp || extra.Count == 0 )
             {
-                showHelp();
+                ShowHelp();
             }
             else
             {
@@ -54,24 +54,24 @@ namespace DaedalusCompiler
 
                 if (loadDat)
                 {
-                    analyzeDATFile(filePath);
+                    AnalyzeDATFile(filePath);
                 }
                 else
                 {
-                    compileDaedalus(filePath);
+                    CompileDaedalus(filePath);
                 }
             }
             
             return;
         }
 
-        static void analyzeDATFile(string path)
+        static void AnalyzeDATFile(string path)
         {
             var dat = new DatFile();
             dat.Load(path);
         }
 
-        static void compileDaedalus(string path)
+        static void CompileDaedalus(string path)
         {
             var compiler = new Compiler();
             compiler.CompileFromSrc(path);
@@ -81,7 +81,7 @@ namespace DaedalusCompiler
 
         static void Main(string[] args)
         {
-            handleOptionsParser(args);
+            HandleOptionsParser(args);
         }
     }
 }
