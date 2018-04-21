@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using DaedalusCompiler.Dat;
 using System.Linq;
 using DaedalusCompiler.Compilation;
+using System.Diagnostics;
 
 namespace DaedalusCompiler
 {
@@ -74,9 +75,11 @@ namespace DaedalusCompiler
         static void CompileDaedalus(string path)
         {
             var compiler = new Compiler();
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
             compiler.CompileFromSrc(path);
 
-            Console.WriteLine($"Compilation completed successfully");
+            Console.WriteLine($"Compilation completed successfully. Total time: {stopwatch.Elapsed}");
         }
 
         static void Main(string[] args)

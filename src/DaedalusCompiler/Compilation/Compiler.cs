@@ -14,15 +14,21 @@ namespace DaedalusCompiler.Compilation
         {
             try
             {
-                var paths = (SrcFileHelper.LoadScriptsFilePaths(srcFilePath));
+                var paths = SrcFileHelper.LoadScriptsFilePaths(srcFilePath).ToArray();
+                var assemblyBuilder = new AssemblyBuilder();
 
-                foreach (var scriptPath in paths)
+                for (int i = 0; i < paths.Length; i++)
                 {
-                    Console.WriteLine($"Compiling: {scriptPath}");
+                    Console.WriteLine($"[{i + 1}/{paths.Length}]Compiling: {paths[i]}");
 
-                    var parser = GetParser(scriptPath);
+                    // create parser for specific file
+                    var parser = GetParser(paths[i]);
 
-                    var context = parser.daedalusFile();
+                    // add listener (tree walker)
+                    parser.AddParseListener(new DaedalusParserListener(assemblyBuilder));
+
+                    // start parsing (compiling) script file
+                    parser.daedalusFile();
                 }
             }
             catch (Exception exc)
@@ -38,11 +44,6 @@ namespace DaedalusCompiler.Compilation
             DaedalusLexer lexer = new DaedalusLexer(inputStream);
             CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
             return new DaedalusParser(commonTokenStream);
-        }
-
-        private List<DatSymbol> LoadSymbols(DaedalusParser parser)
-        {
-            throw new NotImplementedException();
         }
     }
 }
