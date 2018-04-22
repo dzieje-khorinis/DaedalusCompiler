@@ -28,6 +28,12 @@ namespace DaedalusCompiler.Dat
             return BitConverter.ToInt32(bytes, 0);            
         }
 
+        public uint ReadUInt()
+        {
+            var bytes = ReadBytes(4);
+            return BitConverter.ToUInt32(bytes, 0);
+        }
+
         public float ReadFloat()
         {
             var bytes = ReadBytes(4);

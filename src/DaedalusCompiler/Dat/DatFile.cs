@@ -37,7 +37,7 @@ namespace DaedalusCompiler.Dat
             var symbols = new DatSymbol[symbolsCount];
             for (int i = 0; i < symbolsCount; i++)
             {
-                symbols[i] = new DatSymbol(stream);
+                symbols[i] = DatSymbol.Load(stream);
             }
 
             return symbols;

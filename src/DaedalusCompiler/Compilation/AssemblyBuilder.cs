@@ -110,11 +110,11 @@ namespace DaedalusCompiler.Compilation
         public DatSymbol resolveSymbol(string symbolName)
         {
             var funcName = active.name;
-            var symbolLocalScope = symbols.Find(x => x.name == funcName + "." + symbolName);
+            var symbolLocalScope = symbols.Find(x => x.Name == funcName + "." + symbolName);
 
             if (symbolLocalScope == null)
             {
-                var symbol = symbols.Find(x => x.name == symbolName);
+                var symbol = symbols.Find(x => x.Name == symbolName);
 
                 if (symbol == null)
                 {

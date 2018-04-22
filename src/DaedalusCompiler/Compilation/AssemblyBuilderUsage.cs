@@ -11,14 +11,14 @@ namespace DaedalusCompiler.Compilation
             var functionName = "someFunc";
             var functionSecondName = "secondFunc";
             
-            assemblyBuilder.addSymbol(TokenBuilder.BuildFunc("Print", DatSymbolType.Void));
+            assemblyBuilder.addSymbol(SymbolBuilder.BuildFunc("Print", DatSymbolType.Void));
 
-            assemblyBuilder.addSymbol(TokenBuilder.BuildVariable("someVar1", DatSymbolType.Int));
-            assemblyBuilder.addSymbol(TokenBuilder.BuildConst("someConst1", DatSymbolType.Int, 34));
+            assemblyBuilder.addSymbol(SymbolBuilder.BuildVariable("someVar1", DatSymbolType.Int));
+            assemblyBuilder.addSymbol(SymbolBuilder.BuildConst("someConst1", DatSymbolType.Int, 34));
 
-            assemblyBuilder.addSymbol(TokenBuilder.BuildVariable(functionName + ".param1", DatSymbolType.Int));
-            assemblyBuilder.addSymbol(TokenBuilder.BuildVariable(functionName + ".param2", DatSymbolType.Int));
-            assemblyBuilder.addSymbol(TokenBuilder.BuildVariable(functionName + ".inner", DatSymbolType.Int));
+            assemblyBuilder.addSymbol(SymbolBuilder.BuildVariable(functionName + ".param1", DatSymbolType.Int));
+            assemblyBuilder.addSymbol(SymbolBuilder.BuildVariable(functionName + ".param2", DatSymbolType.Int));
+            assemblyBuilder.addSymbol(SymbolBuilder.BuildVariable(functionName + ".inner", DatSymbolType.Int));
 
             assemblyBuilder.registerFunction(functionName);
 

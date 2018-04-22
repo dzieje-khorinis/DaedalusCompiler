@@ -14,7 +14,7 @@ namespace DaedalusCompiler.Dat
         Class = 4,
         Func = 5,
         Prototype = 6,
-        Instance = 7
+        Instance = 7,
     }
 
     [Flags]
@@ -27,130 +27,139 @@ namespace DaedalusCompiler.Dat
         Merged = 16,
     }
 
-    [DebuggerDisplay("{SymbolType} {ReturnType} {name} '{Flags}'")]
+    [DebuggerDisplay("{Type} {ReturnType} {Name} '{Flags}'")]
     public class DatSymbol
     {
         /// <summary>
-        /// ??? almost always is set to 1
+        /// Symbol name like C_MISSION.RUNNING, C_ITEM, MAX_WISPSKILL
         /// </summary>
-        public int bHasName;
+        public string Name { get; set; }
 
         /// <summary>
-        /// Symbol name
+        /// Length for array variables or constants. Set to 1 for non array variables or constants
         /// </summary>
-        public string name;
+        public uint ArrayLength { get; set; }
 
         /// <summary>
-        /// ??? Contains information about return type
+        /// Symbol type ex. 'class' or 'func'
         /// </summary>
-        public int offset;
+        public DatSymbolType Type { get; set; }
 
         /// <summary>
-        /// Symbol type, flags, content size encoded in bits 
+        /// Symbol flags ex. 'const' or 'return'
         /// </summary>
-        public int bitField;
+        public DatSymbolFlag Flags { get; set; }
 
         /// <summary>
-        /// Zero based source file number
+        /// Return type which is set only for 'func' symbols with 'return' flag set
         /// </summary>
-        public int fileNumber;
+        public DatSymbolType? ReturnType { get; set; }
 
         /// <summary>
-        /// Line number in source file where symbol is located
+        /// Addres of parent 'class' symbol set only for 'classvar' symbol.
         /// </summary>
-        public int line;
+        public int? ClassVarOffset { get; set; }
 
         /// <summary>
-        /// Number of lines (count) in source file taken by symbol definition
+        /// Fields count which is set only for 'class' symbol
         /// </summary>
-        public int linesCount;
-
+        public int? ClassSize { get; set; }
+        
         /// <summary>
-        /// Char position from begining of source file where symbol is located
+        /// Specifies where symbol is located in source scripts
         /// </summary>
-        public int positionBegin;
-
-        /// <summary>
-        /// Number of characters to next symbol
-        /// </summary>
-        public int positionsCount;
+        public DatSymbolLocation Location { get; set; }
 
         /// <summary>
         /// Content of const variable or array
         /// </summary>
-        public object[] content;
+        public object[] Content { get; set; }
 
         /// <summary>
         /// ??? Some kind of reference to parent symbol for nested symbols like class variables
         /// </summary>
-        private int parent;
+        public int Parent { get; private set; }
 
-        public DatSymbol(BinaryFileStream stream)
+        /// <summary>
+        /// Loads DatSymbol from binary DAT formatted stream
+        /// </summary>
+        public static DatSymbol Load(BinaryFileStream stream)
         {
-            bHasName = stream.ReadInt();
-            if (bHasName != 0)
+            var symbol = new DatSymbol();
+
+            // Read symbol name
+            var hasName = Convert.ToBoolean(stream.ReadUInt());
+            if (hasName)
             {
-                name = stream.ReadString();   
+                symbol.Name = stream.ReadString();
             }
-            offset = stream.ReadInt();
-            bitField = stream.ReadInt();
-            fileNumber = stream.ReadInt();
-            line = stream.ReadInt();
-            linesCount = stream.ReadInt();
-            positionBegin = stream.ReadInt();
-            positionsCount = stream.ReadInt();
-            content = GetContentIfExists(stream);
-            parent = stream.ReadInt();
+
+            // Read symbol properties
+            var offset = stream.ReadInt();
+            var bitField = stream.ReadUInt();
+
+            symbol.ArrayLength = bitField & 0xFFF;
+            symbol.Type = (DatSymbolType)((bitField & 0xF000) >> 12);
+            symbol.Flags = (DatSymbolFlag)((bitField & 0x3F0000) >> 16);
+
+            if (symbol.Type == DatSymbolType.Func && symbol.Flags.HasFlag(DatSymbolFlag.Return))
+            {
+                symbol.ReturnType = (DatSymbolType)offset;
+            }
+
+            if (symbol.Type == DatSymbolType.Class)
+            {
+                symbol.ClassSize = offset;
+            }
+
+            if (symbol.Flags.HasFlag(DatSymbolFlag.Classvar))
+            {
+                symbol.ClassVarOffset = offset;
+            }
+
+            // Read symbol localization data
+            symbol.Location = new DatSymbolLocation
+            {
+                FileNumber = stream.ReadInt(),
+                Line = stream.ReadInt(),
+                LinesCount = stream.ReadInt(),
+                PositionBegin = stream.ReadInt(),
+                PositionsCount = stream.ReadInt(),
+            };
+
+
+            // Read symbol content if exists
+            symbol.Content = GetContentIfExists(stream, symbol);
+
+            // Read symbol parent
+            symbol.Parent = stream.ReadInt();
+
+            return symbol;            
         }
 
-        public DatSymbol()
-        {
-            
-        }
-
-        public DatSymbolType SymbolType
-        {
-            get { return (DatSymbolType)((bitField & 0xF000) >> 12); }
-        }
-
-        public DatSymbolType ReturnType
-        {
-            get { return (DatSymbolType)offset; }
-        }
-
-        public DatSymbolFlag Flags
-        {
-            get { return (DatSymbolFlag)((bitField & 0x3F0000) >> 16); }
-        }
-
-        public bool IsLocal
-        {
-            get { return name.Contains("."); }
-        }
-
-        private object[] GetContentIfExists(BinaryFileStream stream)
+        private static object[] GetContentIfExists(BinaryFileStream stream, DatSymbol symbol)
         {
             object[] result = null;
 
-            if (Flags.HasFlag(DatSymbolFlag.Classvar) == false)
+            if (symbol.Flags.HasFlag(DatSymbolFlag.Classvar) == false)
             {
-                if (SymbolType == DatSymbolType.Func || SymbolType == DatSymbolType.Class || SymbolType == DatSymbolType.Prototype)
+                if (symbol.Type == DatSymbolType.Func || symbol.Type == DatSymbolType.Class || symbol.Type == DatSymbolType.Prototype)
                 {
                     result = new object[1];
                 }
                 else
                 {
-                    result = new object[GetContentSize()];
+                    result = new object[symbol.ArrayLength];
                 }
 
-                if ((result.Length == 0) && (SymbolType == DatSymbolType.Instance))
+                if ((result.Length == 0) && (symbol.Type == DatSymbolType.Instance))
                 {
                     result = new object[1];
                 }
 
                 for (int i = 0; i < result.Length; i++)
                 {
-                    switch (SymbolType)
+                    switch (symbol.Type)
                     {
                         case DatSymbolType.String:
                             result[i] = stream.ReadString();
@@ -166,11 +175,6 @@ namespace DaedalusCompiler.Dat
             }
 
             return result;
-        }
-
-        private int GetContentSize()
-        {
-            return bitField & 0xFFF;
         }
     }
 }

@@ -23,7 +23,7 @@ namespace DaedalusCompiler.Compilation
             var type = DatSymbolTypeFromString(typeName);
             var value = context.constAssignment()?.expression()?.value()?.GetText(); // TODO: expression evaluation && convert value to specific type
             
-            var symbol = TokenBuilder.BuildConst(name, type.Value, value); // TODO : Validate params
+            var symbol = SymbolBuilder.BuildConst(name, type.Value, value); // TODO : Validate params
             assemblyBuilder.addSymbol(symbol);
         }
 
@@ -36,7 +36,7 @@ namespace DaedalusCompiler.Compilation
             {
                 var name = nameContext.GetText();
 
-                var symbol = TokenBuilder.BuildVariable(name, type.Value); // TODO : Validate params
+                var symbol = SymbolBuilder.BuildVariable(name, type.Value); // TODO : Validate params
                 assemblyBuilder.addSymbol(symbol);
             }
         }
@@ -47,10 +47,9 @@ namespace DaedalusCompiler.Compilation
             var typeName = context.typeReference()?.GetText();
             var type = DatSymbolTypeFromString(typeName);
 
-            var symbol = TokenBuilder.BuildFunc(name, type.Value); // TODO : Validate params
+            var symbol = SymbolBuilder.BuildFunc(name, type.Value); // TODO : Validate params
             assemblyBuilder.addSymbol(symbol);
         }
-
 
         private DatSymbolType? DatSymbolTypeFromString(string typeReference)
         {
@@ -58,7 +57,7 @@ namespace DaedalusCompiler.Compilation
                 return null;
 
             // FirstCharToUpper 
-            typeReference = typeReference.First().ToString().ToUpper() + typeReference.Substring(1);
+            typeReference = typeReference.First().ToString().ToUpper() + typeReference.Substring(1).ToLower();
 
             DatSymbolType type;
             if (Enum.TryParse(typeReference, out type))
