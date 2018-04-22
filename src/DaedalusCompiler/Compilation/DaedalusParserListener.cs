@@ -75,7 +75,7 @@ namespace DaedalusCompiler.Compilation
             }
         }
 
-        public override void ExitFunctionDef([NotNull] DaedalusParser.FunctionDefContext context)
+        public override void EnterFunctionDef([NotNull] DaedalusParser.FunctionDefContext context)
         {
             var name = context.nameNode().GetText();
             var typeName = context.typeReference().GetText();
@@ -83,6 +83,19 @@ namespace DaedalusCompiler.Compilation
 
             var symbol = SymbolBuilder.BuildFunc(name, type.Value); // TODO : Validate params
             assemblyBuilder.addSymbol(symbol);
+            assemblyBuilder.registerFunction(symbol);
+        }
+        
+        public override void ExitFunctionDef([NotNull] DaedalusParser.FunctionDefContext context)
+        {
+            // we invoke functionEnd, thanks that ab will assign all instructions
+            // to currently exited function
+            assemblyBuilder.functionEnd();
+        }
+
+        public override void ExitReturnStatement([NotNull] DaedalusParser.ReturnStatementContext context)
+        {
+            assemblyBuilder.addInstruction(new Ret());
         }
 
         private DatSymbolType? DatSymbolTypeFromString(string typeReference)

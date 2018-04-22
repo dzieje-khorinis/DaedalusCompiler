@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Antlr4.Runtime.Misc;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
@@ -58,7 +59,7 @@ namespace DaedalusCompiler.Compilation
     public class AssemblyFunction
     {
         public List<AssemblyInstruction> body;
-        public string name;
+        public DatSymbol symbol;
     }
 
     public class AssemblyBuilder
@@ -66,35 +67,50 @@ namespace DaedalusCompiler.Compilation
         private List<AssemblyFunction> functions;
         private List<DatSymbol> symbols;
         private AssemblyFunction active;
-        
+        private List<AssemblyInstruction> instructionStack;
+
         public AssemblyBuilder()
         {
             functions = new List<AssemblyFunction>();
             symbols = new List<DatSymbol>();
+            instructionStack = new List<AssemblyInstruction>();
             active = null;
         }
 
-        public void registerFunction(string name)
+        public void registerFunction(DatSymbol symbol)
         {
-            functions.Add(new AssemblyFunction() { name = name});
-            setActiveFunction(name);
-        }
-        
-        public void addFunctionBody(string name, List<AssemblyInstruction> body)
-        {
-            var funcToUpdate = functions.Find(x => x.name == name);
-
-            if (funcToUpdate == null)
-            {
-                throw new Exception("Function with name " + name + " is not added to assembly builder");
-            }
-
-            funcToUpdate.body = body;
+            functions.Add(new AssemblyFunction() { symbol = symbol});
+            setActiveFunction(symbol);
         }
 
-        public void setActiveFunction(string functionName)
+        public void addInstruction(AssemblyInstruction instruction)
         {
-            active = functions.Find(x => x.name == functionName);
+            instructionStack.Add(instruction);
+        }
+
+        public void functionEnd()
+        {
+            active.body = instructionStack;
+            active = null;
+
+            instructionStack = new ArrayList<AssemblyInstruction>();
+        }
+
+//        public void addFunctionBody(string name, List<AssemblyInstruction> body)
+//        {
+//            var funcToUpdate = functions.Find(x => x.name == name);
+//
+//            if (funcToUpdate == null)
+//            {
+//                throw new Exception("Function with name " + name + " is not added to assembly builder");
+//            }
+//
+//            funcToUpdate.body = body;
+//        }
+
+        public void setActiveFunction(DatSymbol symbol)
+        {
+            active = functions.Find(x => x.symbol == symbol);
         }
 
         public void addSymbol(DatSymbol symbol)
@@ -106,10 +122,10 @@ namespace DaedalusCompiler.Compilation
         {
             symbols.AddRange(symbols);
         }
-        
+
         public DatSymbol resolveSymbol(string symbolName)
         {
-            var funcName = active.name;
+            var funcName = active.symbol.Name;
             var symbolLocalScope = symbols.Find(x => x.Name == funcName + "." + symbolName);
 
             if (symbolLocalScope == null)

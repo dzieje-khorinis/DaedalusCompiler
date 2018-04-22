@@ -20,7 +20,7 @@ namespace DaedalusCompiler.Compilation
             assemblyBuilder.addSymbol(SymbolBuilder.BuildVariable(functionName + ".param2", DatSymbolType.Int));
             assemblyBuilder.addSymbol(SymbolBuilder.BuildVariable(functionName + ".inner", DatSymbolType.Int));
 
-            assemblyBuilder.registerFunction(functionName);
+            //assemblyBuilder.registerFunction(functionName);
 
             List<AssemblyInstruction> functionBody = new List<AssemblyInstruction>(new AssemblyInstruction[]
             {
@@ -44,8 +44,8 @@ namespace DaedalusCompiler.Compilation
                 /* e.t.c */
             });
             
-            assemblyBuilder.registerFunction(functionSecondName);
-            assemblyBuilder.addFunctionBody(functionName, functionBody);
+            //assemblyBuilder.registerFunction(functionSecondName);
+            //assemblyBuilder.addFunctionBody(functionName, functionBody);
         }
     }
 }
