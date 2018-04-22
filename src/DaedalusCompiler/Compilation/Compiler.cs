@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Antlr4.Runtime.Tree;
 
 namespace DaedalusCompiler.Compilation
 {
@@ -24,11 +25,7 @@ namespace DaedalusCompiler.Compilation
                     // create parser for specific file
                     var parser = GetParser(paths[i]);
 
-                    // add listener (tree walker)
-                    parser.AddParseListener(new DaedalusParserListener(assemblyBuilder, i));
-
-                    // start parsing (compiling) script file
-                    parser.daedalusFile();
+                    ParseTreeWalker.Default.Walk(new DaedalusParserListener(assemblyBuilder, i), parser.daedalusFile());
                 }
             }
             catch (Exception exc)
