@@ -36,7 +36,6 @@ namespace DaedalusCompiler.Dat
 
         public float ReadFloat()
         {
-            var bytes = ReadBytes(4);
             return BitConverter.Int32BitsToSingle(ReadInt());
         }
 

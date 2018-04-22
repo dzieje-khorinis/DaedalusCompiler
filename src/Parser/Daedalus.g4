@@ -30,12 +30,21 @@ LineComment :   '//' ~[\r\n]* -> skip ;
 daedalusFile: (( functionDef | constDef | varDecl | classDef | prototypeDef | instanceDef | instanceDecl )';')*?;
 
 functionDef: Func typeReference nameNode parameterList statementBlock;
-constDef: Const typeReference nameNode ( '[' simpleValue ']')? constAssignment;
+constDef: Const typeReference (constValueDef | constArrayDef) (',' (constValueDef | constArrayDef) )*;
 classDef: Class nameNode '{' ( varDecl ';' )*? '}';
 prototypeDef: Prototype nameNode '(' referenceNode ')' '{' ( ( assignment | funcCall ) ';' )*? '}';
 instanceDef: Instance nameNode '(' referenceNode ')' '{' ( ( assignment | funcCall ) ';' )*? '}';
 instanceDecl: Instance nameNode ( ',' referenceNode )*? '(' nameNode ')';
-varDecl: Var typeReference nameNode ( ('[' simpleValue ']') | (',' nameNode )* )? ;
+varDecl: Var typeReference (varValueDecl | varArrayDecl) (',' (varValueDecl | varArrayDecl) )* ;
+
+constArrayDef: nameNode '[' simpleValue ']' constArrayAssignment;
+constArrayAssignment: '=' '{' ( expression (',' expression)*? ) '}';
+
+constValueDef: nameNode constValueAssignment;
+constValueAssignment: '=' expression;
+
+varArrayDecl: nameNode '[' simpleValue ']';
+varValueDecl: nameNode;
 
 parameterList: '(' (parameterDecl (',' parameterDecl)*? )? ')';
 parameterDecl: Var typeReference nameNode ('[' simpleValue ']')?;
@@ -45,9 +54,6 @@ funcCall: nameNode '(' ( expression ( ',' expression )*? )? ')';
 assignment: complexReference ( '=' | '+=' | '-=' | '*=' | '/=' ) expression;
 ifBlock: If expression statementBlock ( Else If expression statementBlock )*? ( Else statementBlock )?;
 returnStatement: Return ( expression )?;
-
-constAssignment: '=' ( expression | arrayLiteral );
-arrayLiteral: '{' ( expression (',' expression)*? ) '}';
 
 expression
     : '(' expression ')'

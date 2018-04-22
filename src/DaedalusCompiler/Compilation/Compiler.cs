@@ -25,7 +25,7 @@ namespace DaedalusCompiler.Compilation
                     var parser = GetParser(paths[i]);
 
                     // add listener (tree walker)
-                    parser.AddParseListener(new DaedalusParserListener(assemblyBuilder));
+                    parser.AddParseListener(new DaedalusParserListener(assemblyBuilder, i));
 
                     // start parsing (compiling) script file
                     parser.daedalusFile();

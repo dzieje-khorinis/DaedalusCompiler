@@ -78,7 +78,7 @@ namespace DaedalusCompiler.Dat
         /// <summary>
         /// ??? Some kind of reference to parent symbol for nested symbols like class variables
         /// </summary>
-        public int Parent { get; private set; }
+        public int Parent { get; set; }
 
         /// <summary>
         /// Loads DatSymbol from binary DAT formatted stream
@@ -123,7 +123,7 @@ namespace DaedalusCompiler.Dat
                 FileNumber = stream.ReadInt(),
                 Line = stream.ReadInt(),
                 LinesCount = stream.ReadInt(),
-                PositionBegin = stream.ReadInt(),
+                Position = stream.ReadInt(),
                 PositionsCount = stream.ReadInt(),
             };
 
@@ -139,6 +139,8 @@ namespace DaedalusCompiler.Dat
 
         private static object[] GetContentIfExists(BinaryFileStream stream, DatSymbol symbol)
         {
+            // TODO : Verify and refactor this method.
+
             object[] result = null;
 
             if (symbol.Flags.HasFlag(DatSymbolFlag.Classvar) == false)

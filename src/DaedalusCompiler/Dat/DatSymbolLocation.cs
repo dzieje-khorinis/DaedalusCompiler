@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace DaedalusCompiler.Dat
 {
+    [DebuggerDisplay("F:{FileNumber} L:{Line} LC:{LinesCount} P:{Position} PC:{PositionsCount}")]
     public class DatSymbolLocation
     {
         /// <summary>
@@ -24,7 +26,7 @@ namespace DaedalusCompiler.Dat
         /// <summary>
         /// Char position from begining of source file where symbol is located
         /// </summary>
-        public int PositionBegin { get; set; }
+        public int Position { get; set; }
 
         /// <summary>
         /// Number of characters to next symbol
