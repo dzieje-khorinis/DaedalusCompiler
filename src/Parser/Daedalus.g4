@@ -48,24 +48,28 @@ varValueDecl: nameNode;
 
 parameterList: '(' (parameterDecl (',' parameterDecl)*? )? ')';
 parameterDecl: Var typeReference nameNode ('[' simpleValue ']')?;
-statementBlock: '{' ( ( (statement ';')  | ( ifBlock ( ';' )? ) ) )*? '}';
+statementBlock: '{' ( ( (statement ';')  | ( ifBlockStatement ( ';' )? ) ) )*? '}';
 statement: funcCall | assignment | returnStatement | constDef | varDecl | expression;
 funcCall: nameNode '(' ( expression ( ',' expression )*? )? ')';
 assignment: complexReference ( '=' | '+=' | '-=' | '*=' | '/=' ) expression;
-ifBlock: If expression statementBlock ( Else If expression statementBlock )*? ( Else statementBlock )?;
+ifCondition: expression;
+elseBlock: Else statementBlock;
+elseIfBlock: Else If ifCondition statementBlock;
+ifBlock: If ifCondition statementBlock;
+ifBlockStatement: ifBlock ( elseIfBlock )*? ( elseBlock )?;
 returnStatement: Return ( expression )?;
 
 expression
-    : '(' expression ')'
-    | ('-' | '!' | '~' | '+') expression
-    | expression ('*' | '/' | '%') expression
-    | expression ('+' | '-') expression
-    | expression ('<<' | '>>') expression
-    | expression ('<' | '>' | '<=' | '>=') expression
-    | expression ('==' | '!=') expression
-    | expression ('&' | '|' | '&&' | '||') expression
-    | value
-    | nameNode
+    : '(' expression ')' #bracketExpression
+    | ('-' | '!' | '~' | '+') expression #oneArgExpression
+    | expression ('*' | '/' | '%') expression #multExpression
+    | expression ('+' | '-') expression #addExpression
+    | expression ('<<' | '>>') expression #bitMoveExpression
+    | expression ('<' | '>' | '<=' | '>=') expression #compExpression
+    | expression ('==' | '!=') expression #eqExpression
+    | expression ('&' | '|' | '&&' | '||') expression #bitExpression
+    | value #valExpression
+    | nameNode #idExpression
     ;
 
 simpleValue: IntegerLiteral | referenceNode;

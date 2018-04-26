@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
 using DaedalusCompiler.Dat;
@@ -27,7 +28,7 @@ namespace DaedalusCompiler.Compilation
             {
                 var name = constValueContext.nameNode().GetText();
                 var location = GetLocation(context);
-                var value = constValueContext.constValueAssignment().expression().value().GetText();
+                var value = constValueContext.constValueAssignment().expression().GetText();
 
                 var symbol = SymbolBuilder.BuildConst(name, type.Value, value, location); // TODO : Validate params
                 assemblyBuilder.addSymbol(symbol);
@@ -40,7 +41,7 @@ namespace DaedalusCompiler.Compilation
                 var sizeString = constArrayContext.simpleValue().GetText(); // TODO : Allow set array size by reference to constant
                 var size = int.Parse(sizeString); // TODO : Validate array size an its assignment content size
                 var content = constArrayContext.constArrayAssignment().expression() // TODO: expression evaluation && convert values to specific type
-                    .Select(expr => expr.value().GetText())
+                    .Select(expr => expr.GetText())
                     .ToArray();              
 
                 var symbol = SymbolBuilder.BuildArrOfConst(name, type.Value, content, location); // TODO : Validate params
@@ -83,7 +84,7 @@ namespace DaedalusCompiler.Compilation
 
             var symbol = SymbolBuilder.BuildFunc(name, type.Value); // TODO : Validate params
             assemblyBuilder.addSymbol(symbol);
-            assemblyBuilder.registerFunction(symbol);
+            assemblyBuilder.functionStart(symbol);
         }
         
         public override void ExitFunctionDef([NotNull] DaedalusParser.FunctionDefContext context)
@@ -96,6 +97,82 @@ namespace DaedalusCompiler.Compilation
         public override void ExitReturnStatement([NotNull] DaedalusParser.ReturnStatementContext context)
         {
             assemblyBuilder.addInstruction(new Ret());
+        }
+
+        public override void EnterIfBlockStatement(DaedalusParser.IfBlockStatementContext context)
+        {
+            assemblyBuilder.conditionalStart();
+        }
+
+        public override void ExitIfBlockStatement(DaedalusParser.IfBlockStatementContext context)
+        {
+            assemblyBuilder.conditionalEnd();
+            //assemblyBuilder.ifStatementEnd();
+        }
+
+
+        public override void EnterIfBlock(DaedalusParser.IfBlockContext context)
+        {
+            assemblyBuilder.conditionalBlockConditionStart(IfBlockType.If);
+        }
+
+        public override void ExitIfBlock(DaedalusParser.IfBlockContext context)
+        {
+            assemblyBuilder.conditionalBlockBodyEnd();
+        }
+
+        public override void EnterElseIfBlock(DaedalusParser.ElseIfBlockContext context)
+        {
+            assemblyBuilder.conditionalBlockConditionStart(IfBlockType.ElseIf);
+        }
+
+        public override void ExitElseIfBlock(DaedalusParser.ElseIfBlockContext context)
+        {
+            assemblyBuilder.conditionalBlockBodyEnd();
+        }
+        
+        public override void EnterElseBlock(DaedalusParser.ElseBlockContext context)
+        {
+            assemblyBuilder.conditionalBlockConditionStart(IfBlockType.Else);
+            // else does't have condition so we call here end of condition
+            assemblyBuilder.conditionalBlockConditionEnd();
+        }
+
+        public override void ExitElseBlock(DaedalusParser.ElseBlockContext context)
+        {
+            assemblyBuilder.conditionalBlockBodyEnd();
+        }
+        
+        public override void ExitIfCondition(DaedalusParser.IfConditionContext context)
+        {
+            assemblyBuilder.conditionalBlockConditionEnd();
+        }
+
+        public override void ExitCompExpression(DaedalusParser.CompExpressionContext context)
+        {
+            //TODO implement correctly
+            assemblyBuilder.addInstruction(new Greater());
+        }
+
+        public override void EnterValExpression(DaedalusParser.ValExpressionContext context)
+        {
+            string value = context.value().GetText();
+            var firstChar = value[0];
+            var lastChar = value[value.Length - 1];
+            var isNumber = new Regex("^[0-9]+$");
+
+            if (firstChar == '"' && lastChar == '"')
+            {
+                //TODO implement
+            }
+            else if ( isNumber.IsMatch(firstChar.ToString()) )
+            {
+                assemblyBuilder.addInstruction(new PushInt(int.Parse(value)));
+            }
+            else
+            {
+                //todo implement identificator
+            }
         }
 
         private DatSymbolType? DatSymbolTypeFromString(string typeReference)

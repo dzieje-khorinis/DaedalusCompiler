@@ -6,13 +6,58 @@ using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
 {
-    public class AssemblyInstruction
+    public class AssemblyElement {}
+    
+    public class AssemblyInstruction: AssemblyElement
     {
     }
 
-    public class LabelInstruction : AssemblyInstruction
+    public class AssemblyLabel: AssemblyElement
     {
         public string label;
+    }
+
+    public class IfBlock
+    {
+        public List<AssemblyElement> body;
+        public List<AssemblyElement> condition;
+
+        public IfBlock()
+        {
+            body = new List<AssemblyElement>();
+            condition = new List<AssemblyElement>();
+        }
+    }
+    
+    public enum IfBlockType
+    {
+        If,
+        ElseIf,
+        Else
+    }
+
+    public class AssemblyIfStatement : AssemblyElement
+    {
+        
+        public IfBlock ifBlock;
+        public List<AssemblyElement> elseBody;
+        public List<IfBlock> elseIfBlock;
+        public IfBlockType currentBlockType;
+        public List<AssemblyElement> conditionInstructionStack;
+
+
+        public AssemblyIfStatement()
+        {
+            ifBlock = new IfBlock();
+            elseBody = new List<AssemblyElement>();
+            elseIfBlock = new List<IfBlock>();
+        }
+    }
+
+    public class AssemblyFunction : AssemblyElement
+    {
+        public List<AssemblyElement> body;
+        public DatSymbol symbol;
     }
 
     public class SymbolInstruction : AssemblyInstruction
@@ -23,6 +68,11 @@ namespace DaedalusCompiler.Compilation
     public class ValueInstruction : AssemblyInstruction
     {
         public object value;
+
+        public ValueInstruction(object value)
+        {
+            this.value = value;
+        }
     }
 
     public class AddressInstruction : AssemblyInstruction
@@ -37,7 +87,13 @@ namespace DaedalusCompiler.Compilation
 
     public class ParamLessInstruction : AssemblyInstruction{}
 
-    public class PushInt : ValueInstruction {}
+    public class PushInt : ValueInstruction
+    {
+        public PushInt(int value): base(value)
+        {
+            
+        }
+    }
     
     public class PushVar : SymbolInstruction {}
 
@@ -56,10 +112,11 @@ namespace DaedalusCompiler.Compilation
     
     public class CallExternal: SymbolInstruction {}
 
-    public class AssemblyFunction
+    public class AssemblyBuildContext
     {
-        public List<AssemblyInstruction> body;
-        public DatSymbol symbol;
+        public AssemblyIfStatement currentConditionStatement;
+        public List<AssemblyElement> body;
+        public AssemblyBuildContext parent;
     }
 
     public class AssemblyBuilder
@@ -67,33 +124,54 @@ namespace DaedalusCompiler.Compilation
         private List<AssemblyFunction> functions;
         private List<DatSymbol> symbols;
         private AssemblyFunction active;
-        private List<AssemblyInstruction> instructionStack;
+        private AssemblyBuildContext currentBuildCtx; // current assembly build context
+        private List<AssemblyElement> assembly;
 
         public AssemblyBuilder()
         {
             functions = new List<AssemblyFunction>();
             symbols = new List<DatSymbol>();
-            instructionStack = new List<AssemblyInstruction>();
+            currentBuildCtx = getEmptyBuildContext();
             active = null;
+            assembly = new List<AssemblyElement>();
         }
 
-        public void registerFunction(DatSymbol symbol)
+        public AssemblyBuildContext getEmptyBuildContext()
         {
-            functions.Add(new AssemblyFunction() { symbol = symbol});
-            setActiveFunction(symbol);
+            return new AssemblyBuildContext()
+            {
+                body = new List<AssemblyElement>(),
+                parent = currentBuildCtx,
+                currentConditionStatement = new AssemblyIfStatement()
+            };
         }
-
+        
+        public void setActiveFunction(DatSymbol symbol)
+        {
+            active = functions.Find(x => x.symbol == symbol);
+        }
+        
         public void addInstruction(AssemblyInstruction instruction)
         {
-            instructionStack.Add(instruction);
+            currentBuildCtx.body.Add(instruction);
+        }
+
+        public void functionStart(DatSymbol symbol)
+        {
+            var newFunctionInstructionStack = getEmptyBuildContext();
+
+            functions.Add(new AssemblyFunction() { symbol = symbol});
+            setActiveFunction(symbol);
+
+            currentBuildCtx = newFunctionInstructionStack;
         }
 
         public void functionEnd()
         {
-            active.body = instructionStack;
+            active.body = currentBuildCtx.body;
             active = null;
 
-            instructionStack = new ArrayList<AssemblyInstruction>();
+            currentBuildCtx = currentBuildCtx.parent;
         }
 
 //        public void addFunctionBody(string name, List<AssemblyInstruction> body)
@@ -108,9 +186,66 @@ namespace DaedalusCompiler.Compilation
 //            funcToUpdate.body = body;
 //        }
 
-        public void setActiveFunction(DatSymbol symbol)
+        public void conditionalStart()
         {
-            active = functions.Find(x => x.symbol == symbol);
+            
+        }
+
+        public void conditionalEnd()
+        {
+            currentBuildCtx.body.Add(currentBuildCtx.currentConditionStatement);
+
+            currentBuildCtx.currentConditionStatement = new AssemblyIfStatement();
+        }
+        
+        public void conditionalBlockConditionStart(IfBlockType blockType)
+        {
+            currentBuildCtx.currentConditionStatement.currentBlockType = blockType;
+
+            currentBuildCtx = getEmptyBuildContext();
+        }
+
+        public void conditionalBlockConditionEnd()
+        {
+            var body = currentBuildCtx.body;
+            // we need firstly get out from condition context
+            currentBuildCtx = currentBuildCtx.parent;
+            currentBuildCtx.currentConditionStatement.conditionInstructionStack = body;
+
+            // we need create context for statement block
+            currentBuildCtx = getEmptyBuildContext();
+        }
+
+        public void conditionalBlockBodyEnd()
+        {
+            var body = currentBuildCtx.body;
+            currentBuildCtx = currentBuildCtx.parent;
+
+            var blocktype = currentBuildCtx.currentConditionStatement.currentBlockType;
+
+            if (blocktype == IfBlockType.If || blocktype == IfBlockType.ElseIf)
+            {
+                var ifBlock = new IfBlock()
+                {
+                    body = body,
+                    condition = currentBuildCtx.currentConditionStatement.conditionInstructionStack
+                };
+
+                if (blocktype == IfBlockType.If)
+                {
+                    currentBuildCtx.currentConditionStatement.ifBlock =ifBlock;
+                }
+                else
+                {
+                    currentBuildCtx.currentConditionStatement.elseIfBlock.Add(ifBlock);
+                }
+            }
+            else
+            {
+                currentBuildCtx.currentConditionStatement.elseBody = body;
+            }
+            
+            //currentAssemblyBuildContext
         }
 
         public void addSymbol(DatSymbol symbol)
