@@ -15,6 +15,11 @@ namespace DaedalusCompiler.Compilation
     public class AssemblyLabel: AssemblyElement
     {
         public string label;
+
+        public AssemblyLabel(string label)
+        {
+            this.label = label;
+        }
     }
 
     public class IfBlock
@@ -83,6 +88,11 @@ namespace DaedalusCompiler.Compilation
     public class LabelJumpInstruction : AssemblyInstruction
     {
         public string label;
+
+        public LabelJumpInstruction(string label)
+        {
+            this.label = label;
+        }
     }
 
     public class ParamLessInstruction : AssemblyInstruction{}
@@ -107,8 +117,13 @@ namespace DaedalusCompiler.Compilation
     public class Divide : ParamLessInstruction {}
     public class Subract : ParamLessInstruction {}
 
-    public class JumpIf : LabelJumpInstruction {}
-    public class Call : LabelJumpInstruction {}
+    public class JumpIfToLabel : LabelJumpInstruction
+    {
+        public JumpIfToLabel(string name) : base(name)
+        {
+        }
+    }
+    //public class Call : LabelJumpInstruction {}
     
     public class CallExternal: SymbolInstruction {}
 
@@ -282,7 +297,7 @@ namespace DaedalusCompiler.Compilation
 
         public string getAssembler()
         {
-            return "";
+            return new AssemblyBuilderTraverser().traverse(true, functions, symbols);
         }
 
         public string getByteCode()

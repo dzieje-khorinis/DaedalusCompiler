@@ -22,7 +22,8 @@ namespace DaedalusCompiler
             );
             Console.WriteLine(
                 "Args description:\n" +
-                "--load-dat      loads Gothic DAT file and make analyze of that, in that case file_path should be DAT file"
+                "--load-dat      loads Gothic DAT file and make analyze of that, in that case file_path should be DAT file" +
+                "--get-assembly  compile code to readable assembly"
             );
         }
         
@@ -30,10 +31,12 @@ namespace DaedalusCompiler
         {
             var loadHelp = false;
             var loadDat = false;
+            var compileToAssembly = false;
 
             var p = new NDesk.Options.OptionSet () {
                 { "h|?|help",   v => loadHelp = true },
-                { "load-dat", v => loadDat = true }
+                { "load-dat", v => loadDat = true },
+                { "get-assembly", v => compileToAssembly = true },
             };
 
             List<string> extra;
@@ -59,7 +62,7 @@ namespace DaedalusCompiler
                 }
                 else
                 {
-                    CompileDaedalus(filePath);
+                    CompileDaedalus(filePath, compileToAssembly);
                 }
             }
             
@@ -72,12 +75,12 @@ namespace DaedalusCompiler
             dat.Load(path);
         }
 
-        static void CompileDaedalus(string path)
+        static void CompileDaedalus(string path, bool compileToAssembly)
         {
             var compiler = new Compiler();
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
-            compiler.CompileFromSrc(path);
+            compiler.CompileFromSrc(path, compileToAssembly);
 
             Console.WriteLine($"Compilation completed successfully. Total time: {stopwatch.Elapsed}");
         }

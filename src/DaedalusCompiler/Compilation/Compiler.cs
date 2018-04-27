@@ -11,7 +11,7 @@ namespace DaedalusCompiler.Compilation
 {
     public class Compiler
     {
-        public void CompileFromSrc(string srcFilePath)
+        public void CompileFromSrc(string srcFilePath, bool compileToAssembly)
         {
             try
             {
@@ -26,6 +26,11 @@ namespace DaedalusCompiler.Compilation
                     var parser = GetParser(paths[i]);
 
                     ParseTreeWalker.Default.Walk(new DaedalusParserListener(assemblyBuilder, i), parser.daedalusFile());
+                }
+
+                if (compileToAssembly)
+                {
+                    Console.WriteLine(assemblyBuilder.getAssembler());
                 }
             }
             catch (Exception exc)

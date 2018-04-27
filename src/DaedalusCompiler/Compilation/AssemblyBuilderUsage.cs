@@ -33,14 +33,14 @@ namespace DaedalusCompiler.Compilation
                 new Add(),
                 new PushVar() { symbol = assemblyBuilder.resolveSymbol("inner")},
                 /* ... */
-                new JumpIf() { label = "jump1"},
+                //new JumpIfToLabel() { label = "jump1"},
                 new PushVar() { symbol = assemblyBuilder.resolveSymbol("inner")},
                 //new PushInt() { value = 10},
                 new Assign(),
                 //new LabelInstruction() { label = "jump1"},
                 //new PushInt() { value = 110},
                 new CallExternal() { symbol = assemblyBuilder.resolveSymbol("Print") }, 
-                new Call() { label = functionSecondName}
+                //new Call() { label = functionSecondName}
                 /* e.t.c */
             });
             
