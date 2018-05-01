@@ -18,7 +18,7 @@ namespace DaedalusCompiler.Compilation
             this.sourceFileNumber = sourceFileNumber;
         }
 
-        public override void ExitConstDef([NotNull] DaedalusParser.ConstDefContext context)
+        public override void EnterConstDef([NotNull] DaedalusParser.ConstDefContext context)
         {
             var typeName = context.typeReference().GetText();
             var type = DatSymbolTypeFromString(typeName);
@@ -49,7 +49,7 @@ namespace DaedalusCompiler.Compilation
             }
         }
 
-        public override void ExitVarDecl([NotNull] DaedalusParser.VarDeclContext context)
+        public override void EnterVarDecl([NotNull] DaedalusParser.VarDeclContext context)
         {
             var typeName = context.typeReference().GetText();
             var type = DatSymbolTypeFromString(typeName);
