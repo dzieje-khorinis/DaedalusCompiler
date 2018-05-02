@@ -295,6 +295,11 @@ namespace DaedalusCompiler.Compilation
             }
         }
 
+        public DatSymbol getSymbolByName(string symbolName)
+        {
+            return symbols.FirstOrDefault(x => x.Name == symbolName);
+        }
+
         public string getAssembler()
         {
             return new AssemblyBuilderTraverser().traverse(true, functions, symbols);

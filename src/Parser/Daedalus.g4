@@ -69,7 +69,6 @@ expression
     | expression ('==' | '!=') expression #eqExpression
     | expression ('&' | '|' | '&&' | '||') expression #bitExpression
     | value #valExpression
-    | nameNode #idExpression
     ;
 
 simpleValue: IntegerLiteral | referenceNode;

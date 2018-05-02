@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
+using DaedalusCompiler.Compilation.Evaluation;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
@@ -28,7 +29,8 @@ namespace DaedalusCompiler.Compilation
             {
                 var name = constValueContext.nameNode().GetText();
                 var location = GetLocation(context);
-                var value = constValueContext.constValueAssignment().expression().GetText();
+                var assignmentExpression = constValueContext.constValueAssignment().expression();
+                var value = EvaluatorFactory.GetEvaluator(type.Value).EvaluateConst(assignmentExpression, assemblyBuilder);
 
                 var symbol = SymbolBuilder.BuildConst(name, type.Value, value, location); // TODO : Validate params
                 assemblyBuilder.addSymbol(symbol);
