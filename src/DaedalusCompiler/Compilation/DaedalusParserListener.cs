@@ -3,7 +3,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
-using DaedalusCompiler.Compilation.Evaluation;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
@@ -30,7 +29,7 @@ namespace DaedalusCompiler.Compilation
                 var name = constValueContext.nameNode().GetText();
                 var location = GetLocation(context);
                 var assignmentExpression = constValueContext.constValueAssignment().expression();
-                var value = EvaluatorFactory.GetEvaluator(type.Value).EvaluateConst(assignmentExpression, assemblyBuilder);
+                var value = EvaluatorHelper.EvaluateConst(assignmentExpression, assemblyBuilder, type.Value);
 
                 var symbol = SymbolBuilder.BuildConst(name, type.Value, value, location); // TODO : Validate params
                 assemblyBuilder.addSymbol(symbol);
@@ -42,8 +41,8 @@ namespace DaedalusCompiler.Compilation
                 var location = GetLocation(context);
                 var sizeString = constArrayContext.simpleValue().GetText(); // TODO : Allow set array size by reference to constant
                 var size = int.Parse(sizeString); // TODO : Validate array size an its assignment content size
-                var content = constArrayContext.constArrayAssignment().expression() // TODO: expression evaluation && convert values to specific type
-                    .Select(expr => expr.GetText())
+                var content = constArrayContext.constArrayAssignment().expression()
+                    .Select(expr => EvaluatorHelper.EvaluateConst(expr, assemblyBuilder, type.Value))
                     .ToArray();              
 
                 var symbol = SymbolBuilder.BuildArrOfConst(name, type.Value, content, location); // TODO : Validate params

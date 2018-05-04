@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Generated from C:/Users/grzeg/source/repos/DaedalusCompiler/src/Parser\Daedalus.g4 by ANTLR 4.7
+// Generated from C:/Users/grzeg/Source/Repos/DaedalusCompiler/src/Parser\Daedalus.g4 by ANTLR 4.7
 
 // Unreachable code detected
 #pragma warning disable 0162
