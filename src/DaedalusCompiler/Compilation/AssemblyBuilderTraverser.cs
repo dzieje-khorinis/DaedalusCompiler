@@ -51,6 +51,14 @@ namespace DaedalusCompiler.Compilation
 
                 buildAcc += $"{typeName}\n";
             }
+            else if (element is PushVar pushVarElement)
+            {
+                buildAcc += $"PushVar {pushVarElement.symbol.Name}\n";
+            }
+            else if (element is PushArrVar pushArrVarElement)
+            {
+                buildAcc += $"PushArrVar {pushArrVarElement.symbol.Name}[{pushArrVarElement.index}]\n";
+            }
             else if (element is AssemblyIfStatement ifElement)
             {
                 var ifBlock = ifElement.ifBlock;

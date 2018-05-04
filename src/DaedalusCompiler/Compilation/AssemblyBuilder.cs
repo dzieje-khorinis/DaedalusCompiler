@@ -68,6 +68,11 @@ namespace DaedalusCompiler.Compilation
     public class SymbolInstruction : AssemblyInstruction
     {
         public DatSymbol symbol;
+
+        public SymbolInstruction(DatSymbol symbol)
+        {
+            this.symbol = symbol;
+        }
     }
 
     public class ValueInstruction : AssemblyInstruction
@@ -104,8 +109,24 @@ namespace DaedalusCompiler.Compilation
             
         }
     }
+
+    public class PushVar : SymbolInstruction
+    {
+        public PushVar(DatSymbol symbol) : base(symbol)
+        {
+            
+        }
+    }
     
-    public class PushVar : SymbolInstruction {}
+    public class PushArrVar : SymbolInstruction
+    {
+        public int index;
+
+        public PushArrVar(DatSymbol symbol, int index) : base(symbol)
+        {
+            this.index = index;
+        }
+    }
 
     public class Less : ParamLessInstruction {}
     public class Greater : ParamLessInstruction {}
@@ -124,8 +145,14 @@ namespace DaedalusCompiler.Compilation
         }
     }
     //public class Call : LabelJumpInstruction {}
-    
-    public class CallExternal: SymbolInstruction {}
+
+    public class CallExternal : SymbolInstruction
+    {
+        public CallExternal(DatSymbol symbol) : base(symbol)
+        {
+            
+        }
+    }
 
     public class AssemblyBuildContext
     {

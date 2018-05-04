@@ -176,6 +176,54 @@ namespace DaedalusCompiler.Compilation
             }
         }
 
+        public override void EnterAssignment(DaedalusParser.AssignmentContext context)
+        {
+            var referenceNodes = context.complexReference().complexReferenceNode();
+            var symbolPart = referenceNodes[0];
+            var arrIndex = symbolPart.simpleValue();
+            var symbol = assemblyBuilder.getSymbolByName(symbolPart.referenceNode().GetText());
+            var operatorVal = context.assigmentOperator().GetText();
+            
+            if (referenceNodes.Length == 2)
+            {
+                //TODO implement
+                // it that case we want assign something to field, example:
+                // some_var.old = 90
+            }
+            else
+            {
+                if ( arrIndex == null )
+                {
+                    assemblyBuilder.addInstruction(new PushVar( symbol ));
+                }
+                else
+                {
+                    assemblyBuilder.addInstruction(new PushArrVar(symbol, int.Parse(arrIndex.GetText())));
+                }
+            }
+
+            switch (operatorVal)
+            {
+                case "=":
+                    //TODO implement correctly
+                    assemblyBuilder.addInstruction(new PushInt(-10));
+                    assemblyBuilder.addInstruction(new Assign());
+                    break;
+                case "+=":
+                    //TODO implement correctly
+                    break;
+                case "-=":
+                    //TODO implement correctly
+                    break;
+                case "*=":
+                    //TODO implement correctly
+                    break;
+                case "/=":
+                    //TODO implement correctly
+                    break;
+            }
+        }
+
         private DatSymbolType? DatSymbolTypeFromString(string typeReference)
         {
             if (String.IsNullOrWhiteSpace(typeReference))
