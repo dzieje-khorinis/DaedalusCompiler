@@ -32,8 +32,8 @@ daedalusFile: (( functionDef | constDef | varDecl | classDef | prototypeDef | in
 functionDef: Func typeReference nameNode parameterList statementBlock;
 constDef: Const typeReference (constValueDef | constArrayDef) (',' (constValueDef | constArrayDef) )*;
 classDef: Class nameNode '{' ( varDecl ';' )*? '}';
-prototypeDef: Prototype nameNode '(' referenceNode ')' '{' ( ( assignment | funcCall ) ';' )*? '}';
-instanceDef: Instance nameNode '(' referenceNode ')' '{' ( ( assignment | funcCall ) ';' )*? '}';
+prototypeDef: Prototype nameNode '(' referenceNode ')' statementBlock;
+instanceDef: Instance nameNode '(' referenceNode ')' statementBlock;
 instanceDecl: Instance nameNode ( ',' referenceNode )*? '(' nameNode ')';
 varDecl: Var typeReference (varValueDecl | varArrayDecl) (',' (varValueDecl | varArrayDecl) )* ;
 
