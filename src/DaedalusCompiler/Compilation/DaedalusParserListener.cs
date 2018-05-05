@@ -3,11 +3,12 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
+using Antlr4.Runtime.Tree;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
 {
-    public class DaedalusParserListener: DaedalusBaseListener
+    public class DaedalusParserListener : DaedalusBaseListener
     {
         private readonly AssemblyBuilder assemblyBuilder;
         private readonly int sourceFileNumber;
@@ -23,30 +24,45 @@ namespace DaedalusCompiler.Compilation
             var typeName = context.typeReference().GetText();
             var type = DatSymbolTypeFromString(typeName);
 
-            // TODO: Fix this solution to preserve declaration order (ex. const int arr[2] = { 1, 2 }, val = 1, arr2[a] = { 1, 2 }, val2 = 2;)
-            foreach (var constValueContext in context.constValueDef())
+            for (int i = 0; i < context.ChildCount; i++)
             {
-                var name = constValueContext.nameNode().GetText();
-                var location = GetLocation(context);
-                var assignmentExpression = constValueContext.constValueAssignment().expression();
-                var value = EvaluatorHelper.EvaluateConst(assignmentExpression, assemblyBuilder, type.Value);
+                var constContext = context.GetChild(i);
 
-                var symbol = SymbolBuilder.BuildConst(name, type.Value, value, location); // TODO : Validate params
-                assemblyBuilder.addSymbol(symbol);
-            }
+                if (constContext is TerminalNodeImpl)
+                    continue; // skips ',' 
 
-            foreach (var constArrayContext in context.constArrayDef())
-            {
-                var name = constArrayContext.nameNode().GetText();
-                var location = GetLocation(context);
-                var sizeString = constArrayContext.simpleValue().GetText(); // TODO : Allow set array size by reference to constant
-                var size = int.Parse(sizeString); // TODO : Validate array size an its assignment content size
-                var content = constArrayContext.constArrayAssignment().expression()
-                    .Select(expr => EvaluatorHelper.EvaluateConst(expr, assemblyBuilder, type.Value))
-                    .ToArray();              
+                if (constContext is DaedalusParser.ConstValueDefContext)
+                {
+                    var constValueContext = (DaedalusParser.ConstValueDefContext)constContext;
+                    var name = constValueContext.nameNode().GetText();
+                    var location = GetLocation(context);
+                    var assignmentExpression = constValueContext.constValueAssignment().expression();
+                    var value = EvaluatorHelper.EvaluateConst(assignmentExpression, assemblyBuilder, type.Value);
 
-                var symbol = SymbolBuilder.BuildArrOfConst(name, type.Value, content, location); // TODO : Validate params
-                assemblyBuilder.addSymbol(symbol);
+                    var symbol = SymbolBuilder.BuildConst(name, type.Value, value, location); // TODO : Validate params
+                    assemblyBuilder.addSymbol(symbol);
+
+                    continue;
+                }
+
+                if (constContext is DaedalusParser.ConstArrayDefContext)
+                {
+                    var constArrayContext = (DaedalusParser.ConstArrayDefContext)constContext;
+                    var name = constArrayContext.nameNode().GetText();
+                    var location = GetLocation(context);
+                    var size = EvaluatorHelper.EvaluteArraySize(constArrayContext.simpleValue(), assemblyBuilder);
+                    var content = constArrayContext.constArrayAssignment().expression()
+                        .Select(expr => EvaluatorHelper.EvaluateConst(expr, assemblyBuilder, type.Value))
+                        .ToArray();
+
+                    if (size != content.Length)
+                        throw new Exception($"Invalid const array definition '{constArrayContext.GetText()}'. Invalid items count: expected = {size}, readed = {content.Length}");
+
+                    var symbol = SymbolBuilder.BuildArrOfConst(name, type.Value, content, location); // TODO : Validate params
+                    assemblyBuilder.addSymbol(symbol);
+
+                    continue;
+                }
             }
         }
 
@@ -55,25 +71,33 @@ namespace DaedalusCompiler.Compilation
             var typeName = context.typeReference().GetText();
             var type = DatSymbolTypeFromString(typeName);
 
-            // TODO: Fix this solution to preserve declaration order (ex. var int arr[5], val, arr2[a], val2;)
-            foreach (var varValueContext in context.varValueDecl())
+            for (int i = 0; i < context.ChildCount; i++)
             {
-                var name = varValueContext.nameNode().GetText();
-                var location = GetLocation(context);
+                var varContext = context.GetChild(i);
 
-                var symbol = SymbolBuilder.BuildVariable(name, type.Value, location); // TODO : Validate params
-                assemblyBuilder.addSymbol(symbol);
-            }
+                if (varContext is TerminalNodeImpl)
+                    continue; // skips ',' 
 
-            foreach(var varArrayContext in context.varArrayDecl())
-            {
-                var name = varArrayContext.nameNode().GetText();
-                var location = GetLocation(context);
-                var sizeString = varArrayContext.simpleValue().GetText(); // TODO : Allow set array size by reference to constant
-                var size = uint.Parse(sizeString);
+                if (varContext is DaedalusParser.VarValueDeclContext)
+                {
+                    var varValueContext = (DaedalusParser.VarValueDeclContext)varContext;
+                    var name = varValueContext.nameNode().GetText();
+                    var location = GetLocation(context);
 
-                var symbol = SymbolBuilder.BuildArrOfVariables(name, type.Value, size); // TODO : Validate params
-                assemblyBuilder.addSymbol(symbol);
+                    var symbol = SymbolBuilder.BuildVariable(name, type.Value, location); // TODO : Validate params
+                    assemblyBuilder.addSymbol(symbol);
+                }
+                
+                if (varContext is DaedalusParser.VarArrayDeclContext)
+                {
+                    var varArrayContext = (DaedalusParser.VarArrayDeclContext)varContext;
+                    var name = varArrayContext.nameNode().GetText();
+                    var location = GetLocation(context);
+                    var size = EvaluatorHelper.EvaluteArraySize(varArrayContext.simpleValue(), assemblyBuilder);
+
+                    var symbol = SymbolBuilder.BuildArrOfVariables(name, type.Value, (uint)size); // TODO : Validate params
+                    assemblyBuilder.addSymbol(symbol);
+                }
             }
         }
 
@@ -87,7 +111,7 @@ namespace DaedalusCompiler.Compilation
             assemblyBuilder.addSymbol(symbol);
             assemblyBuilder.functionStart(symbol);
         }
-        
+
         public override void ExitFunctionDef([NotNull] DaedalusParser.FunctionDefContext context)
         {
             // we invoke functionEnd, thanks that ab will assign all instructions
@@ -131,7 +155,7 @@ namespace DaedalusCompiler.Compilation
         {
             assemblyBuilder.conditionalBlockBodyEnd();
         }
-        
+
         public override void EnterElseBlock(DaedalusParser.ElseBlockContext context)
         {
             assemblyBuilder.conditionalBlockConditionStart(IfBlockType.Else);
@@ -143,7 +167,7 @@ namespace DaedalusCompiler.Compilation
         {
             assemblyBuilder.conditionalBlockBodyEnd();
         }
-        
+
         public override void ExitIfCondition(DaedalusParser.IfConditionContext context)
         {
             assemblyBuilder.conditionalBlockConditionEnd();
@@ -166,7 +190,7 @@ namespace DaedalusCompiler.Compilation
             {
                 //TODO implement
             }
-            else if ( isNumber.IsMatch(firstChar.ToString()) )
+            else if (isNumber.IsMatch(firstChar.ToString()))
             {
                 assemblyBuilder.addInstruction(new PushInt(int.Parse(value)));
             }

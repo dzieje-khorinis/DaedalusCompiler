@@ -10,6 +10,18 @@ namespace DaedalusCompiler.Compilation
 {
     public static class EvaluatorHelper
     {
+        public static int EvaluteArraySize(DaedalusParser.SimpleValueContext context, AssemblyBuilder assemblyBuilder)
+        {
+            string arraySizeText = context.GetText();
+            int arraySize;
+
+            // simple value
+            if (int.TryParse(context.GetText(), out arraySize) == false)
+                arraySize = (int)assemblyBuilder.getSymbolByName(arraySizeText).Content.First();
+
+            return arraySize;
+        }
+
         public static object EvaluateConst(DaedalusParser.ExpressionContext expression, AssemblyBuilder assemblyBuilder, DatSymbolType type)
         {
             switch (type)
