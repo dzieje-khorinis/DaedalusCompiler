@@ -24,22 +24,22 @@ namespace DaedalusCompiler.Compilation
 
             List<AssemblyInstruction> functionBody = new List<AssemblyInstruction>(new AssemblyInstruction[]
             {
-                new PushVar() { symbol = assemblyBuilder.resolveSymbol("param1")},
+                //new PushVar() { symbol = assemblyBuilder.resolveSymbol("param1")},
                 new Assign(),
-                new PushVar() { symbol = assemblyBuilder.resolveSymbol("param2")},
+                //new PushVar() { symbol = assemblyBuilder.resolveSymbol("param2")},
                 new Assign(),
-                new PushVar() { symbol = assemblyBuilder.resolveSymbol("param1")},
-                new PushVar() { symbol = assemblyBuilder.resolveSymbol("param2")},
+//                new PushVar() { symbol = assemblyBuilder.resolveSymbol("param1")},
+//                new PushVar() { symbol = assemblyBuilder.resolveSymbol("param2")},
                 new Add(),
-                new PushVar() { symbol = assemblyBuilder.resolveSymbol("inner")},
+                //new PushVar() { symbol = assemblyBuilder.resolveSymbol("inner")},
                 /* ... */
                 //new JumpIfToLabel() { label = "jump1"},
-                new PushVar() { symbol = assemblyBuilder.resolveSymbol("inner")},
+                //new PushVar() { symbol = assemblyBuilder.resolveSymbol("inner")},
                 //new PushInt() { value = 10},
                 new Assign(),
                 //new LabelInstruction() { label = "jump1"},
                 //new PushInt() { value = 110},
-                new CallExternal() { symbol = assemblyBuilder.resolveSymbol("Print") }, 
+                //new CallExternal() { symbol = assemblyBuilder.resolveSymbol("Print") }, 
                 //new Call() { label = functionSecondName}
                 /* e.t.c */
             });
