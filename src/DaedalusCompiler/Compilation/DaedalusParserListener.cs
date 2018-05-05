@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Antlr4.Runtime;
@@ -68,37 +69,96 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterVarDecl([NotNull] DaedalusParser.VarDeclContext context)
         {
-            var typeName = context.typeReference().GetText();
-            var type = DatSymbolTypeFromString(typeName);
-
-            for (int i = 0; i < context.ChildCount; i++)
+            if (context.Parent is DaedalusParser.DaedalusFileContext)
             {
-                var varContext = context.GetChild(i);
+                var typeName = context.typeReference().GetText();
+                var type = DatSymbolTypeFromString(typeName);
 
-                if (varContext is TerminalNodeImpl)
-                    continue; // skips ',' 
-
-                if (varContext is DaedalusParser.VarValueDeclContext)
+                for (int i = 0; i < context.ChildCount; i++)
                 {
-                    var varValueContext = (DaedalusParser.VarValueDeclContext)varContext;
-                    var name = varValueContext.nameNode().GetText();
-                    var location = GetLocation(context);
+                    var varContext = context.GetChild(i);
 
-                    var symbol = SymbolBuilder.BuildVariable(name, type.Value, location); // TODO : Validate params
-                    assemblyBuilder.addSymbol(symbol);
-                }
-                
-                if (varContext is DaedalusParser.VarArrayDeclContext)
-                {
-                    var varArrayContext = (DaedalusParser.VarArrayDeclContext)varContext;
-                    var name = varArrayContext.nameNode().GetText();
-                    var location = GetLocation(context);
-                    var size = EvaluatorHelper.EvaluteArraySize(varArrayContext.simpleValue(), assemblyBuilder);
+                    if (varContext is TerminalNodeImpl)
+                        continue; // skips ',' 
 
-                    var symbol = SymbolBuilder.BuildArrOfVariables(name, type.Value, (uint)size); // TODO : Validate params
-                    assemblyBuilder.addSymbol(symbol);
+                    if (varContext is DaedalusParser.VarValueDeclContext)
+                    {
+                        var varValueContext = (DaedalusParser.VarValueDeclContext)varContext;
+                        var name = varValueContext.nameNode().GetText();
+                        var location = GetLocation(context);
+
+                        var symbol = SymbolBuilder.BuildVariable(name, type.Value, location); // TODO : Validate params
+                        assemblyBuilder.addSymbol(symbol);
+                    }
+
+                    if (varContext is DaedalusParser.VarArrayDeclContext)
+                    {
+                        var varArrayContext = (DaedalusParser.VarArrayDeclContext)varContext;
+                        var name = varArrayContext.nameNode().GetText();
+                        var location = GetLocation(context);
+                        var size = EvaluatorHelper.EvaluteArraySize(varArrayContext.simpleValue(), assemblyBuilder);
+
+                        var symbol = SymbolBuilder.BuildArrOfVariables(name, type.Value, (uint)size, location); // TODO : Validate params
+                        assemblyBuilder.addSymbol(symbol);
+                    }
                 }
             }
+        }
+
+        public override void EnterClassDef([NotNull] DaedalusParser.ClassDefContext context)
+        {
+            var className = context.nameNode().GetText();
+            var classSymbol = SymbolBuilder.BuildClass(className, 0, 0, GetLocation(context));
+            assemblyBuilder.addSymbol(classSymbol);
+
+            var classId = assemblyBuilder.getSymbolId(classSymbol);
+            int classVarOffset = 0;
+            uint classLength = 0;
+
+            // TODO: refactor later
+            foreach(var varDeclContext in context.varDecl())
+            {
+                var typeName = varDeclContext.typeReference().GetText();
+                var type = DatSymbolTypeFromString(typeName);
+
+                for (int i = 0; i < varDeclContext.ChildCount; i++)
+                {
+                    var varContext = varDeclContext.GetChild(i);
+
+                    if (varContext is TerminalNodeImpl)
+                        continue; // skips ',' 
+
+                    if (varContext is DaedalusParser.VarValueDeclContext)
+                    {
+                        var varValueContext = (DaedalusParser.VarValueDeclContext)varContext;
+                        var name = varValueContext.nameNode().GetText();
+                        var location = GetLocation(context);
+
+                        var symbol = SymbolBuilder.BuildClassVar(name, type.Value, 1, className, classId, classVarOffset, location); // TODO : Validate params
+                        assemblyBuilder.addSymbol(symbol);
+
+                        classVarOffset += (type == DatSymbolType.String ? 20 : 4);
+                        classLength++;
+                    }
+
+                    if (varContext is DaedalusParser.VarArrayDeclContext)
+                    {
+                        var varArrayContext = (DaedalusParser.VarArrayDeclContext)varContext;
+                        var name = varArrayContext.nameNode().GetText();
+                        var location = GetLocation(context);
+                        var size = EvaluatorHelper.EvaluteArraySize(varArrayContext.simpleValue(), assemblyBuilder);
+
+                        var symbol = SymbolBuilder.BuildClassVar(name, type.Value, (uint)size, className, classId, classVarOffset, location); // TODO : Validate params
+                        assemblyBuilder.addSymbol(symbol);
+
+                        classVarOffset += (type == DatSymbolType.String ? 20 : 4) * size;
+                        classLength++;
+                    }
+                }
+            }
+
+            classSymbol.ArrayLength = classLength;
+            classSymbol.ClassSize = classVarOffset;
         }
 
         public override void EnterFunctionDef([NotNull] DaedalusParser.FunctionDefContext context)

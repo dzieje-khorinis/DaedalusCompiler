@@ -88,9 +88,40 @@ namespace DaedalusCompiler.Compilation
             return symbol;
         }
 
-        public static DatSymbol BuildClass(string name)
+        public static DatSymbol BuildClass(string name, uint classLength, int classSize, DatSymbolLocation location = null)
         {
-            var symbol = new DatSymbol { Name = name };
+            var symbol = new DatSymbol
+            {
+                Name = name,
+                Type = DatSymbolType.Class,
+                ArrayLength = classLength,
+                Content = null,
+                Flags = 0,
+                Location = location,
+                ReturnType = null,
+                ClassSize = classSize,
+                ClassVarOffset = null,
+                Parent = -1,
+            };
+
+            return symbol;
+        }
+
+        public static DatSymbol BuildClassVar(string varName, DatSymbolType varType, uint arraySize, string className, int classId, int classVarOffset, DatSymbolLocation location = null)
+        {
+            var symbol = new DatSymbol
+            {
+                Name = $"{className}.{varName}",
+                Type = varType,
+                ArrayLength = arraySize,
+                Content = null,
+                Flags = DatSymbolFlag.Classvar,
+                Location = location,
+                ReturnType = null,
+                ClassSize = null,
+                ClassVarOffset = classVarOffset,
+                Parent = classId,
+            };
 
             return symbol;
         }

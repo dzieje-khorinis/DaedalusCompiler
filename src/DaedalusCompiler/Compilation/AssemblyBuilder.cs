@@ -327,6 +327,11 @@ namespace DaedalusCompiler.Compilation
             return symbols.FirstOrDefault(x => x.Name == symbolName);
         }
 
+        public int getSymbolId(DatSymbol symbol)
+        {
+            return symbols.IndexOf(symbol);
+        }
+
         public string getAssembler()
         {
             return new AssemblyBuilderTraverser().traverse(true, functions, symbols);
