@@ -6,6 +6,13 @@ using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
 {
+    public enum ExecutebleBlockType
+    {
+        Function,
+        InstanceConstructor,
+        PrototypeConstructor
+    }
+    
     public class AssemblyElement {}
     
     public class AssemblyInstruction: AssemblyElement
@@ -59,11 +66,17 @@ namespace DaedalusCompiler.Compilation
         }
     }
 
-    public class AssemblyFunction : AssemblyElement
+    public class ExecBlock : AssemblyElement
     {
         public List<AssemblyElement> body;
         public DatSymbol symbol;
     }
+
+    public class FunctionBlock : ExecBlock {}
+
+    public class InstanceConstructorBlock : ExecBlock {}
+
+    public class PrototypeContructorBlock : ExecBlock {}
 
     public class SymbolInstruction : AssemblyInstruction
     {
@@ -163,15 +176,21 @@ namespace DaedalusCompiler.Compilation
 
     public class AssemblyBuilder
     {
-        private List<AssemblyFunction> functions;
+        private List<FunctionBlock> functions;
+        private List<PrototypeContructorBlock> prototypeContructors;
+        private List<InstanceConstructorBlock> instanceConstructors;
         private List<DatSymbol> symbols;
-        private AssemblyFunction active;
+        private ExecBlock active;
         private AssemblyBuildContext currentBuildCtx; // current assembly build context
         private List<AssemblyElement> assembly;
+        private DatSymbol refSymbol; // we use that for prototype and instance definintions
+        private SymbolInstruction assigmentLInstruction;
 
         public AssemblyBuilder()
         {
-            functions = new List<AssemblyFunction>();
+            functions = new List<FunctionBlock>();
+            prototypeContructors = new List<PrototypeContructorBlock>();
+            instanceConstructors = new List<InstanceConstructorBlock>();
             symbols = new List<DatSymbol>();
             currentBuildCtx = getEmptyBuildContext();
             active = null;
@@ -188,27 +207,44 @@ namespace DaedalusCompiler.Compilation
             };
         }
         
-        public void setActiveFunction(DatSymbol symbol)
-        {
-            active = functions.Find(x => x.symbol == symbol);
-        }
         
         public void addInstruction(AssemblyInstruction instruction)
         {
             currentBuildCtx.body.Add(instruction);
         }
 
-        public void functionStart(DatSymbol symbol)
+        public void execBlockStart(DatSymbol symbol, ExecutebleBlockType blockType)
         {
-            var newFunctionInstructionStack = getEmptyBuildContext();
+            var newExecBlockInstructionStack = getEmptyBuildContext();
+            switch (blockType)
+            {
+                case ExecutebleBlockType.Function:
+                    var function = new FunctionBlock(){ symbol = symbol};
+                    
+                    functions.Add(function);
 
-            functions.Add(new AssemblyFunction() { symbol = symbol});
-            setActiveFunction(symbol);
+                    active = function;
+                    break;
+                case ExecutebleBlockType.InstanceConstructor:
+                    var instanceConstructor = new InstanceConstructorBlock(){ symbol = symbol};
+                    
+                    instanceConstructors.Add(instanceConstructor);
+                    
+                    active = instanceConstructor;
+                    break;
+                case ExecutebleBlockType.PrototypeConstructor:
+                    var prototypeConstructor = new PrototypeContructorBlock(){ symbol = symbol};
+                    
+                    prototypeContructors.Add(prototypeConstructor);
 
-            currentBuildCtx = newFunctionInstructionStack;
+                    active = prototypeConstructor;
+                    break;
+            }
+
+            currentBuildCtx = newExecBlockInstructionStack;
         }
 
-        public void functionEnd()
+        public void execBlockEnd()
         {
             active.body = currentBuildCtx.body;
             active = null;
@@ -216,17 +252,33 @@ namespace DaedalusCompiler.Compilation
             currentBuildCtx = currentBuildCtx.parent;
         }
 
-//        public void addFunctionBody(string name, List<AssemblyInstruction> body)
-//        {
-//            var funcToUpdate = functions.Find(x => x.name == name);
-//
-//            if (funcToUpdate == null)
-//            {
-//                throw new Exception("Function with name " + name + " is not added to assembly builder");
-//            }
-//
-//            funcToUpdate.body = body;
-//        }
+        public void assigmentStart(SymbolInstruction instruction)
+        {
+            assigmentLInstruction = instruction;
+        }
+
+        public void assigmentEnd()
+        {
+            var operationType = assigmentLInstruction.symbol.Type;
+
+            addInstruction(assigmentLInstruction);
+            switch (operationType)
+            {
+                case DatSymbolType.Int:
+                    addInstruction(new Assign());
+                    break;
+                case DatSymbolType.String:
+                    addInstruction(new AssignString());
+                    break;
+                //todo implement rest
+            }
+        }
+
+        public void setRefSymbol(DatSymbol refSymbol)
+        {
+            this.refSymbol = refSymbol;
+        }
+
 
         public void conditionalStart()
         {
@@ -302,11 +354,22 @@ namespace DaedalusCompiler.Compilation
 
         public DatSymbol resolveSymbol(string symbolName)
         {
-            var funcName = active.symbol.Name;
-            var symbolLocalScope = symbols.Find(x => x.Name == funcName + "." + symbolName);
+            string targetSymbolName;
+
+            if (active is PrototypeContructorBlock || active is InstanceConstructorBlock)
+            {
+                targetSymbolName = $"{refSymbol.Name}.{symbolName}";
+            }
+            else
+            {
+                targetSymbolName = $"{active.symbol.Name}.{symbolName}";
+            }
+
+            var symbolLocalScope = symbols.Find(x => x.Name == targetSymbolName);
 
             if (symbolLocalScope == null)
             {
+                // in that case we look for symbol in global scope
                 var symbol = symbols.Find(x => x.Name == symbolName);
 
                 if (symbol == null)

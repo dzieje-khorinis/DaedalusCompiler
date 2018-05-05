@@ -165,15 +165,46 @@ namespace DaedalusCompiler.Compilation
         {
             var prototypeName = context.nameNode().GetText();
             var referenceName = context.referenceNode().GetText();
-            var referenceSymbolId = assemblyBuilder.getSymbolId(assemblyBuilder.getSymbolByName(referenceName));
+            var refSymbol = assemblyBuilder.getSymbolByName(referenceName);
+            var referenceSymbolId = assemblyBuilder.getSymbolId(refSymbol);
+            var location = GetLocation(context);
+
+            var firstTokenAddress = 0; // TODO: Populate first token addres
+            var prototypeSymbol = SymbolBuilder.BuildPrototype(prototypeName, referenceSymbolId, firstTokenAddress, location); // TODO: Validate params
+            assemblyBuilder.addSymbol(prototypeSymbol);
+            
+            assemblyBuilder.execBlockStart(prototypeSymbol, ExecutebleBlockType.PrototypeConstructor);
+            assemblyBuilder.setRefSymbol(refSymbol);
+        }
+
+        public override void ExitPrototypeDef(DaedalusParser.PrototypeDefContext context)
+        {
+            // we invoke execBlockEnd, thanks that ab will assign all instructions
+            // to currently exited prototype constructor
+            assemblyBuilder.execBlockEnd();
+        }
+
+        public override void EnterInstanceDef(DaedalusParser.InstanceDefContext context)
+        {
+            var prototypeName = context.nameNode().GetText();
+            var referenceName = context.referenceNode().GetText();
+            var refSymbol = assemblyBuilder.getSymbolByName(referenceName);
+            var referenceSymbolId = assemblyBuilder.getSymbolId(refSymbol);
             var location = GetLocation(context);
 
             var firstTokenAddress = 0; // TODO: Populate first token addres
             var prototypeSymbol = SymbolBuilder.BuildPrototype(prototypeName, referenceSymbolId, firstTokenAddress, location); // TODO: Validate params
             assemblyBuilder.addSymbol(prototypeSymbol);
 
-            // TODO: generate 'virtual constant symbols' for string literals used in prototype
-            // TODO: generate Tokens (op codes)
+            assemblyBuilder.execBlockStart(prototypeSymbol, ExecutebleBlockType.InstanceConstructor);
+            assemblyBuilder.setRefSymbol(refSymbol);
+        }
+
+        public override void ExitInstanceDef(DaedalusParser.InstanceDefContext context)
+        {
+            // we invoke execBlockEnd, thanks that ab will assign all instructions
+            // to currently exited instance constructor
+            assemblyBuilder.execBlockEnd();
         }
 
         public override void EnterFunctionDef([NotNull] DaedalusParser.FunctionDefContext context)
@@ -184,14 +215,14 @@ namespace DaedalusCompiler.Compilation
 
             var symbol = SymbolBuilder.BuildFunc(name, type.Value); // TODO : Validate params
             assemblyBuilder.addSymbol(symbol);
-            assemblyBuilder.functionStart(symbol);
+            assemblyBuilder.execBlockStart(symbol, ExecutebleBlockType.Function);
         }
 
         public override void ExitFunctionDef([NotNull] DaedalusParser.FunctionDefContext context)
         {
-            // we invoke functionEnd, thanks that ab will assign all instructions
+            // we invoke execBlockEnd, thanks that ab will assign all instructions
             // to currently exited function
-            assemblyBuilder.functionEnd();
+            assemblyBuilder.execBlockEnd();
         }
 
         public override void ExitReturnStatement([NotNull] DaedalusParser.ReturnStatementContext context)
@@ -280,9 +311,9 @@ namespace DaedalusCompiler.Compilation
             var referenceNodes = context.complexReference().complexReferenceNode();
             var symbolPart = referenceNodes[0];
             var arrIndex = symbolPart.simpleValue();
-            var symbol = assemblyBuilder.getSymbolByName(symbolPart.referenceNode().GetText());
+            var symbol = assemblyBuilder.resolveSymbol(symbolPart.referenceNode().GetText());
             var operatorVal = context.assigmentOperator().GetText();
-            
+
             if (referenceNodes.Length == 2)
             {
                 //TODO implement
@@ -293,34 +324,39 @@ namespace DaedalusCompiler.Compilation
             {
                 if ( arrIndex == null )
                 {
-                    assemblyBuilder.addInstruction(new PushVar( symbol ));
+                    assemblyBuilder.assigmentStart(new PushVar( symbol ));
                 }
                 else
                 {
-                    assemblyBuilder.addInstruction(new PushArrVar(symbol, int.Parse(arrIndex.GetText())));
+                    assemblyBuilder.assigmentStart(new PushArrVar(symbol, int.Parse(arrIndex.GetText())));
                 }
             }
 
-            switch (operatorVal)
-            {
-                case "=":
-                    //TODO implement correctly
-                    assemblyBuilder.addInstruction(new PushInt(-10));
-                    assemblyBuilder.addInstruction(new Assign());
-                    break;
-                case "+=":
-                    //TODO implement correctly
-                    break;
-                case "-=":
-                    //TODO implement correctly
-                    break;
-                case "*=":
-                    //TODO implement correctly
-                    break;
-                case "/=":
-                    //TODO implement correctly
-                    break;
-            }
+//            switch (operatorVal)
+//            {
+//                case "=":
+//                    //TODO implement correctly
+//                    assemblyBuilder.addInstruction(new PushInt(-10));
+//                    assemblyBuilder.addInstruction(new Assign());
+//                    break;
+//                case "+=":
+//                    //TODO implement correctly
+//                    break;
+//                case "-=":
+//                    //TODO implement correctly
+//                    break;
+//                case "*=":
+//                    //TODO implement correctly
+//                    break;
+//                case "/=":
+//                    //TODO implement correctly
+//                    break;
+//            }
+        }
+
+        public override void ExitAssignment(DaedalusParser.AssignmentContext context)
+        {
+            assemblyBuilder.assigmentEnd();
         }
 
         private DatSymbolType? DatSymbolTypeFromString(string typeReference)

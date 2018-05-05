@@ -20,7 +20,7 @@ namespace DaedalusCompiler.Compilation
             return $"label_{labelIdx++}";
         }
         
-        public string traverse(bool getAssembly, List<AssemblyFunction> functions, List<DatSymbol> symbols)
+        public string traverse(bool getAssembly, List<FunctionBlock> functions, List<DatSymbol> symbols)
         {
             foreach (var symbol in symbols)
             {
