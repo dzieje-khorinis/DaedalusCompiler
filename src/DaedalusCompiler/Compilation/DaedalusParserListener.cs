@@ -161,6 +161,21 @@ namespace DaedalusCompiler.Compilation
             classSymbol.ClassSize = classVarOffset;
         }
 
+        public override void EnterPrototypeDef([NotNull] DaedalusParser.PrototypeDefContext context)
+        {
+            var prototypeName = context.nameNode().GetText();
+            var referenceName = context.referenceNode().GetText();
+            var referenceSymbolId = assemblyBuilder.getSymbolId(assemblyBuilder.getSymbolByName(referenceName));
+            var location = GetLocation(context);
+
+            var firstTokenAddress = 0; // TODO: Populate first token addres
+            var prototypeSymbol = SymbolBuilder.BuildPrototype(prototypeName, referenceSymbolId, firstTokenAddress, location); // TODO: Validate params
+            assemblyBuilder.addSymbol(prototypeSymbol);
+
+            // TODO: generate 'virtual constant symbols' for string literals used in prototype
+            // TODO: generate Tokens (op codes)
+        }
+
         public override void EnterFunctionDef([NotNull] DaedalusParser.FunctionDefContext context)
         {
             var name = context.nameNode().GetText();

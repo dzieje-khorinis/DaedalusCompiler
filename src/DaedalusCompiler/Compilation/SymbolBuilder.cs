@@ -126,9 +126,21 @@ namespace DaedalusCompiler.Compilation
             return symbol;
         }
 
-        public static DatSymbol BuildPrototype(string name)
+        public static DatSymbol BuildPrototype(string name, int referenceId, int firstTokenAddress, DatSymbolLocation location = null)
         {
-            var symbol = new DatSymbol { Name = name };
+            var symbol = new DatSymbol
+            {
+                Name = name,
+                Type = DatSymbolType.Prototype,
+                ArrayLength = 0,
+                Content = new object[] { firstTokenAddress },
+                Flags = 0,
+                Location = location,
+                ReturnType = null,
+                ClassSize = null,
+                ClassVarOffset = null,
+                Parent = referenceId,
+            };
 
             return symbol;
         }
