@@ -347,6 +347,18 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitReturnStatement([NotNull] DaedalusParser.ReturnStatementContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.expressionBlock"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterExpressionBlock([NotNull] DaedalusParser.ExpressionBlockContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.expressionBlock"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitExpressionBlock([NotNull] DaedalusParser.ExpressionBlockContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by the <c>bitMoveExpression</c>
 	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
 	/// <para>The default implementation does nothing.</para>

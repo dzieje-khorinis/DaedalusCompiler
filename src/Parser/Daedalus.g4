@@ -38,10 +38,10 @@ instanceDecl: Instance nameNode ( ',' referenceNode )*? '(' nameNode ')';
 varDecl: Var typeReference (varValueDecl | varArrayDecl) (',' (varValueDecl | varArrayDecl) )* ;
 
 constArrayDef: nameNode '[' simpleValue ']' constArrayAssignment;
-constArrayAssignment: '=' '{' ( expression (',' expression)*? ) '}';
+constArrayAssignment: '=' '{' ( expressionBlock (',' expressionBlock)*? ) '}';
 
 constValueDef: nameNode constValueAssignment;
-constValueAssignment: '=' expression;
+constValueAssignment: '=' expressionBlock;
 
 varArrayDecl: nameNode '[' simpleValue ']';
 varValueDecl: nameNode;
@@ -50,14 +50,16 @@ parameterList: '(' (parameterDecl (',' parameterDecl)*? )? ')';
 parameterDecl: Var typeReference nameNode ('[' simpleValue ']')?;
 statementBlock: '{' ( ( (statement ';')  | ( ifBlockStatement ( ';' )? ) ) )*? '}';
 statement: funcCall | assignment | returnStatement | constDef | varDecl | expression;
-funcCall: nameNode '(' ( expression ( ',' expression )*? )? ')';
-assignment: complexReference assigmentOperator expression;
-ifCondition: expression;
+funcCall: nameNode '(' ( expressionBlock ( ',' expressionBlock )*? )? ')';
+assignment: complexReference assigmentOperator expressionBlock;
+ifCondition: expressionBlock;
 elseBlock: Else statementBlock;
 elseIfBlock: Else If ifCondition statementBlock;
 ifBlock: If ifCondition statementBlock;
 ifBlockStatement: ifBlock ( elseIfBlock )*? ( elseBlock )?;
-returnStatement: Return ( expression )?;
+returnStatement: Return ( expressionBlock )?;
+
+expressionBlock: expression; // we use that expression to force parser threat expression as a block
 
 expression
     : '(' expression ')' #bracketExpression

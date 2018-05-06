@@ -37,7 +37,7 @@ namespace DaedalusCompiler.Compilation
                     var constValueContext = (DaedalusParser.ConstValueDefContext)constContext;
                     var name = constValueContext.nameNode().GetText();
                     var location = GetLocation(context);
-                    var assignmentExpression = constValueContext.constValueAssignment().expression();
+                    var assignmentExpression = constValueContext.constValueAssignment().expressionBlock().expression();
                     var value = EvaluatorHelper.EvaluateConst(assignmentExpression, assemblyBuilder, type.Value);
 
                     var symbol = SymbolBuilder.BuildConst(name, type.Value, value, location); // TODO : Validate params
@@ -52,8 +52,8 @@ namespace DaedalusCompiler.Compilation
                     var name = constArrayContext.nameNode().GetText();
                     var location = GetLocation(context);
                     var size = EvaluatorHelper.EvaluteArraySize(constArrayContext.simpleValue(), assemblyBuilder);
-                    var content = constArrayContext.constArrayAssignment().expression()
-                        .Select(expr => EvaluatorHelper.EvaluateConst(expr, assemblyBuilder, type.Value))
+                    var content = constArrayContext.constArrayAssignment().expressionBlock()
+                        .Select(expr => EvaluatorHelper.EvaluateConst(expr.expression(), assemblyBuilder, type.Value))
                         .ToArray();
 
                     if (size != content.Length)
@@ -371,6 +371,12 @@ namespace DaedalusCompiler.Compilation
 
             //todo implement call external
             assemblyBuilder.addInstruction(new Call(symbol));
+        }
+
+        public override void EnterExpressionBlock(DaedalusParser.ExpressionBlockContext context)
+        {
+            Console.WriteLine("enter expr block");
+            Console.WriteLine(context.GetText());
         }
 
         private DatSymbolType? DatSymbolTypeFromString(string typeReference)
