@@ -24,3 +24,7 @@
  - every .d file starts with line `#package NAME` where `NAME` is name or relative path of .src file (e.g. `#package Menu` or `#package System/Menu`)
  - below it can specify which files are its dependencies that have to be compiled before: `#import C_Npc` or `#import ../Engine/C_Npc`
  
+# Loops
+ - for
+ - while
+ - foreach
