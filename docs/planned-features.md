@@ -21,8 +21,8 @@
  - usage: `hero.Die()`, `if(hero.CanSeeNpc(xardas))`
 
 # Generation of .src files
- - every .d file starts with line `#package NAME` where `NAME` is name or relative path of .dat/.src file (e.g. `#package Menu` or `#package System/Menu`)
- - below it can specify which files are its dependencies that have to be compiled before: `#import C_Npc` or `#import ../Engine/C_Npc`
+ - every .d file starts with line `#package NAME` where `NAME` is name or relative path of .dat/.src file (e.g. `#package Menu` or `#package System/Menu` or even `package System.Menu`)
+ - below it can specify which files are its dependencies that have to be compiled before: `#import C_Npc` or `#import ../Engine/C_Npc` or even `import Engine.C_Npc`
  - .src wouldn't be needed at all
  - needs to detect cyclic dependencies
  - optional: dependency solver (when dependencies are not specified, tries to guess them and write down in source files)
