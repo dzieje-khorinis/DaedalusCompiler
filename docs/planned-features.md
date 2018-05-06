@@ -28,3 +28,8 @@
  - for
  - while
  - foreach
+
+# Declarations of external functions
+ - original compiler has external functions (kind of standard library) hardcoded
+ - we need compatibility with various versions of this standard library
+ - `extern func void ExitGame();`
