@@ -159,6 +159,11 @@ namespace DaedalusCompiler.Compilation
     }
     //public class Call : LabelJumpInstruction {}
 
+    public class Call : SymbolInstruction
+    {
+        public Call(DatSymbol symbol) : base(symbol) {}
+    }
+
     public class CallExternal : SymbolInstruction
     {
         public CallExternal(DatSymbol symbol) : base(symbol)

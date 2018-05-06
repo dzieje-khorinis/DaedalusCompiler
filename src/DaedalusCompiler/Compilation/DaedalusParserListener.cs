@@ -359,6 +359,20 @@ namespace DaedalusCompiler.Compilation
             assemblyBuilder.assigmentEnd();
         }
 
+        public override void ExitFuncCall(DaedalusParser.FuncCallContext context)
+        {
+            var funcName = context.nameNode().GetText();
+            var symbol = assemblyBuilder.getSymbolByName(funcName);
+
+            if (symbol == null)
+            {
+                throw new Exception($"Function '{funcName}' not defined");
+            }
+
+            //todo implement call external
+            assemblyBuilder.addInstruction(new Call(symbol));
+        }
+
         private DatSymbolType? DatSymbolTypeFromString(string typeReference)
         {
             if (String.IsNullOrWhiteSpace(typeReference))
