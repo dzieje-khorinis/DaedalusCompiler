@@ -181,10 +181,10 @@ namespace DaedalusCompiler.Compilation
 
     public class AssemblyBuilder
     {
-        private List<FunctionBlock> functions;
-        private List<PrototypeContructorBlock> prototypeContructors;
-        private List<InstanceConstructorBlock> instanceConstructors;
-        private List<DatSymbol> symbols;
+        public List<FunctionBlock> functions;
+        public List<PrototypeContructorBlock> prototypeContructors;
+        public List<InstanceConstructorBlock> instanceConstructors;
+        public List<DatSymbol> symbols;
         private ExecBlock active;
         private AssemblyBuildContext currentBuildCtx; // current assembly build context
         private List<AssemblyElement> assembly;
