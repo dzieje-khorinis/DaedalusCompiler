@@ -217,6 +217,11 @@ namespace DaedalusCompiler.Compilation
         {
             currentBuildCtx.body.Add(instruction);
         }
+        
+        public void addInstructions(params AssemblyInstruction[] instructions)
+        {
+            currentBuildCtx.body.AddRange(instructions);
+        }
 
         public void execBlockStart(DatSymbol symbol, ExecutebleBlockType blockType)
         {
@@ -277,6 +282,26 @@ namespace DaedalusCompiler.Compilation
                     break;
                 //todo implement rest
             }
+        }
+
+        public void expressionBracketStart()
+        {
+            //todo implement
+        }
+
+        public void expressionBracketEnd()
+        {
+            //todo implement
+        }
+
+        public void expressionBlockStart()
+        {
+            //todo implement
+        }
+
+        public void expressionBlockEnd()
+        {
+            //todo implement
         }
 
         public void setRefSymbol(DatSymbol refSymbol)
