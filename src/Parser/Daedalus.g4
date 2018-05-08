@@ -49,7 +49,7 @@ varValueDecl: nameNode;
 parameterList: '(' (parameterDecl (',' parameterDecl)*? )? ')';
 parameterDecl: Var typeReference nameNode ('[' simpleValue ']')?;
 statementBlock: '{' ( ( (statement ';')  | ( ifBlockStatement ( ';' )? ) ) )*? '}';
-statement: funcCall | assignment | returnStatement | constDef | varDecl | expression;
+statement: assignment | returnStatement | constDef | varDecl | expression;
 funcCall: nameNode '(' ( expressionBlock ( ',' expressionBlock )*? )? ')';
 assignment: complexReference assigmentOperator expressionBlock;
 ifCondition: expressionBlock;
@@ -64,8 +64,8 @@ expressionBlock: expression; // we use that expression to force parser threat ex
 expression
     : '(' expression ')' #bracketExpression
     | ('-' | '!' | '~' | '+') expression #oneArgExpression
-    | expression ('*' | '/' | '%') expression #multExpression
-    | expression ('+' | '-') expression #addExpression
+    | expression multOperators expression #multExpression
+    | expression addOperators expression #addExpression
     | expression ('<<' | '>>') expression #bitMoveExpression
     | expression ('<' | '>' | '<=' | '>=') expression #compExpression
     | expression ('==' | '!=') expression #eqExpression
@@ -74,10 +74,19 @@ expression
     ;
 
 simpleValue: IntegerLiteral | referenceNode;
-value: IntegerLiteral | FloatLiteral | StringLiteral | Null | funcCall | complexReference;
+value
+    : IntegerLiteral #integerLiteralValue
+    | FloatLiteral #floatLiteralValue
+    | StringLiteral #stringLiteralValue
+    | Null #nullLiteralValue
+    | funcCall #funcCallValue
+    | complexReference #complexReferenceValue
+    ;
 complexReference: complexReferenceNode ( '.' complexReferenceNode )?;
 complexReferenceNode: referenceNode ( '[' simpleValue ']')?;
 typeReference:  ( referenceNode  | Void | Int | Float | String | Func | Instance);
 nameNode: Identifier;
 referenceNode: Identifier;
 assigmentOperator:  '=' | '+=' | '-=' | '*=' | '/=';
+addOperators: '+' | '-';
+multOperators: '*' | '/' | '%';

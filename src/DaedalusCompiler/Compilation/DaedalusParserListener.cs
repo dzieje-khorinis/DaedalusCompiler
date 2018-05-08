@@ -285,27 +285,6 @@ namespace DaedalusCompiler.Compilation
             assemblyBuilder.addInstruction(new Greater());
         }
 
-        public override void EnterValExpression(DaedalusParser.ValExpressionContext context)
-        {
-            string value = context.value().GetText();
-            var firstChar = value[0];
-            var lastChar = value[value.Length - 1];
-            var isNumber = new Regex("^[0-9]+$");
-
-            if (firstChar == '"' && lastChar == '"')
-            {
-                //TODO implement
-            }
-            else if (isNumber.IsMatch(firstChar.ToString()))
-            {
-                assemblyBuilder.addInstruction(new PushInt(int.Parse(value)));
-            }
-            else
-            {
-                //todo implement identificator
-            }
-        }
-
         public override void EnterAssignment(DaedalusParser.AssignmentContext context)
         {
             var referenceNodes = context.complexReference().complexReferenceNode();
@@ -377,6 +356,45 @@ namespace DaedalusCompiler.Compilation
         {
             Console.WriteLine("enter expr block");
             Console.WriteLine(context.GetText());
+        }
+
+        public override void EnterIntegerLiteralValue(DaedalusParser.IntegerLiteralValueContext context)
+        {
+            Console.WriteLine("enter int ;)");
+            assemblyBuilder.addInstruction(new PushInt(int.Parse(context.GetText())));
+        }
+
+        public override void ExitAddExpression(DaedalusParser.AddExpressionContext context)
+        {
+            var exprOperator = context.addOperators().GetText();
+
+            switch (exprOperator)
+            {
+                case "+":
+                    assemblyBuilder.addInstruction(new Add());
+                    break;
+                case "-":
+                    assemblyBuilder.addInstruction(new Subract());
+                    break;
+            }
+        }
+
+        public override void ExitMultExpression(DaedalusParser.MultExpressionContext context)
+        {
+            var exprOperator = context.multOperators().GetText();
+            
+            switch (exprOperator)
+            {
+                case "/":
+                    assemblyBuilder.addInstruction(new Divide());
+                    break;
+                case "*":
+                    assemblyBuilder.addInstruction(new Multiply());
+                    break;
+                case "%":
+                    //TODO
+                    break;
+            }
         }
 
         private DatSymbolType? DatSymbolTypeFromString(string typeReference)

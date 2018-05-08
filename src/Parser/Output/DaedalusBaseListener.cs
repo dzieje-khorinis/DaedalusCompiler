@@ -497,17 +497,89 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitSimpleValue([NotNull] DaedalusParser.SimpleValueContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.value"/>.
+	/// Enter a parse tree produced by the <c>integerLiteralValue</c>
+	/// labeled alternative in <see cref="DaedalusParser.value"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterValue([NotNull] DaedalusParser.ValueContext context) { }
+	public virtual void EnterIntegerLiteralValue([NotNull] DaedalusParser.IntegerLiteralValueContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.value"/>.
+	/// Exit a parse tree produced by the <c>integerLiteralValue</c>
+	/// labeled alternative in <see cref="DaedalusParser.value"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitValue([NotNull] DaedalusParser.ValueContext context) { }
+	public virtual void ExitIntegerLiteralValue([NotNull] DaedalusParser.IntegerLiteralValueContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>floatLiteralValue</c>
+	/// labeled alternative in <see cref="DaedalusParser.value"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterFloatLiteralValue([NotNull] DaedalusParser.FloatLiteralValueContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>floatLiteralValue</c>
+	/// labeled alternative in <see cref="DaedalusParser.value"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitFloatLiteralValue([NotNull] DaedalusParser.FloatLiteralValueContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>stringLiteralValue</c>
+	/// labeled alternative in <see cref="DaedalusParser.value"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterStringLiteralValue([NotNull] DaedalusParser.StringLiteralValueContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>stringLiteralValue</c>
+	/// labeled alternative in <see cref="DaedalusParser.value"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitStringLiteralValue([NotNull] DaedalusParser.StringLiteralValueContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>nullLiteralValue</c>
+	/// labeled alternative in <see cref="DaedalusParser.value"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterNullLiteralValue([NotNull] DaedalusParser.NullLiteralValueContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>nullLiteralValue</c>
+	/// labeled alternative in <see cref="DaedalusParser.value"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitNullLiteralValue([NotNull] DaedalusParser.NullLiteralValueContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>funcCallValue</c>
+	/// labeled alternative in <see cref="DaedalusParser.value"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterFuncCallValue([NotNull] DaedalusParser.FuncCallValueContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>funcCallValue</c>
+	/// labeled alternative in <see cref="DaedalusParser.value"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitFuncCallValue([NotNull] DaedalusParser.FuncCallValueContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>complexReferenceValue</c>
+	/// labeled alternative in <see cref="DaedalusParser.value"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterComplexReferenceValue([NotNull] DaedalusParser.ComplexReferenceValueContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>complexReferenceValue</c>
+	/// labeled alternative in <see cref="DaedalusParser.value"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitComplexReferenceValue([NotNull] DaedalusParser.ComplexReferenceValueContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.complexReference"/>.
 	/// <para>The default implementation does nothing.</para>
@@ -580,6 +652,30 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitAssigmentOperator([NotNull] DaedalusParser.AssigmentOperatorContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.addOperators"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterAddOperators([NotNull] DaedalusParser.AddOperatorsContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.addOperators"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitAddOperators([NotNull] DaedalusParser.AddOperatorsContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.multOperators"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterMultOperators([NotNull] DaedalusParser.MultOperatorsContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.multOperators"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitMultOperators([NotNull] DaedalusParser.MultOperatorsContext context) { }
 
 	/// <inheritdoc/>
 	/// <remarks>The default implementation does nothing.</remarks>
