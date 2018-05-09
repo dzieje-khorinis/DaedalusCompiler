@@ -66,6 +66,47 @@ namespace DaedalusCompiler.Compilation
         }
     }
 
+    public class AssemblyOperatorStatement: AssemblyElement
+    {
+        public List<AssemblyElement> leftBody;
+        public List<AssemblyElement> rightBody;
+        public AssemblyOperatorStatement parent;
+        public AssemblyOperatorStatement currentContextParentChild;
+
+        public void replaceElement(AssemblyElement element, List<AssemblyElement> toReplace)
+        {
+            var leftSearch = leftBody.First(x => x == element);
+            var rightSearch = leftBody.First(x => x == element);
+            var targetList = leftSearch == null ? rightBody : leftBody;
+            var elementIndex = targetList.IndexOf(leftSearch == null ? leftSearch : rightSearch);
+
+            targetList.InsertRange(elementIndex, toReplace);
+        }
+        
+        public AssemblyOperatorStatement(AssemblyOperatorStatement parent)
+        {
+            leftBody = new List<AssemblyElement>();
+            rightBody = new List<AssemblyElement>();
+            this.parent = parent;
+        }
+
+        public AssemblyOperatorStatement buildAssemblyStatement()
+        {
+            parent.replaceElement(currentContextParentChild, getBody());
+            return parent;
+        }
+
+        public List<AssemblyElement> getBody()
+        {
+            return leftBody.Concat(rightBody).ToList();
+        }
+
+        public AssemblyOperatorStatement getNewChild()
+        {
+            return new AssemblyOperatorStatement(parent);
+        }
+    }
+
     public class ExecBlock : AssemblyElement
     {
         public List<AssemblyElement> body;
@@ -174,6 +215,7 @@ namespace DaedalusCompiler.Compilation
 
     public class AssemblyBuildContext
     {
+        public AssemblyOperatorStatement currentOperatorStatement;
         public AssemblyIfStatement currentConditionStatement;
         public List<AssemblyElement> body;
         public AssemblyBuildContext parent;
@@ -208,7 +250,8 @@ namespace DaedalusCompiler.Compilation
             {
                 body = new List<AssemblyElement>(),
                 parent = currentBuildCtx,
-                currentConditionStatement = new AssemblyIfStatement()
+                currentConditionStatement = new AssemblyIfStatement(),
+                currentOperatorStatement = new AssemblyOperatorStatement(null)
             };
         }
         
