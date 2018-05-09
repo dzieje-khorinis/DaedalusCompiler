@@ -68,47 +68,33 @@ namespace DaedalusCompiler.Compilation
 
     public class AssemblyOperatorStatement: AssemblyElement
     {
-        public List<AssemblyElement> leftBody;
-        public List<AssemblyElement> rightBody;
-        public AssemblyOperatorStatement parent;
-        public AssemblyOperatorStatement currentContextParentChild;
+        private List<AssemblyElement> leftBody;
+        private List<AssemblyElement> rightBody;
         
-        public AssemblyOperatorStatement(AssemblyOperatorStatement parent)
+        public AssemblyOperatorStatement()
         {
             leftBody = new List<AssemblyElement>();
             rightBody = new List<AssemblyElement>();
-            this.parent = parent;
+        }
+
+        public List<AssemblyElement> getLeft()
+        {
+            return leftBody;
         }
         
-        public void replaceElement(AssemblyElement element, List<AssemblyElement> toReplace)
+        public List<AssemblyElement> getRight()
         {
-            var leftSearch = leftBody.First(x => x == element);
-            var rightSearch = leftBody.First(x => x == element);
-            var targetList = leftSearch == null ? rightBody : leftBody;
-            var elementIndex = targetList.IndexOf(leftSearch == null ? leftSearch : rightSearch);
-
-            targetList.InsertRange(elementIndex, toReplace);
+            return rightBody;
         }
 
-        public bool isRootNode()
+        public void setLeft(List<AssemblyElement> lInstructions)
         {
-            return parent == null;
+            leftBody = lInstructions;
         }
 
-        public AssemblyOperatorStatement buildAssemblyStatement()
+        public void setRight(List<AssemblyElement> rInstructions)
         {
-            parent.replaceElement(currentContextParentChild, getBody());
-            return parent;
-        }
-
-        public List<AssemblyElement> getBody()
-        {
-            return leftBody.Concat(rightBody).ToList();
-        }
-
-        public AssemblyOperatorStatement getNewChild()
-        {
-            return new AssemblyOperatorStatement(parent);
+            rightBody = rInstructions;
         }
     }
 
@@ -224,6 +210,7 @@ namespace DaedalusCompiler.Compilation
         public AssemblyIfStatement currentConditionStatement;
         public List<AssemblyElement> body;
         public AssemblyBuildContext parent;
+        public bool isOperatorContext;
     }
 
     public class AssemblyBuilder
@@ -249,14 +236,15 @@ namespace DaedalusCompiler.Compilation
             assembly = new List<AssemblyElement>();
         }
 
-        public AssemblyBuildContext getEmptyBuildContext()
+        public AssemblyBuildContext getEmptyBuildContext(bool isOperatorContext = false)
         {
             return new AssemblyBuildContext()
             {
                 body = new List<AssemblyElement>(),
                 parent = currentBuildCtx,
                 currentConditionStatement = new AssemblyIfStatement(),
-                currentOperatorStatement = new AssemblyOperatorStatement(null)
+                currentOperatorStatement = new AssemblyOperatorStatement(),
+                isOperatorContext = isOperatorContext
             };
         }
         
@@ -332,23 +320,68 @@ namespace DaedalusCompiler.Compilation
             }
         }
 
+        public void expressionLeftSideStart()
+        {
+            currentBuildCtx = getEmptyBuildContext(true);
+        }
+        
+        public void expressionRightSideStart()
+        {
+            currentBuildCtx.currentOperatorStatement.setLeft(currentBuildCtx.body);
+            currentBuildCtx.body = new List<AssemblyElement>();
+        }
+
+        public void expressionEnd(AssemblyInstruction instruction)
+        {
+            var currentOperatorStatement = currentBuildCtx.currentOperatorStatement;
+            var parentBuildContext = currentBuildCtx.parent;
+            var leftStack = currentOperatorStatement.getLeft();
+            var leftBody = leftStack.Count > 0 ? leftStack : currentOperatorStatement.getRight();
+            var rightBody = currentBuildCtx.body.Count > 0 ? currentBuildCtx.body : currentOperatorStatement.getRight();
+            var instructions = rightBody.Concat(leftBody).Append(instruction).ToList();
+
+            if ( !parentBuildContext.isOperatorContext )
+            {
+                parentBuildContext.body.AddRange( instructions );
+            }
+            else
+            {
+                var parentRight = parentBuildContext.currentOperatorStatement.getRight();
+
+                if (parentRight.Count > 0)
+                {
+                    parentBuildContext.currentOperatorStatement.setLeft( instructions );
+                }
+                else
+                {
+                    parentBuildContext.currentOperatorStatement.setRight( instructions );
+                }                
+            }
+            
+            currentBuildCtx = parentBuildContext;
+        }
+        
         public void expressionBracketStart()
         {
+            // to remove, need to refactor testst
             //todo implement
         }
 
         public void expressionBracketEnd()
         {
+            // to remove, need to refactor testst
             //todo implement
         }
 
         public void expressionBlockStart()
         {
+            // to remove, need to refactor testst
             //todo implement
         }
 
         public void expressionBlockEnd()
         {
+            // to remove, need to refactor testst
             //todo implement
         }
 

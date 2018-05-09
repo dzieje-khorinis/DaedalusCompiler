@@ -51,6 +51,10 @@ namespace DaedalusCompiler.Compilation
 
                 buildAcc += $"{typeName}\n";
             }
+            else if (element is Call callElement)
+            {
+                buildAcc += $"call {callElement.symbol.Name}\n";
+            }
             else if (element is PushVar pushVarElement)
             {
                 buildAcc += $"PushVar {pushVarElement.symbol.Name}\n";

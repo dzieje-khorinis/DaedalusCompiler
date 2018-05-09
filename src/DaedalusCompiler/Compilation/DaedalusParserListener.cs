@@ -338,9 +338,14 @@ namespace DaedalusCompiler.Compilation
             assemblyBuilder.assigmentEnd();
         }
 
-        public override void ExitFuncCall(DaedalusParser.FuncCallContext context)
+        public override void EnterFuncCallValue(DaedalusParser.FuncCallValueContext context)
         {
-            var funcName = context.nameNode().GetText();
+            assemblyBuilder.expressionLeftSideStart();
+        }
+
+        public override void ExitFuncCallValue(DaedalusParser.FuncCallValueContext context)
+        {
+            var funcName = context.funcCall().nameNode().GetText();
             var symbol = assemblyBuilder.getSymbolByName(funcName);
 
             if (symbol == null)
@@ -360,36 +365,60 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterIntegerLiteralValue(DaedalusParser.IntegerLiteralValueContext context)
         {
-            Console.WriteLine("enter int ;)");
+            var val = context.GetText();
             assemblyBuilder.addInstruction(new PushInt(int.Parse(context.GetText())));
         }
 
+        public override void EnterAddExpression(DaedalusParser.AddExpressionContext context)
+        {
+            var test = context.GetText();
+            assemblyBuilder.expressionLeftSideStart();
+        }
+        
         public override void ExitAddExpression(DaedalusParser.AddExpressionContext context)
         {
+            var test = context.GetText();
             var exprOperator = context.addOperators().GetText();
 
             switch (exprOperator)
             {
                 case "+":
-                    assemblyBuilder.addInstruction(new Add());
+                    assemblyBuilder.expressionEnd(new Add());
                     break;
                 case "-":
-                    assemblyBuilder.addInstruction(new Subract());
+                    assemblyBuilder.expressionEnd(new Subract());
                     break;
             }
+        }
+
+        public override void EnterAddOperators(DaedalusParser.AddOperatorsContext context)
+        {
+            //TODO add comment why here we invoke that
+            assemblyBuilder.expressionRightSideStart();
+        }
+
+        public override void EnterMultOperators(DaedalusParser.MultOperatorsContext context)
+        {
+            //TODO add comment why here we invoke that
+            assemblyBuilder.expressionRightSideStart();
+        }
+
+        public override void EnterMultExpression(DaedalusParser.MultExpressionContext context)
+        {
+            assemblyBuilder.expressionLeftSideStart();
         }
 
         public override void ExitMultExpression(DaedalusParser.MultExpressionContext context)
         {
             var exprOperator = context.multOperators().GetText();
-            
+
             switch (exprOperator)
             {
                 case "/":
-                    assemblyBuilder.addInstruction(new Divide());
+                    assemblyBuilder.expressionEnd(new Divide());
                     break;
                 case "*":
-                    assemblyBuilder.addInstruction(new Multiply());
+                    assemblyBuilder.expressionEnd(new Multiply());
                     break;
                 case "%":
                     //TODO
