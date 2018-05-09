@@ -72,7 +72,14 @@ namespace DaedalusCompiler.Compilation
         public List<AssemblyElement> rightBody;
         public AssemblyOperatorStatement parent;
         public AssemblyOperatorStatement currentContextParentChild;
-
+        
+        public AssemblyOperatorStatement(AssemblyOperatorStatement parent)
+        {
+            leftBody = new List<AssemblyElement>();
+            rightBody = new List<AssemblyElement>();
+            this.parent = parent;
+        }
+        
         public void replaceElement(AssemblyElement element, List<AssemblyElement> toReplace)
         {
             var leftSearch = leftBody.First(x => x == element);
@@ -82,12 +89,10 @@ namespace DaedalusCompiler.Compilation
 
             targetList.InsertRange(elementIndex, toReplace);
         }
-        
-        public AssemblyOperatorStatement(AssemblyOperatorStatement parent)
+
+        public bool isRootNode()
         {
-            leftBody = new List<AssemblyElement>();
-            rightBody = new List<AssemblyElement>();
-            this.parent = parent;
+            return parent == null;
         }
 
         public AssemblyOperatorStatement buildAssemblyStatement()
