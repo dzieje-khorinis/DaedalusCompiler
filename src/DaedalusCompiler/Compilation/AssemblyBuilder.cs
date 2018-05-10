@@ -349,8 +349,16 @@ namespace DaedalusCompiler.Compilation
             else
             {
                 var parentRight = parentBuildContext.currentOperatorStatement.getRight();
+                var parentLeft = parentBuildContext.currentOperatorStatement.getLeft();
+                var parentRightHasItems = parentRight.Count > 0;
+                var parentLeftHasItems = parentLeft.Count > 0;
 
-                if (parentRight.Count > 0)
+                if (parentRightHasItems && parentLeftHasItems)
+                {
+                    // func call case when we have more then 2 args
+                    parentBuildContext.currentOperatorStatement.setLeft(parentLeft.Concat(instructions).ToList());
+                }
+                else if (parentRightHasItems)
                 {
                     parentBuildContext.currentOperatorStatement.setLeft( instructions );
                 }
