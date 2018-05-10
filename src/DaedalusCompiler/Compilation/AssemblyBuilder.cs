@@ -331,14 +331,16 @@ namespace DaedalusCompiler.Compilation
             currentBuildCtx.body = new List<AssemblyElement>();
         }
 
-        public void expressionEnd(AssemblyInstruction instruction)
+        public void expressionEnd(AssemblyInstruction operatorInstruction)
         {
             var currentOperatorStatement = currentBuildCtx.currentOperatorStatement;
             var parentBuildContext = currentBuildCtx.parent;
-            var leftStack = currentOperatorStatement.getLeft();
-            var leftBody = leftStack.Count > 0 ? leftStack : currentOperatorStatement.getRight();
-            var rightBody = currentBuildCtx.body.Count > 0 ? currentBuildCtx.body : currentOperatorStatement.getRight();
-            var instructions = rightBody.Concat(leftBody).Append(instruction).ToList();
+            var currentBody = currentBuildCtx.body;
+            var currentLeftBody = currentOperatorStatement.getLeft();
+            var currentRightBody = currentOperatorStatement.getRight();
+            var newLeftBody = currentLeftBody.Count > 0 ? currentLeftBody : currentRightBody;
+            var newRightBody = currentBody.Count > 0 ? currentBody : currentRightBody;
+            var instructions = newRightBody.Concat(newLeftBody).Append(operatorInstruction).ToList();
 
             if ( !parentBuildContext.isOperatorContext )
             {
