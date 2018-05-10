@@ -333,6 +333,7 @@ namespace DaedalusCompiler.Compilation
 
         public void expressionEnd(AssemblyInstruction operatorInstruction)
         {
+            //TODO add desc why
             var currentOperatorStatement = currentBuildCtx.currentOperatorStatement;
             var parentBuildContext = currentBuildCtx.parent;
             var currentBody = currentBuildCtx.body;
@@ -360,10 +361,12 @@ namespace DaedalusCompiler.Compilation
                 }
                 else if (parentRightHasItems)
                 {
+                    //TODO add desc why
                     parentBuildContext.currentOperatorStatement.setLeft( instructions );
                 }
                 else
                 {
+                    //TODO add desc why
                     parentBuildContext.currentOperatorStatement.setRight( instructions );
                 }                
             }
