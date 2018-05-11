@@ -341,6 +341,7 @@ namespace DaedalusCompiler.Compilation
         public override void EnterFuncCallValue(DaedalusParser.FuncCallValueContext context)
         {
             assemblyBuilder.expressionLeftSideStart();
+            assemblyBuilder.funcCallStart();
         }
 
         public override void ExitFuncCallValue(DaedalusParser.FuncCallValueContext context)

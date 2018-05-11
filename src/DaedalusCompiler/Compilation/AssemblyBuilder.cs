@@ -213,6 +213,18 @@ namespace DaedalusCompiler.Compilation
         public bool isOperatorContext;
     }
 
+    public class FuncArgsBodyContext
+    {
+        public List<AssemblyElement> body;
+        public FuncArgsBodyContext parent;
+
+        public FuncArgsBodyContext(FuncArgsBodyContext parent)
+        {
+            body = new List<AssemblyElement>();
+            this.parent = parent;
+        }
+    }
+
     public class AssemblyBuilder
     {
         public List<FunctionBlock> functions;
@@ -224,7 +236,7 @@ namespace DaedalusCompiler.Compilation
         private List<AssemblyElement> assembly;
         private DatSymbol refSymbol; // we use that for prototype and instance definintions
         private SymbolInstruction assigmentLInstruction;
-        private List<AssemblyElement> funcArgsBody;
+        private FuncArgsBodyContext funcArgsBodyCtx;
 
         public AssemblyBuilder()
         {
@@ -235,7 +247,7 @@ namespace DaedalusCompiler.Compilation
             currentBuildCtx = getEmptyBuildContext();
             active = null;
             assembly = new List<AssemblyElement>();
-            funcArgsBody = new List<AssemblyElement>();
+            funcArgsBodyCtx = new FuncArgsBodyContext(null);
         }
 
         public AssemblyBuildContext getEmptyBuildContext(bool isOperatorContext = false)
@@ -340,15 +352,22 @@ namespace DaedalusCompiler.Compilation
 
         public void funcCallArgEnd()
         {
-            funcArgsBody.AddRange(currentBuildCtx.body);
+            funcArgsBodyCtx.body.AddRange(currentBuildCtx.body);
             currentBuildCtx = currentBuildCtx.parent;
+        }
+
+        public void funcCallStart()
+        {
+            funcArgsBodyCtx = new FuncArgsBodyContext(funcArgsBodyCtx);
         }
 
         public void funcCallEnd(AssemblyElement instruction)
         {
             currentBuildCtx = currentBuildCtx.parent;
-            currentBuildCtx.body.AddRange(funcArgsBody);
+            currentBuildCtx.body.AddRange(funcArgsBodyCtx.body);
             currentBuildCtx.body.Add(instruction);
+
+            funcArgsBodyCtx = funcArgsBodyCtx.parent;
         }
 
         public void expressionEnd(AssemblyInstruction operatorInstruction)
