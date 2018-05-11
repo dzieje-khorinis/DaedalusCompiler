@@ -359,6 +359,7 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterExpressionBlock(DaedalusParser.ExpressionBlockContext context)
         {
+            var text = context.GetText();
             Console.WriteLine("enter expr block");
             Console.WriteLine(context.GetText());
         }

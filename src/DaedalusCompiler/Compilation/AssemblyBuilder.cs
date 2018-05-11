@@ -362,7 +362,8 @@ namespace DaedalusCompiler.Compilation
                 else if (parentRightHasItems)
                 {
                     //TODO add desc why
-                    parentBuildContext.currentOperatorStatement.setLeft( instructions );
+                    parentBuildContext.currentOperatorStatement.setRight(instructions);
+                    parentBuildContext.currentOperatorStatement.setLeft( parentRight );
                 }
                 else
                 {
