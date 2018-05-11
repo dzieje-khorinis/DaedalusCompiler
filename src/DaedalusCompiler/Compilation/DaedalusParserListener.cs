@@ -354,7 +354,17 @@ namespace DaedalusCompiler.Compilation
             }
 
             //todo implement call external
-            assemblyBuilder.expressionEnd(new Call(symbol));
+            assemblyBuilder.funcCallEnd(new Call(symbol));
+        }
+
+        public override void EnterFuncArgExpression(DaedalusParser.FuncArgExpressionContext context)
+        {
+            assemblyBuilder.funcCallArgStart();
+        }
+
+        public override void ExitFuncArgExpression(DaedalusParser.FuncArgExpressionContext context)
+        {
+            assemblyBuilder.funcCallArgEnd();
         }
 
         public override void EnterExpressionBlock(DaedalusParser.ExpressionBlockContext context)

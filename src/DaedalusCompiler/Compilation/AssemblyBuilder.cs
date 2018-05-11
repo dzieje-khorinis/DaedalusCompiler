@@ -224,6 +224,7 @@ namespace DaedalusCompiler.Compilation
         private List<AssemblyElement> assembly;
         private DatSymbol refSymbol; // we use that for prototype and instance definintions
         private SymbolInstruction assigmentLInstruction;
+        private List<AssemblyElement> funcArgsBody;
 
         public AssemblyBuilder()
         {
@@ -234,6 +235,7 @@ namespace DaedalusCompiler.Compilation
             currentBuildCtx = getEmptyBuildContext();
             active = null;
             assembly = new List<AssemblyElement>();
+            funcArgsBody = new List<AssemblyElement>();
         }
 
         public AssemblyBuildContext getEmptyBuildContext(bool isOperatorContext = false)
@@ -331,6 +333,24 @@ namespace DaedalusCompiler.Compilation
             currentBuildCtx.body = new List<AssemblyElement>();
         }
 
+        public void funcCallArgStart()
+        {
+            currentBuildCtx = getEmptyBuildContext();
+        }
+
+        public void funcCallArgEnd()
+        {
+            funcArgsBody.AddRange(currentBuildCtx.body);
+            currentBuildCtx = currentBuildCtx.parent;
+        }
+
+        public void funcCallEnd(AssemblyElement instruction)
+        {
+            currentBuildCtx = currentBuildCtx.parent;
+            currentBuildCtx.body.AddRange(funcArgsBody);
+            currentBuildCtx.body.Add(instruction);
+        }
+
         public void expressionEnd(AssemblyInstruction operatorInstruction)
         {
             //TODO add desc why
@@ -348,6 +368,7 @@ namespace DaedalusCompiler.Compilation
                 {
                     if (currentBody.Count > 0)
                     {
+                        //TODO make sure if that case happen
                         newRightBody = currentRightBody.Concat(currentBody).ToList();   
                     }
                 }
@@ -378,7 +399,6 @@ namespace DaedalusCompiler.Compilation
 
                 if (parentRightHasItems && parentLeftHasItems)
                 {
-                    // func call case when we have more then 2 args
                     parentBuildContext.currentOperatorStatement.setLeft(parentLeft.Concat(instructions).ToList());
                 }
                 else if (parentRightHasItems)

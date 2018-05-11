@@ -291,6 +291,16 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitReturnStatement([NotNull] DaedalusParser.ReturnStatementContext context);
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.funcArgExpression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterFuncArgExpression([NotNull] DaedalusParser.FuncArgExpressionContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.funcArgExpression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitFuncArgExpression([NotNull] DaedalusParser.FuncArgExpressionContext context);
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.expressionBlock"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

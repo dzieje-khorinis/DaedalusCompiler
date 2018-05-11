@@ -50,7 +50,7 @@ parameterList: '(' (parameterDecl (',' parameterDecl)*? )? ')';
 parameterDecl: Var typeReference nameNode ('[' simpleValue ']')?;
 statementBlock: '{' ( ( (statement ';')  | ( ifBlockStatement ( ';' )? ) ) )*? '}';
 statement: assignment | returnStatement | constDef | varDecl | expression;
-funcCall: nameNode '(' ( expressionBlock ( ',' expressionBlock )*? )? ')';
+funcCall: nameNode '(' ( funcArgExpression ( ',' funcArgExpression )*? )? ')';
 assignment: complexReference assigmentOperator expressionBlock;
 ifCondition: expressionBlock;
 elseBlock: Else statementBlock;
@@ -59,6 +59,7 @@ ifBlock: If ifCondition statementBlock;
 ifBlockStatement: ifBlock ( elseIfBlock )*? ( elseBlock )?;
 returnStatement: Return ( expressionBlock )?;
 
+funcArgExpression: expressionBlock; // we use that to detect func call args
 expressionBlock: expression; // we use that expression to force parser threat expression as a block
 
 expression
