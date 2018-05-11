@@ -339,10 +339,32 @@ namespace DaedalusCompiler.Compilation
             var currentBody = currentBuildCtx.body;
             var currentLeftBody = currentOperatorStatement.getLeft();
             var currentRightBody = currentOperatorStatement.getRight();
-            var newLeftBody = currentLeftBody.Count > 0 ? currentLeftBody : currentRightBody;
-            var newRightBody = currentBody.Count > 0 ? currentBody : currentRightBody;
+            var newLeftBody = currentLeftBody;
+            var newRightBody = currentRightBody;
+
+            if (currentRightBody.Count > 0)
+            {
+                if (currentLeftBody.Count > 0)
+                {
+                    if (currentBody.Count > 0)
+                    {
+                        newRightBody = currentRightBody.Concat(currentBody).ToList();   
+                    }
+                }
+                else
+                {
+                    newLeftBody = currentRightBody;
+                    newRightBody = currentBody;
+                }
+            }
+            else
+            {
+                newRightBody = currentBody;
+            }
+            
             var instructions = newRightBody.Concat(newLeftBody).Append(operatorInstruction).ToList();
 
+            
             if ( !parentBuildContext.isOperatorContext )
             {
                 parentBuildContext.body.AddRange( instructions );
