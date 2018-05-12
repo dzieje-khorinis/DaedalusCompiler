@@ -36,3 +36,9 @@
  - original compiler has external functions (kind of standard library) hardcoded
  - we need compatibility with various versions of this standard library
  - `extern func void ExitGame();`
+
+# Optional semicolons
+ - Daedalus normally requires semicolons after if blocks, classes, etc
+ - we can require semicolons only after statements, as in less archaic languages
+ - or drop them altogether as grammar is unambiguous even without them (?)
+ 
