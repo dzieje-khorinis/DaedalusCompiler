@@ -51,7 +51,7 @@ namespace DaedalusCompiler.Dat
         PushArrayVar = 245,
     }
 
-    [DebuggerDisplay("{TokenType} A:{Address} S:{Symbol} V:{Value} I:{Index}")]
+    [DebuggerDisplay("{TokenType} I:{IntParam} B:{ByteParam}")]
     public class DatToken
     {
         public static DatToken LoadToken(BinaryFileStream stream)
@@ -69,40 +69,40 @@ namespace DaedalusCompiler.Dat
             switch (token.TokenType)
             {
                 case DatTokenType.Call:
-                    token.Address = stream.ReadInt();
+                    token.IntParam = stream.ReadInt();
                     break;
 
                 case DatTokenType.CallExternal:
-                    token.Symbol = stream.ReadInt();
+                    token.IntParam = stream.ReadInt();
                     break;
 
                 case DatTokenType.PushInt:
-                    token.Value = stream.ReadInt();
+                    token.IntParam = stream.ReadInt();
                     break;
 
                 case DatTokenType.PushVar:
-                    token.Symbol = stream.ReadInt();
+                    token.IntParam = stream.ReadInt();
                     break;
 
                 case DatTokenType.PushInstance:
-                    token.Symbol = stream.ReadInt();
+                    token.IntParam = stream.ReadInt();
                     break;
 
                 case DatTokenType.Jump:
-                    token.Address = stream.ReadInt();
+                    token.IntParam = stream.ReadInt();
                     break;
 
                 case DatTokenType.JumpIf:
-                    token.Address = stream.ReadInt();
+                    token.IntParam = stream.ReadInt();
                     break;
 
                 case DatTokenType.SetInstance:
-                    token.Symbol = stream.ReadInt();
+                    token.IntParam = stream.ReadInt();
                     break;
 
                 case DatTokenType.PushArrayVar:
-                    token.Symbol = stream.ReadInt();
-                    token.Index = stream.ReadByte();
+                    token.IntParam = stream.ReadInt();
+                    token.ByteParam = stream.ReadByte();
                     break;
             }
 
@@ -111,14 +111,10 @@ namespace DaedalusCompiler.Dat
 
         public DatTokenType TokenType { get; private set; }
 
-        public int Size { get { return 1 + (Address.HasValue ? 4 : 0) + (Symbol.HasValue ? 4 : 0) + (Value.HasValue ? 4 : 0) + (Index.HasValue ? 1 : 0); } }
+        public int Size { get { return 1 + (IntParam.HasValue ? 4 : 0) + (ByteParam.HasValue ? 1 : 0); } }
 
-        public int? Address { get; private set; }
+        public int? IntParam { get; set; }
 
-        public int? Symbol { get; private set; }
-
-        public int? Value { get; private set; }
-
-        public int? Index { get; private set; }
+        public int? ByteParam { get; private set; }
     }
 }
