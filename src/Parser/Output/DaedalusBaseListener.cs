@@ -677,6 +677,18 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitAddOperators([NotNull] DaedalusParser.AddOperatorsContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.compOperators"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterCompOperators([NotNull] DaedalusParser.CompOperatorsContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.compOperators"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitCompOperators([NotNull] DaedalusParser.CompOperatorsContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.oneArgOperator"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>

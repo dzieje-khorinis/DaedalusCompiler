@@ -68,7 +68,7 @@ expression
     | expression multOperators expression #multExpression
     | expression addOperators expression #addExpression
     | expression ('<<' | '>>') expression #bitMoveExpression
-    | expression ('<' | '>' | '<=' | '>=') expression #compExpression
+    | expression compOperators expression #compExpression
     | expression ('==' | '!=') expression #eqExpression
     | expression ('&' | '|' | '&&' | '||') expression #bitExpression
     | value #valExpression
@@ -90,5 +90,6 @@ nameNode: Identifier;
 referenceNode: Identifier;
 assigmentOperator:  '=' | '+=' | '-=' | '*=' | '/=';
 addOperators: '+' | '-';
+compOperators: '<' | '>' | '<=' | '>=';
 oneArgOperator: '-' | '!' | '~' | '+';
 multOperators: '*' | '/' | '%';

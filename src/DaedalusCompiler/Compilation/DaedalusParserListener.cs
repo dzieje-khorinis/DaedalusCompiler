@@ -280,10 +280,38 @@ namespace DaedalusCompiler.Compilation
             assemblyBuilder.conditionalBlockConditionEnd();
         }
 
+        public override void EnterCompExpression(DaedalusParser.CompExpressionContext context)
+        {
+            var test = context.GetText();
+            assemblyBuilder.expressionLeftSideStart();
+        }
+
         public override void ExitCompExpression(DaedalusParser.CompExpressionContext context)
         {
-            //TODO implement correctly
-            assemblyBuilder.addInstruction(new Greater());
+            var test = context.GetText();
+            var exprOperator = context.compOperators().GetText();
+
+            switch (exprOperator)
+            {
+                case ">":
+                    assemblyBuilder.expressionEnd(new Greater());
+                    break;
+                case ">=":
+                    assemblyBuilder.expressionEnd(new GreaterOrEqual());
+                    break;
+                case "<":
+                    assemblyBuilder.expressionEnd(new Less());
+                    break;
+                case "<=":
+                    assemblyBuilder.expressionEnd(new LessOrEqual());
+                    break;
+            }
+        }
+
+        public override void EnterCompOperators(DaedalusParser.CompOperatorsContext context)
+        {
+            //TODO add comment why here we invoke that
+            assemblyBuilder.expressionRightSideStart();
         }
 
         public override void EnterAssignment(DaedalusParser.AssignmentContext context)
