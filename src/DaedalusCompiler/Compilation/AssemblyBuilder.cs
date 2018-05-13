@@ -182,6 +182,10 @@ namespace DaedalusCompiler.Compilation
     public class Multiply : ParamLessInstruction {}
     public class Divide : ParamLessInstruction {}
     public class Subract : ParamLessInstruction {}
+    public class Not: ParamLessInstruction {}
+    public class Minus: ParamLessInstruction {}
+    public class Plus: ParamLessInstruction {}
+    public class Negate: ParamLessInstruction {}
 
     public class JumpIfToLabel : LabelJumpInstruction
     {

@@ -64,7 +64,7 @@ expressionBlock: expression; // we use that expression to force parser threat ex
 
 expression
     : '(' expression ')' #bracketExpression
-    | ('-' | '!' | '~' | '+') expression #oneArgExpression
+    | oneArgOperator expression #oneArgExpression
     | expression multOperators expression #multExpression
     | expression addOperators expression #addExpression
     | expression ('<<' | '>>') expression #bitMoveExpression
@@ -90,4 +90,5 @@ nameNode: Identifier;
 referenceNode: Identifier;
 assigmentOperator:  '=' | '+=' | '-=' | '*=' | '/=';
 addOperators: '+' | '-';
+oneArgOperator: '-' | '!' | '~' | '+';
 multOperators: '*' | '/' | '%';

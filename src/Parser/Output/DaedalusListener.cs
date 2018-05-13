@@ -571,6 +571,16 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitAddOperators([NotNull] DaedalusParser.AddOperatorsContext context);
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.oneArgOperator"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterOneArgOperator([NotNull] DaedalusParser.OneArgOperatorContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.oneArgOperator"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitOneArgOperator([NotNull] DaedalusParser.OneArgOperatorContext context);
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.multOperators"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

@@ -222,6 +222,7 @@ namespace DaedalusCompiler.Compilation
         {
             // we invoke execBlockEnd, thanks that ab will assign all instructions
             // to currently exited function
+            assemblyBuilder.addInstruction(new Ret());
             assemblyBuilder.execBlockEnd();
         }
 
@@ -434,6 +435,27 @@ namespace DaedalusCompiler.Compilation
                     break;
                 case "%":
                     //TODO
+                    break;
+            }
+        }
+
+        public override void ExitOneArgExpression(DaedalusParser.OneArgExpressionContext context)
+        {
+            var operatorVal = context.oneArgOperator().GetText();
+
+            switch (operatorVal)
+            {
+                case "-":
+                    assemblyBuilder.addInstruction(new Minus());
+                    break;
+                case "+":
+                    assemblyBuilder.addInstruction(new Plus());
+                    break;
+                case "!":
+                    assemblyBuilder.addInstruction(new Not());
+                    break;
+                case "~":
+                    assemblyBuilder.addInstruction(new Negate());
                     break;
             }
         }
