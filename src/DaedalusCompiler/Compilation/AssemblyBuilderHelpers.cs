@@ -20,6 +20,20 @@ namespace DaedalusCompiler.Compilation
                         instruction = new Plus();
                     }
                     break;
+
+                case ">":
+                    instruction = new Greater();
+                    break;
+                case ">=":
+                    instruction = new GreaterOrEqual();
+                    break;
+                case "<":
+                    instruction = new Less();
+                    break;
+                case "<=":
+                    instruction = new LessOrEqual();
+                    break;
+
             }
 
             if (instruction == null)

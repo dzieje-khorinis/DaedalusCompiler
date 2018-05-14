@@ -174,7 +174,9 @@ namespace DaedalusCompiler.Compilation
     }
 
     public class Less : ParamLessInstruction {}
+    public class LessOrEqual : ParamLessInstruction {}
     public class Greater : ParamLessInstruction {}
+    public class GreaterOrEqual : ParamLessInstruction {}
     public class Assign : ParamLessInstruction {}
     public class AssignString : ParamLessInstruction {}
     public class Ret : ParamLessInstruction {}
