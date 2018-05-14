@@ -7,9 +7,9 @@ using Xunit;
 
 namespace DaedalusCompiler.Tests
 {
-    public class AssemblyBuilderTest
+    public class ParsingSourceToAbstractAssemblyTests
     {
-        private static readonly Dictionary<string, DatSymbolType> StringToTypeMap =
+        private static readonly Dictionary<string, DatSymbolType> StringToDatSymbolTypeMap =
             new Dictionary<string, DatSymbolType>
             {
                 {"void", DatSymbolType.Void},
@@ -25,7 +25,7 @@ namespace DaedalusCompiler.Tests
         private DatSymbol Var(string variable)
         {
             string[] typeAndName = variable.Split(' ');
-            return SymbolBuilder.BuildVariable(typeAndName[1], StringToTypeMap[typeAndName[0]]);
+            return SymbolBuilder.BuildVariable(typeAndName[1], StringToDatSymbolTypeMap[typeAndName[0]]);
         }
 
         private DatSymbol Func(string funcname)
@@ -70,10 +70,10 @@ namespace DaedalusCompiler.Tests
             Assert.Equal(instruction.GetType(), expectedInstruction.GetType());
             switch (instruction)
             {
-                case PushInt _:
+                case PushInt pushIntInstruction:
                 {
                     Assert.Equal(
-                        ((PushInt) instruction).value,
+                        pushIntInstruction.value,
                         ((PushInt) expectedInstruction).value
                     );
                     break;
@@ -92,17 +92,17 @@ namespace DaedalusCompiler.Tests
                     );
                     break;
                 }
-                case PushArrVar _:
+                case PushArrVar pushArrVarInstruction:
                     Assert.Equal(
-                        ((SymbolInstruction) instruction).symbol.Type,
+                        pushArrVarInstruction.symbol.Type,
                         ((SymbolInstruction) expectedInstruction).symbol.Type
                     );
                     Assert.Equal(
-                        ((SymbolInstruction) instruction).symbol.Name,
+                        pushArrVarInstruction.symbol.Name,
                         ((SymbolInstruction) expectedInstruction).symbol.Name
                     );
                     Assert.Equal(
-                        ((PushArrVar) instruction).index,
+                        pushArrVarInstruction.index,
                         ((PushArrVar) expectedInstruction).index
                     );
                     break;
