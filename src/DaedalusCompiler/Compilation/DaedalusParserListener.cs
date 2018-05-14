@@ -282,30 +282,13 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterCompExpression(DaedalusParser.CompExpressionContext context)
         {
-            var test = context.GetText();
             assemblyBuilder.expressionLeftSideStart();
         }
 
         public override void ExitCompExpression(DaedalusParser.CompExpressionContext context)
         {
-            var test = context.GetText();
             var exprOperator = context.compOperators().GetText();
-
-            switch (exprOperator)
-            {
-                case ">":
-                    assemblyBuilder.expressionEnd(new Greater());
-                    break;
-                case ">=":
-                    assemblyBuilder.expressionEnd(new GreaterOrEqual());
-                    break;
-                case "<":
-                    assemblyBuilder.expressionEnd(new Less());
-                    break;
-                case "<=":
-                    assemblyBuilder.expressionEnd(new LessOrEqual());
-                    break;
-            }
+            assemblyBuilder.expressionEnd(AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator, true));
         }
 
         public override void EnterCompOperators(DaedalusParser.CompOperatorsContext context)
