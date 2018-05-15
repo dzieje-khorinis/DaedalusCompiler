@@ -501,6 +501,16 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitComplexReferenceValue([NotNull] DaedalusParser.ComplexReferenceValueContext context);
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.complexReferenceLeftSide"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterComplexReferenceLeftSide([NotNull] DaedalusParser.ComplexReferenceLeftSideContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.complexReferenceLeftSide"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitComplexReferenceLeftSide([NotNull] DaedalusParser.ComplexReferenceLeftSideContext context);
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.complexReference"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

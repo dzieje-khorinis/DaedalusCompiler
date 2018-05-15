@@ -51,7 +51,7 @@ parameterDecl: Var typeReference nameNode ('[' simpleValue ']')?;
 statementBlock: '{' ( ( (statement ';')  | ( ifBlockStatement ( ';' )? ) ) )*? '}';
 statement: assignment | returnStatement | constDef | varDecl | expression;
 funcCall: nameNode '(' ( funcArgExpression ( ',' funcArgExpression )*? )? ')';
-assignment: complexReference assigmentOperator expressionBlock;
+assignment: complexReferenceLeftSide assigmentOperator expressionBlock;
 ifCondition: expressionBlock;
 elseBlock: Else statementBlock;
 elseIfBlock: Else If ifCondition statementBlock;
@@ -83,6 +83,8 @@ value
     | funcCall #funcCallValue
     | complexReference #complexReferenceValue
     ;
+    
+complexReferenceLeftSide: complexReferenceNode ( '.' complexReferenceNode )?;
 complexReference: complexReferenceNode ( '.' complexReferenceNode )?;
 complexReferenceNode: referenceNode ( '[' simpleValue ']')?;
 typeReference:  ( referenceNode  | Void | Int | Float | String | Func | Instance);
