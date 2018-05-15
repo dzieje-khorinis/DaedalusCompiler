@@ -296,10 +296,37 @@ namespace DaedalusCompiler.Compilation
             //TODO add comment why here we invoke that
             assemblyBuilder.expressionRightSideStart();
         }
+        
+        public override void ExitComplexReference(DaedalusParser.ComplexReferenceContext context)
+        {
+            var referenceNodes = context.complexReferenceNode();
+            var symbolPart = referenceNodes[0];
+            var arrIndex = symbolPart.simpleValue();
+            var symbol = assemblyBuilder.resolveSymbol(symbolPart.referenceNode().GetText());
 
+            if (referenceNodes.Length == 2)
+            {
+                //TODO implement
+                // it that case we want assign something to field, example:
+                // some_var.old = 90
+            }
+            else
+            {
+                if ( arrIndex == null )
+                {
+                    assemblyBuilder.addInstruction(new PushVar( symbol ));
+                }
+                else
+                {
+                    assemblyBuilder.addInstruction(new PushArrVar(symbol, int.Parse(arrIndex.GetText())));
+                }
+            }
+        }
+        
+        
         public override void EnterAssignment(DaedalusParser.AssignmentContext context)
         {
-            var referenceNodes = context.complexReference().complexReferenceNode();
+            var referenceNodes = context.complexReferenceLeftSide().complexReferenceNode();
             var symbolPart = referenceNodes[0];
             var arrIndex = symbolPart.simpleValue();
             var symbol = assemblyBuilder.resolveSymbol(symbolPart.referenceNode().GetText());
@@ -323,6 +350,7 @@ namespace DaedalusCompiler.Compilation
                 }
             }
         }
+        
 
         public override void ExitAssignment(DaedalusParser.AssignmentContext context)
         {
