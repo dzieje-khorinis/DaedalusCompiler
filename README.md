@@ -1,4 +1,4 @@
-# Daedalus Compiler
+# Daedalus Compiler  [![Build](https://circleci.com/gh/dzieje-khorinis/DaedalusCompiler.png)](https://github.com/dzieje-khorinis/DaedalusCompiler)
 This is repo with Daedalus ( Gothic I, II scripting language ) compiler.
 Project is using internally ANTL4 for parsing source code.
 The compiler itself is written in .NET Core C#.
