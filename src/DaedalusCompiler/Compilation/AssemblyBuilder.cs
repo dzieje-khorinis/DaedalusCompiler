@@ -178,7 +178,15 @@ namespace DaedalusCompiler.Compilation
     public class Greater : ParamLessInstruction {}
     public class GreaterOrEqual : ParamLessInstruction {}
     public class Assign : ParamLessInstruction {}
+    public class AssignAdd : ParamLessInstruction {}
+    public class AssignSubtract : ParamLessInstruction {}
+    public class AssignMultiply : ParamLessInstruction {}
+    public class AssignDivide : ParamLessInstruction {}
     public class AssignString : ParamLessInstruction {}
+    public class AssignStringRef : ParamLessInstruction {}
+    public class AssignFunc : ParamLessInstruction {}
+    public class AssignFloat : ParamLessInstruction {}
+    public class AssignInstance : ParamLessInstruction {}
     public class Ret : ParamLessInstruction {}
     public class Add : ParamLessInstruction {}
     public class Multiply : ParamLessInstruction {}
@@ -241,7 +249,7 @@ namespace DaedalusCompiler.Compilation
         private AssemblyBuildContext currentBuildCtx; // current assembly build context
         private List<AssemblyElement> assembly;
         private DatSymbol refSymbol; // we use that for prototype and instance definintions
-        private SymbolInstruction assigmentLInstruction;
+        private SymbolInstruction assigmentLeftSide;
         private FuncArgsBodyContext funcArgsBodyCtx;
 
         public AssemblyBuilder()
@@ -320,24 +328,16 @@ namespace DaedalusCompiler.Compilation
 
         public void assigmentStart(SymbolInstruction instruction)
         {
-            assigmentLInstruction = instruction;
+            assigmentLeftSide = instruction;
         }
 
-        public void assigmentEnd()
+        public void assigmentEnd(string assignmentOperator)
         {
-            var operationType = assigmentLInstruction.symbol.Type;
-
-            addInstruction(assigmentLInstruction);
-            switch (operationType)
-            {
-                case DatSymbolType.Int:
-                    addInstruction(new Assign());
-                    break;
-                case DatSymbolType.String:
-                    addInstruction(new AssignString());
-                    break;
-                //todo implement rest
-            }
+            var operationType = assigmentLeftSide.symbol.Type;
+            var assignmentInstruction = AssemblyBuilderHelpers.GetInstructionForOperator(assignmentOperator, true, operationType);
+            
+            addInstruction(assigmentLeftSide);
+            addInstruction(assignmentInstruction);
         }
 
         public void expressionLeftSideStart()
