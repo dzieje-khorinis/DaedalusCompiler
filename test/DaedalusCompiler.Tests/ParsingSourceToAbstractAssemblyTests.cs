@@ -121,14 +121,18 @@ namespace DaedalusCompiler.Tests
         }
 
         [Fact]
-        public void TestAssignAndAddIntExpressions()
+        public void TestIntAddOperator()
         {
             string declarations = "var int x;";
-            string expressions = "x = 2 + 3 + 4 + 5;";
+            string expressions = @"
+                x = 2 + 3 + 4 + 5;
+                x = 2 - 3 - 4 - 5;
+            ";
             List<AssemblyElement> instructions = ParseExpressions(declarations, expressions);
 
             List<AssemblyElement> expectedInstructions = new List<AssemblyElement>
             {
+                // x = 2 + 3 + 4 + 5;
                 new PushInt(5),
                 new PushInt(4),
                 new PushInt(3),
@@ -138,27 +142,15 @@ namespace DaedalusCompiler.Tests
                 new Add(),
                 new PushVar(Var("int x")),
                 new Assign(),
-            };
 
-            CompareInstructionLists(instructions, expectedInstructions);
-        }
-
-        [Fact]
-        public void TestAssignAndSubtractIntExpressions()
-        {
-            string declarations = "var int x;";
-            string expressions = "x = 2 - 3 - 4 - 5;";
-            List<AssemblyElement> instructions = ParseExpressions(declarations, expressions);
-
-            List<AssemblyElement> expectedInstructions = new List<AssemblyElement>
-            {
+                // x = 2 - 3 - 4 - 5;
                 new PushInt(5),
                 new PushInt(4),
                 new PushInt(3),
                 new PushInt(2),
-                new Subract(),
-                new Subract(),
-                new Subract(),
+                new Subtract(),
+                new Subtract(),
+                new Subtract(),
                 new PushVar(Var("int x")),
                 new Assign(),
             };
@@ -167,14 +159,19 @@ namespace DaedalusCompiler.Tests
         }
 
         [Fact]
-        public void TestAssignAndMultiplyIntExpressions()
+        public void TestIntMultOperator()
         {
             string declarations = "var int x;";
-            string expressions = "x = 2 * 3 * 4 * 5;";
+            string expressions = @"
+                x = 2 * 3 * 4 * 5;
+                x = 2 / 3 / 4 / 5;
+                x = 2 % 3 % 4 % 5;
+            ";
             List<AssemblyElement> instructions = ParseExpressions(declarations, expressions);
 
             List<AssemblyElement> expectedInstructions = new List<AssemblyElement>
             {
+                // x = 2 * 3 * 4 * 5;
                 new PushInt(5),
                 new PushInt(4),
                 new PushInt(3),
@@ -184,20 +181,8 @@ namespace DaedalusCompiler.Tests
                 new Multiply(),
                 new PushVar(Var("int x")),
                 new Assign(),
-            };
 
-            CompareInstructionLists(instructions, expectedInstructions);
-        }
-
-        [Fact]
-        public void TestAssignAndDivideIntExpressions()
-        {
-            string declarations = "var int x;";
-            string expressions = "x = 2 / 3 / 4 / 5;";
-            List<AssemblyElement> instructions = ParseExpressions(declarations, expressions);
-
-            List<AssemblyElement> expectedInstructions = new List<AssemblyElement>
-            {
+                // x = 2 / 3 / 4 / 5;
                 new PushInt(5),
                 new PushInt(4),
                 new PushInt(3),
@@ -207,71 +192,58 @@ namespace DaedalusCompiler.Tests
                 new Divide(),
                 new PushVar(Var("int x")),
                 new Assign(),
+
+                // x = 2 / 3 / 4 / 5;
+                new PushInt(5),
+                new PushInt(4),
+                new PushInt(3),
+                new PushInt(2),
+                new Modulo(),
+                new Modulo(),
+                new Modulo(),
+                new PushVar(Var("int x")),
+                new Assign(),
             };
 
             CompareInstructionLists(instructions, expectedInstructions);
         }
 
         [Fact]
-        public void TestAssignAddIntExpressions()
+        public void TestIntAssignmentOperator()
         {
             string declarations = "var int x;";
-            string expressions = "x += 5;";
+            string expressions = @"
+                x = 1
+                x += 2;
+                x -= 3;
+                x *= 4;
+                x /= 5;
+            ";
             List<AssemblyElement> instructions = ParseExpressions(declarations, expressions);
 
             List<AssemblyElement> expectedInstructions = new List<AssemblyElement>
             {
-                new PushInt(5),
+                // x = 1;
+                new PushInt(1),
+                new PushVar(Var("int x")),
+                new Assign(),
+
+                // x += 2;
+                new PushInt(2),
                 new PushVar(Var("int x")),
                 new AssignAdd(),
-            };
 
-            CompareInstructionLists(instructions, expectedInstructions);
-        }
-
-        [Fact]
-        public void TestAssignSubtractIntExpressions()
-        {
-            string declarations = "var int x;";
-            string expressions = "x -= 5;";
-            List<AssemblyElement> instructions = ParseExpressions(declarations, expressions);
-
-            List<AssemblyElement> expectedInstructions = new List<AssemblyElement>
-            {
-                new PushInt(5),
+                // x -= 3;
+                new PushInt(3),
                 new PushVar(Var("int x")),
                 new AssignSubtract(),
-            };
 
-            CompareInstructionLists(instructions, expectedInstructions);
-        }
-
-        [Fact]
-        public void TestAssignMultiplyIntExpressions()
-        {
-            string declarations = "var int x;";
-            string expressions = "x *= 5;";
-            List<AssemblyElement> instructions = ParseExpressions(declarations, expressions);
-
-            List<AssemblyElement> expectedInstructions = new List<AssemblyElement>
-            {
-                new PushInt(5),
+                // x *= 4;
+                new PushInt(4),
                 new PushVar(Var("int x")),
                 new AssignMultiply(),
-            };
 
-            CompareInstructionLists(instructions, expectedInstructions);
-        }
-
-        [Fact]
-        public void TestAssignDivideIntExpressions()
-        {
-            string declarations = "var int x;";
-            string expressions = "x /= 5;";
-            List<AssemblyElement> instructions = ParseExpressions(declarations, expressions);
-
-            List<AssemblyElement> expectedInstructions = new List<AssemblyElement>
-            {
+                // x /= 5;
                 new PushInt(5),
                 new PushVar(Var("int x")),
                 new AssignDivide(),
@@ -281,7 +253,7 @@ namespace DaedalusCompiler.Tests
         }
 
         [Fact]
-        public void TestAssignAndAddAndMultOperatorsPrecedence()
+        public void TestIntAddAndMultOperatorPrecedence()
         {
             string declarations = @"
                 var int a;
@@ -330,7 +302,7 @@ namespace DaedalusCompiler.Tests
                 new PushInt(2),
                 new Multiply(),
                 new PushInt(1),
-                new Subract(),
+                new Subtract(),
                 new PushVar(Var("int b")),
                 new Assign(),
 
@@ -339,7 +311,7 @@ namespace DaedalusCompiler.Tests
                 new PushInt(2),
                 new Divide(),
                 new PushInt(1),
-                new Subract(),
+                new Subtract(),
                 new PushVar(Var("int b")),
                 new AssignSubtract(),
 
@@ -369,7 +341,7 @@ namespace DaedalusCompiler.Tests
                 new PushInt(7),
                 new PushInt(6),
                 new PushInt(5),
-                new Subract(),
+                new Subtract(),
                 new PushInt(4),
                 new Divide(),
                 new Multiply(),
@@ -380,7 +352,7 @@ namespace DaedalusCompiler.Tests
                 new PushInt(7),
                 new PushInt(6),
                 new PushInt(5),
-                new Subract(),
+                new Subtract(),
                 new PushInt(4),
                 new Multiply(),
                 new Divide(),
@@ -392,7 +364,320 @@ namespace DaedalusCompiler.Tests
         }
 
         [Fact]
-        public void TestAssignAndCompOperators()
+        public void TestIntEqOperator()
+        {
+            string declarations = @"
+                var int a;
+                var int b;
+                var int c;
+                var int d;
+            ";
+            string expressions = @"
+                a = 1 == 2 != 3;
+                a = 1 != 2 == 3;
+                a = b == c != d;
+            ";
+            List<AssemblyElement> instructions = ParseExpressions(declarations, expressions);
+
+            List<AssemblyElement> expectedInstructions = new List<AssemblyElement>
+            {
+                // a = 1 == 2 != 3;
+                new PushInt(3),
+                new PushInt(2),
+                new PushInt(1),
+                new Equal(),
+                new NotEqual(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // a = 1 != 2 == 3;
+                new PushInt(3),
+                new PushInt(2),
+                new PushInt(1),
+                new NotEqual(),
+                new Equal(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // a = b == c != d;
+                new PushVar(Var("int d")),
+                new PushVar(Var("int c")),
+                new PushVar(Var("int b")),
+                new Equal(),
+                new NotEqual(),
+                new PushVar(Var("int a")),
+                new Assign(),
+            };
+
+            CompareInstructionLists(instructions, expectedInstructions);
+        }
+
+        [Fact]
+        public void TestIntOneArgOperator()
+        {
+            string declarations = @"
+                var int a;
+                var int b;
+                var int c;
+                var int d;
+            ";
+            string expressions = @"
+                a = -1;
+                b = !2;
+                c = ~3;
+                d = +4;
+            ";
+            List<AssemblyElement> instructions = ParseExpressions(declarations, expressions);
+
+            List<AssemblyElement> expectedInstructions = new List<AssemblyElement>
+            {
+                // a = -1;
+                new PushInt(1),
+                new Minus(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // b = !2;
+                new PushInt(2),
+                new Not(),
+                new PushVar(Var("int b")),
+                new Assign(),
+
+                // c = ~3;
+                new PushInt(3),
+                new Negate(),
+                new PushVar(Var("int c")),
+                new Assign(),
+
+                // d = +4;
+                new PushInt(4),
+                new Plus(),
+                new PushVar(Var("int d")),
+                new Assign(),
+            };
+
+            CompareInstructionLists(instructions, expectedInstructions);
+        }
+
+        [Fact]
+        public void TestIntBitOperator()
+        {
+            string declarations = @"
+                var int a;
+                var int b;
+                var int c;
+                var int d;
+            ";
+            string expressions = @"
+                a = 1 & 2;
+                a = 1 | 2;
+                a = 1 && 2;
+                a = 1 || 2;
+                
+                a = 1 & b;
+                a = 1 | b;
+                a = 1 && b;
+                a = 1 || b;
+                
+                a = b & 2;
+                a = b | 2;
+                a = b && 2;
+                a = b || 2;
+                
+                a = c & d;
+                a = c | d;
+                a = c && d;
+                a = c || d;
+            ";
+            List<AssemblyElement> instructions = ParseExpressions(declarations, expressions);
+
+            List<AssemblyElement> expectedInstructions = new List<AssemblyElement>
+            {
+                // a = 1 & 2;
+                new PushInt(2),
+                new PushInt(1),
+                new BitAnd(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // a = 1 | 2;
+                new PushInt(2),
+                new PushInt(1),
+                new BitOr(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // a = 1 && 2;
+                new PushInt(2),
+                new PushInt(1),
+                new LogAnd(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // a = 1 || 2;
+                new PushInt(2),
+                new PushInt(1),
+                new LogOr(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // a = 1 & b;
+                new PushVar(Var("int b")),
+                new PushInt(1),
+                new BitAnd(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // a = 1 | b;
+                new PushVar(Var("int b")),
+                new PushInt(1),
+                new BitOr(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // a = 1 && b;
+                new PushVar(Var("int b")),
+                new PushInt(1),
+                new LogAnd(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // a = 1 || b;
+                new PushVar(Var("int b")),
+                new PushInt(1),
+                new LogOr(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // a = b & 2;
+                new PushInt(2),
+                new PushVar(Var("int b")),
+                new BitAnd(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // a = b | 2;
+                new PushInt(2),
+                new PushVar(Var("int b")),
+                new BitOr(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // a = b && 2;
+                new PushInt(2),
+                new PushVar(Var("int b")),
+                new LogAnd(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // a = b || 2;
+                new PushInt(2),
+                new PushVar(Var("int b")),
+                new LogOr(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // a = c & d;
+                new PushVar(Var("int d")),
+                new PushVar(Var("int c")),
+                new BitAnd(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // a = c | d;
+                new PushVar(Var("int d")),
+                new PushVar(Var("int c")),
+                new BitOr(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // a = c && d;
+                new PushVar(Var("int d")),
+                new PushVar(Var("int c")),
+                new LogAnd(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // a = c || d;
+                new PushVar(Var("int d")),
+                new PushVar(Var("int c")),
+                new LogOr(),
+                new PushVar(Var("int a")),
+                new Assign(),
+            };
+
+            CompareInstructionLists(instructions, expectedInstructions);
+        }
+
+        [Fact]
+        public void TestIntBitMoveOperator()
+        {
+            string declarations = @"
+                var int a;
+                var int b;
+                var int c;
+                var int d;
+            ";
+            string expressions = @"
+                a = 1 << 2;
+                a = 1 >> 2;
+                a = 1 << b;
+                a = b >> 2;
+                a = c << d;
+                a = c >> d;
+            ";
+            List<AssemblyElement> instructions = ParseExpressions(declarations, expressions);
+
+            List<AssemblyElement> expectedInstructions = new List<AssemblyElement>
+            {
+                // a = 1 << 2;
+                new PushInt(2),
+                new PushInt(1),
+                new ShiftLeft(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // a = 1 >> 2;
+                new PushInt(2),
+                new PushInt(1),
+                new ShiftRight(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // a = 1 << b;
+                new PushVar(Var("int b")),
+                new PushInt(1),
+                new ShiftLeft(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // a = b >> 2;
+                new PushInt(2),
+                new PushVar(Var("int b")),
+                new ShiftRight(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // a = c << d;
+                new PushVar(Var("int d")),
+                new PushVar(Var("int c")),
+                new ShiftLeft(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // a = c >> d;
+                new PushVar(Var("int d")),
+                new PushVar(Var("int c")),
+                new ShiftRight(),
+                new PushVar(Var("int a")),
+                new Assign(),
+            };
+
+            CompareInstructionLists(instructions, expectedInstructions);
+        }
+
+        [Fact]
+        public void TestIntCompOperator()
         {
             string declarations = @"
                 var int a;
@@ -443,28 +728,7 @@ namespace DaedalusCompiler.Tests
         }
 
         [Fact]
-        public void TestAssignAndAddAndMultiplyExpression()
-        {
-            string declarations = "var int x;";
-            string expressions = "x = 12 + 9 * 20;";
-            List<AssemblyElement> instructions = ParseExpressions(declarations, expressions);
-
-            List<AssemblyElement> expectedInstructions = new List<AssemblyElement>
-            {
-                new PushInt(20),
-                new PushInt(9),
-                new Multiply(),
-                new PushInt(12),
-                new Add(),
-                new PushVar(Var("int x")),
-                new Assign(),
-            };
-
-            CompareInstructionLists(instructions, expectedInstructions);
-        }
-
-        [Fact]
-        public void TestComplexExpression()
+        public void TestIntComplexExpression()
         {
             string declarations = @"
                 func int otherFunc(var int a, var int b)

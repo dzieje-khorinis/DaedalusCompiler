@@ -7,37 +7,13 @@ namespace DaedalusCompiler.Compilation
     {
         public static ParamLessInstruction GetInstructionForOperator(
             string operatorVal,
-            bool twoArg = false,
+            bool twoArg = true,
             DatSymbolType rightHandSideType = DatSymbolType.Void)
         {
             ParamLessInstruction instruction = new ParamLessInstruction();
 
             switch (operatorVal)
             {
-                case "+":
-                    if (twoArg)
-                    {
-                        instruction = new Add();
-                    }
-                    else
-                    {
-                        instruction = new Plus();
-                    }
-                    break;
-
-                case ">":
-                    instruction = new Greater();
-                    break;
-                case ">=":
-                    instruction = new GreaterOrEqual();
-                    break;
-                case "<":
-                    instruction = new Less();
-                    break;
-                case "<=":
-                    instruction = new LessOrEqual();
-                    break;
-                
                 case "=":
                     switch (rightHandSideType)
                     {
@@ -67,6 +43,7 @@ namespace DaedalusCompiler.Compilation
                             break;
                         }
                     }
+
                     break;
                 case "+=":
                     instruction = new AssignAdd();
@@ -81,6 +58,94 @@ namespace DaedalusCompiler.Compilation
                     instruction = new AssignDivide();
                     break;
 
+
+                case "+":
+                    if (twoArg)
+                    {
+                        instruction = new Add();
+                    }
+                    else
+                    {
+                        instruction = new Plus();
+                    }
+
+                    break;
+
+                case "-":
+                    if (twoArg)
+                    {
+                        instruction = new Subtract();
+                        ;
+                    }
+                    else
+                    {
+                        instruction = new Minus();
+                    }
+
+                    break;
+
+
+                case "<<":
+                    instruction = new ShiftLeft();
+                    break;
+                case ">>":
+                    instruction = new ShiftRight();
+                    break;
+
+
+                case ">":
+                    instruction = new Greater();
+                    break;
+                case ">=":
+                    instruction = new GreaterOrEqual();
+                    break;
+                case "<":
+                    instruction = new Less();
+                    break;
+                case "<=":
+                    instruction = new LessOrEqual();
+                    break;
+
+
+                case "==":
+                    instruction = new Equal();
+                    break;
+                case "!=":
+                    instruction = new NotEqual();
+                    break;
+
+
+                case "!":
+                    instruction = new Not();
+                    break;
+                case "~":
+                    instruction = new Negate();
+                    break;
+
+
+                case "*":
+                    instruction = new Multiply();
+                    break;
+                case "/":
+                    instruction = new Divide();
+                    break;
+                case "%":
+                    instruction = new Modulo();
+                    break;
+
+
+                case "&":
+                    instruction = new BitAnd();
+                    break;
+                case "|":
+                    instruction = new BitOr();
+                    break;
+                case "&&":
+                    instruction = new LogAnd();
+                    break;
+                case "||":
+                    instruction = new LogOr();
+                    break;
             }
 
             if (instruction == null)

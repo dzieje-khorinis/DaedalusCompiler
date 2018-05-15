@@ -65,12 +65,12 @@ expressionBlock: expression; // we use that expression to force parser threat ex
 expression
     : '(' expression ')' #bracketExpression
     | oneArgOperator expression #oneArgExpression
-    | expression multOperators expression #multExpression
-    | expression addOperators expression #addExpression
-    | expression ('<<' | '>>') expression #bitMoveExpression
-    | expression compOperators expression #compExpression
-    | expression ('==' | '!=') expression #eqExpression
-    | expression ('&' | '|' | '&&' | '||') expression #bitExpression
+    | expression multOperator expression #multExpression
+    | expression addOperator expression #addExpression
+    | expression bitMoveOperator expression #bitMoveExpression
+    | expression compOperator expression #compExpression
+    | expression eqOperator expression #eqExpression
+    | expression bitOperator expression #bitExpression
     | value #valExpression
     ;
 
@@ -91,7 +91,10 @@ typeReference:  ( referenceNode  | Void | Int | Float | String | Func | Instance
 nameNode: Identifier;
 referenceNode: Identifier;
 assigmentOperator:  '=' | '+=' | '-=' | '*=' | '/=';
-addOperators: '+' | '-';
-compOperators: '<' | '>' | '<=' | '>=';
+addOperator: '+' | '-';
+bitMoveOperator: '<<' | '>>';
+compOperator: '<' | '>' | '<=' | '>=';
+eqOperator: '==' | '!=';
 oneArgOperator: '-' | '!' | '~' | '+';
-multOperators: '*' | '/' | '%';
+multOperator: '*' | '/' | '%';
+bitOperator: '&' | '|' | '&&' | '||';

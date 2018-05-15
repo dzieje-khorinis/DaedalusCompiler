@@ -34,7 +34,7 @@ namespace DaedalusCompiler.Compilation
 
                 if (constContext is DaedalusParser.ConstValueDefContext)
                 {
-                    var constValueContext = (DaedalusParser.ConstValueDefContext)constContext;
+                    var constValueContext = (DaedalusParser.ConstValueDefContext) constContext;
                     var name = constValueContext.nameNode().GetText();
                     var location = GetLocation(context);
                     var assignmentExpression = constValueContext.constValueAssignment().expressionBlock().expression();
@@ -48,7 +48,7 @@ namespace DaedalusCompiler.Compilation
 
                 if (constContext is DaedalusParser.ConstArrayDefContext)
                 {
-                    var constArrayContext = (DaedalusParser.ConstArrayDefContext)constContext;
+                    var constArrayContext = (DaedalusParser.ConstArrayDefContext) constContext;
                     var name = constArrayContext.nameNode().GetText();
                     var location = GetLocation(context);
                     var size = EvaluatorHelper.EvaluteArraySize(constArrayContext.simpleValue(), assemblyBuilder);
@@ -57,9 +57,11 @@ namespace DaedalusCompiler.Compilation
                         .ToArray();
 
                     if (size != content.Length)
-                        throw new Exception($"Invalid const array definition '{constArrayContext.GetText()}'. Invalid items count: expected = {size}, readed = {content.Length}");
+                        throw new Exception(
+                            $"Invalid const array definition '{constArrayContext.GetText()}'. Invalid items count: expected = {size}, readed = {content.Length}");
 
-                    var symbol = SymbolBuilder.BuildArrOfConst(name, type.Value, content, location); // TODO : Validate params
+                    var symbol =
+                        SymbolBuilder.BuildArrOfConst(name, type.Value, content, location); // TODO : Validate params
                     assemblyBuilder.addSymbol(symbol);
 
                     continue;
@@ -83,7 +85,7 @@ namespace DaedalusCompiler.Compilation
 
                     if (varContext is DaedalusParser.VarValueDeclContext)
                     {
-                        var varValueContext = (DaedalusParser.VarValueDeclContext)varContext;
+                        var varValueContext = (DaedalusParser.VarValueDeclContext) varContext;
                         var name = varValueContext.nameNode().GetText();
                         var location = GetLocation(context);
 
@@ -93,12 +95,14 @@ namespace DaedalusCompiler.Compilation
 
                     if (varContext is DaedalusParser.VarArrayDeclContext)
                     {
-                        var varArrayContext = (DaedalusParser.VarArrayDeclContext)varContext;
+                        var varArrayContext = (DaedalusParser.VarArrayDeclContext) varContext;
                         var name = varArrayContext.nameNode().GetText();
                         var location = GetLocation(context);
                         var size = EvaluatorHelper.EvaluteArraySize(varArrayContext.simpleValue(), assemblyBuilder);
 
-                        var symbol = SymbolBuilder.BuildArrOfVariables(name, type.Value, (uint)size, location); // TODO : Validate params
+                        var symbol =
+                            SymbolBuilder.BuildArrOfVariables(name, type.Value, (uint) size,
+                                location); // TODO : Validate params
                         assemblyBuilder.addSymbol(symbol);
                     }
                 }
@@ -116,7 +120,7 @@ namespace DaedalusCompiler.Compilation
             uint classLength = 0;
 
             // TODO: refactor later
-            foreach(var varDeclContext in context.varDecl())
+            foreach (var varDeclContext in context.varDecl())
             {
                 var typeName = varDeclContext.typeReference().GetText();
                 var type = DatSymbolTypeFromString(typeName);
@@ -130,11 +134,12 @@ namespace DaedalusCompiler.Compilation
 
                     if (varContext is DaedalusParser.VarValueDeclContext)
                     {
-                        var varValueContext = (DaedalusParser.VarValueDeclContext)varContext;
+                        var varValueContext = (DaedalusParser.VarValueDeclContext) varContext;
                         var name = varValueContext.nameNode().GetText();
                         var location = GetLocation(context);
 
-                        var symbol = SymbolBuilder.BuildClassVar(name, type.Value, 1, className, classId, classVarOffset, location); // TODO : Validate params
+                        var symbol = SymbolBuilder.BuildClassVar(name, type.Value, 1, className, classId,
+                            classVarOffset, location); // TODO : Validate params
                         assemblyBuilder.addSymbol(symbol);
 
                         classVarOffset += (type == DatSymbolType.String ? 20 : 4);
@@ -143,12 +148,13 @@ namespace DaedalusCompiler.Compilation
 
                     if (varContext is DaedalusParser.VarArrayDeclContext)
                     {
-                        var varArrayContext = (DaedalusParser.VarArrayDeclContext)varContext;
+                        var varArrayContext = (DaedalusParser.VarArrayDeclContext) varContext;
                         var name = varArrayContext.nameNode().GetText();
                         var location = GetLocation(context);
                         var size = EvaluatorHelper.EvaluteArraySize(varArrayContext.simpleValue(), assemblyBuilder);
 
-                        var symbol = SymbolBuilder.BuildClassVar(name, type.Value, (uint)size, className, classId, classVarOffset, location); // TODO : Validate params
+                        var symbol = SymbolBuilder.BuildClassVar(name, type.Value, (uint) size, className, classId,
+                            classVarOffset, location); // TODO : Validate params
                         assemblyBuilder.addSymbol(symbol);
 
                         classVarOffset += (type == DatSymbolType.String ? 20 : 4) * size;
@@ -170,9 +176,11 @@ namespace DaedalusCompiler.Compilation
             var location = GetLocation(context);
 
             var firstTokenAddress = 0; // TODO: Populate first token addres
-            var prototypeSymbol = SymbolBuilder.BuildPrototype(prototypeName, referenceSymbolId, firstTokenAddress, location); // TODO: Validate params
+            var prototypeSymbol =
+                SymbolBuilder.BuildPrototype(prototypeName, referenceSymbolId, firstTokenAddress,
+                    location); // TODO: Validate params
             assemblyBuilder.addSymbol(prototypeSymbol);
-            
+
             assemblyBuilder.execBlockStart(prototypeSymbol, ExecutebleBlockType.PrototypeConstructor);
             assemblyBuilder.setRefSymbol(refSymbol);
         }
@@ -193,7 +201,9 @@ namespace DaedalusCompiler.Compilation
             var location = GetLocation(context);
 
             var firstTokenAddress = 0; // TODO: Populate first token addres
-            var prototypeSymbol = SymbolBuilder.BuildPrototype(prototypeName, referenceSymbolId, firstTokenAddress, location); // TODO: Validate params
+            var prototypeSymbol =
+                SymbolBuilder.BuildPrototype(prototypeName, referenceSymbolId, firstTokenAddress,
+                    location); // TODO: Validate params
             assemblyBuilder.addSymbol(prototypeSymbol);
 
             assemblyBuilder.execBlockStart(prototypeSymbol, ExecutebleBlockType.InstanceConstructor);
@@ -280,6 +290,23 @@ namespace DaedalusCompiler.Compilation
             assemblyBuilder.conditionalBlockConditionEnd();
         }
 
+        public override void EnterBitMoveOperator(DaedalusParser.BitMoveOperatorContext context)
+        {
+            assemblyBuilder.expressionRightSideStart();
+        }
+
+        public override void EnterBitMoveExpression(DaedalusParser.BitMoveExpressionContext context)
+        {
+            assemblyBuilder.expressionLeftSideStart();
+        }
+
+        public override void ExitBitMoveExpression(DaedalusParser.BitMoveExpressionContext context)
+        {
+            var exprOperator = context.bitMoveOperator().GetText();
+            var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator);
+            assemblyBuilder.expressionEnd(instruction);
+        }
+
         public override void EnterCompExpression(DaedalusParser.CompExpressionContext context)
         {
             assemblyBuilder.expressionLeftSideStart();
@@ -287,16 +314,33 @@ namespace DaedalusCompiler.Compilation
 
         public override void ExitCompExpression(DaedalusParser.CompExpressionContext context)
         {
-            var exprOperator = context.compOperators().GetText();
-            assemblyBuilder.expressionEnd(AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator, true));
+            var exprOperator = context.compOperator().GetText();
+            var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator);
+            assemblyBuilder.expressionEnd(instruction);
         }
 
-        public override void EnterCompOperators(DaedalusParser.CompOperatorsContext context)
+        public override void EnterCompOperator(DaedalusParser.CompOperatorContext context)
         {
-            //TODO add comment why here we invoke that
             assemblyBuilder.expressionRightSideStart();
         }
-        
+
+        public override void EnterEqExpression(DaedalusParser.EqExpressionContext context)
+        {
+            assemblyBuilder.expressionLeftSideStart();
+        }
+
+        public override void ExitEqExpression(DaedalusParser.EqExpressionContext context)
+        {
+            var exprOperator = context.eqOperator().GetText();
+            var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator);
+            assemblyBuilder.expressionEnd(instruction);
+        }
+
+        public override void EnterEqOperator(DaedalusParser.EqOperatorContext context)
+        {
+            assemblyBuilder.expressionRightSideStart();
+        }
+
         public override void ExitComplexReference(DaedalusParser.ComplexReferenceContext context)
         {
             var referenceNodes = context.complexReferenceNode();
@@ -312,9 +356,9 @@ namespace DaedalusCompiler.Compilation
             }
             else
             {
-                if ( arrIndex == null )
+                if (arrIndex == null)
                 {
-                    assemblyBuilder.addInstruction(new PushVar( symbol ));
+                    assemblyBuilder.addInstruction(new PushVar(symbol));
                 }
                 else
                 {
@@ -322,8 +366,8 @@ namespace DaedalusCompiler.Compilation
                 }
             }
         }
-        
-        
+
+
         public override void EnterAssignment(DaedalusParser.AssignmentContext context)
         {
             var referenceNodes = context.complexReferenceLeftSide().complexReferenceNode();
@@ -340,9 +384,9 @@ namespace DaedalusCompiler.Compilation
             }
             else
             {
-                if ( arrIndex == null )
+                if (arrIndex == null)
                 {
-                    assemblyBuilder.assigmentStart(new PushVar( symbol ));
+                    assemblyBuilder.assigmentStart(new PushVar(symbol));
                 }
                 else
                 {
@@ -350,7 +394,7 @@ namespace DaedalusCompiler.Compilation
                 }
             }
         }
-        
+
 
         public override void ExitAssignment(DaedalusParser.AssignmentContext context)
         {
@@ -397,39 +441,28 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterIntegerLiteralValue(DaedalusParser.IntegerLiteralValueContext context)
         {
-            var val = context.GetText();
             assemblyBuilder.addInstruction(new PushInt(int.Parse(context.GetText())));
         }
 
         public override void EnterAddExpression(DaedalusParser.AddExpressionContext context)
         {
-            var test = context.GetText();
             assemblyBuilder.expressionLeftSideStart();
         }
-        
+
         public override void ExitAddExpression(DaedalusParser.AddExpressionContext context)
         {
-            var test = context.GetText();
-            var exprOperator = context.addOperators().GetText();
-
-            switch (exprOperator)
-            {
-                case "+":
-                    assemblyBuilder.expressionEnd(new Add());
-                    break;
-                case "-":
-                    assemblyBuilder.expressionEnd(new Subract());
-                    break;
-            }
+            var exprOperator = context.addOperator().GetText();
+            var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator);
+            assemblyBuilder.expressionEnd(instruction);
         }
 
-        public override void EnterAddOperators(DaedalusParser.AddOperatorsContext context)
+        public override void EnterAddOperator(DaedalusParser.AddOperatorContext context)
         {
             //TODO add comment why here we invoke that
             assemblyBuilder.expressionRightSideStart();
         }
 
-        public override void EnterMultOperators(DaedalusParser.MultOperatorsContext context)
+        public override void EnterMultOperator(DaedalusParser.MultOperatorContext context)
         {
             //TODO add comment why here we invoke that
             assemblyBuilder.expressionRightSideStart();
@@ -442,41 +475,33 @@ namespace DaedalusCompiler.Compilation
 
         public override void ExitMultExpression(DaedalusParser.MultExpressionContext context)
         {
-            var exprOperator = context.multOperators().GetText();
+            var exprOperator = context.multOperator().GetText();
+            var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator);
+            assemblyBuilder.expressionEnd(instruction);
+        }
 
-            switch (exprOperator)
-            {
-                case "/":
-                    assemblyBuilder.expressionEnd(new Divide());
-                    break;
-                case "*":
-                    assemblyBuilder.expressionEnd(new Multiply());
-                    break;
-                case "%":
-                    //TODO
-                    break;
-            }
+        public override void EnterBitOperator(DaedalusParser.BitOperatorContext context)
+        {
+            assemblyBuilder.expressionRightSideStart();
+        }
+
+        public override void EnterBitExpression(DaedalusParser.BitExpressionContext context)
+        {
+            assemblyBuilder.expressionLeftSideStart();
+        }
+
+        public override void ExitBitExpression(DaedalusParser.BitExpressionContext context)
+        {
+            var exprOperator = context.bitOperator().GetText();
+            var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator);
+            assemblyBuilder.expressionEnd(instruction);
         }
 
         public override void ExitOneArgExpression(DaedalusParser.OneArgExpressionContext context)
         {
-            var operatorVal = context.oneArgOperator().GetText();
-
-            switch (operatorVal)
-            {
-                case "-":
-                    assemblyBuilder.addInstruction(new Minus());
-                    break;
-                case "+":
-                    assemblyBuilder.addInstruction(new Plus());
-                    break;
-                case "!":
-                    assemblyBuilder.addInstruction(new Not());
-                    break;
-                case "~":
-                    assemblyBuilder.addInstruction(new Negate());
-                    break;
-            }
+            var exprOperator = context.oneArgOperator().GetText();
+            var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator, false);
+            assemblyBuilder.addInstruction(instruction);
         }
 
         private DatSymbolType? DatSymbolTypeFromString(string typeReference)

@@ -173,6 +173,8 @@ namespace DaedalusCompiler.Compilation
         }
     }
 
+    public class Equal : ParamLessInstruction {}
+    public class NotEqual : ParamLessInstruction {}
     public class Less : ParamLessInstruction {}
     public class LessOrEqual : ParamLessInstruction {}
     public class Greater : ParamLessInstruction {}
@@ -191,11 +193,18 @@ namespace DaedalusCompiler.Compilation
     public class Add : ParamLessInstruction {}
     public class Multiply : ParamLessInstruction {}
     public class Divide : ParamLessInstruction {}
-    public class Subract : ParamLessInstruction {}
+    public class Subtract : ParamLessInstruction {}
+    public class Modulo : ParamLessInstruction {}
     public class Not: ParamLessInstruction {}
     public class Minus: ParamLessInstruction {}
     public class Plus: ParamLessInstruction {}
     public class Negate: ParamLessInstruction {}
+    public class ShiftLeft: ParamLessInstruction {}
+    public class ShiftRight: ParamLessInstruction {}
+    public class BitAnd: ParamLessInstruction {}
+    public class BitOr: ParamLessInstruction {}
+    public class LogAnd: ParamLessInstruction {}
+    public class LogOr: ParamLessInstruction {}
 
     public class JumpIfToLabel : LabelJumpInstruction
     {

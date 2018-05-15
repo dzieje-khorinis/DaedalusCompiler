@@ -677,29 +677,53 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitAssigmentOperator([NotNull] DaedalusParser.AssigmentOperatorContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.addOperators"/>.
+	/// Enter a parse tree produced by <see cref="DaedalusParser.addOperator"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterAddOperators([NotNull] DaedalusParser.AddOperatorsContext context) { }
+	public virtual void EnterAddOperator([NotNull] DaedalusParser.AddOperatorContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.addOperators"/>.
+	/// Exit a parse tree produced by <see cref="DaedalusParser.addOperator"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitAddOperators([NotNull] DaedalusParser.AddOperatorsContext context) { }
+	public virtual void ExitAddOperator([NotNull] DaedalusParser.AddOperatorContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.compOperators"/>.
+	/// Enter a parse tree produced by <see cref="DaedalusParser.bitMoveOperator"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterCompOperators([NotNull] DaedalusParser.CompOperatorsContext context) { }
+	public virtual void EnterBitMoveOperator([NotNull] DaedalusParser.BitMoveOperatorContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.compOperators"/>.
+	/// Exit a parse tree produced by <see cref="DaedalusParser.bitMoveOperator"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitCompOperators([NotNull] DaedalusParser.CompOperatorsContext context) { }
+	public virtual void ExitBitMoveOperator([NotNull] DaedalusParser.BitMoveOperatorContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.compOperator"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterCompOperator([NotNull] DaedalusParser.CompOperatorContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.compOperator"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitCompOperator([NotNull] DaedalusParser.CompOperatorContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.eqOperator"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterEqOperator([NotNull] DaedalusParser.EqOperatorContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.eqOperator"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitEqOperator([NotNull] DaedalusParser.EqOperatorContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.oneArgOperator"/>.
 	/// <para>The default implementation does nothing.</para>
@@ -713,17 +737,29 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitOneArgOperator([NotNull] DaedalusParser.OneArgOperatorContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.multOperators"/>.
+	/// Enter a parse tree produced by <see cref="DaedalusParser.multOperator"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterMultOperators([NotNull] DaedalusParser.MultOperatorsContext context) { }
+	public virtual void EnterMultOperator([NotNull] DaedalusParser.MultOperatorContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.multOperators"/>.
+	/// Exit a parse tree produced by <see cref="DaedalusParser.multOperator"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitMultOperators([NotNull] DaedalusParser.MultOperatorsContext context) { }
+	public virtual void ExitMultOperator([NotNull] DaedalusParser.MultOperatorContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.bitOperator"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterBitOperator([NotNull] DaedalusParser.BitOperatorContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.bitOperator"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitBitOperator([NotNull] DaedalusParser.BitOperatorContext context) { }
 
 	/// <inheritdoc/>
 	/// <remarks>The default implementation does nothing.</remarks>
