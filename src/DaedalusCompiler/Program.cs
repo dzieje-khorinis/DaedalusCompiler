@@ -6,6 +6,7 @@ using DaedalusCompiler.Dat;
 using System.Linq;
 using DaedalusCompiler.Compilation;
 using System.Diagnostics;
+using System.IO;
 
 namespace DaedalusCompiler
 {
@@ -73,6 +74,11 @@ namespace DaedalusCompiler
         {
             var dat = new DatFile();
             dat.Load(path);
+
+            //TODO: Move save to compilation process
+            var fileName = Path.GetFileName(path);
+            fileName = Path.ChangeExtension(fileName, "DAT");
+            dat.Save(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), fileName));
         }
 
         static void CompileDaedalus(string path, bool compileToAssembly)

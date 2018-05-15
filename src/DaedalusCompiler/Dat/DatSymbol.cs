@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace DaedalusCompiler.Dat
@@ -64,7 +66,7 @@ namespace DaedalusCompiler.Dat
         /// Fields count which is set only for 'class' symbol
         /// </summary>
         public int? ClassSize { get; set; }
-        
+
         /// <summary>
         /// Specifies where symbol is located in source scripts
         /// </summary>
@@ -76,27 +78,93 @@ namespace DaedalusCompiler.Dat
         public object[] Content { get; set; }
 
         /// <summary>
-        /// ??? Some kind of reference to parent symbol for nested symbols like class variables
+        /// Reference to parent symbol for nested symbols like class variables
         /// </summary>
         public int Parent { get; set; }
 
         /// <summary>
+        /// Saves DatSymbol to binary stream using DAT format 
+        /// </summary>
+        public void Save(DatBinaryWriter writer)
+        {
+            // Save name
+            writer.Write(Convert.ToUInt32(Name != null));
+            if (Name != null)
+            {
+                writer.Write(Name);
+            }
+
+            // Save ReturnType / ClassSize / ClassVarOffset
+            if (Type == DatSymbolType.Func && Flags.HasFlag(DatSymbolFlag.Return))
+            {
+                writer.Write((int)ReturnType.Value);
+            }
+            else if (Type == DatSymbolType.Class)
+            {
+                writer.Write(ClassSize.Value);
+            }
+            else if (Flags.HasFlag(DatSymbolFlag.Classvar))
+            {
+                writer.Write(ClassVarOffset.Value);
+            }
+            else
+            {
+                writer.Write(0);
+            }
+
+            // Save ArrayLength & Type & Flags
+            var bitField = 0u;
+            bitField |= ArrayLength;
+            bitField |= ((uint)Type << 12);
+            bitField |= ((uint)Flags << 16);
+            bitField |= 0x400000;
+            writer.Write(bitField);
+
+            // Save localization data
+            writer.Write(Location.FileNumber);
+            writer.Write(Location.Line);
+            writer.Write(Location.LinesCount);
+            writer.Write(Location.Position);
+            writer.Write(Location.PositionsCount);
+
+            //Save content
+            foreach(var obj in Content ?? Enumerable.Empty<object>())
+            {
+                switch (Type)
+                {
+                    case DatSymbolType.String:
+                        writer.Write((string)obj);
+                        break;
+                    case DatSymbolType.Float:
+                        writer.Write((float)obj);
+                        break;
+                    default:
+                        writer.Write((int)obj);
+                        break;
+                }
+            }
+
+            // Save parent
+            writer.Write(Parent);
+        }
+
+        /// <summary>
         /// Loads DatSymbol from binary DAT formatted stream
         /// </summary>
-        public static DatSymbol Load(BinaryFileStream stream)
+        public static DatSymbol Load(DatBinaryReader reader)
         {
             var symbol = new DatSymbol();
 
-            // Read symbol name
-            var hasName = Convert.ToBoolean(stream.ReadUInt());
+            // Read Name
+            var hasName = Convert.ToBoolean(reader.ReadUInt32());
             if (hasName)
             {
-                symbol.Name = stream.ReadString();
+                symbol.Name = reader.ReadString();
             }
 
-            // Read symbol properties
-            var offset = stream.ReadInt();
-            var bitField = stream.ReadUInt();
+            // Read ReturnType / ClassSize / ClassVarOffset / ArrayLength / Type / Flags
+            var valueField = reader.ReadInt32();
+            var bitField = reader.ReadUInt32();
 
             symbol.ArrayLength = bitField & 0xFFF;
             symbol.Type = (DatSymbolType)((bitField & 0xF000) >> 12);
@@ -104,40 +172,40 @@ namespace DaedalusCompiler.Dat
 
             if (symbol.Type == DatSymbolType.Func && symbol.Flags.HasFlag(DatSymbolFlag.Return))
             {
-                symbol.ReturnType = (DatSymbolType)offset;
+                symbol.ReturnType = (DatSymbolType)valueField;
             }
 
             if (symbol.Type == DatSymbolType.Class)
             {
-                symbol.ClassSize = offset;
+                symbol.ClassSize = valueField;
             }
 
             if (symbol.Flags.HasFlag(DatSymbolFlag.Classvar))
             {
-                symbol.ClassVarOffset = offset;
+                symbol.ClassVarOffset = valueField;
             }
 
-            // Read symbol localization data
+            // Read Location
             symbol.Location = new DatSymbolLocation
             {
-                FileNumber = stream.ReadInt(),
-                Line = stream.ReadInt(),
-                LinesCount = stream.ReadInt(),
-                Position = stream.ReadInt(),
-                PositionsCount = stream.ReadInt(),
+                FileNumber = reader.ReadInt32(),
+                Line = reader.ReadInt32(),
+                LinesCount = reader.ReadInt32(),
+                Position = reader.ReadInt32(),
+                PositionsCount = reader.ReadInt32(),
             };
 
 
-            // Read symbol content if exists
-            symbol.Content = GetContentIfExists(stream, symbol);
+            // Read Content (if exists)
+            symbol.Content = GetContentIfExists(reader, symbol);
 
-            // Read symbol parent
-            symbol.Parent = stream.ReadInt();
+            // Read Parent
+            symbol.Parent = reader.ReadInt32();
 
-            return symbol;            
+            return symbol;
         }
 
-        private static object[] GetContentIfExists(BinaryFileStream stream, DatSymbol symbol)
+        private static object[] GetContentIfExists(DatBinaryReader reader, DatSymbol symbol)
         {
             // TODO : Verify and refactor this method.
 
@@ -164,13 +232,13 @@ namespace DaedalusCompiler.Dat
                     switch (symbol.Type)
                     {
                         case DatSymbolType.String:
-                            result[i] = stream.ReadString();
+                            result[i] = reader.ReadString();
                             break;
                         case DatSymbolType.Float:
-                            result[i] = stream.ReadFloat();
+                            result[i] = reader.ReadSingle();
                             break;
                         default:
-                            result[i] = stream.ReadInt();
+                            result[i] = reader.ReadInt32();
                             break;
                     }
                 }

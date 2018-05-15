@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 
 namespace DaedalusCompiler.Dat
 {
-    public enum DatTokenType
+    public enum DatTokenType : byte
     {
         Add = 0,
         Subract = 1,
@@ -54,9 +55,9 @@ namespace DaedalusCompiler.Dat
     [DebuggerDisplay("{TokenType} I:{IntParam} B:{ByteParam}")]
     public class DatToken
     {
-        public static DatToken LoadToken(BinaryFileStream stream)
+        public static DatToken LoadToken(DatBinaryReader reader)
         {
-            var tokenByte = stream.ReadByte();
+            var tokenByte = reader.ReadByte();
 
             if (Enum.IsDefined(typeof(DatTokenType), tokenByte) == false)
                 throw new Exception($"Unable to parse DatToken with id = {tokenByte}");
@@ -69,44 +70,34 @@ namespace DaedalusCompiler.Dat
             switch (token.TokenType)
             {
                 case DatTokenType.Call:
-                    token.IntParam = stream.ReadInt();
-                    break;
-
                 case DatTokenType.CallExternal:
-                    token.IntParam = stream.ReadInt();
-                    break;
-
                 case DatTokenType.PushInt:
-                    token.IntParam = stream.ReadInt();
-                    break;
-
                 case DatTokenType.PushVar:
-                    token.IntParam = stream.ReadInt();
-                    break;
-
                 case DatTokenType.PushInstance:
-                    token.IntParam = stream.ReadInt();
-                    break;
-
                 case DatTokenType.Jump:
-                    token.IntParam = stream.ReadInt();
-                    break;
-
                 case DatTokenType.JumpIf:
-                    token.IntParam = stream.ReadInt();
-                    break;
-
                 case DatTokenType.SetInstance:
-                    token.IntParam = stream.ReadInt();
+                    token.IntParam = reader.ReadInt32();
                     break;
 
                 case DatTokenType.PushArrayVar:
-                    token.IntParam = stream.ReadInt();
-                    token.ByteParam = stream.ReadByte();
+                    token.IntParam = reader.ReadInt32();
+                    token.ByteParam = reader.ReadByte();
                     break;
             }
 
             return token;
+        }
+
+        public void Save(DatBinaryWriter writer)
+        {
+            writer.Write((byte)TokenType);
+
+            if (IntParam.HasValue)
+                writer.Write(IntParam.Value);
+
+            if (ByteParam.HasValue)
+                writer.Write(ByteParam.Value);
         }
 
         public DatTokenType TokenType { get; private set; }
