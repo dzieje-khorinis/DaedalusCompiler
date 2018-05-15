@@ -117,7 +117,7 @@ namespace DaedalusCompiler.Tests
 
             builder.execBlockStart(symbol, ExecutebleBlockType.Function);
             builder.execBlockEnd();
-            Assert.Equal(1, builder.functions.Count);
+            Assert.Equal(2, builder.functions.Count);
         }
 
         [Fact]
