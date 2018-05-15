@@ -322,32 +322,12 @@ namespace DaedalusCompiler.Compilation
                     assemblyBuilder.assigmentStart(new PushArrVar(symbol, int.Parse(arrIndex.GetText())));
                 }
             }
-
-//            switch (operatorVal)
-//            {
-//                case "=":
-//                    //TODO implement correctly
-//                    assemblyBuilder.addInstruction(new PushInt(-10));
-//                    assemblyBuilder.addInstruction(new Assign());
-//                    break;
-//                case "+=":
-//                    //TODO implement correctly
-//                    break;
-//                case "-=":
-//                    //TODO implement correctly
-//                    break;
-//                case "*=":
-//                    //TODO implement correctly
-//                    break;
-//                case "/=":
-//                    //TODO implement correctly
-//                    break;
-//            }
         }
 
         public override void ExitAssignment(DaedalusParser.AssignmentContext context)
         {
-            assemblyBuilder.assigmentEnd();
+            string assignmentOperator = context.assigmentOperator().GetText();
+            assemblyBuilder.assigmentEnd(assignmentOperator);
         }
 
         public override void EnterFuncCallValue(DaedalusParser.FuncCallValueContext context)
