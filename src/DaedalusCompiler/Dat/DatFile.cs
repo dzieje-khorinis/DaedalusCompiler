@@ -65,7 +65,7 @@ namespace DaedalusCompiler.Dat
             List<DatToken> result = new List<DatToken>();
             while (stackLength > 0)
             {
-                var token = DatToken.LoadToken(reader);
+                var token = DatToken.Load(reader);
                 result.Add(token);
                 stackLength -= token.Size;
             }

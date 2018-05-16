@@ -55,7 +55,7 @@ namespace DaedalusCompiler.Dat
     [DebuggerDisplay("{TokenType} I:{IntParam} B:{ByteParam}")]
     public class DatToken
     {
-        public static DatToken LoadToken(DatBinaryReader reader)
+        public static DatToken Load(DatBinaryReader reader)
         {
             var tokenByte = reader.ReadByte();
 
@@ -100,12 +100,12 @@ namespace DaedalusCompiler.Dat
                 writer.Write(ByteParam.Value);
         }
 
-        public DatTokenType TokenType { get; private set; }
+        public DatTokenType TokenType { get; set; }
 
         public int Size { get { return 1 + (IntParam.HasValue ? 4 : 0) + (ByteParam.HasValue ? 1 : 0); } }
 
         public int? IntParam { get; set; }
 
-        public int? ByteParam { get; private set; }
+        public int? ByteParam { get; set; }
     }
 }
