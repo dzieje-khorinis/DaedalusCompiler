@@ -459,8 +459,9 @@ namespace DaedalusCompiler.Tests
             CompareInstructionLists(instructions, expectedInstructions);
         }
 
+
         [Fact]
-        public void TestIntBitOperator()
+        public void TestIntLogAndBinOperator()
         {
             string declarations = @"
                 var int a;
@@ -603,6 +604,53 @@ namespace DaedalusCompiler.Tests
                 new PushVar(Var("int c")),
                 new LogOr(),
                 new PushVar(Var("int a")),
+                new Assign(),
+            };
+
+            CompareInstructionLists(instructions, expectedInstructions);
+        }
+
+
+        [Fact]
+        public void TestIntLogAndBinOperatorPrecedence()
+        {
+            string declarations = @"
+                var int a;
+                var int b;
+            ";
+            string expressions = @"
+                a = 0 || 1 && 2 | 3 & 4;
+                b = 5 & 6 | 7 && 8 || 9;
+            ";
+
+            List<AssemblyElement> instructions = ParseExpressions(declarations, expressions);
+
+            List<AssemblyElement> expectedInstructions = new List<AssemblyElement>
+            {
+                // a = 0 || 1 && 2 | 3 & 4;
+                new PushInt(4),
+                new PushInt(3),
+                new BitAnd(),
+                new PushInt(2),
+                new BitOr(),
+                new PushInt(1),
+                new LogAnd(),
+                new PushInt(0),
+                new LogOr(),
+                new PushVar(Var("int a")),
+                new Assign(),
+
+                // b = 5 & 6 | 7 && 8 || 9;
+                new PushInt(9),
+                new PushInt(8),
+                new PushInt(7),
+                new PushInt(6),
+                new PushInt(5),
+                new BitAnd(),
+                new BitOr(),
+                new LogAnd(),
+                new LogOr(),
+                new PushVar(Var("int b")),
                 new Assign(),
             };
 

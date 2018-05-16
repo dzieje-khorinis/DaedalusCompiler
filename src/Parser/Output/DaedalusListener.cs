@@ -383,17 +383,41 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitCompExpression([NotNull] DaedalusParser.CompExpressionContext context);
 	/// <summary>
-	/// Enter a parse tree produced by the <c>bitExpression</c>
+	/// Enter a parse tree produced by the <c>logOrExpression</c>
 	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void EnterBitExpression([NotNull] DaedalusParser.BitExpressionContext context);
+	void EnterLogOrExpression([NotNull] DaedalusParser.LogOrExpressionContext context);
 	/// <summary>
-	/// Exit a parse tree produced by the <c>bitExpression</c>
+	/// Exit a parse tree produced by the <c>logOrExpression</c>
 	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void ExitBitExpression([NotNull] DaedalusParser.BitExpressionContext context);
+	void ExitLogOrExpression([NotNull] DaedalusParser.LogOrExpressionContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>binAndExpression</c>
+	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterBinAndExpression([NotNull] DaedalusParser.BinAndExpressionContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>binAndExpression</c>
+	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitBinAndExpression([NotNull] DaedalusParser.BinAndExpressionContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>binOrExpression</c>
+	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterBinOrExpression([NotNull] DaedalusParser.BinOrExpressionContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>binOrExpression</c>
+	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitBinOrExpression([NotNull] DaedalusParser.BinOrExpressionContext context);
 	/// <summary>
 	/// Enter a parse tree produced by the <c>multExpression</c>
 	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
@@ -418,6 +442,18 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitBracketExpression([NotNull] DaedalusParser.BracketExpressionContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>logAndExpression</c>
+	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterLogAndExpression([NotNull] DaedalusParser.LogAndExpressionContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>logAndExpression</c>
+	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitLogAndExpression([NotNull] DaedalusParser.LogAndExpressionContext context);
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.simpleValue"/>.
 	/// </summary>
@@ -631,13 +667,43 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitMultOperator([NotNull] DaedalusParser.MultOperatorContext context);
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.bitOperator"/>.
+	/// Enter a parse tree produced by <see cref="DaedalusParser.binAndOperator"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void EnterBitOperator([NotNull] DaedalusParser.BitOperatorContext context);
+	void EnterBinAndOperator([NotNull] DaedalusParser.BinAndOperatorContext context);
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.bitOperator"/>.
+	/// Exit a parse tree produced by <see cref="DaedalusParser.binAndOperator"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void ExitBitOperator([NotNull] DaedalusParser.BitOperatorContext context);
+	void ExitBinAndOperator([NotNull] DaedalusParser.BinAndOperatorContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.binOrOperator"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterBinOrOperator([NotNull] DaedalusParser.BinOrOperatorContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.binOrOperator"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitBinOrOperator([NotNull] DaedalusParser.BinOrOperatorContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.logAndOperator"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterLogAndOperator([NotNull] DaedalusParser.LogAndOperatorContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.logAndOperator"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitLogAndOperator([NotNull] DaedalusParser.LogAndOperatorContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.logOrOperator"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterLogOrOperator([NotNull] DaedalusParser.LogOrOperatorContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.logOrOperator"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitLogOrOperator([NotNull] DaedalusParser.LogOrOperatorContext context);
 }

@@ -480,19 +480,70 @@ namespace DaedalusCompiler.Compilation
             assemblyBuilder.expressionEnd(instruction);
         }
 
-        public override void EnterBitOperator(DaedalusParser.BitOperatorContext context)
+        public override void EnterBinAndOperator(DaedalusParser.BinAndOperatorContext context)
         {
             assemblyBuilder.expressionRightSideStart();
         }
 
-        public override void EnterBitExpression(DaedalusParser.BitExpressionContext context)
+        public override void EnterBinAndExpression(DaedalusParser.BinAndExpressionContext context)
         {
             assemblyBuilder.expressionLeftSideStart();
         }
 
-        public override void ExitBitExpression(DaedalusParser.BitExpressionContext context)
+        public override void ExitBinAndExpression(DaedalusParser.BinAndExpressionContext context)
         {
-            var exprOperator = context.bitOperator().GetText();
+            var exprOperator = context.binAndOperator().GetText();
+            var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator);
+            assemblyBuilder.expressionEnd(instruction);
+        }
+
+        public override void EnterBinOrOperator(DaedalusParser.BinOrOperatorContext context)
+        {
+            assemblyBuilder.expressionRightSideStart();
+        }
+
+        public override void EnterBinOrExpression(DaedalusParser.BinOrExpressionContext context)
+        {
+            assemblyBuilder.expressionLeftSideStart();
+        }
+
+        public override void ExitBinOrExpression(DaedalusParser.BinOrExpressionContext context)
+        {
+            var exprOperator = context.binOrOperator().GetText();
+            var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator);
+            assemblyBuilder.expressionEnd(instruction);
+        }
+
+        public override void EnterLogAndOperator(DaedalusParser.LogAndOperatorContext context)
+        {
+            assemblyBuilder.expressionRightSideStart();
+        }
+
+        public override void EnterLogAndExpression(DaedalusParser.LogAndExpressionContext context)
+        {
+            assemblyBuilder.expressionLeftSideStart();
+        }
+
+        public override void ExitLogAndExpression(DaedalusParser.LogAndExpressionContext context)
+        {
+            var exprOperator = context.logAndOperator().GetText();
+            var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator);
+            assemblyBuilder.expressionEnd(instruction);
+        }
+
+        public override void EnterLogOrOperator(DaedalusParser.LogOrOperatorContext context)
+        {
+            assemblyBuilder.expressionRightSideStart();
+        }
+
+        public override void EnterLogOrExpression(DaedalusParser.LogOrExpressionContext context)
+        {
+            assemblyBuilder.expressionLeftSideStart();
+        }
+
+        public override void ExitLogOrExpression(DaedalusParser.LogOrExpressionContext context)
+        {
+            var exprOperator = context.logOrOperator().GetText();
             var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator);
             assemblyBuilder.expressionEnd(instruction);
         }

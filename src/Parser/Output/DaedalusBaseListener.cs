@@ -455,19 +455,47 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitCompExpression([NotNull] DaedalusParser.CompExpressionContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by the <c>bitExpression</c>
+	/// Enter a parse tree produced by the <c>logOrExpression</c>
 	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterBitExpression([NotNull] DaedalusParser.BitExpressionContext context) { }
+	public virtual void EnterLogOrExpression([NotNull] DaedalusParser.LogOrExpressionContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by the <c>bitExpression</c>
+	/// Exit a parse tree produced by the <c>logOrExpression</c>
 	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitBitExpression([NotNull] DaedalusParser.BitExpressionContext context) { }
+	public virtual void ExitLogOrExpression([NotNull] DaedalusParser.LogOrExpressionContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>binAndExpression</c>
+	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterBinAndExpression([NotNull] DaedalusParser.BinAndExpressionContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>binAndExpression</c>
+	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitBinAndExpression([NotNull] DaedalusParser.BinAndExpressionContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>binOrExpression</c>
+	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterBinOrExpression([NotNull] DaedalusParser.BinOrExpressionContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>binOrExpression</c>
+	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitBinOrExpression([NotNull] DaedalusParser.BinOrExpressionContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by the <c>multExpression</c>
 	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
@@ -496,6 +524,20 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitBracketExpression([NotNull] DaedalusParser.BracketExpressionContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>logAndExpression</c>
+	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterLogAndExpression([NotNull] DaedalusParser.LogAndExpressionContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>logAndExpression</c>
+	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitLogAndExpression([NotNull] DaedalusParser.LogAndExpressionContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.simpleValue"/>.
 	/// <para>The default implementation does nothing.</para>
@@ -749,17 +791,53 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitMultOperator([NotNull] DaedalusParser.MultOperatorContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.bitOperator"/>.
+	/// Enter a parse tree produced by <see cref="DaedalusParser.binAndOperator"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterBitOperator([NotNull] DaedalusParser.BitOperatorContext context) { }
+	public virtual void EnterBinAndOperator([NotNull] DaedalusParser.BinAndOperatorContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.bitOperator"/>.
+	/// Exit a parse tree produced by <see cref="DaedalusParser.binAndOperator"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitBitOperator([NotNull] DaedalusParser.BitOperatorContext context) { }
+	public virtual void ExitBinAndOperator([NotNull] DaedalusParser.BinAndOperatorContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.binOrOperator"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterBinOrOperator([NotNull] DaedalusParser.BinOrOperatorContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.binOrOperator"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitBinOrOperator([NotNull] DaedalusParser.BinOrOperatorContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.logAndOperator"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterLogAndOperator([NotNull] DaedalusParser.LogAndOperatorContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.logAndOperator"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitLogAndOperator([NotNull] DaedalusParser.LogAndOperatorContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.logOrOperator"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterLogOrOperator([NotNull] DaedalusParser.LogOrOperatorContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.logOrOperator"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitLogOrOperator([NotNull] DaedalusParser.LogOrOperatorContext context) { }
 
 	/// <inheritdoc/>
 	/// <remarks>The default implementation does nothing.</remarks>

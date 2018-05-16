@@ -70,7 +70,10 @@ expression
     | expression bitMoveOperator expression #bitMoveExpression
     | expression compOperator expression #compExpression
     | expression eqOperator expression #eqExpression
-    | expression bitOperator expression #bitExpression
+    | expression binAndOperator expression #binAndExpression
+    | expression binOrOperator expression #binOrExpression
+    | expression logAndOperator expression #logAndExpression
+    | expression logOrOperator expression #logOrExpression
     | value #valExpression
     ;
 
@@ -97,4 +100,7 @@ compOperator: '<' | '>' | '<=' | '>=';
 eqOperator: '==' | '!=';
 oneArgOperator: '-' | '!' | '~' | '+';
 multOperator: '*' | '/' | '%';
-bitOperator: '&' | '|' | '&&' | '||';
+binAndOperator: '&';
+binOrOperator: '|';
+logAndOperator: '&&';
+logOrOperator: '||';
