@@ -49,7 +49,7 @@ namespace DaedalusCompiler.Tests
             ";
 
             AssemblyBuilder assemblyBuilder = GetAssemblyBuilder(data);
-            return assemblyBuilder.functions.Find(func => func.symbol.Name == "testFunc").body;
+            return assemblyBuilder.functions.Find(func => func.symbol.Name == "testfunc").body;
         }
 
         private AssemblyBuilder GetAssemblyBuilder(string data)
@@ -842,7 +842,7 @@ namespace DaedalusCompiler.Tests
 
             AssemblyBuilder ab = GetAssemblyBuilder(data);
 
-            List<AssemblyElement> testFuncInstructions = ab.functions.Find(func => func.symbol.Name == "testFunc").body;
+            List<AssemblyElement> testFuncInstructions = ab.functions.Find(func => func.symbol.Name == "testfunc").body;
             List<AssemblyElement> testFuncExpectedInstructions = new List<AssemblyElement>
             {
                 // d.age = 5;

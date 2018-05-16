@@ -570,6 +570,7 @@ namespace DaedalusCompiler.Compilation
 
         public DatSymbol resolveSymbol(string symbolName)
         {
+            symbolName = symbolName.ToLower();
             string targetSymbolName;
 
             if (active is PrototypeContructorBlock || active is InstanceConstructorBlock)
@@ -607,7 +608,7 @@ namespace DaedalusCompiler.Compilation
 
         public DatSymbol getSymbolByName(string symbolName)
         {
-            return symbols.FirstOrDefault(x => x.Name == symbolName);
+            return symbols.FirstOrDefault(x => x.Name == symbolName.ToLower());
         }
 
         public int getSymbolId(DatSymbol symbol)
