@@ -33,6 +33,11 @@ namespace DaedalusCompiler.Tests
             return SymbolBuilder.BuildFunc(funcname, DatSymbolType.Func);
         }
 
+        private static DatSymbol Symbol(AssemblyBuilder assemblyBuilder, string symbolname)
+        {
+            return assemblyBuilder.resolveSymbol(symbolname);
+        }
+
         private List<AssemblyElement> ParseExpressions(string declarations, string expressions)
         {
             string data = $@"
@@ -42,15 +47,21 @@ namespace DaedalusCompiler.Tests
                     {expressions}
                 }};
             ";
+
+            AssemblyBuilder assemblyBuilder = GetAssemblyBuilder(data);
+            return assemblyBuilder.functions.Find(func => func.symbol.Name == "testFunc").body;
+        }
+
+        private AssemblyBuilder GetAssemblyBuilder(string data)
+        {
             AntlrInputStream inputStream = new AntlrInputStream(data);
             DaedalusLexer lexer = new DaedalusLexer(inputStream);
             CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
             DaedalusParser parser = new DaedalusParser(commonTokenStream);
 
-
             AssemblyBuilder assemblyBuilder = new AssemblyBuilder();
             ParseTreeWalker.Default.Walk(new DaedalusParserListener(assemblyBuilder, 0), parser.daedalusFile());
-            return assemblyBuilder.functions.Find(func => func.symbol.Name == "testFunc").body;
+            return assemblyBuilder;
         }
 
         private void CompareInstructionLists(
@@ -810,6 +821,44 @@ namespace DaedalusCompiler.Tests
             };
 
             CompareInstructionLists(instructions, expectedInstructions);
+        }
+
+        [Fact]
+        public void TestFuncClassParameterAndAttributesInSimpleExpressions()
+        {
+            string data = @"
+                class person {
+                    var int age;
+                };
+                
+                var int a;
+
+                func void testFunc(var person d)
+                {
+                    d.age = 5;
+                    a = d.age;
+                };
+            ";
+
+            AssemblyBuilder ab = GetAssemblyBuilder(data);
+
+            List<AssemblyElement> testFuncInstructions = ab.functions.Find(func => func.symbol.Name == "testFunc").body;
+            List<AssemblyElement> testFuncExpectedInstructions = new List<AssemblyElement>
+            {
+                // d.age = 5;
+                new PushInt(5),
+                new SetInstance(Symbol(ab, "testFunc.d")),
+                new PushVar(Symbol(ab, "person.age")),
+                new Assign(),
+
+                // a = d.age;
+                new SetInstance(Symbol(ab, "testFunc.d")),
+                new PushVar(Symbol(ab, "person.age")),
+                new PushVar(Symbol(ab, "a")),
+                new Assign(),
+            };
+
+            CompareInstructionLists(testFuncInstructions, testFuncExpectedInstructions);
         }
     }
 }
