@@ -266,7 +266,7 @@ namespace DaedalusCompiler.Compilation
         private AssemblyBuildContext currentBuildCtx; // current assembly build context
         private List<AssemblyElement> assembly;
         private DatSymbol refSymbol; // we use that for prototype and instance definintions
-        private List<SymbolInstruction> assigmentLeftSide;
+        private List<SymbolInstruction> assignmentLeftSide;
         private FuncArgsBodyContext funcArgsBodyCtx;
 
         public AssemblyBuilder()
@@ -278,7 +278,7 @@ namespace DaedalusCompiler.Compilation
             currentBuildCtx = getEmptyBuildContext();
             active = null;
             assembly = new List<AssemblyElement>();
-            assigmentLeftSide = new List<SymbolInstruction>();
+            assignmentLeftSide = new List<SymbolInstruction>();
             funcArgsBodyCtx = new FuncArgsBodyContext(null);
         }
 
@@ -346,27 +346,23 @@ namespace DaedalusCompiler.Compilation
 
         public void assigmentStart(SymbolInstruction instruction)
         {
-            assigmentLeftSide.Add(instruction);
+            assignmentLeftSide.Add(instruction);
         }
         
-        //TODO check if there are any possibilities of assigmentLeftSide longer than 2 instructions?
+        //TODO check if there are any possibilities of assignmentLeftSide longer than 2 instructions?
         public void assigmentStart(SymbolInstruction instruction1, SymbolInstruction instruction2)
         {
-            assigmentLeftSide.Add(instruction1);
-            assigmentLeftSide.Add(instruction2);
+            assignmentLeftSide.Add(instruction1);
+            assignmentLeftSide.Add(instruction2);
         }
 
         public void assigmentEnd(string assignmentOperator)
         {
-            var operationType = assigmentLeftSide[assigmentLeftSide.Count - 1].symbol.Type;   //TODO check if there are any possibilities of assigmentLeftSide longer than 2 instructions?
+            var operationType = assignmentLeftSide.Last().symbol.Type;   //TODO check if there are any possibilities of assignmentLeftSide longer than 2 instructions?
             var assignmentInstruction = AssemblyBuilderHelpers.GetInstructionForOperator(assignmentOperator, true, operationType);
-
-            foreach (var instruction in assigmentLeftSide)
-            {
-                addInstruction(instruction);
-            }
-
-            assigmentLeftSide = new List<SymbolInstruction>();
+          
+            addInstructions((SymbolInstruction[])assignmentLeftSide.ToArray());
+            assignmentLeftSide = new List<SymbolInstruction>();
             addInstruction(assignmentInstruction);
         }
 

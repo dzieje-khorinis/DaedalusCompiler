@@ -22,7 +22,7 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterParameterDecl(DaedalusParser.ParameterDeclContext context)
         {
-            FunctionBlock functionBlock = assemblyBuilder.functions[assemblyBuilder.functions.Count - 1];
+            FunctionBlock functionBlock = assemblyBuilder.functions.Last();
             string functionName = functionBlock.symbol.Name;
             string parameterLocalName = context.nameNode().GetText();
             string parameterName = $"{functionName}.{parameterLocalName}";
@@ -391,8 +391,8 @@ namespace DaedalusCompiler.Compilation
 
                 DatSymbol attribute = assemblyBuilder.resolveSymbol($"{typeName}.{attributeName}");
 
-                assemblyBuilder.addInstruction(new SetInstance(symbol));
-                assemblyBuilder.addInstruction(new PushVar(attribute));
+                AssemblyInstruction[] instructions = {new SetInstance(symbol), new PushVar(attribute)};
+                assemblyBuilder.addInstructions(instructions);
             }
             else
             {
