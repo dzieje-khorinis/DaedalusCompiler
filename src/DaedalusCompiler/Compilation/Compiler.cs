@@ -32,6 +32,10 @@ namespace DaedalusCompiler.Compilation
                 {
                     Console.WriteLine(assemblyBuilder.getAssembler());
                 }
+                else
+                {
+                    assemblyBuilder.saveToDat();
+                }
             }
             catch (Exception exc)
             {

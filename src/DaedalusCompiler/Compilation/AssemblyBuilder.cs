@@ -264,7 +264,6 @@ namespace DaedalusCompiler.Compilation
         public List<DatSymbol> symbols;
         private ExecBlock active;
         private AssemblyBuildContext currentBuildCtx; // current assembly build context
-        private List<AssemblyElement> assembly;
         private DatSymbol refSymbol; // we use that for prototype and instance definintions
         private List<SymbolInstruction> assignmentLeftSide;
         private FuncArgsBodyContext funcArgsBodyCtx;
@@ -277,7 +276,6 @@ namespace DaedalusCompiler.Compilation
             symbols = new List<DatSymbol>();
             currentBuildCtx = getEmptyBuildContext();
             active = null;
-            assembly = new List<AssemblyElement>();
             assignmentLeftSide = new List<SymbolInstruction>();
             funcArgsBodyCtx = new FuncArgsBodyContext(null);
         }
@@ -617,80 +615,27 @@ namespace DaedalusCompiler.Compilation
             return symbols.IndexOf(symbol);
         }
 
+        public List<ExecBlock> getExecBlocks()
+        {
+            var execBlocks = new List<ExecBlock>();
+            execBlocks.AddRange(functions);
+            execBlocks.AddRange(prototypeContructors);
+            execBlocks.AddRange(instanceConstructors);
+
+            return execBlocks;
+        }
+
         public string getAssembler()
         {
-            return new AssemblyBuilderTraverser().traverse(true, functions, symbols);
+            return new AssemblyBuilderTraverser().getAssembler(getExecBlocks(), symbols);
         }
 
-        public string getByteCode()
+        public void saveToDat()
         {
-            return "";
-        }
-
-        public DatFile getDatFile()
-        {
-            // TODO: Refactor this code later
-
-            var labels = assembly
-                .Select((tokenClass, id) => new { id, tokenClass })
-                .Where(x => x.tokenClass is AssemblyLabel)
-                .Select((x, i) => new { id = x.id - i, ((AssemblyLabel)x.tokenClass).label })
-                .ToDictionary(x => x.label, x => x.id);
-
-            var tokens = assembly
-                .Where(x => x is AssemblyIfStatement == false)
-                .Select(tokenClass =>
-                {
-                    var tokenName = tokenClass.GetType().Name;
-                    var tokenType = Enum.Parse<DatTokenType>(tokenName);
-                    int? intParam = null;
-                    byte? byteParam = null;
-
-                    if (tokenClass is PushArrVar)
-                    {
-                        var arrayVar = (PushArrVar)tokenClass;
-                        intParam = getSymbolId(arrayVar.symbol);
-                        byteParam = (byte)arrayVar.index;
-                    }
-                    else if (tokenClass is LabelJumpInstruction)
-                    {
-                        //TODO: this is token id, should be changed to token stack location later
-                        intParam = labels[((LabelJumpInstruction)tokenClass).label];
-                    }
-                    else if (tokenClass is SymbolInstruction)
-                    {
-                        intParam = getSymbolId(((SymbolInstruction)tokenClass).symbol);
-                    }
-                    else if (tokenClass is ValueInstruction)
-                    {
-                        intParam = (int)((ValueInstruction)tokenClass).value;
-                    }
-                    else if (tokenClass is AddressInstruction)
-                    {
-                        intParam = ((AddressInstruction)tokenClass).address;
-                    }
-
-                    return new DatToken { TokenType = tokenType, IntParam = intParam, ByteParam = byteParam };
-                });
-
-            return new DatFile
-            {
-                Version = '2',
-                Symbols = symbols,
-                Tokens = tokens.ToList()
-            };
-        }
-
-        public string getOutput(bool getAssembler = false)
-        {
-            if (getAssembler)
-            {
-                return this.getAssembler();
-            }
-            else
-            {
-                return getByteCode();
-            }
+            // todo finish
+            var datFile = AssemblyBuilderToDat.getDatFile(getExecBlocks(), symbols);
+            
+            datFile.Save("./test.dat");
         }
     }
 }

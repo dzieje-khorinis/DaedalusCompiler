@@ -480,13 +480,6 @@ namespace DaedalusCompiler.Compilation
             assemblyBuilder.funcCallArgEnd();
         }
 
-        public override void EnterExpressionBlock(DaedalusParser.ExpressionBlockContext context)
-        {
-            var text = context.GetText();
-            Console.WriteLine("enter expr block");
-            Console.WriteLine(context.GetText());
-        }
-
         public override void EnterIntegerLiteralValue(DaedalusParser.IntegerLiteralValueContext context)
         {
             assemblyBuilder.addInstruction(new PushInt(int.Parse(context.GetText())));

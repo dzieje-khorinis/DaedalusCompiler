@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
@@ -20,14 +21,14 @@ namespace DaedalusCompiler.Compilation
             return $"label_{labelIdx++}";
         }
 
-        public string traverse(bool getAssembly, List<FunctionBlock> functions, List<DatSymbol> symbols)
+        public string getAssembler(List<ExecBlock> execBlocks, List<DatSymbol> symbols)
         {
             foreach (var symbol in symbols)
             {
                 //TODO
             }
 
-            foreach (var function in functions)
+            foreach (var function in execBlocks)
             {
                 buildAcc += $"# func \"{function.symbol.Name}\" start \n";
 
