@@ -8,7 +8,7 @@ namespace DaedalusCompiler.Compilation
     {
         private string buildAcc;
         private int labelIdx;
-        
+
         public AssemblyBuilderTraverser()
         {
             buildAcc = "";
@@ -19,14 +19,14 @@ namespace DaedalusCompiler.Compilation
         {
             return $"label_{labelIdx++}";
         }
-        
+
         public string traverse(bool getAssembly, List<FunctionBlock> functions, List<DatSymbol> symbols)
         {
             foreach (var symbol in symbols)
             {
                 //TODO
             }
-            
+
             foreach (var function in functions)
             {
                 buildAcc += $"# func \"{function.symbol.Name}\" start \n";
@@ -63,6 +63,10 @@ namespace DaedalusCompiler.Compilation
             {
                 buildAcc += $"PushArrVar {pushArrVarElement.symbol.Name}[{pushArrVarElement.index}]\n";
             }
+            else if (element is SetInstance setInstanceElement)
+            {
+                buildAcc += $"SetInstance {setInstanceElement.symbol.Name}\n";
+            }
             else if (element is AssemblyIfStatement ifElement)
             {
                 var ifBlock = ifElement.ifBlock;
@@ -70,7 +74,7 @@ namespace DaedalusCompiler.Compilation
                 var elseInstructions = ifElement.elseBody;
                 var ifStatementEndLabel = getLabel();
                 var nextJumpLabel = ifStatementEndLabel;
-                
+
                 //TODO make sure that this code works good, not tested :(
 
                 foreach (var item in ifBlock.condition)
@@ -97,9 +101,9 @@ namespace DaedalusCompiler.Compilation
                     foreach (var block in elseIfBlocks)
                     {
                         visitElement(new AssemblyLabel(nextJumpLabel));
-                        
+
                         nextJumpLabel = getLabel();
-                        
+
                         foreach (var item in block.condition)
                         {
                             visitElement(item);
@@ -109,15 +113,15 @@ namespace DaedalusCompiler.Compilation
                         {
                             visitElement(item);
                         }
-                        
+
                         visitElement(new JumpIfToLabel(ifStatementEndLabel));
-                    }   
+                    }
                 }
 
                 if (elseInstructions.Count > 0)
                 {
                     visitElement(new AssemblyLabel(nextJumpLabel));
-                    
+
                     foreach (var item in elseInstructions)
                     {
                         visitElement(item);
@@ -127,7 +131,7 @@ namespace DaedalusCompiler.Compilation
                 {
                     ifStatementEndLabel = nextJumpLabel;
                 }
-                
+
                 visitElement(new AssemblyLabel(ifStatementEndLabel));
             }
             else if (element is AssemblyLabel label)

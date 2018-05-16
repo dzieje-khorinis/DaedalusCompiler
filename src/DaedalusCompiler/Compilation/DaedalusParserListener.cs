@@ -20,6 +20,42 @@ namespace DaedalusCompiler.Compilation
             this.sourceFileNumber = sourceFileNumber;
         }
 
+        public override void EnterParameterDecl(DaedalusParser.ParameterDeclContext context)
+        {
+            FunctionBlock functionBlock = assemblyBuilder.functions[assemblyBuilder.functions.Count - 1];
+            string functionName = functionBlock.symbol.Name;
+            string parameterLocalName = context.nameNode().GetText();
+            string parameterName = $"{functionName}.{parameterLocalName}";
+
+            int parentId = -1;
+            DatSymbol parentSymbol = null;
+
+            string parameterTypeName = context.typeReference().GetText();
+            DatSymbolType? parameterType = DatSymbolTypeFromString(parameterTypeName);
+            if (parameterType is DatSymbolType.Class) // TODO what about prototypes and instances?
+            {
+                parentSymbol = assemblyBuilder.resolveSymbol(parameterTypeName);
+                parentId = assemblyBuilder.getSymbolId(parentSymbol);
+            }
+
+            DatSymbol symbol = null;
+            var location = GetLocation(context);
+
+            if (context.simpleValue() != null) // arrayElementsCount Context
+            {
+                uint arrayElementsCount = uint.Parse(context.simpleValue().GetText());
+                // TODO is parentId also included in variable array?
+                symbol = SymbolBuilder.BuildArrOfVariables(parameterName, parameterType.Value, arrayElementsCount,
+                    location);
+            }
+            else
+            {
+                symbol = SymbolBuilder.BuildVariable(parameterName, parameterType.Value, location, parentId);
+            }
+
+            assemblyBuilder.addSymbol(symbol);
+        }
+
         public override void EnterConstDef([NotNull] DaedalusParser.ConstDefContext context)
         {
             var typeName = context.typeReference().GetText();
@@ -350,9 +386,13 @@ namespace DaedalusCompiler.Compilation
 
             if (referenceNodes.Length == 2)
             {
-                //TODO implement
-                // it that case we want assign something to field, example:
-                // some_var.old = 90
+                string typeName = assemblyBuilder.symbols[symbol.Parent].Name;
+                string attributeName = referenceNodes[1].GetText();
+
+                DatSymbol attribute = assemblyBuilder.resolveSymbol($"{typeName}.{attributeName}");
+
+                assemblyBuilder.addInstruction(new SetInstance(symbol));
+                assemblyBuilder.addInstruction(new PushVar(attribute));
             }
             else
             {
@@ -371,6 +411,7 @@ namespace DaedalusCompiler.Compilation
         public override void EnterAssignment(DaedalusParser.AssignmentContext context)
         {
             var referenceNodes = context.complexReferenceLeftSide().complexReferenceNode();
+
             var symbolPart = referenceNodes[0];
             var arrIndex = symbolPart.simpleValue();
             var symbol = assemblyBuilder.resolveSymbol(symbolPart.referenceNode().GetText());
@@ -378,9 +419,15 @@ namespace DaedalusCompiler.Compilation
 
             if (referenceNodes.Length == 2)
             {
-                //TODO implement
-                // it that case we want assign something to field, example:
-                // some_var.old = 90
+                string typeName = assemblyBuilder.symbols[symbol.Parent].Name;
+                string attributeName = referenceNodes[1].GetText();
+
+                DatSymbol attribute = assemblyBuilder.resolveSymbol($"{typeName}.{attributeName}");
+
+                assemblyBuilder.assigmentStart(
+                    new SetInstance(symbol),
+                    new PushVar(attribute)
+                );
             }
             else
             {
@@ -390,7 +437,8 @@ namespace DaedalusCompiler.Compilation
                 }
                 else
                 {
-                    assemblyBuilder.assigmentStart(new PushArrVar(symbol, int.Parse(arrIndex.GetText())));
+                    int arrayIndex = int.Parse(arrIndex.GetText());
+                    assemblyBuilder.assigmentStart(new PushArrVar(symbol, arrayIndex));
                 }
             }
         }
@@ -555,19 +603,24 @@ namespace DaedalusCompiler.Compilation
             assemblyBuilder.addInstruction(instruction);
         }
 
-        private DatSymbolType? DatSymbolTypeFromString(string typeReference)
+        // TODO change return type from DatSymbolType? to DatSymbolType
+        private DatSymbolType? DatSymbolTypeFromString(string typeName)
         {
-            if (String.IsNullOrWhiteSpace(typeReference))
+            if (String.IsNullOrWhiteSpace(typeName))
                 return null;
 
-            // FirstCharToUpper 
-            typeReference = typeReference.First().ToString().ToUpper() + typeReference.Substring(1).ToLower();
+            string capitalizedTypeName = typeName.First().ToString().ToUpper() + typeName.Substring(1).ToLower();
 
             DatSymbolType type;
-            if (Enum.TryParse(typeReference, out type))
+            if (Enum.TryParse(capitalizedTypeName, out type))
+            {
                 return type;
+            }
             else
-                return null;
+            {
+                var symbol = assemblyBuilder.resolveSymbol(typeName);
+                return symbol.Type;
+            }
         }
 
         private DatSymbolLocation GetLocation(ParserRuleContext context)

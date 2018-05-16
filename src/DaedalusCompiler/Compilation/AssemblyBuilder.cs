@@ -172,6 +172,14 @@ namespace DaedalusCompiler.Compilation
             this.index = index;
         }
     }
+    
+    public class SetInstance : SymbolInstruction
+    {
+        public SetInstance(DatSymbol symbol) : base(symbol)
+        {
+            
+        }
+    }
 
     public class Equal : ParamLessInstruction {}
     public class NotEqual : ParamLessInstruction {}
@@ -258,7 +266,7 @@ namespace DaedalusCompiler.Compilation
         private AssemblyBuildContext currentBuildCtx; // current assembly build context
         private List<AssemblyElement> assembly;
         private DatSymbol refSymbol; // we use that for prototype and instance definintions
-        private SymbolInstruction assigmentLeftSide;
+        private List<SymbolInstruction> assigmentLeftSide;
         private FuncArgsBodyContext funcArgsBodyCtx;
 
         public AssemblyBuilder()
@@ -270,6 +278,7 @@ namespace DaedalusCompiler.Compilation
             currentBuildCtx = getEmptyBuildContext();
             active = null;
             assembly = new List<AssemblyElement>();
+            assigmentLeftSide = new List<SymbolInstruction>();
             funcArgsBodyCtx = new FuncArgsBodyContext(null);
         }
 
@@ -337,15 +346,27 @@ namespace DaedalusCompiler.Compilation
 
         public void assigmentStart(SymbolInstruction instruction)
         {
-            assigmentLeftSide = instruction;
+            assigmentLeftSide.Add(instruction);
+        }
+        
+        //TODO check if there are any possibilities of assigmentLeftSide longer than 2 instructions?
+        public void assigmentStart(SymbolInstruction instruction1, SymbolInstruction instruction2)
+        {
+            assigmentLeftSide.Add(instruction1);
+            assigmentLeftSide.Add(instruction2);
         }
 
         public void assigmentEnd(string assignmentOperator)
         {
-            var operationType = assigmentLeftSide.symbol.Type;
+            var operationType = assigmentLeftSide[assigmentLeftSide.Count - 1].symbol.Type;   //TODO check if there are any possibilities of assigmentLeftSide longer than 2 instructions?
             var assignmentInstruction = AssemblyBuilderHelpers.GetInstructionForOperator(assignmentOperator, true, operationType);
-            
-            addInstruction(assigmentLeftSide);
+
+            foreach (var instruction in assigmentLeftSide)
+            {
+                addInstruction(instruction);
+            }
+
+            assigmentLeftSide = new List<SymbolInstruction>();
             addInstruction(assignmentInstruction);
         }
 
@@ -561,9 +582,13 @@ namespace DaedalusCompiler.Compilation
             {
                 targetSymbolName = $"{refSymbol.Name}.{symbolName}";
             }
-            else
+            else if (active != null)
             {
                 targetSymbolName = $"{active.symbol.Name}.{symbolName}";
+            }
+            else
+            {
+                targetSymbolName = symbolName;
             }
 
             var symbolLocalScope = symbols.Find(x => x.Name == targetSymbolName);
