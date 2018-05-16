@@ -12,9 +12,9 @@ namespace DaedalusCompiler.Compilation
         InstanceConstructor,
         PrototypeConstructor
     }
-    
+
     public class AssemblyElement {}
-    
+
     public class AssemblyInstruction: AssemblyElement
     {
     }
@@ -40,7 +40,7 @@ namespace DaedalusCompiler.Compilation
             condition = new List<AssemblyElement>();
         }
     }
-    
+
     public enum IfBlockType
     {
         If,
@@ -50,7 +50,7 @@ namespace DaedalusCompiler.Compilation
 
     public class AssemblyIfStatement : AssemblyElement
     {
-        
+
         public IfBlock ifBlock;
         public List<AssemblyElement> elseBody;
         public List<IfBlock> elseIfBlock;
@@ -70,7 +70,7 @@ namespace DaedalusCompiler.Compilation
     {
         private List<AssemblyElement> leftBody;
         private List<AssemblyElement> rightBody;
-        
+
         public AssemblyOperatorStatement()
         {
             leftBody = new List<AssemblyElement>();
@@ -81,7 +81,7 @@ namespace DaedalusCompiler.Compilation
         {
             return leftBody;
         }
-        
+
         public List<AssemblyElement> getRight()
         {
             return rightBody;
@@ -151,7 +151,7 @@ namespace DaedalusCompiler.Compilation
     {
         public PushInt(int value): base(value)
         {
-            
+
         }
     }
 
@@ -159,10 +159,10 @@ namespace DaedalusCompiler.Compilation
     {
         public PushVar(DatSymbol symbol) : base(symbol)
         {
-            
+
         }
     }
-    
+
     public class PushArrVar : SymbolInstruction
     {
         public int index;
@@ -223,7 +223,7 @@ namespace DaedalusCompiler.Compilation
     {
         public CallExternal(DatSymbol symbol) : base(symbol)
         {
-            
+
         }
     }
 
@@ -284,13 +284,13 @@ namespace DaedalusCompiler.Compilation
                 isOperatorContext = isOperatorContext
             };
         }
-        
-        
+
+
         public void addInstruction(AssemblyInstruction instruction)
         {
             currentBuildCtx.body.Add(instruction);
         }
-        
+
         public void addInstructions(params AssemblyInstruction[] instructions)
         {
             currentBuildCtx.body.AddRange(instructions);
@@ -303,21 +303,21 @@ namespace DaedalusCompiler.Compilation
             {
                 case ExecutebleBlockType.Function:
                     var function = new FunctionBlock(){ symbol = symbol};
-                    
+
                     functions.Add(function);
 
                     active = function;
                     break;
                 case ExecutebleBlockType.InstanceConstructor:
                     var instanceConstructor = new InstanceConstructorBlock(){ symbol = symbol};
-                    
+
                     instanceConstructors.Add(instanceConstructor);
-                    
+
                     active = instanceConstructor;
                     break;
                 case ExecutebleBlockType.PrototypeConstructor:
                     var prototypeConstructor = new PrototypeContructorBlock(){ symbol = symbol};
-                    
+
                     prototypeContructors.Add(prototypeConstructor);
 
                     active = prototypeConstructor;
@@ -344,7 +344,7 @@ namespace DaedalusCompiler.Compilation
         {
             var operationType = assigmentLeftSide.symbol.Type;
             var assignmentInstruction = AssemblyBuilderHelpers.GetInstructionForOperator(assignmentOperator, true, operationType);
-            
+
             addInstruction(assigmentLeftSide);
             addInstruction(assignmentInstruction);
         }
@@ -353,7 +353,7 @@ namespace DaedalusCompiler.Compilation
         {
             currentBuildCtx = getEmptyBuildContext(true);
         }
-        
+
         public void expressionRightSideStart()
         {
             currentBuildCtx.currentOperatorStatement.setLeft(currentBuildCtx.body);
@@ -403,7 +403,7 @@ namespace DaedalusCompiler.Compilation
                     if (currentBody.Count > 0)
                     {
                         //TODO make sure if that case happen
-                        newRightBody = currentRightBody.Concat(currentBody).ToList();   
+                        newRightBody = currentRightBody.Concat(currentBody).ToList();
                     }
                 }
                 else
@@ -416,10 +416,10 @@ namespace DaedalusCompiler.Compilation
             {
                 newRightBody = currentBody;
             }
-            
+
             var instructions = newRightBody.Concat(newLeftBody).Append(operatorInstruction).ToList();
 
-            
+
             if ( !parentBuildContext.isOperatorContext )
             {
                 parentBuildContext.body.AddRange( instructions );
@@ -445,12 +445,12 @@ namespace DaedalusCompiler.Compilation
                 {
                     //TODO add desc why
                     parentBuildContext.currentOperatorStatement.setRight( instructions );
-                }                
+                }
             }
-            
+
             currentBuildCtx = parentBuildContext;
         }
-        
+
         public void expressionBracketStart()
         {
             // to remove, need to refactor testst
@@ -483,7 +483,7 @@ namespace DaedalusCompiler.Compilation
 
         public void conditionalStart()
         {
-            
+
         }
 
         public void conditionalEnd()
@@ -492,7 +492,7 @@ namespace DaedalusCompiler.Compilation
 
             currentBuildCtx.currentConditionStatement = new AssemblyIfStatement();
         }
-        
+
         public void conditionalBlockConditionStart(IfBlockType blockType)
         {
             currentBuildCtx.currentConditionStatement.currentBlockType = blockType;
@@ -539,7 +539,7 @@ namespace DaedalusCompiler.Compilation
             {
                 currentBuildCtx.currentConditionStatement.elseBody = body;
             }
-            
+
             //currentAssemblyBuildContext
         }
 
@@ -547,7 +547,7 @@ namespace DaedalusCompiler.Compilation
         {
             symbols.Add(symbol);
         }
-        
+
         public void addSymbols(List<DatSymbol> symbols)
         {
             symbols.AddRange(symbols);
@@ -604,6 +604,60 @@ namespace DaedalusCompiler.Compilation
         public string getByteCode()
         {
             return "";
+        }
+
+        public DatFile getDatFile()
+        {
+            // TODO: Refactor this code later
+
+            var labels = assembly
+                .Select((tokenClass, id) => new { id, tokenClass })
+                .Where(x => x.tokenClass is AssemblyLabel)
+                .Select((x, i) => new { id = x.id - i, ((AssemblyLabel)x.tokenClass).label })
+                .ToDictionary(x => x.label, x => x.id);
+
+            var tokens = assembly
+                .Where(x => x is AssemblyIfStatement == false)
+                .Select(tokenClass =>
+                {
+                    var tokenName = tokenClass.GetType().Name;
+                    var tokenType = Enum.Parse<DatTokenType>(tokenName);
+                    int? intParam = null;
+                    byte? byteParam = null;
+
+                    if (tokenClass is PushArrVar)
+                    {
+                        var arrayVar = (PushArrVar)tokenClass;
+                        intParam = getSymbolId(arrayVar.symbol);
+                        byteParam = (byte)arrayVar.index;
+                    }
+                    else if (tokenClass is LabelJumpInstruction)
+                    {
+                        //TODO: this is token id, should be changed to token stack location later
+                        intParam = labels[((LabelJumpInstruction)tokenClass).label];
+                    }
+                    else if (tokenClass is SymbolInstruction)
+                    {
+                        intParam = getSymbolId(((SymbolInstruction)tokenClass).symbol);
+                    }
+                    else if (tokenClass is ValueInstruction)
+                    {
+                        intParam = (int)((ValueInstruction)tokenClass).value;
+                    }
+                    else if (tokenClass is AddressInstruction)
+                    {
+                        intParam = ((AddressInstruction)tokenClass).address;
+                    }
+
+                    return new DatToken { TokenType = tokenType, IntParam = intParam, ByteParam = byteParam };
+                });
+
+            return new DatFile
+            {
+                Version = '2',
+                Symbols = symbols,
+                Tokens = tokens.ToList()
+            };
         }
 
         public string getOutput(bool getAssembler = false)
