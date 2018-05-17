@@ -135,11 +135,11 @@ namespace DaedalusCompiler.Compilation
         public int address;
     }
 
-    public class LabelJumpInstruction : AssemblyInstruction
+    public class JumpToLabel : AssemblyInstruction
     {
         public string label;
 
-        public LabelJumpInstruction(string label)
+        public JumpToLabel(string label)
         {
             this.label = label;
         }
@@ -214,7 +214,7 @@ namespace DaedalusCompiler.Compilation
     public class LogAnd: ParamLessInstruction {}
     public class LogOr: ParamLessInstruction {}
 
-    public class JumpIfToLabel : LabelJumpInstruction
+    public class JumpIfToLabel : JumpToLabel
     {
         public JumpIfToLabel(string name) : base(name)
         {
@@ -267,6 +267,7 @@ namespace DaedalusCompiler.Compilation
         private DatSymbol refSymbol; // we use that for prototype and instance definintions
         private List<SymbolInstruction> assignmentLeftSide;
         private FuncArgsBodyContext funcArgsBodyCtx;
+        private int labelIndexGenerator;
 
         public AssemblyBuilder()
         {
@@ -278,6 +279,7 @@ namespace DaedalusCompiler.Compilation
             active = null;
             assignmentLeftSide = new List<SymbolInstruction>();
             funcArgsBodyCtx = new FuncArgsBodyContext(null);
+            labelIndexGenerator = 0;
         }
 
         public AssemblyBuildContext getEmptyBuildContext(bool isOperatorContext = false)
@@ -503,7 +505,7 @@ namespace DaedalusCompiler.Compilation
 
         public void conditionalEnd()
         {
-            currentBuildCtx.body.Add(currentBuildCtx.currentConditionStatement);
+            currentBuildCtx.body.AddRange(resolveIfStatement(currentBuildCtx.currentConditionStatement));
 
             currentBuildCtx.currentConditionStatement = new AssemblyIfStatement();
         }
@@ -623,6 +625,68 @@ namespace DaedalusCompiler.Compilation
             execBlocks.AddRange(instanceConstructors);
 
             return execBlocks;
+        }
+
+        public string getNextLabel()
+        {
+            var labelVal = labelIndexGenerator;
+
+            labelIndexGenerator++;
+            
+            return $"label_{labelVal}";
+        }
+
+        public List<AssemblyElement> resolveIfStatement(AssemblyIfStatement ifStatement)
+        {
+            var instructions = new List<AssemblyElement>();
+            var ifBlocks = new List<IfBlock>();
+            var haveElse = ifStatement.elseBody.Count > 0;
+            var statementEndLabel = getNextLabel();
+            var elseStartLabel = "";
+            
+            ifBlocks.Add(ifStatement.ifBlock);
+            ifBlocks.AddRange(ifStatement.elseIfBlock);
+
+            foreach (var ifBlock in ifBlocks)
+            {
+                var isLastOne = ifBlock == ifBlocks.Last();
+                var nextJumpLabel = getNextLabel();
+
+                instructions.AddRange(ifBlock.condition);
+
+                if (!isLastOne)
+                {
+                    instructions.Add(new JumpIfToLabel(nextJumpLabel));
+                    instructions.AddRange(ifBlock.body);
+                    instructions.Add(new JumpToLabel(statementEndLabel));
+                    instructions.Add(new AssemblyLabel(nextJumpLabel));
+                }
+                else
+                {
+                    if (haveElse)
+                    {
+                        elseStartLabel = getNextLabel();
+                        instructions.Add(new JumpIfToLabel(elseStartLabel));
+                        instructions.AddRange(ifBlock.body);
+                        instructions.Add(new JumpToLabel(statementEndLabel));
+                    }
+                    else
+                    {
+                        instructions.Add(new JumpIfToLabel(statementEndLabel));
+                        instructions.AddRange(ifBlock.body);
+                    }
+                }
+            }
+
+            if (haveElse)
+            {
+                instructions.Add(new AssemblyLabel(elseStartLabel));
+                instructions.AddRange(ifStatement.elseBody);
+            }
+            
+            instructions.Add(new AssemblyLabel(statementEndLabel));
+
+            return instructions;
         }
 
         public string getAssembler()

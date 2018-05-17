@@ -139,9 +139,13 @@ namespace DaedalusCompiler.Compilation
             {
                 buildAcc += $"{label.label}:\n";
             }
-            else if (element is LabelJumpInstruction labelJump)
+            else if (element is JumpIfToLabel labelIfJump)
             {
-                buildAcc += $"JumpIfToLabel {labelJump.label}\n";
+                buildAcc += $"JumpIfToLabel {labelIfJump.label}\n";
+            }
+            else if (element is JumpToLabel labelJump)
+            {
+                buildAcc += $"JumpToLabel {labelJump.label}\n";
             }
             else if (element is PushInt pushint)
             {

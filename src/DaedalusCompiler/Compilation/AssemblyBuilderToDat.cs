@@ -39,10 +39,10 @@ namespace DaedalusCompiler.Compilation
                         intParam = getSymbolId(symbols, arrayVar.symbol);
                         byteParam = (byte)arrayVar.index;
                     }
-                    else if (tokenClass is LabelJumpInstruction)
+                    else if (tokenClass is JumpToLabel)
                     {
                         //TODO: this is token id, should be changed to token stack location later
-                        intParam = labels[((LabelJumpInstruction)tokenClass).label];
+                        intParam = labels[((JumpToLabel)tokenClass).label];
                     }
                     else if (tokenClass is SymbolInstruction)
                     {
