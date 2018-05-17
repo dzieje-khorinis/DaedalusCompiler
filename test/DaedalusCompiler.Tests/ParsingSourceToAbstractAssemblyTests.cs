@@ -1,21 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Antlr4.Runtime;
-using Antlr4.Runtime.Atn;
 using Antlr4.Runtime.Tree;
 using DaedalusCompiler.Compilation;
 using DaedalusCompiler.Dat;
 using Xunit;
-using Xunit.Sdk;
 
 namespace DaedalusCompiler.Tests
 {
     public class ParsingSourceToAbstractAssemblyTests
     {
-        private AssemblyBuilder assemblyBuilder;
+        private readonly AssemblyBuilder assemblyBuilder;
         private string code;
         private List<AssemblyElement> instructions;
         private List<AssemblyElement> expectedInstructions;
+        private List<DatSymbol> expectedSymbols;
         private bool parsed;
 
         public ParsingSourceToAbstractAssemblyTests()
@@ -23,6 +21,7 @@ namespace DaedalusCompiler.Tests
             assemblyBuilder = new AssemblyBuilder();
             instructions = new List<AssemblyElement>();
             expectedInstructions = new List<AssemblyElement>();
+            expectedSymbols = new List<DatSymbol>();
             parsed = false;
         }
 
@@ -60,41 +59,61 @@ namespace DaedalusCompiler.Tests
             {
                 var instruction = instructions[index];
                 var expectedInstruction = expectedInstructions[index];
-                CompareInstructions(instruction, expectedInstruction);
+                CompareInstructions(expectedInstruction, instruction);
+            }
+        }
+
+        private void AssertSymbolsMatch()
+        {
+            Assert.Equal(expectedSymbols.Count, assemblyBuilder.symbols.Count);
+            for (var index = 0; index < expectedSymbols.Count; index++)
+            {
+                var symbol = assemblyBuilder.symbols[index];
+                var expectedSymbol = expectedSymbols[index];
+                Assert.Equal(expectedSymbol, symbol);
             }
         }
 
 
-        private void CompareInstructions(AssemblyElement instruction, AssemblyElement expectedInstruction)
+        private void CompareInstructions(AssemblyElement expectedInstruction, AssemblyElement instruction)
         {
-            Assert.Equal(instruction.GetType(), expectedInstruction.GetType());
+            Assert.Equal(expectedInstruction.GetType(), instruction.GetType());
             switch (instruction)
             {
                 case PushInt pushIntInstruction:
                 {
-                    Assert.Equal(pushIntInstruction.value, ((PushInt) expectedInstruction).value);
+                    Assert.Equal(
+                        ((PushInt) expectedInstruction).value,
+                        pushIntInstruction.value
+                    );
                     break;
                 }
                 case Call _:
                 case CallExternal _:
                 case PushVar _:
                     Assert.Equal(
-                        ((SymbolInstruction) instruction).symbol,
-                        ((SymbolInstruction) expectedInstruction).symbol
-                        );
+                        ((SymbolInstruction) expectedInstruction).symbol,
+                        ((SymbolInstruction) instruction).symbol
+                    );
                     break;
                 case PushArrVar pushArrVarInstruction:
                 {
                     Assert.Equal(
-                        ((SymbolInstruction) instruction).symbol,
-                        ((SymbolInstruction) expectedInstruction).symbol
-                        );
-                    Assert.Equal(pushArrVarInstruction.index, ((PushArrVar) expectedInstruction).index);
+                        ((SymbolInstruction) expectedInstruction).symbol,
+                        ((SymbolInstruction) instruction).symbol
+                    );
+                    Assert.Equal(
+                        ((PushArrVar) expectedInstruction).index,
+                        pushArrVarInstruction.index
+                    );
                     break;
                 }
                 case AssemblyLabel assemblyLabelInstruction:
                 {
-                    Assert.Equal(assemblyLabelInstruction.label, ((AssemblyLabel)expectedInstruction).label);
+                    Assert.Equal(
+                        ((AssemblyLabel) expectedInstruction).label,
+                        assemblyLabelInstruction.label
+                    );
                     break;
                 }
 
@@ -102,7 +121,9 @@ namespace DaedalusCompiler.Tests
                 case JumpToLabel _:
                 {
                     var jumpInstruction = (JumpToLabel) instruction;
-                    Assert.Equal(jumpInstruction.label, ((JumpToLabel)expectedInstruction).label);
+                    Assert.Equal(
+                        ((JumpToLabel) expectedInstruction).label,
+                        jumpInstruction.label);
                     break;
                 }
             }
@@ -144,9 +165,17 @@ namespace DaedalusCompiler.Tests
                 new Subtract(),
                 new PushVar(Ref("x")),
                 new Assign(),
-            };
 
+                new Ret(),
+            };
             AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("x"),
+                Ref("testFunc"),
+            };
+            AssertSymbolsMatch();
         }
 
         [Fact]
@@ -197,9 +226,17 @@ namespace DaedalusCompiler.Tests
                 new Modulo(),
                 new PushVar(Ref("x")),
                 new Assign(),
-            };
 
+                new Ret(),
+            };
             AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("x"),
+                Ref("testFunc"),
+            };
+            AssertSymbolsMatch();
         }
 
         [Fact]
@@ -244,9 +281,17 @@ namespace DaedalusCompiler.Tests
                 new PushInt(5),
                 new PushVar(Ref("x")),
                 new AssignDivide(),
-            };
 
+                new Ret(),
+            };
             AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("x"),
+                Ref("testFunc"),
+            };
+            AssertSymbolsMatch();
         }
 
         [Fact]
@@ -355,9 +400,20 @@ namespace DaedalusCompiler.Tests
                 new Divide(),
                 new PushVar(Ref("d")),
                 new AssignDivide(),
-            };
 
+                new Ret(),
+            };
             AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("a"),
+                Ref("b"),
+                Ref("c"),
+                Ref("d"),
+                Ref("testFunc"),
+            };
+            AssertSymbolsMatch();
         }
 
         [Fact]
@@ -405,9 +461,20 @@ namespace DaedalusCompiler.Tests
                 new NotEqual(),
                 new PushVar(Ref("a")),
                 new Assign(),
-            };
 
+                new Ret(),
+            };
             AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("a"),
+                Ref("b"),
+                Ref("c"),
+                Ref("d"),
+                Ref("testFunc"),
+            };
+            AssertSymbolsMatch();
         }
 
         [Fact]
@@ -453,9 +520,20 @@ namespace DaedalusCompiler.Tests
                 new Plus(),
                 new PushVar(Ref("d")),
                 new Assign(),
-            };
 
+                new Ret(),
+            };
             AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("a"),
+                Ref("b"),
+                Ref("c"),
+                Ref("d"),
+                Ref("testFunc"),
+            };
+            AssertSymbolsMatch();
         }
 
 
@@ -605,9 +683,20 @@ namespace DaedalusCompiler.Tests
                 new LogOr(),
                 new PushVar(Ref("a")),
                 new Assign(),
-            };
 
+                new Ret(),
+            };
             AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("a"),
+                Ref("b"),
+                Ref("c"),
+                Ref("d"),
+                Ref("testFunc"),
+            };
+            AssertSymbolsMatch();
         }
 
 
@@ -652,9 +741,18 @@ namespace DaedalusCompiler.Tests
                 new LogOr(),
                 new PushVar(Ref("b")),
                 new Assign(),
-            };
 
+                new Ret(),
+            };
             AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("a"),
+                Ref("b"),
+                Ref("testFunc"),
+            };
+            AssertSymbolsMatch();
         }
 
         [Fact]
@@ -720,9 +818,20 @@ namespace DaedalusCompiler.Tests
                 new ShiftRight(),
                 new PushVar(Ref("a")),
                 new Assign(),
-            };
 
+                new Ret(),
+            };
             AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("a"),
+                Ref("b"),
+                Ref("c"),
+                Ref("d"),
+                Ref("testFunc"),
+            };
+            AssertSymbolsMatch();
         }
 
         [Fact]
@@ -772,9 +881,20 @@ namespace DaedalusCompiler.Tests
                 new GreaterOrEqual(),
                 new PushVar(Ref("d")),
                 new Assign(),
-            };
 
+                new Ret(),
+            };
             AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("a"),
+                Ref("b"),
+                Ref("c"),
+                Ref("d"),
+                Ref("testFunc"),
+            };
+            AssertSymbolsMatch();
         }
 
         [Fact]
@@ -792,6 +912,14 @@ namespace DaedalusCompiler.Tests
                     x = 12 + 9 * ( 2 + otherFunc(1 + 7 * 3, 4 + 5) );
                 };
             ";
+
+            instructions = GetExecBlockInstructions("otherFunc");
+            expectedInstructions = new List<AssemblyElement>
+            {
+                new PushInt(0),
+                new Ret(),
+            };
+            AssertInstructionsMatch();
 
             instructions = GetExecBlockInstructions("testFunc");
             expectedInstructions = new List<AssemblyElement>
@@ -813,9 +941,20 @@ namespace DaedalusCompiler.Tests
                 new Add(),
                 new PushVar(Ref("x")),
                 new Assign(),
-            };
 
+                new Ret(),
+            };
             AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("otherFunc"),
+                Ref("otherFunc.a"),
+                Ref("otherFunc.b"),
+                Ref("x"),
+                Ref("testFunc"),
+            };
+            AssertSymbolsMatch();
         }
 
         [Fact]
@@ -865,13 +1004,23 @@ namespace DaedalusCompiler.Tests
                 new Add(),
                 new PushVar(Ref("x")),
                 new Assign(),
-            };
 
+                new Ret(),
+            };
             AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("x"),
+                Ref("tab"),
+                Ref("testFunc"),
+            };
+            AssertSymbolsMatch();
         }
 
+
         [Fact]
-        public void TestIntArrElementWithConstIntIndexExpression()
+        public void TestIntArrElementWithGlobalConstIntIndexExpression()
         {
             code = @"
                 const int TAB_SIZE = 3;
@@ -921,9 +1070,91 @@ namespace DaedalusCompiler.Tests
                 new Add(),
                 new PushVar(Ref("x")),
                 new Assign(),
-            };
 
+                new Ret(),
+            };
             AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("TAB_SIZE"),
+                Ref("INDEX_ZERO"),
+                Ref("INDEX_ONE"),
+                Ref("INDEX_TWO"),
+                Ref("x"),
+                Ref("tab"),
+                Ref("testFunc"),
+            };
+            AssertSymbolsMatch();
+        }
+
+        [Fact]
+        public void TestIntArrElementWithLocalConstIntIndexExpression()
+        {
+            code = @"
+                const int TAB_SIZE = 3;
+                var int x;
+                var int tab[TAB_SIZE];
+
+                func void testFunc() {
+                    const int INDEX_ZERO = 0;
+                    const int INDEX_ONE = 1;
+                    const int INDEX_TWO = 2;
+                    x = 1;
+                    tab[INDEX_ZERO] = 2;
+                    tab[INDEX_ONE] = 3;
+                    tab[INDEX_TWO] = x;
+                    x = tab[INDEX_ZERO] + tab[INDEX_ONE] * tab[INDEX_TWO];
+                };
+            ";
+
+            instructions = GetExecBlockInstructions("testFunc");
+            expectedInstructions = new List<AssemblyElement>
+            {
+                // x = 1;
+                new PushInt(1),
+                new PushVar(Ref("x")),
+                new Assign(),
+
+                // tab[INDEX_ZERO] = 2;
+                new PushInt(2),
+                new PushVar(Ref("tab")),
+                new Assign(),
+
+                // tab[INDEX_ONE] = 3;
+                new PushInt(3),
+                new PushArrVar(Ref("tab"), 1),
+                new Assign(),
+
+                //  tab[INDEX_TWO] = x;
+                new PushVar(Ref("x")),
+                new PushArrVar(Ref("tab"), 2),
+                new Assign(),
+
+                // x = tab[INDEX_ZERO] + tab[INDEX_ONE] * tab[INDEX_TWO];
+                new PushArrVar(Ref("tab"), 2),
+                new PushArrVar(Ref("tab"), 1),
+                new Multiply(),
+                new PushVar(Ref("tab")),
+                new Add(),
+                new PushVar(Ref("x")),
+                new Assign(),
+
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("TAB_SIZE"),
+                Ref("x"),
+                Ref("tab"),
+                Ref("testFunc"),
+                Ref("testFunc.INDEX_ZERO"),
+                Ref("testFunc.INDEX_ONE"),
+                Ref("testFunc.INDEX_TWO"),
+            };
+            AssertSymbolsMatch();
         }
 
         [Fact]
@@ -1018,9 +1249,17 @@ namespace DaedalusCompiler.Tests
                 new LogOr(),
                 new PushVar(Ref("x")),
                 new Assign(),
-            };
 
+                new Ret(),
+            };
             AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("x"),
+                Ref("testFunc"),
+            };
+            AssertSymbolsMatch();
         }
 
         [Fact]
@@ -1053,9 +1292,20 @@ namespace DaedalusCompiler.Tests
                 new PushVar(Ref("person.age")),
                 new PushVar(Ref("a")),
                 new Assign(),
-            };
 
+                new Ret(),
+            };
             AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("person"),
+                Ref("person.age"),
+                Ref("a"),
+                Ref("testFunc"),
+                Ref("testFunc.d"),
+            };
+            AssertSymbolsMatch();
         }
 
         [Fact]
@@ -1089,9 +1339,20 @@ namespace DaedalusCompiler.Tests
                 new PushVar(Ref("person.age")),
                 new PushVar(Ref("a")),
                 new Assign(),
-            };
 
+                new Ret(),
+            };
             AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("person"),
+                Ref("person.age"),
+                Ref("a"),
+                Ref("d"),
+                Ref("testFunc"),
+            };
+            AssertSymbolsMatch();
         }
 
         [Fact]
@@ -1125,9 +1386,20 @@ namespace DaedalusCompiler.Tests
                 new PushVar(Ref("person.age")),
                 new PushVar(Ref("a")),
                 new Assign(),
-            };
 
+                new Ret(),
+            };
             AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("person"),
+                Ref("person.age"),
+                Ref("a"),
+                Ref("testFunc"),
+                Ref("testFunc.d"),
+            };
+            AssertSymbolsMatch();
         }
 
         [Fact]
@@ -1166,8 +1438,14 @@ namespace DaedalusCompiler.Tests
                 new AssemblyLabel("label_0"),
                 new Ret()
             };
-
             AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("a"),
+                Ref("testFunc"),
+            };
+            AssertSymbolsMatch();
         }
 
         [Fact]
@@ -1209,10 +1487,16 @@ namespace DaedalusCompiler.Tests
                 new AssemblyLabel("label_0"),
                 new Ret()
             };
-
             AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("a"),
+                Ref("testFunc"),
+            };
+            AssertSymbolsMatch();
         }
-        
+
         [Fact]
         public void TestIfElseInstruction()
         {
@@ -1266,8 +1550,14 @@ namespace DaedalusCompiler.Tests
                 new AssemblyLabel("label_0"),
                 new Ret()
             };
-
             AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("a"),
+                Ref("testFunc"),
+            };
+            AssertSymbolsMatch();
         }
     }
 }

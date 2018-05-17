@@ -23,9 +23,9 @@ namespace DaedalusCompiler.Compilation
         public override void EnterParameterDecl(DaedalusParser.ParameterDeclContext context)
         {
             ExecBlock execBlock = assemblyBuilder.execBlocks.Last();
-            string functionName = execBlock.symbol.Name;
+            string execBlockName = execBlock.symbol.Name;
             string parameterLocalName = context.nameNode().GetText();
-            string parameterName = $"{functionName}.{parameterLocalName}";
+            string parameterName = $"{execBlockName}.{parameterLocalName}";
 
             int parentId = -1;
             DatSymbol parentSymbol = null;
@@ -72,6 +72,13 @@ namespace DaedalusCompiler.Compilation
                 {
                     var constValueContext = (DaedalusParser.ConstValueDefContext) constContext;
                     var name = constValueContext.nameNode().GetText();
+                    if (assemblyBuilder.isContextInsideExecBlock())
+                    {
+                        ExecBlock execBlock = assemblyBuilder.execBlocks.Last();
+                        string execBlockName = execBlock.symbol.Name;
+                        name = $"{execBlockName}.{name}";
+                    }
+
                     var location = GetLocation(context);
                     var assignmentExpression = constValueContext.constValueAssignment().expressionBlock().expression();
                     var value = EvaluatorHelper.EvaluateConst(assignmentExpression, assemblyBuilder, type.Value);
@@ -127,8 +134,8 @@ namespace DaedalusCompiler.Compilation
                         {
                             // TODO consider making assemblyBuilder.active public and using it here
                             ExecBlock execBlock = assemblyBuilder.execBlocks.Last();
-                            string functionName = execBlock.symbol.Name;
-                            name = $"{functionName}.{name}";
+                            string execBlockName = execBlock.symbol.Name;
+                            name = $"{execBlockName}.{name}";
                         }
 
                         var location = GetLocation(context);
@@ -464,7 +471,7 @@ namespace DaedalusCompiler.Compilation
         {
             var complexReferenceNodes = context.complexReferenceLeftSide().complexReferenceNode();
             List<AssemblyInstruction> instructions = GetComplexReferenceNodeInstructions(complexReferenceNodes);
-            assemblyBuilder.assigmentStart(Array.ConvertAll(instructions.ToArray(), item => (SymbolInstruction)item));
+            assemblyBuilder.assigmentStart(Array.ConvertAll(instructions.ToArray(), item => (SymbolInstruction) item));
         }
 
 
@@ -506,7 +513,11 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterIntegerLiteralValue(DaedalusParser.IntegerLiteralValueContext context)
         {
-            assemblyBuilder.addInstruction(new PushInt(int.Parse(context.GetText())));
+            if (context?.Parent?.Parent?.Parent is DaedalusParser.ConstValueAssignmentContext == false
+            ) // TODO make it more elegant
+            {
+                assemblyBuilder.addInstruction(new PushInt(int.Parse(context.GetText())));
+            }
         }
 
         public override void EnterAddExpression(DaedalusParser.AddExpressionContext context)
