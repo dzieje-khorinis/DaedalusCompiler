@@ -1212,5 +1212,62 @@ namespace DaedalusCompiler.Tests
 
             AssertInstructionsMatch();
         }
+        
+        [Fact]
+        public void TestIfElseInstruction()
+        {
+            code = @"
+                var int a;
+
+                func void testFunc()
+                {
+                        if ( 1 < 2 ) {
+                            a = 3;
+                        } else if ( 4 < 5 ) {
+                            a = 6;
+                        } else {
+                            a = 7;
+                        };
+                };
+            ";
+            instructions = GetExecBlockInstructions("testFunc");
+            expectedInstructions = new List<AssemblyElement>
+            {
+                // if ( 1 < 2 )
+                new PushInt(2),
+                new PushInt(1),
+                new Less(),
+                new JumpIfToLabel("label_1"),
+                // a = 3;
+                new PushInt(3),
+                new PushVar(Ref("a")),
+                new Assign(),
+                new JumpToLabel("label_0"),
+                // if end
+                new AssemblyLabel("label_1"),
+                // else if ( 4 < 5 )
+                new PushInt(5),
+                new PushInt(4),
+                new Less(),
+                new JumpIfToLabel("label_2"),
+                // a = 6;
+                new PushInt(6),
+                new PushVar(Ref("a")),
+                new Assign(),
+                new JumpToLabel("label_0"),
+                // else if end
+                // else start
+                new AssemblyLabel("label_2"),
+                //a = 7;
+                new PushInt(7),
+                new PushVar(Ref("a")),
+                new Assign(),
+                // else end if end
+                new AssemblyLabel("label_0"),
+                new Ret()
+            };
+
+            AssertInstructionsMatch();
+        }
     }
 }
