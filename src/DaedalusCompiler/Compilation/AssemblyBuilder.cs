@@ -292,6 +292,10 @@ namespace DaedalusCompiler.Compilation
             };
         }
 
+        public bool isContextInsideFunction()
+        {
+            return active is FunctionBlock;
+        }
 
         public void addInstruction(AssemblyInstruction instruction)
         {
