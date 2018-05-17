@@ -402,15 +402,15 @@ namespace DaedalusCompiler.Compilation
             var symbolPart = referenceNodes[0];
 
             int arrIndex = 0;
-            var arrIndexContext = symbolPart.simpleValue();
-            if (arrIndexContext != null)
+            var simpleValueContext = symbolPart.simpleValue();
+            if (simpleValueContext != null)
             {
-                if (!int.TryParse(arrIndexContext.GetText(), out arrIndex))
+                if (!int.TryParse(simpleValueContext.GetText(), out arrIndex))
                 {
-                    var constSymbol = assemblyBuilder.resolveSymbol(arrIndexContext.GetText());
+                    var constSymbol = assemblyBuilder.resolveSymbol(simpleValueContext.GetText());
                     if (constSymbol.Flags != DatSymbolFlag.Const || constSymbol.Type != DatSymbolType.Int)
                     {
-                        throw new Exception($"Expected integer constant: {arrIndexContext.GetText()}");
+                        throw new Exception($"Expected integer constant: {simpleValueContext.GetText()}");
                     }
 
                     arrIndex = (int) constSymbol.Content[0];
@@ -450,15 +450,15 @@ namespace DaedalusCompiler.Compilation
             var symbolPart = referenceNodes[0];
 
             int arrIndex = 0;
-            var arrIndexContext = symbolPart.simpleValue();
-            if (arrIndexContext != null)
+            var simpleValueContext = symbolPart.simpleValue();
+            if (simpleValueContext != null)
             {
-                if (!int.TryParse(arrIndexContext.GetText(), out arrIndex))
+                if (!int.TryParse(simpleValueContext.GetText(), out arrIndex))
                 {
-                    var constSymbol = assemblyBuilder.resolveSymbol(arrIndexContext.GetText());
+                    var constSymbol = assemblyBuilder.resolveSymbol(simpleValueContext.GetText());
                     if (constSymbol.Flags != DatSymbolFlag.Const || constSymbol.Type != DatSymbolType.Int)
                     {
-                        throw new Exception($"Expected integer constant: {arrIndexContext.GetText()}");
+                        throw new Exception($"Expected integer constant: {simpleValueContext.GetText()}");
                     }
 
                     arrIndex = (int) constSymbol.Content[0];
