@@ -22,8 +22,8 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterParameterDecl(DaedalusParser.ParameterDeclContext context)
         {
-            FunctionBlock functionBlock = assemblyBuilder.functions.Last();
-            string functionName = functionBlock.symbol.Name;
+            ExecBlock execBlock = assemblyBuilder.execBlocks.Last();
+            string functionName = execBlock.symbol.Name;
             string parameterLocalName = context.nameNode().GetText();
             string parameterName = $"{functionName}.{parameterLocalName}";
 
@@ -32,7 +32,7 @@ namespace DaedalusCompiler.Compilation
 
             string parameterTypeName = context.typeReference().GetText();
             DatSymbolType? parameterType = DatSymbolTypeFromString(parameterTypeName);
-            if (parameterType is DatSymbolType.Class) // TODO what about prototypes and instances?
+            if (parameterType is DatSymbolType.Class)
             {
                 parentSymbol = assemblyBuilder.resolveSymbol(parameterTypeName);
                 parentId = assemblyBuilder.getSymbolId(parentSymbol);
@@ -107,7 +107,7 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterVarDecl([NotNull] DaedalusParser.VarDeclContext context)
         {
-            if (context.Parent is DaedalusParser.DaedalusFileContext)
+            if (context.Parent is DaedalusParser.DaedalusFileContext || assemblyBuilder.isContextInsideExecBlock())
             {
                 var typeName = context.typeReference().GetText();
                 var type = DatSymbolTypeFromString(typeName);
@@ -123,9 +123,28 @@ namespace DaedalusCompiler.Compilation
                     {
                         var varValueContext = (DaedalusParser.VarValueDeclContext) varContext;
                         var name = varValueContext.nameNode().GetText();
+                        if (assemblyBuilder.isContextInsideExecBlock())
+                        {
+                            // TODO consider making assemblyBuilder.active public and using it here
+                            ExecBlock execBlock = assemblyBuilder.execBlocks.Last();
+                            string functionName = execBlock.symbol.Name;
+                            name = $"{functionName}.{name}";
+                        }
+
                         var location = GetLocation(context);
 
-                        var symbol = SymbolBuilder.BuildVariable(name, type.Value, location); // TODO : Validate params
+                        int parentId = -1;
+                        DatSymbol parentSymbol = null;
+                        string parameterTypeName = context.typeReference().GetText();
+                        DatSymbolType? parameterType = DatSymbolTypeFromString(parameterTypeName);
+                        if (parameterType is DatSymbolType.Class)
+                        {
+                            parentSymbol = assemblyBuilder.resolveSymbol(parameterTypeName);
+                            parentId = assemblyBuilder.getSymbolId(parentSymbol);
+                        }
+
+                        var symbol =
+                            SymbolBuilder.BuildVariable(name, type.Value, location, parentId); // TODO : Validate params
                         assemblyBuilder.addSymbol(symbol);
                     }
 
@@ -381,7 +400,23 @@ namespace DaedalusCompiler.Compilation
         {
             var referenceNodes = context.complexReferenceNode();
             var symbolPart = referenceNodes[0];
-            var arrIndex = symbolPart.simpleValue();
+
+            int arrIndex = 0;
+            var simpleValueContext = symbolPart.simpleValue();
+            if (simpleValueContext != null)
+            {
+                if (!int.TryParse(simpleValueContext.GetText(), out arrIndex))
+                {
+                    var constSymbol = assemblyBuilder.resolveSymbol(simpleValueContext.GetText());
+                    if (constSymbol.Flags != DatSymbolFlag.Const || constSymbol.Type != DatSymbolType.Int)
+                    {
+                        throw new Exception($"Expected integer constant: {simpleValueContext.GetText()}");
+                    }
+
+                    arrIndex = (int) constSymbol.Content[0];
+                }
+            }
+
             var symbol = assemblyBuilder.resolveSymbol(symbolPart.referenceNode().GetText());
 
             if (referenceNodes.Length == 2)
@@ -396,13 +431,13 @@ namespace DaedalusCompiler.Compilation
             }
             else
             {
-                if (arrIndex == null)
+                if (arrIndex > 0)
                 {
-                    assemblyBuilder.addInstruction(new PushVar(symbol));
+                    assemblyBuilder.addInstruction(new PushArrVar(symbol, arrIndex));
                 }
                 else
                 {
-                    assemblyBuilder.addInstruction(new PushArrVar(symbol, int.Parse(arrIndex.GetText())));
+                    assemblyBuilder.addInstruction(new PushVar(symbol));
                 }
             }
         }
@@ -413,7 +448,23 @@ namespace DaedalusCompiler.Compilation
             var referenceNodes = context.complexReferenceLeftSide().complexReferenceNode();
 
             var symbolPart = referenceNodes[0];
-            var arrIndex = symbolPart.simpleValue();
+
+            int arrIndex = 0;
+            var simpleValueContext = symbolPart.simpleValue();
+            if (simpleValueContext != null)
+            {
+                if (!int.TryParse(simpleValueContext.GetText(), out arrIndex))
+                {
+                    var constSymbol = assemblyBuilder.resolveSymbol(simpleValueContext.GetText());
+                    if (constSymbol.Flags != DatSymbolFlag.Const || constSymbol.Type != DatSymbolType.Int)
+                    {
+                        throw new Exception($"Expected integer constant: {simpleValueContext.GetText()}");
+                    }
+
+                    arrIndex = (int) constSymbol.Content[0];
+                }
+            }
+
             var symbol = assemblyBuilder.resolveSymbol(symbolPart.referenceNode().GetText());
             var operatorVal = context.assigmentOperator().GetText();
 
@@ -431,14 +482,13 @@ namespace DaedalusCompiler.Compilation
             }
             else
             {
-                if (arrIndex == null)
+                if (arrIndex > 0)
                 {
-                    assemblyBuilder.assigmentStart(new PushVar(symbol));
+                    assemblyBuilder.assigmentStart(new PushArrVar(symbol, arrIndex));
                 }
                 else
                 {
-                    int arrayIndex = int.Parse(arrIndex.GetText());
-                    assemblyBuilder.assigmentStart(new PushArrVar(symbol, arrayIndex));
+                    assemblyBuilder.assigmentStart(new PushVar(symbol));
                 }
             }
         }

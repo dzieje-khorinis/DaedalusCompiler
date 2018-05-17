@@ -38,6 +38,11 @@ namespace DaedalusCompiler.Tests
             return assemblyBuilder.resolveSymbol(symbolname);
         }
 
+        private static List<AssemblyElement> GetFunctionInstructions(AssemblyBuilder assemblyBuilder, string funcname)
+        {
+            return assemblyBuilder.execBlocks.Find(func => func.symbol.Name.ToUpper() == funcname.ToUpper()).body;
+        }
+
         private List<AssemblyElement> ParseExpressions(string declarations, string expressions)
         {
             string data = $@"
@@ -49,7 +54,7 @@ namespace DaedalusCompiler.Tests
             ";
 
             AssemblyBuilder assemblyBuilder = GetAssemblyBuilder(data);
-            return assemblyBuilder.functions.Find(func => func.symbol.Name == "testFunc").body;
+            return assemblyBuilder.execBlocks.Find(func => func.symbol.Name.ToUpper() == "TESTFUNC").body;
         }
 
         private AssemblyBuilder GetAssemblyBuilder(string data)
@@ -128,7 +133,7 @@ namespace DaedalusCompiler.Tests
 
             builder.execBlockStart(symbol, ExecutebleBlockType.Function);
             builder.execBlockEnd();
-            Assert.Equal(1, builder.functions.Count);
+            Assert.Equal(1, builder.execBlocks.Count);
         }
 
         [Fact]
@@ -824,6 +829,210 @@ namespace DaedalusCompiler.Tests
         }
 
         [Fact]
+        public void TestIntArrElementExpression()
+        {
+            string declarations = @"
+                var int x;
+                var int tab[3];
+            ";
+            string expressions = @"
+                x = 1;
+                tab[0] = 2;
+                tab[1] = 3;
+                tab[2] = x;
+                x = tab[0] + tab[1] * tab[2];
+            ";
+
+            List<AssemblyElement> instructions = ParseExpressions(declarations, expressions);
+
+            List<AssemblyElement> expectedInstructions = new List<AssemblyElement>
+            {
+                // x = 1;
+                new PushInt(1),
+                new PushVar(Var("int x")),
+                new Assign(),
+
+                // tab[0] = 2;
+                new PushInt(2),
+                new PushVar(Var("int tab")),
+                new Assign(),
+
+                // tab[1] = 3;
+                new PushInt(3),
+                new PushArrVar(Var("int tab"), 1),
+                new Assign(),
+
+                // tab[2] = x;
+                new PushVar(Var("int x")),
+                new PushArrVar(Var("int tab"), 2),
+                new Assign(),
+
+                // x = tab[0] + tab[1] * tab[2];
+                new PushArrVar(Var("int tab"), 2),
+                new PushArrVar(Var("int tab"), 1),
+                new Multiply(),
+                new PushVar(Var("int tab")),
+                new Add(),
+                new PushVar(Var("int x")),
+                new Assign(),
+            };
+
+            CompareInstructionLists(instructions, expectedInstructions);
+        }
+
+        [Fact]
+        public void TestIntArrElementWithConstIntIndexExpression()
+        {
+            string declarations = @"
+                const int TAB_SIZE = 3;
+                const int INDEX_ZERO = 0;
+                const int INDEX_ONE = 1;
+                const int INDEX_TWO = 2;
+                var int x;
+                var int tab[TAB_SIZE];
+            ";
+            string expressions = @"
+                
+                x = 1;
+                tab[INDEX_ZERO] = 2;
+                tab[INDEX_ONE] = 3;
+                tab[INDEX_TWO] = x;
+                x = tab[INDEX_ZERO] + tab[INDEX_ONE] * tab[INDEX_TWO];
+            ";
+
+            List<AssemblyElement> instructions = ParseExpressions(declarations, expressions);
+
+            List<AssemblyElement> expectedInstructions = new List<AssemblyElement>
+            {
+                // x = 1;
+                new PushInt(1),
+                new PushVar(Var("int x")),
+                new Assign(),
+
+                // tab[INDEX_ZERO] = 2;
+                new PushInt(2),
+                new PushVar(Var("int tab")),
+                new Assign(),
+
+                // tab[INDEX_ONE] = 3;
+                new PushInt(3),
+                new PushArrVar(Var("int tab"), 1),
+                new Assign(),
+
+                //  tab[INDEX_TWO] = x;
+                new PushVar(Var("int x")),
+                new PushArrVar(Var("int tab"), 2),
+                new Assign(),
+
+                // x = tab[INDEX_ZERO] + tab[INDEX_ONE] * tab[INDEX_TWO];
+                new PushArrVar(Var("int tab"), 2),
+                new PushArrVar(Var("int tab"), 1),
+                new Multiply(),
+                new PushVar(Var("int tab")),
+                new Add(),
+                new PushVar(Var("int x")),
+                new Assign(),
+            };
+
+            CompareInstructionLists(instructions, expectedInstructions);
+        }
+
+        [Fact]
+        public void TestMostOperatorsPrecedence()
+        {
+            string declarations = "var int x;";
+            string expressions = @"
+                x = +1 * -2 / !3 % ~4 + 5 - 6 << 7 >> 8 < 9 > 10 <= 11 >= 12 & 13 | 14 && 15 || 16;
+                x = 16 || 15 && 14 | 13 & 12 >= 11 <= 10 > 9 < 8 >> 7 << 6 - 5 + ~4 % !3 / -2 * +1;
+            ";
+
+            List<AssemblyElement> instructions = ParseExpressions(declarations, expressions);
+
+            List<AssemblyElement> expectedInstructions = new List<AssemblyElement>
+            {
+                // x = +1 * -2 / !3 % ~4 + 5 - 6 << 7 >> 8 < 9 > 10 <= 11 >= 12 & 13 | 14 && 15 || 16;
+                new PushInt(16),
+                new PushInt(15),
+                new PushInt(14),
+                new PushInt(13),
+                new PushInt(12),
+                new PushInt(11),
+                new PushInt(10),
+                new PushInt(9),
+                new PushInt(8),
+                new PushInt(7),
+                new PushInt(6),
+                new PushInt(5),
+                new PushInt(4),
+                new Negate(),
+                new PushInt(3),
+                new Not(),
+                new PushInt(2),
+                new Minus(),
+                new PushInt(1),
+                new Plus(),
+                new Multiply(),
+                new Divide(),
+                new Modulo(),
+                new Add(),
+                new Subtract(),
+                new ShiftLeft(),
+                new ShiftRight(),
+                new Less(),
+                new Greater(),
+                new LessOrEqual(),
+                new GreaterOrEqual(),
+                new BitAnd(),
+                new BitOr(),
+                new LogAnd(),
+                new LogOr(),
+                new PushVar(Var("int x")),
+                new Assign(),
+
+                // x = 16 || 15 && 14 | 13 & 12 >= 11 <= 10 > 9 < 8 >> 7 << 6 - 5 + ~4 % !3 / -2 * +1;
+                new PushInt(1),
+                new Plus(),
+                new PushInt(2),
+                new Minus(),
+                new PushInt(3),
+                new Not(),
+                new PushInt(4),
+                new Negate(),
+                new Modulo(),
+                new Divide(),
+                new Multiply(),
+                new PushInt(5),
+                new PushInt(6),
+                new Subtract(),
+                new Add(),
+                new PushInt(7),
+                new PushInt(8),
+                new ShiftRight(),
+                new ShiftLeft(),
+                new PushInt(9),
+                new PushInt(10),
+                new PushInt(11),
+                new PushInt(12),
+                new GreaterOrEqual(),
+                new LessOrEqual(),
+                new Greater(),
+                new Less(),
+                new PushInt(13),
+                new BitAnd(),
+                new PushInt(14),
+                new BitOr(),
+                new PushInt(15),
+                new LogAnd(),
+                new PushInt(16),
+                new LogOr(),
+                new PushVar(Var("int x")),
+                new Assign(),
+            };
+
+            CompareInstructionLists(instructions, expectedInstructions);
+        }
+
+        [Fact]
         public void TestFuncClassParameterAndAttributesInSimpleExpressions()
         {
             string data = @"
@@ -842,7 +1051,85 @@ namespace DaedalusCompiler.Tests
 
             AssemblyBuilder ab = GetAssemblyBuilder(data);
 
-            List<AssemblyElement> testFuncInstructions = ab.functions.Find(func => func.symbol.Name == "testFunc").body;
+            List<AssemblyElement> testFuncInstructions = GetFunctionInstructions(ab, "testFunc");
+            List<AssemblyElement> testFuncExpectedInstructions = new List<AssemblyElement>
+            {
+                // d.age = 5;
+                new PushInt(5),
+                new SetInstance(Symbol(ab, "testFunc.d")),
+                new PushVar(Symbol(ab, "person.age")),
+                new Assign(),
+
+                // a = d.age;
+                new SetInstance(Symbol(ab, "testFunc.d")),
+                new PushVar(Symbol(ab, "person.age")),
+                new PushVar(Symbol(ab, "a")),
+                new Assign(),
+            };
+
+            CompareInstructionLists(testFuncInstructions, testFuncExpectedInstructions);
+        }
+
+        [Fact]
+        public void TestGlobalVarClassAndAttributesInSimpleExpressions()
+        {
+            string data = @"
+                class person {
+                    var int age;
+                };
+                
+                var int a;
+                var person d;
+
+                func void testFunc()
+                {
+                    d.age = 5;
+                    a = d.age;
+                };
+            ";
+
+            AssemblyBuilder ab = GetAssemblyBuilder(data);
+
+            List<AssemblyElement> testFuncInstructions = GetFunctionInstructions(ab, "testFunc");
+            List<AssemblyElement> testFuncExpectedInstructions = new List<AssemblyElement>
+            {
+                // d.age = 5;
+                new PushInt(5),
+                new SetInstance(Symbol(ab, "d")),
+                new PushVar(Symbol(ab, "person.age")),
+                new Assign(),
+
+                // a = d.age;
+                new SetInstance(Symbol(ab, "d")),
+                new PushVar(Symbol(ab, "person.age")),
+                new PushVar(Symbol(ab, "a")),
+                new Assign(),
+            };
+
+            CompareInstructionLists(testFuncInstructions, testFuncExpectedInstructions);
+        }
+
+        [Fact]
+        public void TestLocalVarClassAndAttributesInSimpleExpressions()
+        {
+            string data = @"
+                class person {
+                    var int age;
+                };
+                
+                var int a;
+
+                func void testFunc()
+                {
+                    var person d;
+                    d.age = 5;
+                    a = d.age;
+                };
+            ";
+
+            AssemblyBuilder ab = GetAssemblyBuilder(data);
+
+            List<AssemblyElement> testFuncInstructions = GetFunctionInstructions(ab, "testFunc");
             List<AssemblyElement> testFuncExpectedInstructions = new List<AssemblyElement>
             {
                 // d.age = 5;
