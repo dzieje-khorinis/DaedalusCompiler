@@ -92,6 +92,19 @@ namespace DaedalusCompiler.Tests
                     Assert.Equal(pushArrVarInstruction.index, ((PushArrVar) expectedInstruction).index);
                     break;
                 }
+                case AssemblyLabel assemblyLabelInstruction:
+                {
+                    Assert.Equal(assemblyLabelInstruction.label, ((AssemblyLabel)expectedInstruction).label);
+                    break;
+                }
+
+                case JumpIfToLabel _:
+                case JumpToLabel _:
+                {
+                    var jumpInstruction = (JumpToLabel) instruction;
+                    Assert.Equal(jumpInstruction.label, ((JumpToLabel)expectedInstruction).label);
+                    break;
+                }
             }
         }
 
@@ -1112,6 +1125,46 @@ namespace DaedalusCompiler.Tests
                 new PushVar(Ref("person.age")),
                 new PushVar(Ref("a")),
                 new Assign(),
+            };
+
+            AssertInstructionsMatch();
+        }
+
+        [Fact]
+        public void TestFlatIfInstruction()
+        {
+            code = @"
+                var int a;
+
+                func void testFunc()
+                {
+                    if ( 1 < 2 ) {
+                        a = 5;
+                        a = 2 * 2;
+                    };
+                };
+            ";
+            instructions = GetExecBlockInstructions("testFunc");
+            expectedInstructions = new List<AssemblyElement>
+            {
+                // if ( 1 < 2 )
+                new PushInt(2),
+                new PushInt(1),
+                new Less(),
+                new JumpIfToLabel("label_0"),
+                // a = 5;
+                new PushInt(5),
+                new PushVar(Ref("a")),
+                new Assign(),
+                // a = 2 * 2;
+                new PushInt(2),
+                new PushInt(2),
+                new Multiply(),
+                new PushVar(Ref("a")),
+                new Assign(),
+                // if end
+                new AssemblyLabel("label_0"),
+                new Ret()
             };
 
             AssertInstructionsMatch();
