@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Antlr4.Runtime.Misc;
 using DaedalusCompiler.Dat;
@@ -574,7 +575,6 @@ namespace DaedalusCompiler.Compilation
 
         public DatSymbol resolveSymbol(string symbolName)
         {
-            symbolName = symbolName.ToLower();
             string targetSymbolName;
 
             if (active is PrototypeContructorBlock || active is InstanceConstructorBlock)
@@ -590,7 +590,7 @@ namespace DaedalusCompiler.Compilation
                 targetSymbolName = symbolName;
             }
 
-            var symbolLocalScope = symbols.Find(x => x.Name == targetSymbolName);
+            var symbolLocalScope = symbols.Find(x => x.Name.ToUpper() == targetSymbolName.ToUpper());
 
             if (symbolLocalScope == null)
             {
@@ -612,7 +612,7 @@ namespace DaedalusCompiler.Compilation
 
         public DatSymbol getSymbolByName(string symbolName)
         {
-            return symbols.FirstOrDefault(x => x.Name == symbolName.ToLower());
+            return symbols.FirstOrDefault(x => x.Name.ToUpper() == symbolName.ToUpper());
         }
 
         public int getSymbolId(DatSymbol symbol)

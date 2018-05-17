@@ -40,7 +40,7 @@ namespace DaedalusCompiler.Tests
 
         private static List<AssemblyElement> GetFunctionInstructions(AssemblyBuilder assemblyBuilder, string funcname)
         {
-            return assemblyBuilder.functions.Find(func => func.symbol.Name == funcname.ToLower()).body;
+            return assemblyBuilder.functions.Find(func => func.symbol.Name.ToUpper() == funcname.ToUpper()).body;
         }
 
         private List<AssemblyElement> ParseExpressions(string declarations, string expressions)
@@ -54,7 +54,7 @@ namespace DaedalusCompiler.Tests
             ";
 
             AssemblyBuilder assemblyBuilder = GetAssemblyBuilder(data);
-            return assemblyBuilder.functions.Find(func => func.symbol.Name == "testfunc").body;
+            return assemblyBuilder.functions.Find(func => func.symbol.Name.ToUpper() == "TESTFUNC").body;
         }
 
         private AssemblyBuilder GetAssemblyBuilder(string data)

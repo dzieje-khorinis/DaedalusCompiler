@@ -35,12 +35,7 @@ namespace DaedalusCompiler.Dat
         /// <summary>
         /// Symbol name like C_MISSION.RUNNING, C_ITEM, MAX_WISPSKILL
         /// </summary>
-        private string _Name;
-        public string Name
-        {
-            get => _Name.ToLower();
-            set => _Name = value;
-        }
+        public string Name { get; set; }
 
         /// <summary>
         /// Length for array variables or constants. Set to 1 for non array variables or constants
