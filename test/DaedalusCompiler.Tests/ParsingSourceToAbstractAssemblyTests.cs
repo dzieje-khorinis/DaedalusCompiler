@@ -40,7 +40,7 @@ namespace DaedalusCompiler.Tests
 
         private static List<AssemblyElement> GetFunctionInstructions(AssemblyBuilder assemblyBuilder, string funcname)
         {
-            return assemblyBuilder.functions.Find(func => func.symbol.Name.ToUpper() == funcname.ToUpper()).body;
+            return assemblyBuilder.execBlocks.Find(func => func.symbol.Name.ToUpper() == funcname.ToUpper()).body;
         }
 
         private List<AssemblyElement> ParseExpressions(string declarations, string expressions)
@@ -54,7 +54,7 @@ namespace DaedalusCompiler.Tests
             ";
 
             AssemblyBuilder assemblyBuilder = GetAssemblyBuilder(data);
-            return assemblyBuilder.functions.Find(func => func.symbol.Name.ToUpper() == "TESTFUNC").body;
+            return assemblyBuilder.execBlocks.Find(func => func.symbol.Name.ToUpper() == "TESTFUNC").body;
         }
 
         private AssemblyBuilder GetAssemblyBuilder(string data)
@@ -133,7 +133,7 @@ namespace DaedalusCompiler.Tests
 
             builder.execBlockStart(symbol, ExecutebleBlockType.Function);
             builder.execBlockEnd();
-            Assert.Equal(1, builder.functions.Count);
+            Assert.Equal(1, builder.execBlocks.Count);
         }
 
         [Fact]
@@ -868,6 +868,63 @@ namespace DaedalusCompiler.Tests
                 new Assign(),
 
                 // x = tab[0] + tab[1] * tab[2];
+                new PushArrVar(Var("int tab"), 2),
+                new PushArrVar(Var("int tab"), 1),
+                new Multiply(),
+                new PushVar(Var("int tab")),
+                new Add(),
+                new PushVar(Var("int x")),
+                new Assign(),
+            };
+
+            CompareInstructionLists(instructions, expectedInstructions);
+        }
+
+        [Fact]
+        public void TestIntArrElementWithConstIntIndexExpression()
+        {
+            string declarations = @"
+                const int TAB_SIZE = 3;
+                const int INDEX_ZERO = 0;
+                const int INDEX_ONE = 1;
+                const int INDEX_TWO = 2;
+                var int x;
+                var int tab[TAB_SIZE];
+            ";
+            string expressions = @"
+                
+                x = 1;
+                tab[INDEX_ZERO] = 2;
+                tab[INDEX_ONE] = 3;
+                tab[INDEX_TWO] = x;
+                x = tab[INDEX_ZERO] + tab[INDEX_ONE] * tab[INDEX_TWO];
+            ";
+
+            List<AssemblyElement> instructions = ParseExpressions(declarations, expressions);
+
+            List<AssemblyElement> expectedInstructions = new List<AssemblyElement>
+            {
+                // x = 1;
+                new PushInt(1),
+                new PushVar(Var("int x")),
+                new Assign(),
+
+                // tab[INDEX_ZERO] = 2;
+                new PushInt(2),
+                new PushVar(Var("int tab")),
+                new Assign(),
+
+                // tab[INDEX_ONE] = 3;
+                new PushInt(3),
+                new PushArrVar(Var("int tab"), 1),
+                new Assign(),
+
+                //  tab[INDEX_TWO] = x;
+                new PushVar(Var("int x")),
+                new PushArrVar(Var("int tab"), 2),
+                new Assign(),
+
+                // x = tab[INDEX_ZERO] + tab[INDEX_ONE] * tab[INDEX_TWO];
                 new PushArrVar(Var("int tab"), 2),
                 new PushArrVar(Var("int tab"), 1),
                 new Multiply(),

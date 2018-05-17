@@ -259,9 +259,7 @@ namespace DaedalusCompiler.Compilation
 
     public class AssemblyBuilder
     {
-        public List<FunctionBlock> functions;
-        public List<PrototypeContructorBlock> prototypeContructors;
-        public List<InstanceConstructorBlock> instanceConstructors;
+        public List<ExecBlock> execBlocks;
         public List<DatSymbol> symbols;
         private ExecBlock active;
         private AssemblyBuildContext currentBuildCtx; // current assembly build context
@@ -271,9 +269,7 @@ namespace DaedalusCompiler.Compilation
 
         public AssemblyBuilder()
         {
-            functions = new List<FunctionBlock>();
-            prototypeContructors = new List<PrototypeContructorBlock>();
-            instanceConstructors = new List<InstanceConstructorBlock>();
+            execBlocks = new List<ExecBlock>();
             symbols = new List<DatSymbol>();
             currentBuildCtx = getEmptyBuildContext();
             active = null;
@@ -293,9 +289,9 @@ namespace DaedalusCompiler.Compilation
             };
         }
 
-        public bool isContextInsideFunction()
+        public bool isContextInsideExecBlock()
         {
-            return active is FunctionBlock;
+            return active != null;
         }
 
         public void addInstruction(AssemblyInstruction instruction)
@@ -310,33 +306,23 @@ namespace DaedalusCompiler.Compilation
 
         public void execBlockStart(DatSymbol symbol, ExecutebleBlockType blockType)
         {
-            var newExecBlockInstructionStack = getEmptyBuildContext();
             switch (blockType)
             {
                 case ExecutebleBlockType.Function:
-                    var function = new FunctionBlock(){ symbol = symbol};
-
-                    functions.Add(function);
-
+                    var function = new FunctionBlock(){ symbol = symbol };
                     active = function;
                     break;
                 case ExecutebleBlockType.InstanceConstructor:
-                    var instanceConstructor = new InstanceConstructorBlock(){ symbol = symbol};
-
-                    instanceConstructors.Add(instanceConstructor);
-
+                    var instanceConstructor = new InstanceConstructorBlock(){ symbol = symbol };
                     active = instanceConstructor;
                     break;
                 case ExecutebleBlockType.PrototypeConstructor:
-                    var prototypeConstructor = new PrototypeContructorBlock(){ symbol = symbol};
-
-                    prototypeContructors.Add(prototypeConstructor);
-
+                    var prototypeConstructor = new PrototypeContructorBlock(){ symbol = symbol };
                     active = prototypeConstructor;
                     break;
             }
-
-            currentBuildCtx = newExecBlockInstructionStack;
+            execBlocks.Add(active);
+            currentBuildCtx = getEmptyBuildContext();
         }
 
         public void execBlockEnd()
@@ -620,25 +606,15 @@ namespace DaedalusCompiler.Compilation
             return symbols.IndexOf(symbol);
         }
 
-        public List<ExecBlock> getExecBlocks()
-        {
-            var execBlocks = new List<ExecBlock>();
-            execBlocks.AddRange(functions);
-            execBlocks.AddRange(prototypeContructors);
-            execBlocks.AddRange(instanceConstructors);
-
-            return execBlocks;
-        }
-
         public string getAssembler()
         {
-            return new AssemblyBuilderTraverser().getAssembler(getExecBlocks(), symbols);
+            return new AssemblyBuilderTraverser().getAssembler(execBlocks, symbols);
         }
 
         public void saveToDat()
         {
             // todo finish
-            var datFile = AssemblyBuilderToDat.getDatFile(getExecBlocks(), symbols);
+            var datFile = AssemblyBuilderToDat.getDatFile(execBlocks, symbols);
             
             datFile.Save("./test.dat");
         }

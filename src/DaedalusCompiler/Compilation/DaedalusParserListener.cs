@@ -22,8 +22,8 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterParameterDecl(DaedalusParser.ParameterDeclContext context)
         {
-            FunctionBlock functionBlock = assemblyBuilder.functions.Last();
-            string functionName = functionBlock.symbol.Name;
+            ExecBlock execBlock = assemblyBuilder.execBlocks.Last();
+            string functionName = execBlock.symbol.Name;
             string parameterLocalName = context.nameNode().GetText();
             string parameterName = $"{functionName}.{parameterLocalName}";
 
@@ -107,7 +107,7 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterVarDecl([NotNull] DaedalusParser.VarDeclContext context)
         {
-            if (context.Parent is DaedalusParser.DaedalusFileContext || assemblyBuilder.isContextInsideFunction())
+            if (context.Parent is DaedalusParser.DaedalusFileContext || assemblyBuilder.isContextInsideExecBlock())
             {
                 var typeName = context.typeReference().GetText();
                 var type = DatSymbolTypeFromString(typeName);
@@ -123,11 +123,11 @@ namespace DaedalusCompiler.Compilation
                     {
                         var varValueContext = (DaedalusParser.VarValueDeclContext) varContext;
                         var name = varValueContext.nameNode().GetText();
-                        if (assemblyBuilder.isContextInsideFunction())
+                        if (assemblyBuilder.isContextInsideExecBlock())
                         {
                             // TODO consider making assemblyBuilder.active public and using it here
-                            FunctionBlock functionBlock = assemblyBuilder.functions.Last();
-                            string functionName = functionBlock.symbol.Name;
+                            ExecBlock execBlock = assemblyBuilder.execBlocks.Last();
+                            string functionName = execBlock.symbol.Name;
                             name = $"{functionName}.{name}";
                         }
 
@@ -405,7 +405,16 @@ namespace DaedalusCompiler.Compilation
             var arrIndexContext = symbolPart.simpleValue();
             if (arrIndexContext != null)
             {
-                arrIndex = int.Parse(arrIndexContext.GetText());
+                if (!int.TryParse(arrIndexContext.GetText(), out arrIndex))
+                {
+                    var constSymbol = assemblyBuilder.resolveSymbol(arrIndexContext.GetText());
+                    if (constSymbol.Flags != DatSymbolFlag.Const || constSymbol.Type != DatSymbolType.Int)
+                    {
+                        throw new Exception($"Expected integer constant: {arrIndexContext.GetText()}");
+                    }
+
+                    arrIndex = (int) constSymbol.Content[0];
+                }
             }
 
             var symbol = assemblyBuilder.resolveSymbol(symbolPart.referenceNode().GetText());
@@ -444,7 +453,16 @@ namespace DaedalusCompiler.Compilation
             var arrIndexContext = symbolPart.simpleValue();
             if (arrIndexContext != null)
             {
-                arrIndex = int.Parse(arrIndexContext.GetText());
+                if (!int.TryParse(arrIndexContext.GetText(), out arrIndex))
+                {
+                    var constSymbol = assemblyBuilder.resolveSymbol(arrIndexContext.GetText());
+                    if (constSymbol.Flags != DatSymbolFlag.Const || constSymbol.Type != DatSymbolType.Int)
+                    {
+                        throw new Exception($"Expected integer constant: {arrIndexContext.GetText()}");
+                    }
+
+                    arrIndex = (int) constSymbol.Content[0];
+                }
             }
 
             var symbol = assemblyBuilder.resolveSymbol(symbolPart.referenceNode().GetText());
