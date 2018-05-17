@@ -1131,7 +1131,7 @@ namespace DaedalusCompiler.Tests
         }
 
         [Fact]
-        public void TestFlatIfInstruction()
+        public void TestIfInstruction()
         {
             code = @"
                 var int a;
@@ -1163,6 +1163,49 @@ namespace DaedalusCompiler.Tests
                 new PushVar(Ref("a")),
                 new Assign(),
                 // if end
+                new AssemblyLabel("label_0"),
+                new Ret()
+            };
+
+            AssertInstructionsMatch();
+        }
+
+        [Fact]
+        public void TestIfAndElseInstruction()
+        {
+            code = @"
+                var int a;
+
+                func void testFunc()
+                {
+                    if ( 1 < 2 ) {
+                        a = 3;
+                    } else {
+                        a = 4;
+                    };
+                };
+            ";
+            instructions = GetExecBlockInstructions("testFunc");
+            expectedInstructions = new List<AssemblyElement>
+            {
+                // if ( 1 < 2 )
+                new PushInt(2),
+                new PushInt(1),
+                new Less(),
+                new JumpIfToLabel("label_1"),
+                // a = 3;
+                new PushInt(3),
+                new PushVar(Ref("a")),
+                new Assign(),
+                new JumpToLabel("label_0"),
+                // if end
+                // else start
+                new AssemblyLabel("label_1"),
+                // a = 4;
+                new PushInt(4),
+                new PushVar(Ref("a")),
+                new Assign(),
+                // else and if end
                 new AssemblyLabel("label_0"),
                 new Ret()
             };

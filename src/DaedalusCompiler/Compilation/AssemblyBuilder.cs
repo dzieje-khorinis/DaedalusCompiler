@@ -624,12 +624,13 @@ namespace DaedalusCompiler.Compilation
             foreach (var ifBlock in ifBlocks)
             {
                 var isLastOne = ifBlock == ifBlocks.Last();
-                var nextJumpLabel = getNextLabel();
 
                 instructions.AddRange(ifBlock.condition);
 
                 if (!isLastOne)
                 {
+                    var nextJumpLabel = getNextLabel();
+
                     instructions.Add(new JumpIfToLabel(nextJumpLabel));
                     instructions.AddRange(ifBlock.body);
                     instructions.Add(new JumpToLabel(statementEndLabel));
