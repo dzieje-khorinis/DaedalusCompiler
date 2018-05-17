@@ -335,16 +335,9 @@ namespace DaedalusCompiler.Compilation
             currentBuildCtx = currentBuildCtx.parent;
         }
 
-        public void assigmentStart(SymbolInstruction instruction)
+        public void assigmentStart(SymbolInstruction[] instructions)
         {
-            assignmentLeftSide.Add(instruction);
-        }
-        
-        //TODO check if there are any possibilities of assignmentLeftSide longer than 2 instructions?
-        public void assigmentStart(SymbolInstruction instruction1, SymbolInstruction instruction2)
-        {
-            assignmentLeftSide.Add(instruction1);
-            assignmentLeftSide.Add(instruction2);
+            assignmentLeftSide.AddRange(instructions);
         }
 
         public void assigmentEnd(string assignmentOperator)

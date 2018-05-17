@@ -396,10 +396,11 @@ namespace DaedalusCompiler.Compilation
             assemblyBuilder.expressionRightSideStart();
         }
 
-        public override void ExitComplexReference(DaedalusParser.ComplexReferenceContext context)
+
+        public List<AssemblyInstruction> GetComplexReferenceNodeInstructions(
+            DaedalusParser.ComplexReferenceNodeContext[] complexReferenceNodes)
         {
-            var referenceNodes = context.complexReferenceNode();
-            var symbolPart = referenceNodes[0];
+            var symbolPart = complexReferenceNodes[0];
 
             int arrIndex = 0;
             var simpleValueContext = symbolPart.simpleValue();
@@ -419,78 +420,51 @@ namespace DaedalusCompiler.Compilation
 
             var symbol = assemblyBuilder.resolveSymbol(symbolPart.referenceNode().GetText());
 
-            if (referenceNodes.Length == 2)
+            if (complexReferenceNodes.Length == 2)
             {
                 string typeName = assemblyBuilder.symbols[symbol.Parent].Name;
-                string attributeName = referenceNodes[1].GetText();
+                string attributeName = complexReferenceNodes[1].GetText();
 
                 DatSymbol attribute = assemblyBuilder.resolveSymbol($"{typeName}.{attributeName}");
 
-                AssemblyInstruction[] instructions = {new SetInstance(symbol), new PushVar(attribute)};
-                assemblyBuilder.addInstructions(instructions);
+                return new List<AssemblyInstruction>
+                {
+                    new SetInstance(symbol),
+                    new PushVar(attribute)
+                };
             }
             else
             {
                 if (arrIndex > 0)
                 {
-                    assemblyBuilder.addInstruction(new PushArrVar(symbol, arrIndex));
+                    return new List<AssemblyInstruction>
+                    {
+                        new PushArrVar(symbol, arrIndex)
+                    };
                 }
                 else
                 {
-                    assemblyBuilder.addInstruction(new PushVar(symbol));
+                    return new List<AssemblyInstruction>
+                    {
+                        new PushVar(symbol)
+                    };
                 }
             }
+        }
+
+        public override void ExitComplexReference(DaedalusParser.ComplexReferenceContext context)
+        {
+            var complexReferenceNodes = context.complexReferenceNode();
+            List<AssemblyInstruction> instructions = GetComplexReferenceNodeInstructions(complexReferenceNodes);
+            assemblyBuilder.addInstructions(instructions.ToArray());
         }
 
 
         public override void EnterAssignment(DaedalusParser.AssignmentContext context)
         {
-            var referenceNodes = context.complexReferenceLeftSide().complexReferenceNode();
-
-            var symbolPart = referenceNodes[0];
-
-            int arrIndex = 0;
-            var simpleValueContext = symbolPart.simpleValue();
-            if (simpleValueContext != null)
-            {
-                if (!int.TryParse(simpleValueContext.GetText(), out arrIndex))
-                {
-                    var constSymbol = assemblyBuilder.resolveSymbol(simpleValueContext.GetText());
-                    if (constSymbol.Flags != DatSymbolFlag.Const || constSymbol.Type != DatSymbolType.Int)
-                    {
-                        throw new Exception($"Expected integer constant: {simpleValueContext.GetText()}");
-                    }
-
-                    arrIndex = (int) constSymbol.Content[0];
-                }
-            }
-
-            var symbol = assemblyBuilder.resolveSymbol(symbolPart.referenceNode().GetText());
-            var operatorVal = context.assigmentOperator().GetText();
-
-            if (referenceNodes.Length == 2)
-            {
-                string typeName = assemblyBuilder.symbols[symbol.Parent].Name;
-                string attributeName = referenceNodes[1].GetText();
-
-                DatSymbol attribute = assemblyBuilder.resolveSymbol($"{typeName}.{attributeName}");
-
-                assemblyBuilder.assigmentStart(
-                    new SetInstance(symbol),
-                    new PushVar(attribute)
-                );
-            }
-            else
-            {
-                if (arrIndex > 0)
-                {
-                    assemblyBuilder.assigmentStart(new PushArrVar(symbol, arrIndex));
-                }
-                else
-                {
-                    assemblyBuilder.assigmentStart(new PushVar(symbol));
-                }
-            }
+            var complexReferenceNodes = context.complexReferenceLeftSide().complexReferenceNode();
+            List<AssemblyInstruction> instructions = GetComplexReferenceNodeInstructions(complexReferenceNodes);
+            assemblyBuilder.assigmentStart(Array.ConvertAll(instructions.ToArray(), item => (SymbolInstruction)item));
         }
 
 
