@@ -87,7 +87,11 @@ namespace DaedalusCompiler.Compilation
 
         public static DatSymbol BuildFunc(string name, DatSymbolType returnType)
         {
-            var symbol = new DatSymbol {Name = name};
+            var symbol = new DatSymbol
+            {
+                Name = name,
+                Parent = -1,
+            };
 
             return symbol;
         }

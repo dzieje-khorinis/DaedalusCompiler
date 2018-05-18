@@ -271,7 +271,6 @@ namespace DaedalusCompiler.Compilation
         public List<DatSymbol> symbols;
         private ExecBlock active;
         private AssemblyBuildContext currentBuildCtx; // current assembly build context
-        private DatSymbol refSymbol; // we use that for prototype and instance definintions
         private List<SymbolInstruction> assignmentLeftSide;
         private FuncArgsBodyContext funcArgsBodyCtx;
         private int labelIndexGenerator;
@@ -484,11 +483,6 @@ namespace DaedalusCompiler.Compilation
             //todo implement
         }
 
-        public void setRefSymbol(DatSymbol refSymbol)
-        {
-            this.refSymbol = refSymbol;
-        }
-
 
         public void conditionalStart()
         {
@@ -565,38 +559,44 @@ namespace DaedalusCompiler.Compilation
         public DatSymbol resolveSymbol(string symbolName)
         {
             string targetSymbolName;
-
-            if (active is PrototypeContructorBlock || active is InstanceConstructorBlock)
+            DatSymbol symbolLocalScope = null;
+            DatSymbol symbol = null;
+            
+            if (active != null && !symbolName.Contains("."))
             {
-                targetSymbolName = $"{refSymbol.Name}.{symbolName}";
-            }
-            else if (active != null)
-            {
-                targetSymbolName = $"{active.symbol.Name}.{symbolName}";
-            }
-            else
-            {
-                targetSymbolName = symbolName;
-            }
-
-            var symbolLocalScope = symbols.Find(x => x.Name.ToUpper() == targetSymbolName.ToUpper());
-
-            if (symbolLocalScope == null)
-            {
-                // in that case we look for symbol in global scope
-                var symbol = symbols.Find(x => x.Name == symbolName);
-
-                if (symbol == null)
+                DatSymbol currentExecBlockSymbol = active.symbol;
+                
+                while (currentExecBlockSymbol != null)
                 {
-                    throw new Exception("Symbol " + symbolName + " is not added");
+                    targetSymbolName = $"{currentExecBlockSymbol.Name}.{symbolName}";
+                    
+                    symbol = symbols.Find(x => x.Name.ToUpper() == targetSymbolName.ToUpper());
+                    
+                    if (symbol == null)
+                    {
+                        if (currentExecBlockSymbol.Parent == -1)
+                        {
+                            currentExecBlockSymbol = null;
+                            break;
+                        }
+                        currentExecBlockSymbol = symbols[currentExecBlockSymbol.Parent];
+                    }
+                    else
+                    {
+                        return symbol;
+                    }
                 }
+            }
 
-                return symbol;
-            }
-            else
+            symbol = symbols.Find(x => x.Name.ToUpper() == symbolName.ToUpper());
+
+            if (symbol == null)
             {
-                return symbolLocalScope;
+                throw new Exception("Symbol " + symbolName + " is not added");
             }
+
+            return symbol;
+
         }
 
         public DatSymbol getSymbolByName(string symbolName)

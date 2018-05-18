@@ -282,19 +282,19 @@ namespace DaedalusCompiler.Compilation
             assemblyBuilder.addSymbol(prototypeSymbol);
 
             assemblyBuilder.execBlockStart(prototypeSymbol, ExecutebleBlockType.PrototypeConstructor);
-            assemblyBuilder.setRefSymbol(refSymbol);
         }
 
         public override void ExitPrototypeDef(DaedalusParser.PrototypeDefContext context)
         {
             // we invoke execBlockEnd, thanks that ab will assign all instructions
             // to currently exited prototype constructor
+            assemblyBuilder.addInstruction(new Ret());
             assemblyBuilder.execBlockEnd();
         }
 
         public override void EnterInstanceDef(DaedalusParser.InstanceDefContext context)
         {
-            var prototypeName = context.nameNode().GetText();
+            var instanceName = context.nameNode().GetText();
             var referenceName = context.referenceNode().GetText();
             var refSymbol = assemblyBuilder.getSymbolByName(referenceName);
             var referenceSymbolId = assemblyBuilder.getSymbolId(refSymbol);
@@ -302,18 +302,23 @@ namespace DaedalusCompiler.Compilation
 
             var firstTokenAddress = 0; // TODO: Populate first token addres
             var prototypeSymbol =
-                SymbolBuilder.BuildPrototype(prototypeName, referenceSymbolId, firstTokenAddress,
-                    location); // TODO: Validate params
+                SymbolBuilder.BuildPrototype(instanceName, referenceSymbolId, firstTokenAddress,
+                    location); // TODO: Validate params, actually should be BuildInstance
             assemblyBuilder.addSymbol(prototypeSymbol);
 
             assemblyBuilder.execBlockStart(prototypeSymbol, ExecutebleBlockType.InstanceConstructor);
-            assemblyBuilder.setRefSymbol(refSymbol);
+
+            if (refSymbol.Type == DatSymbolType.Prototype)
+            {
+                assemblyBuilder.addInstruction(new Call(refSymbol));
+            }
         }
 
         public override void ExitInstanceDef(DaedalusParser.InstanceDefContext context)
         {
             // we invoke execBlockEnd, thanks that ab will assign all instructions
             // to currently exited instance constructor
+            assemblyBuilder.addInstruction(new Ret());
             assemblyBuilder.execBlockEnd();
         }
 
