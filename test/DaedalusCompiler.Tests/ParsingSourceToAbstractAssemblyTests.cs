@@ -1485,7 +1485,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertSymbolsMatch();
         }
-        
+
         [Fact]
         public void TestInlineVarAndConstDeclarations()
         {
@@ -1515,22 +1515,22 @@ namespace DaedalusCompiler.Tests
                 new PushInt(7),
                 new PushVar(Ref("d")),
                 new Assign(),
-                
+
                 // e = 8;
                 new PushInt(8),
                 new PushVar(Ref("e")),
                 new Assign(),
-                
+
                 // f = 9;
                 new PushInt(9),
                 new PushVar(Ref("f")),
                 new Assign(),
-                
+
                 // k = 10;
                 new PushInt(10),
                 new PushVar(Ref("testFunc.k")),
                 new Assign(),
-                
+
                 // g = 11;
                 new PushInt(11),
                 new PushVar(Ref("testFunc.g")),
@@ -1556,6 +1556,185 @@ namespace DaedalusCompiler.Tests
             AssertSymbolsMatch();
         }
 
+        [Fact]
+        public void TestClassPrototypeInstanceInheritanceAndVarAndConstDeclarationsInsidePrototypeAndInstance()
+        {
+            code = @"
+                class Person {
+                    var int age;
+                };
+                
+                prototype Orc(Person) {
+                    age = 10;
+                    var int weight;
+                    weight = 20;
+                    const int HEIGHT = 100;
+                };
+                
+                instance OrcShaman(Orc) {
+                    age = 10;
+                    var int mana;
+                    mana = 30;
+                    const int HP = 200;
+                };
+                
+                var int a;
+                
+                func void testFunc()
+                {
+                    var person d;
+                    d.age = 5;
+                    a = d.age;
+                };
+            ";
+            
+            instructions = GetExecBlockInstructions("Orc");
+            expectedInstructions = new List<AssemblyElement>
+            {
+                // age = 10;
+                new PushInt(10),
+                new PushVar(Ref("Person.age")),
+                new Assign(),
+                
+                // weight = 20;
+                new PushInt(20),
+                new PushVar(Ref("Orc.weight")),
+                new Assign(),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+
+            instructions = GetExecBlockInstructions("OrcShaman");
+            expectedInstructions = new List<AssemblyElement>
+            {
+                new Call(Ref("Orc")),    // only when parent is prototype
+                
+                // age = 10;
+                new PushInt(10),
+                new PushVar(Ref("Person.age")),
+                new Assign(),
+                
+                // mana = 30;
+                new PushInt(30),
+                new PushVar(Ref("OrcShaman.mana")),
+                new Assign(),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            instructions = GetExecBlockInstructions("testFunc");
+            expectedInstructions = new List<AssemblyElement>
+            {
+                // d.age = 5;
+                new PushInt(5),
+                new SetInstance(Ref("testFunc.d")),
+                new PushVar(Ref("Person.age")),
+                new Assign(),
+                
+                // a = d.age;
+                new SetInstance(Ref("testFunc.d")),
+                new PushVar(Ref("Person.age")),
+                new PushVar(Ref("a")),
+                new Assign(),
+
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("Person"),
+                Ref("Person.age"),
+                Ref("Orc"),
+                Ref("Orc.weight"),
+                Ref("Orc.height"),
+                Ref("OrcShaman"),
+                Ref("OrcShaman.mana"),
+                Ref("OrcShaman.hp"),
+                Ref("a"),
+                Ref("testFunc"),
+                Ref("testFunc.d"),
+            };
+            AssertSymbolsMatch();
+        }
+        
+        [Fact]
+        public void TestClassInstanceInheritanceAndVarAndConstDeclarationsInsidePrototypeAndInstance()
+        {
+            code = @"
+                class Person {
+                    var int age;
+                };
+
+                instance OrcShaman(Person) {
+                    age = 10;
+                    var int mana;
+                    mana = 30;
+                    const int HP = 200;
+                };
+                
+                var int a;
+                
+                func void testFunc()
+                {
+                    var person d;
+                    d.age = 5;
+                    a = d.age;
+                };
+            ";
+
+            instructions = GetExecBlockInstructions("OrcShaman");
+            expectedInstructions = new List<AssemblyElement>
+            {
+                // age = 10;
+                new PushInt(10),
+                new PushVar(Ref("Person.age")),
+                new Assign(),
+                
+                // mana = 30;
+                new PushInt(30),
+                new PushVar(Ref("OrcShaman.mana")),
+                new Assign(),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            instructions = GetExecBlockInstructions("testFunc");
+            expectedInstructions = new List<AssemblyElement>
+            {
+                // d.age = 5;
+                new PushInt(5),
+                new SetInstance(Ref("testFunc.d")),
+                new PushVar(Ref("Person.age")),
+                new Assign(),
+                
+                // a = d.age;
+                new SetInstance(Ref("testFunc.d")),
+                new PushVar(Ref("Person.age")),
+                new PushVar(Ref("a")),
+                new Assign(),
+
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("Person"),
+                Ref("Person.age"),
+                Ref("OrcShaman"),
+                Ref("OrcShaman.mana"),
+                Ref("OrcShaman.hp"),
+                Ref("a"),
+                Ref("testFunc"),
+                Ref("testFunc.d"),
+            };
+            AssertSymbolsMatch();
+        }
+        
         [Fact]
         public void TestIfInstruction()
         {
