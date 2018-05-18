@@ -1735,6 +1735,94 @@ namespace DaedalusCompiler.Tests
             AssertSymbolsMatch();
         }
         
+        [Fact (Skip = "floats don't generate PushInt yet")]
+        public void TestFloatBasicExpression()
+        {
+            code = @"
+                var float x;
+
+                func float otherFunc() {};
+                
+                func void testFunc(var float y) {
+                    y = 5.5;
+                    x = -1.5;
+                    x = -1;
+                    x = 0;
+                    x = 1;
+                    x = 1.5;
+                    x = 2.5;
+                    x = 3.5;
+                };
+            ";
+
+            instructions = GetExecBlockInstructions("otherFunc");
+            expectedInstructions = new List<AssemblyElement>
+            {
+                new Ret(),
+            };
+            
+            instructions = GetExecBlockInstructions("testFunc");
+            expectedInstructions = new List<AssemblyElement>
+            {
+                // parameters
+                new PushVar(Ref("testFunc.y")),
+                new AssignFloat(),
+                
+                // y = 5.5;
+                new PushInt(1085276160),
+                new PushVar(Ref("testFunc.y")),
+                new AssignFloat(),
+                
+                // x = -1.5;
+                new PushInt(-1077936128),
+                new PushVar(Ref("x")),
+                new AssignFloat(),
+                
+                // x = -1;
+                new PushInt(-1082130432),
+                new PushVar(Ref("x")),
+                new AssignFloat(),
+                
+                // x = 0;
+                new PushInt(0),
+                new PushVar(Ref("x")),
+                new AssignFloat(),
+                
+                // x = 1;
+                new PushInt(1065353216),
+                new PushVar(Ref("x")),
+                new AssignFloat(),
+                
+                // x = 1.5;
+                new PushInt(1069547520),
+                new PushVar(Ref("x")),
+                new AssignFloat(),
+                
+                // x = 2.5;
+                new PushInt(1075838976),
+                new PushVar(Ref("x")),
+                new AssignFloat(),
+                
+                // x = 3.5;
+                new PushInt(1080033280),
+                new PushVar(Ref("x")),
+                new AssignFloat(),
+
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("x"),
+                Ref("otherFunc"),
+                Ref("testFunc"),
+                Ref("testFunc"),
+                Ref("testFunc.y"),
+            };
+            AssertSymbolsMatch();
+        }
+        
         [Fact]
         public void TestIfInstruction()
         {
