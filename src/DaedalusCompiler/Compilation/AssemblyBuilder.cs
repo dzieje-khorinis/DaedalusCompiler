@@ -564,22 +564,22 @@ namespace DaedalusCompiler.Compilation
             
             if (active != null && !symbolName.Contains("."))
             {
-                DatSymbol currentSymbol = active.symbol;
+                DatSymbol currentExecBlockSymbol = active.symbol;
                 
-                while (currentSymbol != null)
+                while (currentExecBlockSymbol != null)
                 {
-                    targetSymbolName = $"{currentSymbol.Name}.{symbolName}";
+                    targetSymbolName = $"{currentExecBlockSymbol.Name}.{symbolName}";
                     
                     symbol = symbols.Find(x => x.Name.ToUpper() == targetSymbolName.ToUpper());
                     
                     if (symbol == null)
                     {
-                        if (currentSymbol.Parent == -1)
+                        if (currentExecBlockSymbol.Parent == -1)
                         {
-                            currentSymbol = null;
+                            currentExecBlockSymbol = null;
                             break;
                         }
-                        currentSymbol = symbols[currentSymbol.Parent];
+                        currentExecBlockSymbol = symbols[currentExecBlockSymbol.Parent];
                     }
                     else
                     {
