@@ -916,7 +916,16 @@ namespace DaedalusCompiler.Tests
             instructions = GetExecBlockInstructions("otherFunc");
             expectedInstructions = new List<AssemblyElement>
             {
+                // parameters
+                new PushVar(Ref("otherFunc.b")),
+                new Assign(),
+                new PushVar(Ref("otherFunc.a")),
+                new Assign(),
+
+                // return 0
                 new PushInt(0),
+                new Ret(),
+
                 new Ret(),
             };
             AssertInstructionsMatch();
@@ -1158,6 +1167,77 @@ namespace DaedalusCompiler.Tests
         }
 
         [Fact]
+        public void TestIntArrParameter()
+        {
+            code = @"
+                const int ATTRS_COUNT = 5;
+                
+                func void testFunc(var int x, var int tab[3], var float attrs[ATTRS_COUNT]) {
+                    x = 1;
+                    tab[0] = 2;
+                    tab[1] = 3;
+                    tab[2] = x;
+                    x = tab[0] + tab[1] * tab[2];
+                };
+            ";
+
+            instructions = GetExecBlockInstructions("testFunc");
+            expectedInstructions = new List<AssemblyElement>
+            {
+                // parameters
+                new PushVar(Ref("testFunc.attrs")),
+                new AssignFloat(),
+                new PushVar(Ref("testFunc.tab")),
+                new Assign(),
+                new PushVar(Ref("testFunc.x")),
+                new Assign(),
+
+                // x = 1;
+                new PushInt(1),
+                new PushVar(Ref("testFunc.x")),
+                new Assign(),
+
+                // tab[0] = 2;
+                new PushInt(2),
+                new PushVar(Ref("testFunc.tab")),
+                new Assign(),
+
+                // tab[1] = 3;
+                new PushInt(3),
+                new PushArrVar(Ref("testFunc.tab"), 1),
+                new Assign(),
+
+                // tab[2] = x;
+                new PushVar(Ref("testFunc.x")),
+                new PushArrVar(Ref("testFunc.tab"), 2),
+                new Assign(),
+
+                // x = tab[0] + tab[1] * tab[2];
+                new PushArrVar(Ref("testFunc.tab"), 2),
+                new PushArrVar(Ref("testFunc.tab"), 1),
+                new Multiply(),
+                new PushVar(Ref("testFunc.tab")),
+                new Add(),
+                new PushVar(Ref("testFunc.x")),
+                new Assign(),
+
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("attrs_count"),
+                Ref("testFunc"),
+                Ref("testFunc.x"),
+                Ref("testFunc.tab"),
+                Ref("testFunc.attrs"),
+            };
+            AssertSymbolsMatch();
+        }
+
+
+        [Fact]
         public void TestMostOperatorsPrecedence()
         {
             code = @"
@@ -1281,6 +1361,10 @@ namespace DaedalusCompiler.Tests
             instructions = GetExecBlockInstructions("testFunc");
             expectedInstructions = new List<AssemblyElement>
             {
+                // parameters
+                new PushInstance(Ref("testFunc.d")),
+                new AssignInstance(),
+
                 // d.age = 5;
                 new PushInt(5),
                 new SetInstance(Ref("testFunc.d")),

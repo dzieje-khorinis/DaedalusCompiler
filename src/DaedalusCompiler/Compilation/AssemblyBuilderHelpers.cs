@@ -5,45 +5,53 @@ namespace DaedalusCompiler.Compilation
 {
     public class AssemblyBuilderHelpers
     {
+        public static ParamLessInstruction GetAssignInstructionForDatSymbolType(DatSymbolType type)
+        {
+            ParamLessInstruction instruction = new ParamLessInstruction();
+            switch (type)
+            {
+                case (DatSymbolType.Int):
+                {
+                    instruction = new Assign();
+                    break;
+                }
+                case (DatSymbolType.String):
+                {
+                    instruction = new AssignString(); //TODO when to use AssignStringRef?
+                    break;
+                }
+                case (DatSymbolType.Func):
+                {
+                    instruction = new AssignFunc();
+                    break;
+                }
+                case (DatSymbolType.Float):
+                {
+                    instruction = new AssignFloat();
+                    break;
+                }
+                case (DatSymbolType.Instance):  // TODO check if it happens
+                case (DatSymbolType.Class):
+                {
+                    instruction = new AssignInstance();
+                    break;
+                }
+            }
+
+            return instruction;
+        }
+        
         public static ParamLessInstruction GetInstructionForOperator(
             string operatorVal,
             bool twoArg = true,
-            DatSymbolType rightHandSideType = DatSymbolType.Void)
+            DatSymbolType rightSideType = DatSymbolType.Void)
         {
             ParamLessInstruction instruction = new ParamLessInstruction();
 
             switch (operatorVal)
             {
                 case "=":
-                    switch (rightHandSideType)
-                    {
-                        case (DatSymbolType.Int):
-                        {
-                            instruction = new Assign();
-                            break;
-                        }
-                        case (DatSymbolType.String):
-                        {
-                            instruction = new AssignString(); //TODO when to use AssignStringRef?
-                            break;
-                        }
-                        case (DatSymbolType.Func):
-                        {
-                            instruction = new AssignFunc();
-                            break;
-                        }
-                        case (DatSymbolType.Float):
-                        {
-                            instruction = new AssignFloat();
-                            break;
-                        }
-                        case (DatSymbolType.Instance):
-                        {
-                            instruction = new AssignInstance();
-                            break;
-                        }
-                    }
-
+                    instruction = GetAssignInstructionForDatSymbolType(rightSideType);
                     break;
                 case "+=":
                     instruction = new AssignAdd();

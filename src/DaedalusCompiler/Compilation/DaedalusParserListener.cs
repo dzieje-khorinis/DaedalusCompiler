@@ -20,6 +20,33 @@ namespace DaedalusCompiler.Compilation
             this.sourceFileNumber = sourceFileNumber;
         }
 
+        public override void ExitParameterList(DaedalusParser.ParameterListContext context)
+        {
+            var parametrDeclContexts = context.parameterDecl();
+            foreach (var parameterDeclContext in parametrDeclContexts.Reverse())
+            {
+                ExecBlock execBlock = assemblyBuilder.execBlocks.Last();
+                string execBlockName = execBlock.symbol.Name;
+                string parameterLocalName = parameterDeclContext.nameNode().GetText();
+                string parameterName = $"{execBlockName}.{parameterLocalName}";
+                DatSymbol parameterSymbol = assemblyBuilder.resolveSymbol(parameterName);
+
+                var assignInstruction =
+                    AssemblyBuilderHelpers.GetAssignInstructionForDatSymbolType(parameterSymbol.Type);
+
+                if (parameterSymbol.Type is DatSymbolType.Class)
+                {
+                    assemblyBuilder.addInstruction(new PushInstance(parameterSymbol));
+                }
+                else
+                {
+                    assemblyBuilder.addInstruction(new PushVar(parameterSymbol));
+                }
+
+                assemblyBuilder.addInstruction(assignInstruction);
+            }
+        }
+
         public override void EnterParameterDecl(DaedalusParser.ParameterDeclContext context)
         {
             ExecBlock execBlock = assemblyBuilder.execBlocks.Last();
@@ -41,12 +68,23 @@ namespace DaedalusCompiler.Compilation
             DatSymbol symbol = null;
             var location = GetLocation(context);
 
-            if (context.simpleValue() != null) // arrayElementsCount Context
+            uint arrIndex = 0;
+            var simpleValueContext = context.simpleValue();
+
+            if (simpleValueContext != null)
             {
-                uint arrayElementsCount = uint.Parse(context.simpleValue().GetText());
-                // TODO is parentId also included in variable array?
-                symbol = SymbolBuilder.BuildArrOfVariables(parameterName, parameterType.Value, arrayElementsCount,
-                    location);
+                if (!uint.TryParse(simpleValueContext.GetText(), out arrIndex))
+                {
+                    var constSymbol = assemblyBuilder.resolveSymbol(simpleValueContext.GetText());
+                    if (constSymbol.Flags != DatSymbolFlag.Const || constSymbol.Type != DatSymbolType.Int)
+                    {
+                        throw new Exception($"Expected integer constant: {simpleValueContext.GetText()}");
+                    }
+
+                    arrIndex = (uint) (int) constSymbol.Content[0];
+                }
+
+                symbol = SymbolBuilder.BuildArrOfVariables(parameterName, parameterType.Value, arrIndex, location);
             }
             else
             {

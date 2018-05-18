@@ -174,6 +174,14 @@ namespace DaedalusCompiler.Compilation
         }
     }
     
+    public class PushInstance : SymbolInstruction
+    {
+        public PushInstance(DatSymbol symbol) : base(symbol)
+        {
+
+        }
+    }
+    
     public class SetInstance : SymbolInstruction
     {
         public SetInstance(DatSymbol symbol) : base(symbol)
