@@ -1485,6 +1485,76 @@ namespace DaedalusCompiler.Tests
             };
             AssertSymbolsMatch();
         }
+        
+        [Fact]
+        public void TestInlineVarAndConstDeclarations()
+        {
+            code = @"
+                const int a = 1, b = 2, c = 3;
+                var int d, e, f;
+                
+                func void testFunc(var int g) {
+                    const int h = 4;
+                    var int k;
+                    d = 7;
+                    e = 8;
+                    f = 9;
+                    k = 10;
+                    g = 11;
+                };
+            ";
+
+            instructions = GetExecBlockInstructions("testFunc");
+            expectedInstructions = new List<AssemblyElement>
+            {
+                // parameters
+                new PushVar(Ref("testFunc.g")),
+                new Assign(),
+
+                // d = 7;
+                new PushInt(7),
+                new PushVar(Ref("d")),
+                new Assign(),
+                
+                // e = 8;
+                new PushInt(8),
+                new PushVar(Ref("e")),
+                new Assign(),
+                
+                // f = 9;
+                new PushInt(9),
+                new PushVar(Ref("f")),
+                new Assign(),
+                
+                // k = 10;
+                new PushInt(10),
+                new PushVar(Ref("testFunc.k")),
+                new Assign(),
+                
+                // g = 11;
+                new PushInt(11),
+                new PushVar(Ref("testFunc.g")),
+                new Assign(),
+
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("a"),
+                Ref("b"),
+                Ref("c"),
+                Ref("d"),
+                Ref("e"),
+                Ref("f"),
+                Ref("testFunc"),
+                Ref("testFunc.g"),
+                Ref("testFunc.h"),
+                Ref("testFunc.k"),
+            };
+            AssertSymbolsMatch();
+        }
 
         [Fact]
         public void TestIfInstruction()
