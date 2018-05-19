@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using DaedalusCompiler.Compilation;
@@ -9,72 +10,73 @@ namespace DaedalusCompiler.Tests
 {
     public class ParsingSourceToAbstractAssemblyTests
     {
-        private readonly AssemblyBuilder assemblyBuilder;
-        private string code;
-        private List<AssemblyElement> instructions;
-        private List<AssemblyElement> expectedInstructions;
-        private List<DatSymbol> expectedSymbols;
-        private bool parsed;
+        private readonly AssemblyBuilder _assemblyBuilder;
+        private string _code;
+        private List<AssemblyElement> _instructions;
+        private List<AssemblyElement> _expectedInstructions;
+        private List<DatSymbol> _expectedSymbols;
+        private bool _parsed;
 
         public ParsingSourceToAbstractAssemblyTests()
         {
-            assemblyBuilder = new AssemblyBuilder();
-            instructions = new List<AssemblyElement>();
-            expectedInstructions = new List<AssemblyElement>();
-            expectedSymbols = new List<DatSymbol>();
-            parsed = false;
+            _assemblyBuilder = new AssemblyBuilder();
+            _instructions = new List<AssemblyElement>();
+            _expectedInstructions = new List<AssemblyElement>();
+            _expectedSymbols = new List<DatSymbol>();
+            _parsed = false;
         }
 
         private DatSymbol Ref(string symbolName)
         {
-            return assemblyBuilder.resolveSymbol(symbolName);
+            return _assemblyBuilder.ResolveSymbol(symbolName);
         }
 
         private List<AssemblyElement> GetExecBlockInstructions(string execBlockName)
         {
-            if (!parsed)
+            if (!_parsed)
             {
                 ParseData();
             }
 
-            return assemblyBuilder.execBlocks
-                .Find(execBlock => execBlock.symbol.Name.ToUpper() == execBlockName.ToUpper()).body;
+            return _assemblyBuilder.ExecBlocks
+                .Find(execBlock => execBlock.Symbol.Name.ToUpper() == execBlockName.ToUpper()).Body;
         }
 
         private void ParseData()
         {
-            parsed = true;
+            _parsed = true;
 
-            AntlrInputStream inputStream = new AntlrInputStream(code);
+            AntlrInputStream inputStream = new AntlrInputStream(_code);
             DaedalusLexer lexer = new DaedalusLexer(inputStream);
             CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
             DaedalusParser parser = new DaedalusParser(commonTokenStream);
 
-            ParseTreeWalker.Default.Walk(new DaedalusParserListener(assemblyBuilder, 0), parser.daedalusFile());
+            ParseTreeWalker.Default.Walk(new DaedalusParserListener(_assemblyBuilder, 0), parser.daedalusFile());
         }
 
         private void AssertRefContentEqual(string symbolName, object expectedValue)
         {
+            if (expectedValue == null) throw new ArgumentNullException(nameof(expectedValue));
             Assert.Equal(expectedValue, Ref(symbolName).Content[0]);
         }
 
         private void AssertInstructionsMatch()
         {
-            for (var index = 0; index < expectedInstructions.Count; index++)
+            for (var index = 0; index < _expectedInstructions.Count; index++)
             {
-                var instruction = instructions[index];
-                var expectedInstruction = expectedInstructions[index];
+                var instruction = _instructions[index];
+                var expectedInstruction = _expectedInstructions[index];
                 CompareInstructions(expectedInstruction, instruction);
             }
         }
 
         private void AssertSymbolsMatch()
         {
-            Assert.Equal(expectedSymbols.Count, assemblyBuilder.getAllSymbols().Count);
-            for (var index = 0; index < expectedSymbols.Count; index++)
+            Assert.Equal(_expectedSymbols.Count, _assemblyBuilder.GetAllSymbols().Count);
+            for (var index = 0; index < _expectedSymbols.Count; index++)
             {
-                var symbol = assemblyBuilder.getAllSymbols()[index];
-                var expectedSymbol = expectedSymbols[index];
+                var symbol = _assemblyBuilder.GetAllSymbols()[index];
+                var expectedSymbol = _expectedSymbols[index];
                 Assert.Equal(expectedSymbol, symbol);
             }
         }
@@ -82,14 +84,15 @@ namespace DaedalusCompiler.Tests
 
         private void CompareInstructions(AssemblyElement expectedInstruction, AssemblyElement instruction)
         {
+            if (expectedInstruction == null) throw new ArgumentNullException(nameof(expectedInstruction));
             Assert.Equal(expectedInstruction.GetType(), instruction.GetType());
             switch (instruction)
             {
                 case PushInt pushIntInstruction:
                 {
                     Assert.Equal(
-                        ((PushInt) expectedInstruction).value,
-                        pushIntInstruction.value
+                        ((PushInt) expectedInstruction).Value,
+                        pushIntInstruction.Value
                     );
                     break;
                 }
@@ -97,27 +100,27 @@ namespace DaedalusCompiler.Tests
                 case CallExternal _:
                 case PushVar _:
                     Assert.Equal(
-                        ((SymbolInstruction) expectedInstruction).symbol,
-                        ((SymbolInstruction) instruction).symbol
+                        ((SymbolInstruction) expectedInstruction).Symbol,
+                        ((SymbolInstruction) instruction).Symbol
                     );
                     break;
                 case PushArrVar pushArrVarInstruction:
                 {
                     Assert.Equal(
-                        ((SymbolInstruction) expectedInstruction).symbol,
-                        ((SymbolInstruction) instruction).symbol
+                        ((SymbolInstruction) expectedInstruction).Symbol,
+                        ((SymbolInstruction) instruction).Symbol
                     );
                     Assert.Equal(
-                        ((PushArrVar) expectedInstruction).index,
-                        pushArrVarInstruction.index
+                        ((PushArrVar) expectedInstruction).Index,
+                        pushArrVarInstruction.Index
                     );
                     break;
                 }
                 case AssemblyLabel assemblyLabelInstruction:
                 {
                     Assert.Equal(
-                        ((AssemblyLabel) expectedInstruction).label,
-                        assemblyLabelInstruction.label
+                        ((AssemblyLabel) expectedInstruction).Label,
+                        assemblyLabelInstruction.Label
                     );
                     break;
                 }
@@ -127,8 +130,8 @@ namespace DaedalusCompiler.Tests
                 {
                     var jumpInstruction = (JumpToLabel) instruction;
                     Assert.Equal(
-                        ((JumpToLabel) expectedInstruction).label,
-                        jumpInstruction.label);
+                        ((JumpToLabel) expectedInstruction).Label,
+                        jumpInstruction.Label);
                     break;
                 }
             }
@@ -137,7 +140,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIntAddOperator()
         {
-            code = @"
+            _code = @"
                 var int x;
 
                 func void testFunc() {
@@ -146,8 +149,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // x = 2 + 3 + 4 + 5;
                 new PushInt(5),
@@ -175,7 +178,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("x"),
                 Ref("testFunc"),
@@ -186,7 +189,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIntMultOperator()
         {
-            code = @"
+            _code = @"
                 var int x;
 
                 func void testFunc() {
@@ -196,8 +199,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // x = 2 * 3 * 4 * 5;
                 new PushInt(5),
@@ -236,7 +239,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("x"),
                 Ref("testFunc"),
@@ -247,7 +250,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIntAssignmentOperator()
         {
-            code = @"
+            _code = @"
                 var int x;
 
                 func void testFunc() {
@@ -259,8 +262,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // x = 1;
                 new PushInt(1),
@@ -291,7 +294,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("x"),
                 Ref("testFunc"),
@@ -302,7 +305,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIntAddAndMultOperatorPrecedence()
         {
-            code = @"
+            _code = @"
                 var int a;
                 var int b;
                 var int c;
@@ -323,8 +326,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // a = 1 + 2 * 3;
                 new PushInt(3),
@@ -410,7 +413,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("a"),
                 Ref("b"),
@@ -424,7 +427,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIntEqOperator()
         {
-            code = @"
+            _code = @"
                 var int a;
                 var int b;
                 var int c;
@@ -437,8 +440,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // a = 1 == 2 != 3;
                 new PushInt(3),
@@ -471,7 +474,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("a"),
                 Ref("b"),
@@ -485,7 +488,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIntOneArgOperator()
         {
-            code = @"
+            _code = @"
                 var int a;
                 var int b;
                 var int c;
@@ -499,8 +502,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // a = -1;
                 new PushInt(1),
@@ -530,7 +533,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("a"),
                 Ref("b"),
@@ -545,7 +548,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIntLogAndBinOperator()
         {
-            code = @"
+            _code = @"
                 var int a;
                 var int b;
                 var int c;
@@ -574,8 +577,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // a = 1 & 2;
                 new PushInt(2),
@@ -693,7 +696,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("a"),
                 Ref("b"),
@@ -708,7 +711,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIntLogAndBinOperatorPrecedence()
         {
-            code = @"
+            _code = @"
                 var int a;
                 var int b;
 
@@ -718,8 +721,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // a = 0 || 1 && 2 | 3 & 4;
                 new PushInt(4),
@@ -751,7 +754,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("a"),
                 Ref("b"),
@@ -763,7 +766,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIntBitMoveOperator()
         {
-            code = @"
+            _code = @"
                 var int a;
                 var int b;
                 var int c;
@@ -779,8 +782,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // a = 1 << 2;
                 new PushInt(2),
@@ -828,7 +831,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("a"),
                 Ref("b"),
@@ -842,7 +845,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIntCompOperator()
         {
-            code = @"
+            _code = @"
                 var int a;
                 var int b;
                 var int c;
@@ -856,8 +859,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // a = 1 < 2;
                 new PushInt(2),
@@ -891,7 +894,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("a"),
                 Ref("b"),
@@ -905,7 +908,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIntComplexExpression()
         {
-            code = @"
+            _code = @"
                 func int otherFunc(var int a, var int b)
                 {
                     return 0;
@@ -918,8 +921,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("otherFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("otherFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // parameters
                 new PushVar(Ref("otherFunc.b")),
@@ -935,8 +938,8 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 new PushInt(3),
                 new PushInt(7),
@@ -960,7 +963,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("otherFunc"),
                 Ref("otherFunc.a"),
@@ -974,7 +977,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIntArrElementExpression()
         {
-            code = @"
+            _code = @"
                 var int x;
                 var int tab[3];
 
@@ -987,8 +990,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // x = 1;
                 new PushInt(1),
@@ -1023,7 +1026,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("x"),
                 Ref("tab"),
@@ -1036,7 +1039,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIntArrElementWithGlobalConstIntIndexExpression()
         {
-            code = @"
+            _code = @"
                 const int TAB_SIZE = 0 + 1 + 2;
                 const int INDEX_ZERO = 0 - 0 + 0 * 0;
                 const int INDEX_ONE = 0 + 1 - 0;
@@ -1053,8 +1056,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // x = 1;
                 new PushInt(1),
@@ -1089,7 +1092,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("TAB_SIZE"),
                 Ref("INDEX_ZERO"),
@@ -1105,7 +1108,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIntArrElementWithLocalConstIntIndexExpression()
         {
-            code = @"
+            _code = @"
                 const int TAB_SIZE = 3;
                 var int x;
                 var int tab[TAB_SIZE];
@@ -1122,8 +1125,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // x = 1;
                 new PushInt(1),
@@ -1158,7 +1161,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("TAB_SIZE"),
                 Ref("x"),
@@ -1174,7 +1177,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIntArrParameter()
         {
-            code = @"
+            _code = @"
                 const int ATTRS_COUNT = 5;
                 
                 func void testFunc(var int x, var int tab[3], var float attrs[ATTRS_COUNT]) {
@@ -1186,8 +1189,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // parameters
                 new PushVar(Ref("testFunc.attrs")),
@@ -1230,7 +1233,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("attrs_count"),
                 Ref("testFunc"),
@@ -1245,7 +1248,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestMostOperatorsPrecedence()
         {
-            code = @"
+            _code = @"
                 var int x;
 
                 func void testFunc() {
@@ -1254,8 +1257,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // x = +1 * -2 / !3 % ~4 + 5 - 6 << 7 >> 8 < 9 > 10 <= 11 >= 12 & 13 | 14 && 15 || 16;
                 new PushInt(16),
@@ -1339,7 +1342,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("x"),
                 Ref("testFunc"),
@@ -1350,7 +1353,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestFuncClassParameterAndAttributesInSimpleExpressions()
         {
-            code = @"
+            _code = @"
                 class person {
                     var int age;
                 };
@@ -1363,8 +1366,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // parameters
                 new PushInstance(Ref("testFunc.d")),
@@ -1386,7 +1389,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("person"),
                 Ref("person.age"),
@@ -1400,7 +1403,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestGlobalVarClassAndAttributesInSimpleExpressions()
         {
-            code = @"
+            _code = @"
                 class person {
                     var int age;
                 };
@@ -1414,8 +1417,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // d.age = 5;
                 new PushInt(5),
@@ -1433,7 +1436,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("person"),
                 Ref("person.age"),
@@ -1447,7 +1450,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestLocalVarClassAndAttributesInSimpleExpressions()
         {
-            code = @"
+            _code = @"
                 class person {
                     var int age;
                 };
@@ -1461,8 +1464,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // d.age = 5;
                 new PushInt(5),
@@ -1480,7 +1483,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("person"),
                 Ref("person.age"),
@@ -1494,7 +1497,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestInlineVarAndConstDeclarations()
         {
-            code = @"
+            _code = @"
                 const int a = 1, b = 2, c = 3;
                 var int d, e, f;
                 
@@ -1509,8 +1512,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // parameters
                 new PushVar(Ref("testFunc.g")),
@@ -1545,7 +1548,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("a"),
                 Ref("b"),
@@ -1564,7 +1567,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestClassPrototypeInstanceInheritanceAndVarAndConstDeclarationsInsidePrototypeAndInstance()
         {
-            code = @"
+            _code = @"
                 class Person {
                     var int age;
                 };
@@ -1593,8 +1596,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("Orc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("Orc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // age = 10;
                 new PushInt(10),
@@ -1610,8 +1613,8 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            instructions = GetExecBlockInstructions("OrcShaman");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("OrcShaman");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 new Call(Ref("Orc")), // only when parent is prototype
 
@@ -1629,8 +1632,8 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // d.age = 5;
                 new PushInt(5),
@@ -1648,7 +1651,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("Person"),
                 Ref("Person.age"),
@@ -1668,7 +1671,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestClassInstanceInheritanceAndVarAndConstDeclarationsInsidePrototypeAndInstance()
         {
-            code = @"
+            _code = @"
                 class Person {
                     var int age;
                 };
@@ -1690,8 +1693,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("OrcShaman");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("OrcShaman");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // age = 10;
                 new PushInt(10),
@@ -1707,8 +1710,8 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // d.age = 5;
                 new PushInt(5),
@@ -1726,7 +1729,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("Person"),
                 Ref("Person.age"),
@@ -1743,7 +1746,7 @@ namespace DaedalusCompiler.Tests
         [Fact(Skip = "floats don't generate PushInt yet")]
         public void TestFloatExpressions()
         {
-            code = @"
+            _code = @"
                 var float x;
 
                 func float otherFunc() {};                
@@ -1764,15 +1767,15 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            instructions = GetExecBlockInstructions("otherFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("otherFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 new Ret(),
             };
             AssertInstructionsMatch();
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // parameters
                 new PushVar(Ref("testFunc.y")),
@@ -1822,7 +1825,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("x"),
                 Ref("otherFunc"),
@@ -1842,7 +1845,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestStringExpressions()
         {
-            code = @"
+            _code = @"
                 const string hyzio = ""Hyzio"";
                 const string dyzio = ""Dyzio"";
                 const string zyzio = ""Zyzio"";
@@ -1883,8 +1886,8 @@ namespace DaedalusCompiler.Tests
 
             char prefix = (char) 255;
 
-            instructions = GetExecBlockInstructions("someFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("someFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // return lech;
                 new PushVar(Ref("lech")),
@@ -1894,8 +1897,8 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            instructions = GetExecBlockInstructions("otherFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("otherFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // parameters
                 new PushVar(Ref("otherFunc.john")),
@@ -1909,8 +1912,8 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            instructions = GetExecBlockInstructions("anotherFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("anotherFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // return zyzio;
                 new PushVar(Ref("zyzio")),
@@ -1920,8 +1923,8 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // parameters
                 new PushVar(Ref("testFunc.czech")),
@@ -1977,7 +1980,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("hyzio"),
                 Ref("dyzio"),
@@ -2021,7 +2024,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIfInstruction()
         {
-            code = @"
+            _code = @"
                 var int a;
 
                 func void testFunc()
@@ -2032,8 +2035,8 @@ namespace DaedalusCompiler.Tests
                     };
                 };
             ";
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // if ( 1 < 2 )
                 new PushInt(2),
@@ -2056,7 +2059,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("a"),
                 Ref("testFunc"),
@@ -2067,7 +2070,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIfAndElseInstruction()
         {
-            code = @"
+            _code = @"
                 var int a;
 
                 func void testFunc()
@@ -2079,8 +2082,8 @@ namespace DaedalusCompiler.Tests
                     };
                 };
             ";
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // if ( 1 < 2 )
                 new PushInt(2),
@@ -2105,7 +2108,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("a"),
                 Ref("testFunc"),
@@ -2116,7 +2119,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIfElseInstruction()
         {
-            code = @"
+            _code = @"
                 var int a;
 
                 func void testFunc()
@@ -2130,8 +2133,8 @@ namespace DaedalusCompiler.Tests
                         };
                 };
             ";
-            instructions = GetExecBlockInstructions("testFunc");
-            expectedInstructions = new List<AssemblyElement>
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
             {
                 // if ( 1 < 2 )
                 new PushInt(2),
@@ -2168,7 +2171,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<DatSymbol>
             {
                 Ref("a"),
                 Ref("testFunc"),

@@ -3,7 +3,7 @@ using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
 {
-    public class AssemblyBuilderHelpers
+    public static class AssemblyBuilderHelpers
     {
         public static ParamLessInstruction GetAssignInstructionForDatSymbolType(DatSymbolType type)
         {
@@ -30,7 +30,7 @@ namespace DaedalusCompiler.Compilation
                     instruction = new AssignFloat();
                     break;
                 }
-                case (DatSymbolType.Instance):  // TODO check if it happens
+                case (DatSymbolType.Instance): // TODO check if it happens
                 case (DatSymbolType.Class):
                 {
                     instruction = new AssignInstance();
@@ -40,7 +40,7 @@ namespace DaedalusCompiler.Compilation
 
             return instruction;
         }
-        
+
         public static ParamLessInstruction GetInstructionForOperator(
             string operatorVal,
             bool twoArg = true,
@@ -83,7 +83,6 @@ namespace DaedalusCompiler.Compilation
                     if (twoArg)
                     {
                         instruction = new Subtract();
-                        ;
                     }
                     else
                     {

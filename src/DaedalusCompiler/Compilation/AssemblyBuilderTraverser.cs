@@ -1,131 +1,123 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using DaedalusCompiler.Dat;
+﻿using System.Collections.Generic;
 
 namespace DaedalusCompiler.Compilation
 {
     public class AssemblyBuilderTraverser
     {
-        private string buildAcc;
-        private int labelIdx;
+        private string _buildAcc;
+        private int _labelIdx;
 
         public AssemblyBuilderTraverser()
         {
-            buildAcc = "";
-            labelIdx = 0;
+            _buildAcc = "";
+            _labelIdx = 0;
         }
 
-        public string getLabel()
+        private string GetLabel()
         {
-            return $"label_{labelIdx++}";
+            return $"label_{_labelIdx++}";
         }
 
-        public string getAssembler(List<ExecBlock> execBlocks, List<DatSymbol> symbols)
+        public string GetAssembler(List<ExecBlock> execBlocks)
         {
-            foreach (var symbol in symbols)
-            {
-                //TODO
-            }
-
             foreach (var function in execBlocks)
             {
-                buildAcc += $"# func \"{function.symbol.Name}\" start \n";
+                _buildAcc += $"# func \"{function.Symbol.Name}\" start \n";
 
                 //function.body
-                foreach (var element in function.body)
+                foreach (var element in function.Body)
                 {
-                    visitElement(element);
+                    VisitElement(element);
                 }
 
-                buildAcc += $"# func \"{function.symbol.Name}\" end \n";
+                _buildAcc += $"# func \"{function.Symbol.Name}\" end \n";
             }
 
-            return buildAcc;
+            return _buildAcc;
         }
 
-        public void visitElement(AssemblyElement element)
+        private void VisitElement(AssemblyElement element)
         {
             if (element is ParamLessInstruction)
             {
                 var typeName = element.GetType().Name;
 
-                buildAcc += $"{typeName}\n";
+                _buildAcc += $"{typeName}\n";
             }
             else if (element is Call callElement)
             {
-                buildAcc += $"call {callElement.symbol.Name}\n";
+                _buildAcc += $"call {callElement.Symbol.Name}\n";
             }
             else if (element is PushVar pushVarElement)
             {
-                buildAcc += $"PushVar {pushVarElement.symbol.Name}\n";
+                _buildAcc += $"PushVar {pushVarElement.Symbol.Name}\n";
             }
             else if (element is PushArrVar pushArrVarElement)
             {
-                buildAcc += $"PushArrVar {pushArrVarElement.symbol.Name}[{pushArrVarElement.index}]\n";
+                _buildAcc += $"PushArrVar {pushArrVarElement.Symbol.Name}[{pushArrVarElement.Index}]\n";
             }
             else if (element is SetInstance setInstanceElement)
             {
-                buildAcc += $"SetInstance {setInstanceElement.symbol.Name}\n";
+                _buildAcc += $"SetInstance {setInstanceElement.Symbol.Name}\n";
             }
             else if (element is AssemblyIfStatement ifElement)
             {
-                var ifBlock = ifElement.ifBlock;
-                var elseIfBlocks = ifElement.elseIfBlock;
-                var elseInstructions = ifElement.elseBody;
-                var ifStatementEndLabel = getLabel();
+                var ifBlock = ifElement.IfBlock;
+                var elseIfBlocks = ifElement.ElseIfBlock;
+                var elseInstructions = ifElement.ElseBody;
+                var ifStatementEndLabel = GetLabel();
                 var nextJumpLabel = ifStatementEndLabel;
 
                 //TODO make sure that this code works good, not tested :(
 
-                foreach (var item in ifBlock.condition)
+                foreach (var item in ifBlock.Condition)
                 {
-                    visitElement(item);
+                    VisitElement(item);
                 }
 
                 if (elseIfBlocks.Count > 0 || elseInstructions.Count > 0)
                 {
-                    nextJumpLabel = getLabel();
+                    nextJumpLabel = GetLabel();
                 }
 
-                visitElement(new JumpIfToLabel(nextJumpLabel));
+                VisitElement(new JumpIfToLabel(nextJumpLabel));
 
-                foreach (var item in ifBlock.body)
+                foreach (var item in ifBlock.Body)
                 {
-                    visitElement(item);
+                    VisitElement(item);
                 }
 
-                visitElement(new JumpIfToLabel(ifStatementEndLabel));
+                VisitElement(new JumpIfToLabel(ifStatementEndLabel));
 
                 if (elseIfBlocks.Count > 0)
                 {
                     foreach (var block in elseIfBlocks)
                     {
-                        visitElement(new AssemblyLabel(nextJumpLabel));
+                        VisitElement(new AssemblyLabel(nextJumpLabel));
 
-                        nextJumpLabel = getLabel();
+                        nextJumpLabel = GetLabel();
 
-                        foreach (var item in block.condition)
+                        foreach (var item in block.Condition)
                         {
-                            visitElement(item);
+                            VisitElement(item);
                         }
 
-                        foreach (var item in block.body)
+                        foreach (var item in block.Body)
                         {
-                            visitElement(item);
+                            VisitElement(item);
                         }
 
-                        visitElement(new JumpIfToLabel(ifStatementEndLabel));
+                        VisitElement(new JumpIfToLabel(ifStatementEndLabel));
                     }
                 }
 
                 if (elseInstructions.Count > 0)
                 {
-                    visitElement(new AssemblyLabel(nextJumpLabel));
+                    VisitElement(new AssemblyLabel(nextJumpLabel));
 
                     foreach (var item in elseInstructions)
                     {
-                        visitElement(item);
+                        VisitElement(item);
                     }
                 }
                 else
@@ -133,23 +125,23 @@ namespace DaedalusCompiler.Compilation
                     ifStatementEndLabel = nextJumpLabel;
                 }
 
-                visitElement(new AssemblyLabel(ifStatementEndLabel));
+                VisitElement(new AssemblyLabel(ifStatementEndLabel));
             }
             else if (element is AssemblyLabel label)
             {
-                buildAcc += $"{label.label}:\n";
+                _buildAcc += $"{label.Label}:\n";
             }
             else if (element is JumpIfToLabel labelIfJump)
             {
-                buildAcc += $"JumpIfToLabel {labelIfJump.label}\n";
+                _buildAcc += $"JumpIfToLabel {labelIfJump.Label}\n";
             }
             else if (element is JumpToLabel labelJump)
             {
-                buildAcc += $"JumpToLabel {labelJump.label}\n";
+                _buildAcc += $"JumpToLabel {labelJump.Label}\n";
             }
             else if (element is PushInt pushint)
             {
-                buildAcc += $"PushInt {pushint.value}\n";
+                _buildAcc += $"PushInt {pushint.Value}\n";
             }
         }
     }

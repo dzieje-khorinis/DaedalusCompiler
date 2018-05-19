@@ -1,10 +1,6 @@
 ﻿using Antlr4.Runtime;
-using DaedalusCompiler.Dat;
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 using Antlr4.Runtime.Tree;
 
 namespace DaedalusCompiler.Compilation
@@ -30,17 +26,17 @@ namespace DaedalusCompiler.Compilation
 
                 if (compileToAssembly)
                 {
-                    Console.WriteLine(assemblyBuilder.getAssembler());
+                    Console.WriteLine(assemblyBuilder.GetAssembler());
                 }
                 else
                 {
-                    assemblyBuilder.saveToDat();
+                    assemblyBuilder.SaveToDat();
                 }
             }
             catch (Exception exc)
             {
                 Console.WriteLine("SRC compilation failed");
-                Console.WriteLine($"{exc.ToString()}");
+                Console.WriteLine($"{exc}");
             }
         }
 
