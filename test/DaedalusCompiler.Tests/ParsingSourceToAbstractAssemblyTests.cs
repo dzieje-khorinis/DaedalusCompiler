@@ -1769,6 +1769,7 @@ namespace DaedalusCompiler.Tests
             {
                 new Ret(),
             };
+            AssertInstructionsMatch();
 
             instructions = GetExecBlockInstructions("testFunc");
             expectedInstructions = new List<AssemblyElement>
@@ -1836,6 +1837,177 @@ namespace DaedalusCompiler.Tests
             AssertRefContentEqual("a", -10.0);
             AssertRefContentEqual("b", 20.0);
             AssertRefContentEqual("c", -12.5);
+        }
+
+        [Fact(Skip = "string aren't implemented correcly yet")]
+        public void TestStringExpressions()
+        {
+            code = @"
+                const string hyzio = ""Hyzio"";
+                const string dyzio = ""Dyzio"";
+                const string zyzio = ""Zyzio"";
+    
+                var string lech;
+    
+                func string someFunc() {
+                    return lech;
+                };
+    
+                func string otherFunc(var string john) {
+                    return ""Dyzio"";
+                };
+    
+                func string anotherFunc() {
+                    return zyzio;
+                };
+    
+                func void testFunc(var string czech) {
+                    var string rus;
+                    lech = ""Lech"";
+        
+                    czech = ""Czech"";
+                    czech = ""Dyzio"";
+        
+                    rus = ""Rus"";
+        
+                    const string hyzio_clone = ""Hyzio"";
+                    hyzio_clone = hyzio;
+                    hyzio_clone = ""Hyzio"";
+                    hyzio_clone = ""Hyzio"";
+        
+                    var string lech_clone;
+                    lech_clone = ""Lech"";
+                    lech_clone = otherFunc(""John"");
+                };
+            ";
+
+            char prefix = (char) 255;
+
+            instructions = GetExecBlockInstructions("someFunc");
+            expectedInstructions = new List<AssemblyElement>
+            {
+                // return lech;
+                new PushVar(Ref("lech")),
+                new Ret(),
+
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+
+            instructions = GetExecBlockInstructions("otheFunc");
+            expectedInstructions = new List<AssemblyElement>
+            {
+                // parameters
+                new PushVar(Ref("otherFunc.john")),
+                new AssignString(),
+
+                // return "Dyzio";
+                new PushVar(Ref($"{prefix}10000")),
+                new Ret(),
+
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+
+            instructions = GetExecBlockInstructions("anotherFunc");
+            expectedInstructions = new List<AssemblyElement>
+            {
+                // return zyzio;
+                new PushVar(Ref("zyzio")),
+                new Ret(),
+
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+
+            instructions = GetExecBlockInstructions("testFunc");
+            expectedInstructions = new List<AssemblyElement>
+            {
+                // parameters
+                new PushVar(Ref("testFunc.czech")),
+                new AssignString(),
+
+                // lech = "Lech";
+                new PushVar(Ref($"{prefix}10001")),
+                new PushVar(Ref("lech")),
+                new AssignString(),
+
+                // czech = "Czech";
+                new PushVar(Ref($"{prefix}10002")),
+                new PushVar(Ref("czech")),
+                new AssignString(),
+
+                // czech = "Dyzio";
+                new PushVar(Ref($"{prefix}10003")),
+                new PushVar(Ref("czech")),
+                new AssignString(),
+
+                // rus = "Rus";
+                new PushVar(Ref($"{prefix}10004")),
+                new PushVar(Ref("rus")),
+                new AssignString(),
+
+                // hyzio_clone = hyzio;
+                new PushVar(Ref("hyzio")),
+                new PushVar(Ref("testFunc.hyzio_clone")),
+                new AssignString(),
+
+                // hyzio_clone = "Hyzio";
+                new PushVar(Ref($"{prefix}10005")),
+                new PushVar(Ref("testFunc.hyzio_clone")),
+                new AssignString(),
+
+                // hyzio_clone = "Hyzio";
+                new PushVar(Ref($"{prefix}10006")),
+                new PushVar(Ref("testFunc.hyzio_clone")),
+                new AssignString(),
+
+                // lech_clone = "Lech";
+                new PushVar(Ref($"{prefix}10007")),
+                new PushVar(Ref("testFunc.lech_clone")),
+                new AssignString(),
+
+                // lech_clone = otherFunc("John");
+                new PushVar(Ref($"{prefix}10008")),
+                new Call(Ref("otherFunc")),
+                new PushVar(Ref("testFunc.lech_clone")),
+                new AssignString(),
+
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+
+            expectedSymbols = new List<DatSymbol>
+            {
+                Ref("hyzio"),
+                Ref("dyzio"),
+                Ref("zyzio"),
+                Ref("lech"),
+                Ref("someFunc"),
+                Ref("otherFunc"),
+                Ref("otherFunc.john"),
+                Ref("anotherFunc"),
+                Ref("testFunc"),
+                Ref("testFunc.czech"),
+                Ref("testFunc.rus"),
+                Ref("testFunc.hyzio_clone"),
+                Ref("testFunc.lech_clone"),
+                Ref($"{prefix}10000"),
+                Ref($"{prefix}10001"),
+                Ref($"{prefix}10002"),
+                Ref($"{prefix}10003"),
+                Ref($"{prefix}10004"),
+                Ref($"{prefix}10005"),
+                Ref($"{prefix}10006"),
+                Ref($"{prefix}10007"),
+                Ref($"{prefix}10008"),
+            };
+            AssertSymbolsMatch();
+
+            AssertRefContentEqual("hyzio", "Hyzio");
+            AssertRefContentEqual("dyzio", "Dyzio");
+            AssertRefContentEqual("zyzio", "Zyzio");
+            AssertRefContentEqual("hyzio_clone", "Hyzio");
         }
 
         [Fact]
