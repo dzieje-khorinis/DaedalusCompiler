@@ -1828,7 +1828,6 @@ namespace DaedalusCompiler.Tests
                 Ref("a"),
                 Ref("b"),
                 Ref("testFunc"),
-                Ref("testFunc"),
                 Ref("testFunc.y"),
                 Ref("testFunc.c"),
             };
