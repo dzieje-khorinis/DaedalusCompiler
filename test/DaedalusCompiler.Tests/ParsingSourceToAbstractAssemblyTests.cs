@@ -70,10 +70,10 @@ namespace DaedalusCompiler.Tests
 
         private void AssertSymbolsMatch()
         {
-            Assert.Equal(expectedSymbols.Count, assemblyBuilder.symbols.Count);
+            Assert.Equal(expectedSymbols.Count, assemblyBuilder.getAllSymbols().Count);
             for (var index = 0; index < expectedSymbols.Count; index++)
             {
-                var symbol = assemblyBuilder.symbols[index];
+                var symbol = assemblyBuilder.getAllSymbols()[index];
                 var expectedSymbol = expectedSymbols[index];
                 Assert.Equal(expectedSymbol, symbol);
             }
@@ -1037,10 +1037,10 @@ namespace DaedalusCompiler.Tests
         public void TestIntArrElementWithGlobalConstIntIndexExpression()
         {
             code = @"
-                const int TAB_SIZE = 3;
-                const int INDEX_ZERO = 0;
-                const int INDEX_ONE = 1;
-                const int INDEX_TWO = 2;
+                const int TAB_SIZE = 0 + 1 + 2;
+                const int INDEX_ZERO = 0 - 0 + 0 * 0;
+                const int INDEX_ONE = 0 + 1 - 0;
+                const int INDEX_TWO = 1 + 1;
                 var int x;
                 var int tab[TAB_SIZE];
 
@@ -1839,7 +1839,7 @@ namespace DaedalusCompiler.Tests
             AssertRefContentEqual("c", -12.5);
         }
 
-        [Fact(Skip = "string aren't implemented correcly yet")]
+        [Fact]
         public void TestStringExpressions()
         {
             code = @"
@@ -1894,7 +1894,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            instructions = GetExecBlockInstructions("otheFunc");
+            instructions = GetExecBlockInstructions("otherFunc");
             expectedInstructions = new List<AssemblyElement>
             {
                 // parameters
@@ -1934,17 +1934,17 @@ namespace DaedalusCompiler.Tests
 
                 // czech = "Czech";
                 new PushVar(Ref($"{prefix}10002")),
-                new PushVar(Ref("czech")),
+                new PushVar(Ref("testFunc.czech")),
                 new AssignString(),
 
                 // czech = "Dyzio";
                 new PushVar(Ref($"{prefix}10003")),
-                new PushVar(Ref("czech")),
+                new PushVar(Ref("testFunc.czech")),
                 new AssignString(),
 
                 // rus = "Rus";
                 new PushVar(Ref($"{prefix}10004")),
-                new PushVar(Ref("rus")),
+                new PushVar(Ref("testFunc.rus")),
                 new AssignString(),
 
                 // hyzio_clone = hyzio;
@@ -2007,7 +2007,15 @@ namespace DaedalusCompiler.Tests
             AssertRefContentEqual("hyzio", "Hyzio");
             AssertRefContentEqual("dyzio", "Dyzio");
             AssertRefContentEqual("zyzio", "Zyzio");
-            AssertRefContentEqual("hyzio_clone", "Hyzio");
+            AssertRefContentEqual($"{prefix}10000", "Dyzio");
+            AssertRefContentEqual($"{prefix}10001", "Lech");
+            AssertRefContentEqual($"{prefix}10002", "Czech");
+            AssertRefContentEqual($"{prefix}10003", "Dyzio");
+            AssertRefContentEqual($"{prefix}10004", "Rus");
+            AssertRefContentEqual($"{prefix}10005", "Hyzio");
+            AssertRefContentEqual($"{prefix}10006", "Hyzio");
+            AssertRefContentEqual($"{prefix}10007", "Lech");
+            AssertRefContentEqual($"{prefix}10008", "John");
         }
 
         [Fact]

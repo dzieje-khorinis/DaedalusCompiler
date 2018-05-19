@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
-using Antlr4.Runtime.Misc;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
@@ -269,21 +267,52 @@ namespace DaedalusCompiler.Compilation
     {
         public List<ExecBlock> execBlocks;
         public List<DatSymbol> symbols;
+        private List<DatSymbol> stringLiteralSymbols;
         private ExecBlock active;
         private AssemblyBuildContext currentBuildCtx; // current assembly build context
         private List<SymbolInstruction> assignmentLeftSide;
         private FuncArgsBodyContext funcArgsBodyCtx;
         private int labelIndexGenerator;
+        private int nextStringSymbolNumber;
+        private bool _isInsideConstDefContext;
 
         public AssemblyBuilder()
         {
             execBlocks = new List<ExecBlock>();
             symbols = new List<DatSymbol>();
+            stringLiteralSymbols = new List<DatSymbol>();
             currentBuildCtx = getEmptyBuildContext();
             active = null;
             assignmentLeftSide = new List<SymbolInstruction>();
             funcArgsBodyCtx = new FuncArgsBodyContext(null);
             labelIndexGenerator = 0;
+            nextStringSymbolNumber = 10000;
+            _isInsideConstDefContext = false;
+        }
+
+        public void constDefStart()
+        {
+            _isInsideConstDefContext = true;
+        }
+
+        public void constDefEnd()
+        {
+            _isInsideConstDefContext = false;
+        }
+
+        public bool isInsideConstDefContext()
+        {
+            return _isInsideConstDefContext;
+        }
+        
+        public string newStringSymbolName()
+        {
+            return $"{(char)255}{nextStringSymbolNumber++}";
+        }
+
+        public List<DatSymbol> getAllSymbols()
+        {
+            return symbols.Concat(stringLiteralSymbols).ToList();
         }
 
         public AssemblyBuildContext getEmptyBuildContext(bool isOperatorContext = false)
@@ -548,7 +577,16 @@ namespace DaedalusCompiler.Compilation
 
         public void addSymbol(DatSymbol symbol)
         {
-            symbols.Add(symbol);
+            if (symbol.Name.StartsWith($"{(char) 255}") && symbol.Type == DatSymbolType.String &&
+                symbol.Flags == DatSymbolFlag.Const)
+            {
+                stringLiteralSymbols.Add(symbol);
+            }
+            else
+            {
+                symbols.Add(symbol);
+            }
+            
         }
 
         public void addSymbols(List<DatSymbol> symbols)
@@ -570,7 +608,7 @@ namespace DaedalusCompiler.Compilation
                 {
                     targetSymbolName = $"{currentExecBlockSymbol.Name}.{symbolName}";
                     
-                    symbol = symbols.Find(x => x.Name.ToUpper() == targetSymbolName.ToUpper());
+                    symbol = getAllSymbols().Find(x => x.Name.ToUpper() == targetSymbolName.ToUpper());
                     
                     if (symbol == null)
                     {
@@ -588,7 +626,7 @@ namespace DaedalusCompiler.Compilation
                 }
             }
 
-            symbol = symbols.Find(x => x.Name.ToUpper() == symbolName.ToUpper());
+            symbol = getAllSymbols().Find(x => x.Name.ToUpper() == symbolName.ToUpper());
 
             if (symbol == null)
             {
@@ -601,12 +639,12 @@ namespace DaedalusCompiler.Compilation
 
         public DatSymbol getSymbolByName(string symbolName)
         {
-            return symbols.FirstOrDefault(x => x.Name.ToUpper() == symbolName.ToUpper());
+            return getAllSymbols().FirstOrDefault(x => x.Name.ToUpper() == symbolName.ToUpper());
         }
 
         public int getSymbolId(DatSymbol symbol)
         {
-            return symbols.IndexOf(symbol);
+            return getAllSymbols().IndexOf(symbol);
         }
 
         public string getNextLabel()
@@ -674,13 +712,13 @@ namespace DaedalusCompiler.Compilation
 
         public string getAssembler()
         {
-            return new AssemblyBuilderTraverser().getAssembler(execBlocks, symbols);
+            return new AssemblyBuilderTraverser().getAssembler(execBlocks, getAllSymbols());
         }
 
         public void saveToDat()
         {
             // todo finish
-            var datFile = AssemblyBuilderToDat.getDatFile(execBlocks, symbols);
+            var datFile = AssemblyBuilderToDat.getDatFile(execBlocks, getAllSymbols());
             
             datFile.Save("./test.dat");
         }

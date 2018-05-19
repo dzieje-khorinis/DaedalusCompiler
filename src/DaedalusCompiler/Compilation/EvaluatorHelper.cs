@@ -1,10 +1,8 @@
 ﻿using Antlr4.Runtime.Tree;
 using DaedalusCompiler.Dat;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 
 namespace DaedalusCompiler.Compilation
 {
@@ -40,7 +38,7 @@ namespace DaedalusCompiler.Compilation
         public static string EvaluateConstStringExpression(DaedalusParser.ExpressionContext expression, AssemblyBuilder assemblyBuilder)
         {
             if (expression is DaedalusParser.ValExpressionContext)
-                return ((DaedalusParser.ValExpressionContext)expression).value().GetChild(0).GetText();
+                return ((DaedalusParser.ValExpressionContext)expression).value().GetChild(0).GetText().Replace("\"", "");
 
             throw new Exception($"Unable to evaluate constant. Expression '{expression.GetText()}' contains unsupported operations.");
         }

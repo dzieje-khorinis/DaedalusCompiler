@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
@@ -96,6 +95,7 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterConstDef([NotNull] DaedalusParser.ConstDefContext context)
         {
+            assemblyBuilder.constDefStart();   
             var typeName = context.typeReference().GetText();
             var type = DatSymbolTypeFromString(typeName);
 
@@ -148,6 +148,11 @@ namespace DaedalusCompiler.Compilation
                     continue;
                 }
             }
+        }
+
+        public override void ExitConstDef([NotNull] DaedalusParser.ConstDefContext context)
+        {
+            assemblyBuilder.constDefEnd();
         }
 
         public override void EnterVarDecl([NotNull] DaedalusParser.VarDeclContext context)
@@ -556,10 +561,22 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterIntegerLiteralValue(DaedalusParser.IntegerLiteralValueContext context)
         {
-            if (context?.Parent?.Parent?.Parent is DaedalusParser.ConstValueAssignmentContext == false
-            ) // TODO make it more elegant
+            if (assemblyBuilder.isInsideConstDefContext() == false)
             {
                 assemblyBuilder.addInstruction(new PushInt(int.Parse(context.GetText())));
+            }
+        }
+
+        public override void EnterStringLiteralValue(DaedalusParser.StringLiteralValueContext context)
+        {
+            if (assemblyBuilder.isInsideConstDefContext() == false)
+            {
+                DatSymbolLocation location = GetLocation(context);
+                string value = context.GetText().Replace("\"", "");
+                string symbolName = assemblyBuilder.newStringSymbolName();
+                DatSymbol symbol = SymbolBuilder.BuildConst(symbolName, DatSymbolType.String, value, location);
+                assemblyBuilder.addSymbol(symbol);
+                assemblyBuilder.addInstruction(new PushVar(symbol));
             }
         }
 
