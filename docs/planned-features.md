@@ -14,6 +14,7 @@
 
 # More warnings
  - if function should return (is not `void`) but does not (original compiler implicitly returns default value)
+ - changing value of constant (Daedalus allows that, but it reverts after loading a game - so at any moment)
  
 # Methods
  - `class C_Npc { func void Die() { this.attribute[atr_hp] = 0 }; }` compiled to `func void Die(C_Npc this) { this.attribute[atr_hp] = 0 };`
