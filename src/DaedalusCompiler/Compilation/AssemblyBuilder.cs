@@ -274,6 +274,7 @@ namespace DaedalusCompiler.Compilation
         private FuncArgsBodyContext funcArgsBodyCtx;
         private int labelIndexGenerator;
         private int nextStringSymbolNumber;
+        private bool _isInsideConstDefContext;
 
         public AssemblyBuilder()
         {
@@ -286,8 +287,24 @@ namespace DaedalusCompiler.Compilation
             funcArgsBodyCtx = new FuncArgsBodyContext(null);
             labelIndexGenerator = 0;
             nextStringSymbolNumber = 10000;
+            _isInsideConstDefContext = false;
         }
 
+        public void constDefStart()
+        {
+            _isInsideConstDefContext = true;
+        }
+
+        public void constDefEnd()
+        {
+            _isInsideConstDefContext = false;
+        }
+
+        public bool isInsideConstDefContext()
+        {
+            return _isInsideConstDefContext;
+        }
+        
         public string newStringSymbolName()
         {
             return $"{(char)255}{nextStringSymbolNumber++}";

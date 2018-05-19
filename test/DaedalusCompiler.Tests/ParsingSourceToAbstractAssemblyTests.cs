@@ -1037,10 +1037,10 @@ namespace DaedalusCompiler.Tests
         public void TestIntArrElementWithGlobalConstIntIndexExpression()
         {
             code = @"
-                const int TAB_SIZE = 3;
-                const int INDEX_ZERO = 0;
-                const int INDEX_ONE = 1;
-                const int INDEX_TWO = 2;
+                const int TAB_SIZE = 0 + 1 + 2;
+                const int INDEX_ZERO = 0 - 0 + 0 * 0;
+                const int INDEX_ONE = 0 + 1 - 0;
+                const int INDEX_TWO = 1 + 1;
                 var int x;
                 var int tab[TAB_SIZE];
 
