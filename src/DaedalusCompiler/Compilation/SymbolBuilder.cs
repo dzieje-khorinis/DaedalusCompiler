@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Antlr4.Runtime.Misc;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
 {
-    public class SymbolBuilder
+    public static class SymbolBuilder
     {
         public static DatSymbol BuildVariable(string name, DatSymbolType type, DatSymbolLocation location = null,
             int parent = -1)
@@ -53,7 +53,7 @@ namespace DaedalusCompiler.Compilation
                 Name = name,
                 Type = type,
                 ArrayLength = 1,
-                Content = new object[] {value},
+                Content = new[] {value},
                 Flags = DatSymbolFlag.Const,
                 Location = location,
                 ReturnType = null,
@@ -85,11 +85,12 @@ namespace DaedalusCompiler.Compilation
             return symbol;
         }
 
-        public static DatSymbol BuildFunc(string name, DatSymbolType returnType)
+        public static DatSymbol BuildFunc(string name, [NotNull] DatSymbolType returnType)
         {
             var symbol = new DatSymbol
             {
                 Name = name,
+                ReturnType = returnType,
                 Parent = -1,
             };
 
@@ -156,11 +157,13 @@ namespace DaedalusCompiler.Compilation
             return symbol;
         }
 
+        /*
         public static DatSymbol BuildInstance(string name)
         {
             var symbol = new DatSymbol {Name = name};
 
             return symbol;
         }
+        */
     }
 }

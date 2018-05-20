@@ -11,23 +11,23 @@ namespace DaedalusCompiler.Compilation
         public static int EvaluteArraySize(DaedalusParser.SimpleValueContext context, AssemblyBuilder assemblyBuilder)
         {
             string arraySizeText = context.GetText();
-            int arraySize;
 
             // simple value
-            if (int.TryParse(context.GetText(), out arraySize) == false)
-                arraySize = (int)assemblyBuilder.getSymbolByName(arraySizeText).Content.First();
+            if (int.TryParse(context.GetText(), out var arraySize) == false)
+                arraySize = (int) assemblyBuilder.GetSymbolByName(arraySizeText).Content.First();
 
             return arraySize;
         }
 
-        public static object EvaluateConst(DaedalusParser.ExpressionContext expression, AssemblyBuilder assemblyBuilder, DatSymbolType type)
+        public static object EvaluateConst(DaedalusParser.ExpressionContext expression, AssemblyBuilder assemblyBuilder,
+            DatSymbolType type)
         {
             switch (type)
             {
                 case DatSymbolType.String:
-                    return EvaluateConstStringExpression(expression, assemblyBuilder);
+                    return EvaluateConstStringExpression(expression);
                 case DatSymbolType.Float:
-                    return EvaluateConstFloatExpression(expression, assemblyBuilder);
+                    return EvaluateConstFloatExpression(expression);
                 case DatSymbolType.Int:
                     return EvaluateConstIntExpression(expression, assemblyBuilder);
                 default:
@@ -35,29 +35,32 @@ namespace DaedalusCompiler.Compilation
             }
         }
 
-        public static string EvaluateConstStringExpression(DaedalusParser.ExpressionContext expression, AssemblyBuilder assemblyBuilder)
+        private static string EvaluateConstStringExpression(DaedalusParser.ExpressionContext expression)
         {
-            if (expression is DaedalusParser.ValExpressionContext)
-                return ((DaedalusParser.ValExpressionContext)expression).value().GetChild(0).GetText().Replace("\"", "");
+            if (expression is DaedalusParser.ValExpressionContext context)
+                return context.value().GetChild(0).GetText().Replace("\"", "");
 
-            throw new Exception($"Unable to evaluate constant. Expression '{expression.GetText()}' contains unsupported operations.");
+            throw new Exception(
+                $"Unable to evaluate constant. Expression '{expression.GetText()}' contains unsupported operations.");
         }
 
-        public static float EvaluateConstFloatExpression(DaedalusParser.ExpressionContext expression, AssemblyBuilder assemblyBuilder)
+        private static float EvaluateConstFloatExpression(DaedalusParser.ExpressionContext expression)
         {
-            if (expression is DaedalusParser.ValExpressionContext)
-                return float.Parse(((DaedalusParser.ValExpressionContext)expression).value().GetChild(0).GetText(), CultureInfo.InvariantCulture);
+            if (expression is DaedalusParser.ValExpressionContext context)
+                return float.Parse(context.value().GetChild(0).GetText(), CultureInfo.InvariantCulture);
 
-            throw new Exception($"Unable to evaluate constant. Expression '{expression.GetText()}' contains unsupported operations.");
+            throw new Exception(
+                $"Unable to evaluate constant. Expression '{expression.GetText()}' contains unsupported operations.");
         }
 
-        public static int EvaluateConstIntExpression(DaedalusParser.ExpressionContext expression, AssemblyBuilder assemblyBuilder)
+        private static int EvaluateConstIntExpression(DaedalusParser.ExpressionContext expression,
+            AssemblyBuilder assemblyBuilder)
         {
-            if (expression is DaedalusParser.BracketExpressionContext)
-                return EvaluateConstIntExpression(((DaedalusParser.BracketExpressionContext)expression).expression(), assemblyBuilder);
+            if (expression is DaedalusParser.BracketExpressionContext expressionContext)
+                return EvaluateConstIntExpression(expressionContext.expression(), assemblyBuilder);
 
-            if (expression is DaedalusParser.ValExpressionContext)
-                return EvaluateIntValueExpression(((DaedalusParser.ValExpressionContext)expression).value(), assemblyBuilder);
+            if (expression is DaedalusParser.ValExpressionContext context)
+                return EvaluateIntValueExpression(context.value(), assemblyBuilder);
 
             if (expression is DaedalusParser.OneArgExpressionContext)
                 return EvaluateIntUnaryExpression(expression, assemblyBuilder);
@@ -77,10 +80,12 @@ namespace DaedalusCompiler.Compilation
             if (expression is DaedalusParser.EqExpressionContext)
                 return EvaluateIntBinaryExpression(expression, assemblyBuilder);
 
-            throw new Exception($"Unable to evaluate constant. Expression '{expression.GetText()}' contains unsupported operations.");
+            throw new Exception(
+                $"Unable to evaluate constant. Expression '{expression.GetText()}' contains unsupported operations.");
         }
 
-        private static int EvaluateIntValueExpression(DaedalusParser.ValueContext value, AssemblyBuilder assemblyBuilder)
+        private static int EvaluateIntValueExpression(DaedalusParser.ValueContext value,
+            AssemblyBuilder assemblyBuilder)
         {
             var valueChild = value.GetChild(0);
 
@@ -89,16 +94,15 @@ namespace DaedalusCompiler.Compilation
                 return int.Parse(valueChild.GetText());
 
             // value is reference to other constant
-            if (valueChild is DaedalusParser.ComplexReferenceContext)
+            if (valueChild is DaedalusParser.ComplexReferenceContext reference)
             {
-                var reference = (DaedalusParser.ComplexReferenceContext)valueChild;
                 var referenceName = reference.complexReferenceNode()?.FirstOrDefault()?.referenceNode()?.GetText();
 
                 //TODO : Allow to reference arrays. Currently it is not possible. 
 
                 if (referenceName != null)
                 {
-                    var referenceSymbol = assemblyBuilder.getSymbolByName(referenceName);
+                    var referenceSymbol = assemblyBuilder.GetSymbolByName(referenceName);
 
                     if (referenceSymbol == null)
                         throw new Exception($"Reference symbol {referenceName} is not declared.");
@@ -106,19 +110,23 @@ namespace DaedalusCompiler.Compilation
                     var referenceValue = referenceSymbol.Content.First();
 
                     if (referenceValue is int == false)
-                        throw new Exception($"Cannot evaluate symbol {referenceName} because it has different data type: {referenceValue.GetType().Name}");
+                        throw new Exception(
+                            $"Cannot evaluate symbol {referenceName} because it has different data type: {referenceValue.GetType().Name}");
 
-                    return (int)referenceValue;
+                    return (int) referenceValue;
                 }
             }
 
-            throw new Exception("Unable to evaluate value expression. Only simple literals or reference variables (except arrays) are supported.");
+            throw new Exception(
+                "Unable to evaluate value expression. Only simple literals or reference variables (except arrays) are supported.");
         }
 
-        private static int EvaluateIntUnaryExpression(DaedalusParser.ExpressionContext expression, AssemblyBuilder assemblyBuilder)
+        private static int EvaluateIntUnaryExpression(DaedalusParser.ExpressionContext expression,
+            AssemblyBuilder assemblyBuilder)
         {
             var oper = expression.GetChild(0).GetText();
-            var param = EvaluateConstIntExpression((DaedalusParser.ExpressionContext)expression.GetChild(1), assemblyBuilder);
+            var param = EvaluateConstIntExpression((DaedalusParser.ExpressionContext) expression.GetChild(1),
+                assemblyBuilder);
 
             switch (oper)
             {
@@ -135,11 +143,14 @@ namespace DaedalusCompiler.Compilation
             }
         }
 
-        private static int EvaluateIntBinaryExpression(DaedalusParser.ExpressionContext expression, AssemblyBuilder assemblyBuilder)
+        private static int EvaluateIntBinaryExpression(DaedalusParser.ExpressionContext expression,
+            AssemblyBuilder assemblyBuilder)
         {
-            var leftParam = EvaluateConstIntExpression((DaedalusParser.ExpressionContext)expression.GetChild(0), assemblyBuilder);
+            var leftParam = EvaluateConstIntExpression((DaedalusParser.ExpressionContext) expression.GetChild(0),
+                assemblyBuilder);
             var oper = expression.GetChild(1).GetText();
-            var rightParam = EvaluateConstIntExpression((DaedalusParser.ExpressionContext)expression.GetChild(2), assemblyBuilder);
+            var rightParam = EvaluateConstIntExpression((DaedalusParser.ExpressionContext) expression.GetChild(2),
+                assemblyBuilder);
 
             switch (oper)
             {

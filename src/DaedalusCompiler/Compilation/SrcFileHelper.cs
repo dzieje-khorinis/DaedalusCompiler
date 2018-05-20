@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace DaedalusCompiler.Compilation
 {
@@ -35,7 +34,8 @@ namespace DaedalusCompiler.Compilation
             }
         }
 
-        private static IEnumerable<string> LoadScriptsFilePaths(string basePath, string[] srcLines, List<string> alreadyLoadedSrcs)
+        private static IEnumerable<string> LoadScriptsFilePaths(string basePath, string[] srcLines,
+            List<string> alreadyLoadedSrcs)
         {
             List<string> result = new List<string>();
 
@@ -54,7 +54,8 @@ namespace DaedalusCompiler.Compilation
                         var wildcardMath = fullPath.Substring(0, fullPath.Length - 3);
 
                         var matchFiles = dirFiles
-                            .Where(x => Path.GetExtension(x).ToLower() == ".d" && x.IndexOf(wildcardMath) == 0);
+                            .Where(x => Path.GetExtension(x).ToLower() == ".d" &&
+                                        x.IndexOf(wildcardMath, StringComparison.Ordinal) == 0);
 
                         result.AddRange(matchFiles);
                     }

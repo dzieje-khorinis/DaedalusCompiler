@@ -12,31 +12,33 @@ namespace DaedalusCompiler.Compilation
         PrototypeConstructor
     }
 
-    public class AssemblyElement {}
-
-    public class AssemblyInstruction: AssemblyElement
+    public class AssemblyElement
     {
     }
 
-    public class AssemblyLabel: AssemblyElement
+    public class AssemblyInstruction : AssemblyElement
     {
-        public string label;
+    }
+
+    public class AssemblyLabel : AssemblyElement
+    {
+        public readonly string Label;
 
         public AssemblyLabel(string label)
         {
-            this.label = label;
+            Label = label;
         }
     }
 
     public class IfBlock
     {
-        public List<AssemblyElement> body;
-        public List<AssemblyElement> condition;
+        public List<AssemblyElement> Body;
+        public List<AssemblyElement> Condition;
 
         public IfBlock()
         {
-            body = new List<AssemblyElement>();
-            condition = new List<AssemblyElement>();
+            Body = new List<AssemblyElement>();
+            Condition = new List<AssemblyElement>();
         }
     }
 
@@ -49,108 +51,119 @@ namespace DaedalusCompiler.Compilation
 
     public class AssemblyIfStatement : AssemblyElement
     {
-
-        public IfBlock ifBlock;
-        public List<AssemblyElement> elseBody;
-        public List<IfBlock> elseIfBlock;
-        public IfBlockType currentBlockType;
-        public List<AssemblyElement> conditionInstructionStack;
+        public IfBlock IfBlock;
+        public List<AssemblyElement> ElseBody;
+        public readonly List<IfBlock> ElseIfBlock;
+        public IfBlockType CurrentBlockType;
+        public List<AssemblyElement> ConditionInstructionStack;
 
 
         public AssemblyIfStatement()
         {
-            ifBlock = new IfBlock();
-            elseBody = new List<AssemblyElement>();
-            elseIfBlock = new List<IfBlock>();
+            IfBlock = new IfBlock();
+            ElseBody = new List<AssemblyElement>();
+            ElseIfBlock = new List<IfBlock>();
         }
     }
 
-    public class AssemblyOperatorStatement: AssemblyElement
+    public class AssemblyOperatorStatement : AssemblyElement
     {
-        private List<AssemblyElement> leftBody;
-        private List<AssemblyElement> rightBody;
+        private List<AssemblyElement> _leftBody;
+        private List<AssemblyElement> _rightBody;
 
         public AssemblyOperatorStatement()
         {
-            leftBody = new List<AssemblyElement>();
-            rightBody = new List<AssemblyElement>();
+            _leftBody = new List<AssemblyElement>();
+            _rightBody = new List<AssemblyElement>();
         }
 
-        public List<AssemblyElement> getLeft()
+        public List<AssemblyElement> GetLeft()
         {
-            return leftBody;
+            return _leftBody;
         }
 
-        public List<AssemblyElement> getRight()
+        public List<AssemblyElement> GetRight()
         {
-            return rightBody;
+            return _rightBody;
         }
 
-        public void setLeft(List<AssemblyElement> lInstructions)
+        public void SetLeft(List<AssemblyElement> lInstructions)
         {
-            leftBody = lInstructions;
+            _leftBody = lInstructions;
         }
 
-        public void setRight(List<AssemblyElement> rInstructions)
+        public void SetRight(List<AssemblyElement> rInstructions)
         {
-            rightBody = rInstructions;
+            _rightBody = rInstructions;
         }
     }
 
     public class ExecBlock : AssemblyElement
     {
-        public List<AssemblyElement> body;
-        public DatSymbol symbol;
+        public List<AssemblyElement> Body;
+        public DatSymbol Symbol;
     }
 
-    public class FunctionBlock : ExecBlock {}
+    public class FunctionBlock : ExecBlock
+    {
+    }
 
-    public class InstanceConstructorBlock : ExecBlock {}
+    public class InstanceConstructorBlock : ExecBlock
+    {
+    }
 
-    public class PrototypeContructorBlock : ExecBlock {}
+    public class PrototypeContructorBlock : ExecBlock
+    {
+    }
 
     public class SymbolInstruction : AssemblyInstruction
     {
-        public DatSymbol symbol;
+        public readonly DatSymbol Symbol;
 
-        public SymbolInstruction(DatSymbol symbol)
+        protected SymbolInstruction(DatSymbol symbol)
         {
-            this.symbol = symbol;
+            Symbol = symbol;
         }
     }
 
     public class ValueInstruction : AssemblyInstruction
     {
-        public object value;
+        public readonly object Value;
 
-        public ValueInstruction(object value)
+        protected ValueInstruction(object value)
         {
-            this.value = value;
+            Value = value;
         }
     }
 
-    public class AddressInstruction : AssemblyInstruction
+    public abstract class AddressInstruction : AssemblyInstruction
     {
-        public int address;
+        public readonly int Address;
+
+        protected AddressInstruction(int address)
+        {
+            Address = address;
+        }
     }
 
     public class JumpToLabel : AssemblyInstruction
     {
-        public string label;
+        public readonly string Label;
 
         public JumpToLabel(string label)
         {
-            this.label = label;
+            Label = label;
         }
     }
 
-    public class ParamLessInstruction : AssemblyInstruction{}
+    public class ParamLessInstruction : AssemblyInstruction
+    {
+    }
 
     public class PushInt : ValueInstruction
     {
-        public PushInt(int value): base(value)
+        public PushInt(int value) : base(value)
         {
-
         }
     }
 
@@ -158,33 +171,30 @@ namespace DaedalusCompiler.Compilation
     {
         public PushVar(DatSymbol symbol) : base(symbol)
         {
-
         }
     }
 
     public class PushArrVar : SymbolInstruction
     {
-        public int index;
+        public readonly int Index;
 
         public PushArrVar(DatSymbol symbol, int index) : base(symbol)
         {
-            this.index = index;
+            Index = index;
         }
     }
-    
+
     public class PushInstance : SymbolInstruction
     {
         public PushInstance(DatSymbol symbol) : base(symbol)
         {
-
         }
     }
-    
+
     public class SetInstance : SymbolInstruction
     {
         public SetInstance(DatSymbol symbol) : base(symbol)
         {
-            
         }
     }
 
@@ -200,7 +210,7 @@ namespace DaedalusCompiler.Compilation
     public class AssignMultiply : ParamLessInstruction {}
     public class AssignDivide : ParamLessInstruction {}
     public class AssignString : ParamLessInstruction {}
-    public class AssignStringRef : ParamLessInstruction {}
+    // public class AssignStringRef : ParamLessInstruction {}
     public class AssignFunc : ParamLessInstruction {}
     public class AssignFloat : ParamLessInstruction {}
     public class AssignInstance : ParamLessInstruction {}
@@ -220,7 +230,7 @@ namespace DaedalusCompiler.Compilation
     public class BitOr: ParamLessInstruction {}
     public class LogAnd: ParamLessInstruction {}
     public class LogOr: ParamLessInstruction {}
-
+    
     public class JumpIfToLabel : JumpToLabel
     {
         public JumpIfToLabel(string name) : base(name)
@@ -231,205 +241,210 @@ namespace DaedalusCompiler.Compilation
 
     public class Call : SymbolInstruction
     {
-        public Call(DatSymbol symbol) : base(symbol) {}
+        public Call(DatSymbol symbol) : base(symbol)
+        {
+        }
     }
 
-    public class CallExternal : SymbolInstruction
+    public abstract class CallExternal : SymbolInstruction
     {
-        public CallExternal(DatSymbol symbol) : base(symbol)
+        protected CallExternal(DatSymbol symbol) : base(symbol)
         {
-
         }
     }
 
     public class AssemblyBuildContext
     {
-        public AssemblyOperatorStatement currentOperatorStatement;
-        public AssemblyIfStatement currentConditionStatement;
-        public List<AssemblyElement> body;
-        public AssemblyBuildContext parent;
-        public bool isOperatorContext;
+        public AssemblyOperatorStatement CurrentOperatorStatement;
+        public AssemblyIfStatement CurrentConditionStatement;
+        public List<AssemblyElement> Body;
+        public AssemblyBuildContext Parent;
+        public bool IsOperatorContext;
     }
 
     public class FuncArgsBodyContext
     {
-        public List<AssemblyElement> body;
-        public FuncArgsBodyContext parent;
+        public readonly List<AssemblyElement> Body;
+        public readonly FuncArgsBodyContext Parent;
 
         public FuncArgsBodyContext(FuncArgsBodyContext parent)
         {
-            body = new List<AssemblyElement>();
-            this.parent = parent;
+            Body = new List<AssemblyElement>();
+            Parent = parent;
         }
     }
 
     public class AssemblyBuilder
     {
-        public List<ExecBlock> execBlocks;
-        public List<DatSymbol> symbols;
-        private List<DatSymbol> stringLiteralSymbols;
-        private ExecBlock active;
-        private AssemblyBuildContext currentBuildCtx; // current assembly build context
-        private List<SymbolInstruction> assignmentLeftSide;
-        private FuncArgsBodyContext funcArgsBodyCtx;
-        private int labelIndexGenerator;
-        private int nextStringSymbolNumber;
+        public readonly List<ExecBlock> ExecBlocks;
+        public readonly List<DatSymbol> Symbols;
+        private readonly List<DatSymbol> _stringLiteralSymbols;
+        private ExecBlock _active;
+        private AssemblyBuildContext _currentBuildCtx;
+        private List<SymbolInstruction> _assignmentLeftSide;
+        private FuncArgsBodyContext _funcArgsBodyCtx;
+        private int _labelIndexGenerator;
+        private int _nextStringSymbolNumber;
         private bool _isInsideConstDefContext;
 
         public AssemblyBuilder()
         {
-            execBlocks = new List<ExecBlock>();
-            symbols = new List<DatSymbol>();
-            stringLiteralSymbols = new List<DatSymbol>();
-            currentBuildCtx = getEmptyBuildContext();
-            active = null;
-            assignmentLeftSide = new List<SymbolInstruction>();
-            funcArgsBodyCtx = new FuncArgsBodyContext(null);
-            labelIndexGenerator = 0;
-            nextStringSymbolNumber = 10000;
+            ExecBlocks = new List<ExecBlock>();
+            Symbols = new List<DatSymbol>();
+            _stringLiteralSymbols = new List<DatSymbol>();
+            _currentBuildCtx = GetEmptyBuildContext();
+            _active = null;
+            _assignmentLeftSide = new List<SymbolInstruction>();
+            _funcArgsBodyCtx = new FuncArgsBodyContext(null);
+            _labelIndexGenerator = 0;
+            _nextStringSymbolNumber = 10000;
             _isInsideConstDefContext = false;
         }
 
-        public void constDefStart()
+        public void ConstDefStart()
         {
             _isInsideConstDefContext = true;
         }
 
-        public void constDefEnd()
+        public void ConstDefEnd()
         {
             _isInsideConstDefContext = false;
         }
 
-        public bool isInsideConstDefContext()
+        public bool IsInsideConstDefContext()
         {
             return _isInsideConstDefContext;
         }
-        
-        public string newStringSymbolName()
+
+        public string NewStringSymbolName()
         {
-            return $"{(char)255}{nextStringSymbolNumber++}";
+            return $"{(char) 255}{_nextStringSymbolNumber++}";
         }
 
-        public List<DatSymbol> getAllSymbols()
+        public List<DatSymbol> GetAllSymbols()
         {
-            return symbols.Concat(stringLiteralSymbols).ToList();
+            return Symbols.Concat(_stringLiteralSymbols).ToList();
         }
 
-        public AssemblyBuildContext getEmptyBuildContext(bool isOperatorContext = false)
+        private AssemblyBuildContext GetEmptyBuildContext(bool isOperatorContext = false)
         {
-            return new AssemblyBuildContext()
+            return new AssemblyBuildContext
             {
-                body = new List<AssemblyElement>(),
-                parent = currentBuildCtx,
-                currentConditionStatement = new AssemblyIfStatement(),
-                currentOperatorStatement = new AssemblyOperatorStatement(),
-                isOperatorContext = isOperatorContext
+                Body = new List<AssemblyElement>(),
+                Parent = _currentBuildCtx,
+                CurrentConditionStatement = new AssemblyIfStatement(),
+                CurrentOperatorStatement = new AssemblyOperatorStatement(),
+                IsOperatorContext = isOperatorContext
             };
         }
 
-        public bool isContextInsideExecBlock()
+        public bool IsContextInsideExecBlock()
         {
-            return active != null;
+            return _active != null;
         }
 
-        public void addInstruction(AssemblyInstruction instruction)
+        public void AddInstruction(AssemblyInstruction instruction)
         {
-            currentBuildCtx.body.Add(instruction);
+            _currentBuildCtx.Body.Add(instruction);
         }
 
-        public void addInstructions(params AssemblyInstruction[] instructions)
+        public void AddInstructions(IEnumerable<AssemblyElement> instructions)
         {
-            currentBuildCtx.body.AddRange(instructions);
+            _currentBuildCtx.Body.AddRange(instructions);
         }
 
-        public void execBlockStart(DatSymbol symbol, ExecutebleBlockType blockType)
+        public void ExecBlockStart(DatSymbol symbol, ExecutebleBlockType blockType)
         {
             switch (blockType)
             {
                 case ExecutebleBlockType.Function:
-                    var function = new FunctionBlock(){ symbol = symbol };
-                    active = function;
+                    var function = new FunctionBlock {Symbol = symbol};
+                    _active = function;
                     break;
                 case ExecutebleBlockType.InstanceConstructor:
-                    var instanceConstructor = new InstanceConstructorBlock(){ symbol = symbol };
-                    active = instanceConstructor;
+                    var instanceConstructor = new InstanceConstructorBlock {Symbol = symbol};
+                    _active = instanceConstructor;
                     break;
                 case ExecutebleBlockType.PrototypeConstructor:
-                    var prototypeConstructor = new PrototypeContructorBlock(){ symbol = symbol };
-                    active = prototypeConstructor;
+                    var prototypeConstructor = new PrototypeContructorBlock {Symbol = symbol};
+                    _active = prototypeConstructor;
                     break;
             }
-            execBlocks.Add(active);
-            currentBuildCtx = getEmptyBuildContext();
+
+            ExecBlocks.Add(_active);
+            _currentBuildCtx = GetEmptyBuildContext();
         }
 
-        public void execBlockEnd()
+        public void ExecBlockEnd()
         {
-            active.body = currentBuildCtx.body;
-            active = null;
+            _active.Body = _currentBuildCtx.Body;
+            _active = null;
 
-            currentBuildCtx = currentBuildCtx.parent;
+            _currentBuildCtx = _currentBuildCtx.Parent;
         }
 
-        public void assigmentStart(SymbolInstruction[] instructions)
+        public void AssigmentStart(SymbolInstruction[] instructions)
         {
-            assignmentLeftSide.AddRange(instructions);
+            _assignmentLeftSide.AddRange(instructions);
         }
 
-        public void assigmentEnd(string assignmentOperator)
+        public void AssigmentEnd(string assignmentOperator)
         {
-            var operationType = assignmentLeftSide.Last().symbol.Type;   //TODO check if there are any possibilities of assignmentLeftSide longer than 2 instructions?
-            var assignmentInstruction = AssemblyBuilderHelpers.GetInstructionForOperator(assignmentOperator, true, operationType);
-          
-            addInstructions((SymbolInstruction[])assignmentLeftSide.ToArray());
-            assignmentLeftSide = new List<SymbolInstruction>();
-            addInstruction(assignmentInstruction);
+            var operationType =
+                _assignmentLeftSide.Last().Symbol
+                    .Type; //TODO check if there are any possibilities of assignmentLeftSide longer than 2 instructions?
+            var assignmentInstruction =
+                AssemblyBuilderHelpers.GetInstructionForOperator(assignmentOperator, true, operationType);
+
+            AddInstructions(_assignmentLeftSide.ToArray());
+            _assignmentLeftSide = new List<SymbolInstruction>();
+            AddInstruction(assignmentInstruction);
         }
 
-        public void expressionLeftSideStart()
+        public void ExpressionLeftSideStart()
         {
-            currentBuildCtx = getEmptyBuildContext(true);
+            _currentBuildCtx = GetEmptyBuildContext(true);
         }
 
-        public void expressionRightSideStart()
+        public void ExpressionRightSideStart()
         {
-            currentBuildCtx.currentOperatorStatement.setLeft(currentBuildCtx.body);
-            currentBuildCtx.body = new List<AssemblyElement>();
+            _currentBuildCtx.CurrentOperatorStatement.SetLeft(_currentBuildCtx.Body);
+            _currentBuildCtx.Body = new List<AssemblyElement>();
         }
 
-        public void funcCallArgStart()
+        public void FuncCallArgStart()
         {
-            currentBuildCtx = getEmptyBuildContext();
+            _currentBuildCtx = GetEmptyBuildContext();
         }
 
-        public void funcCallArgEnd()
+        public void FuncCallArgEnd()
         {
-            funcArgsBodyCtx.body.AddRange(currentBuildCtx.body);
-            currentBuildCtx = currentBuildCtx.parent;
+            _funcArgsBodyCtx.Body.AddRange(_currentBuildCtx.Body);
+            _currentBuildCtx = _currentBuildCtx.Parent;
         }
 
-        public void funcCallStart()
+        public void FuncCallStart()
         {
-            funcArgsBodyCtx = new FuncArgsBodyContext(funcArgsBodyCtx);
+            _funcArgsBodyCtx = new FuncArgsBodyContext(_funcArgsBodyCtx);
         }
 
-        public void funcCallEnd(AssemblyElement instruction)
+        public void FuncCallEnd(AssemblyElement instruction)
         {
-            currentBuildCtx = currentBuildCtx.parent;
-            currentBuildCtx.body.AddRange(funcArgsBodyCtx.body);
-            currentBuildCtx.body.Add(instruction);
+            _currentBuildCtx = _currentBuildCtx.Parent;
+            _currentBuildCtx.Body.AddRange(_funcArgsBodyCtx.Body);
+            _currentBuildCtx.Body.Add(instruction);
 
-            funcArgsBodyCtx = funcArgsBodyCtx.parent;
+            _funcArgsBodyCtx = _funcArgsBodyCtx.Parent;
         }
 
-        public void expressionEnd(AssemblyInstruction operatorInstruction)
+        public void ExpressionEnd(AssemblyInstruction operatorInstruction)
         {
             //TODO add desc why
-            var currentOperatorStatement = currentBuildCtx.currentOperatorStatement;
-            var parentBuildContext = currentBuildCtx.parent;
-            var currentBody = currentBuildCtx.body;
-            var currentLeftBody = currentOperatorStatement.getLeft();
-            var currentRightBody = currentOperatorStatement.getRight();
+            var currentOperatorStatement = _currentBuildCtx.CurrentOperatorStatement;
+            var parentBuildContext = _currentBuildCtx.Parent;
+            var currentBody = _currentBuildCtx.Body;
+            var currentLeftBody = currentOperatorStatement.GetLeft();
+            var currentRightBody = currentOperatorStatement.GetRight();
             var newLeftBody = currentLeftBody;
             var newRightBody = currentRightBody;
 
@@ -457,167 +472,134 @@ namespace DaedalusCompiler.Compilation
             var instructions = newRightBody.Concat(newLeftBody).Append(operatorInstruction).ToList();
 
 
-            if ( !parentBuildContext.isOperatorContext )
+            if (!parentBuildContext.IsOperatorContext)
             {
-                parentBuildContext.body.AddRange( instructions );
+                parentBuildContext.Body.AddRange(instructions);
             }
             else
             {
-                var parentRight = parentBuildContext.currentOperatorStatement.getRight();
-                var parentLeft = parentBuildContext.currentOperatorStatement.getLeft();
+                var parentRight = parentBuildContext.CurrentOperatorStatement.GetRight();
+                var parentLeft = parentBuildContext.CurrentOperatorStatement.GetLeft();
                 var parentRightHasItems = parentRight.Count > 0;
                 var parentLeftHasItems = parentLeft.Count > 0;
 
                 if (parentRightHasItems && parentLeftHasItems)
                 {
-                    parentBuildContext.currentOperatorStatement.setLeft(parentLeft.Concat(instructions).ToList());
+                    parentBuildContext.CurrentOperatorStatement.SetLeft(parentLeft.Concat(instructions).ToList());
                 }
                 else if (parentRightHasItems)
                 {
                     //TODO add desc why
-                    parentBuildContext.currentOperatorStatement.setRight(instructions);
-                    parentBuildContext.currentOperatorStatement.setLeft( parentRight );
+                    parentBuildContext.CurrentOperatorStatement.SetRight(instructions);
+                    parentBuildContext.CurrentOperatorStatement.SetLeft(parentRight);
                 }
                 else
                 {
                     //TODO add desc why
-                    parentBuildContext.currentOperatorStatement.setRight( instructions );
+                    parentBuildContext.CurrentOperatorStatement.SetRight(instructions);
                 }
             }
 
-            currentBuildCtx = parentBuildContext;
-        }
-
-        public void expressionBracketStart()
-        {
-            // to remove, need to refactor testst
-            //todo implement
-        }
-
-        public void expressionBracketEnd()
-        {
-            // to remove, need to refactor testst
-            //todo implement
-        }
-
-        public void expressionBlockStart()
-        {
-            // to remove, need to refactor testst
-            //todo implement
-        }
-
-        public void expressionBlockEnd()
-        {
-            // to remove, need to refactor testst
-            //todo implement
+            _currentBuildCtx = parentBuildContext;
         }
 
 
-        public void conditionalStart()
+        public void ConditionalStart()
         {
-
         }
 
-        public void conditionalEnd()
+        public void ConditionalEnd()
         {
-            currentBuildCtx.body.AddRange(resolveIfStatement(currentBuildCtx.currentConditionStatement));
+            _currentBuildCtx.Body.AddRange(ResolveIfStatement(_currentBuildCtx.CurrentConditionStatement));
 
-            currentBuildCtx.currentConditionStatement = new AssemblyIfStatement();
+            _currentBuildCtx.CurrentConditionStatement = new AssemblyIfStatement();
         }
 
-        public void conditionalBlockConditionStart(IfBlockType blockType)
+        public void ConditionalBlockConditionStart(IfBlockType blockType)
         {
-            currentBuildCtx.currentConditionStatement.currentBlockType = blockType;
+            _currentBuildCtx.CurrentConditionStatement.CurrentBlockType = blockType;
 
-            currentBuildCtx = getEmptyBuildContext();
+            _currentBuildCtx = GetEmptyBuildContext();
         }
 
-        public void conditionalBlockConditionEnd()
+        public void ConditionalBlockConditionEnd()
         {
-            var body = currentBuildCtx.body;
+            var body = _currentBuildCtx.Body;
             // we need firstly get out from condition context
-            currentBuildCtx = currentBuildCtx.parent;
-            currentBuildCtx.currentConditionStatement.conditionInstructionStack = body;
+            _currentBuildCtx = _currentBuildCtx.Parent;
+            _currentBuildCtx.CurrentConditionStatement.ConditionInstructionStack = body;
 
             // we need create context for statement block
-            currentBuildCtx = getEmptyBuildContext();
+            _currentBuildCtx = GetEmptyBuildContext();
         }
 
-        public void conditionalBlockBodyEnd()
+        public void ConditionalBlockBodyEnd()
         {
-            var body = currentBuildCtx.body;
-            currentBuildCtx = currentBuildCtx.parent;
+            var body = _currentBuildCtx.Body;
+            _currentBuildCtx = _currentBuildCtx.Parent;
 
-            var blocktype = currentBuildCtx.currentConditionStatement.currentBlockType;
+            var blocktype = _currentBuildCtx.CurrentConditionStatement.CurrentBlockType;
 
             if (blocktype == IfBlockType.If || blocktype == IfBlockType.ElseIf)
             {
-                var ifBlock = new IfBlock()
+                var ifBlock = new IfBlock
                 {
-                    body = body,
-                    condition = currentBuildCtx.currentConditionStatement.conditionInstructionStack
+                    Body = body,
+                    Condition = _currentBuildCtx.CurrentConditionStatement.ConditionInstructionStack
                 };
 
                 if (blocktype == IfBlockType.If)
                 {
-                    currentBuildCtx.currentConditionStatement.ifBlock =ifBlock;
+                    _currentBuildCtx.CurrentConditionStatement.IfBlock = ifBlock;
                 }
                 else
                 {
-                    currentBuildCtx.currentConditionStatement.elseIfBlock.Add(ifBlock);
+                    _currentBuildCtx.CurrentConditionStatement.ElseIfBlock.Add(ifBlock);
                 }
             }
             else
             {
-                currentBuildCtx.currentConditionStatement.elseBody = body;
+                _currentBuildCtx.CurrentConditionStatement.ElseBody = body;
             }
 
             //currentAssemblyBuildContext
         }
 
-        public void addSymbol(DatSymbol symbol)
+        public void AddSymbol(DatSymbol symbol)
         {
             if (symbol.Name.StartsWith($"{(char) 255}") && symbol.Type == DatSymbolType.String &&
                 symbol.Flags == DatSymbolFlag.Const)
             {
-                stringLiteralSymbols.Add(symbol);
+                _stringLiteralSymbols.Add(symbol);
             }
             else
             {
-                symbols.Add(symbol);
+                Symbols.Add(symbol);
             }
-            
         }
 
-        public void addSymbols(List<DatSymbol> symbols)
+        public DatSymbol ResolveSymbol(string symbolName)
         {
-            symbols.AddRange(symbols);
-        }
+            DatSymbol symbol;
 
-        public DatSymbol resolveSymbol(string symbolName)
-        {
-            string targetSymbolName;
-            DatSymbol symbolLocalScope = null;
-            DatSymbol symbol = null;
-            
-            if (active != null && !symbolName.Contains("."))
+            if (_active != null && !symbolName.Contains("."))
             {
-                DatSymbol currentExecBlockSymbol = active.symbol;
-                
+                DatSymbol currentExecBlockSymbol = _active.Symbol;
+
                 while (currentExecBlockSymbol != null)
                 {
-                    targetSymbolName = $"{currentExecBlockSymbol.Name}.{symbolName}";
-                    
-                    symbol = getAllSymbols().Find(x => x.Name.ToUpper() == targetSymbolName.ToUpper());
-                    
+                    var targetSymbolName = $"{currentExecBlockSymbol.Name}.{symbolName}";
+
+                    symbol = GetAllSymbols().Find(x => x.Name.ToUpper() == targetSymbolName.ToUpper());
+
                     if (symbol == null)
                     {
                         if (currentExecBlockSymbol.Parent == -1)
                         {
-                            currentExecBlockSymbol = null;
                             break;
                         }
-                        currentExecBlockSymbol = symbols[currentExecBlockSymbol.Parent];
+
+                        currentExecBlockSymbol = Symbols[currentExecBlockSymbol.Parent];
                     }
                     else
                     {
@@ -626,7 +608,7 @@ namespace DaedalusCompiler.Compilation
                 }
             }
 
-            symbol = getAllSymbols().Find(x => x.Name.ToUpper() == symbolName.ToUpper());
+            symbol = GetAllSymbols().Find(x => x.Name.ToUpper() == symbolName.ToUpper());
 
             if (symbol == null)
             {
@@ -634,51 +616,50 @@ namespace DaedalusCompiler.Compilation
             }
 
             return symbol;
-
         }
 
-        public DatSymbol getSymbolByName(string symbolName)
+        public DatSymbol GetSymbolByName(string symbolName)
         {
-            return getAllSymbols().FirstOrDefault(x => x.Name.ToUpper() == symbolName.ToUpper());
+            return GetAllSymbols().FirstOrDefault(x => x.Name.ToUpper() == symbolName.ToUpper());
         }
 
-        public int getSymbolId(DatSymbol symbol)
+        public int GetSymbolId(DatSymbol symbol)
         {
-            return getAllSymbols().IndexOf(symbol);
+            return GetAllSymbols().IndexOf(symbol);
         }
 
-        public string getNextLabel()
+        private string GetNextLabel()
         {
-            var labelVal = labelIndexGenerator;
+            var labelVal = _labelIndexGenerator;
 
-            labelIndexGenerator++;
-            
+            _labelIndexGenerator++;
+
             return $"label_{labelVal}";
         }
 
-        public List<AssemblyElement> resolveIfStatement(AssemblyIfStatement ifStatement)
+        private List<AssemblyElement> ResolveIfStatement(AssemblyIfStatement ifStatement)
         {
             var instructions = new List<AssemblyElement>();
             var ifBlocks = new List<IfBlock>();
-            var haveElse = ifStatement.elseBody.Count > 0;
-            var statementEndLabel = getNextLabel();
+            var haveElse = ifStatement.ElseBody.Count > 0;
+            var statementEndLabel = GetNextLabel();
             var elseStartLabel = "";
-            
-            ifBlocks.Add(ifStatement.ifBlock);
-            ifBlocks.AddRange(ifStatement.elseIfBlock);
+
+            ifBlocks.Add(ifStatement.IfBlock);
+            ifBlocks.AddRange(ifStatement.ElseIfBlock);
 
             foreach (var ifBlock in ifBlocks)
             {
                 var isLastOne = ifBlock == ifBlocks.Last();
 
-                instructions.AddRange(ifBlock.condition);
+                instructions.AddRange(ifBlock.Condition);
 
                 if (!isLastOne)
                 {
-                    var nextJumpLabel = getNextLabel();
+                    var nextJumpLabel = GetNextLabel();
 
                     instructions.Add(new JumpIfToLabel(nextJumpLabel));
-                    instructions.AddRange(ifBlock.body);
+                    instructions.AddRange(ifBlock.Body);
                     instructions.Add(new JumpToLabel(statementEndLabel));
                     instructions.Add(new AssemblyLabel(nextJumpLabel));
                 }
@@ -686,15 +667,15 @@ namespace DaedalusCompiler.Compilation
                 {
                     if (haveElse)
                     {
-                        elseStartLabel = getNextLabel();
+                        elseStartLabel = GetNextLabel();
                         instructions.Add(new JumpIfToLabel(elseStartLabel));
-                        instructions.AddRange(ifBlock.body);
+                        instructions.AddRange(ifBlock.Body);
                         instructions.Add(new JumpToLabel(statementEndLabel));
                     }
                     else
                     {
                         instructions.Add(new JumpIfToLabel(statementEndLabel));
-                        instructions.AddRange(ifBlock.body);
+                        instructions.AddRange(ifBlock.Body);
                     }
                 }
             }
@@ -702,24 +683,24 @@ namespace DaedalusCompiler.Compilation
             if (haveElse)
             {
                 instructions.Add(new AssemblyLabel(elseStartLabel));
-                instructions.AddRange(ifStatement.elseBody);
+                instructions.AddRange(ifStatement.ElseBody);
             }
-            
+
             instructions.Add(new AssemblyLabel(statementEndLabel));
 
             return instructions;
         }
 
-        public string getAssembler()
+        public string GetAssembler()
         {
-            return new AssemblyBuilderTraverser().getAssembler(execBlocks, getAllSymbols());
+            return new AssemblyBuilderTraverser().GetAssembler(ExecBlocks);
         }
 
-        public void saveToDat()
+        public void SaveToDat()
         {
             // todo finish
-            var datFile = AssemblyBuilderToDat.getDatFile(execBlocks, getAllSymbols());
-            
+            var datFile = AssemblyBuilderToDat.GetDatFile(ExecBlocks, GetAllSymbols());
+
             datFile.Save("./test.dat");
         }
     }

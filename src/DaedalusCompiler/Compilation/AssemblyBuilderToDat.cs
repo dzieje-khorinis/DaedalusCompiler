@@ -7,21 +7,21 @@ namespace DaedalusCompiler.Compilation
 {
     public static class AssemblyBuilderToDat
     {
-        private static int getSymbolId(List<DatSymbol> symbols, DatSymbol symbol)
+        private static int GetSymbolId(List<DatSymbol> symbols, DatSymbol symbol)
         {
             return symbols.IndexOf(symbol);
         }
 
-        public static DatFile getDatFile(List<ExecBlock> execBlocks, List<DatSymbol> symbols)
+        public static DatFile GetDatFile(List<ExecBlock> execBlocks, List<DatSymbol> symbols)
         {
             // TODO: Refactor this code later
 
             // TODO Now we take last function, make support all !!!
-            var assembly = execBlocks.Last().body;
+            var assembly = execBlocks.Last().Body;
             var labels = assembly
-                .Select((tokenClass, id) => new { id, tokenClass })
+                .Select((tokenClass, id) => new {id, tokenClass})
                 .Where(x => x.tokenClass is AssemblyLabel)
-                .Select((x, i) => new { id = x.id - i, ((AssemblyLabel)x.tokenClass).label })
+                .Select((x, i) => new {id = x.id - i, label = ((AssemblyLabel) x.tokenClass).Label})
                 .ToDictionary(x => x.label, x => x.id);
 
             var tokens = assembly
@@ -33,31 +33,30 @@ namespace DaedalusCompiler.Compilation
                     int? intParam = null;
                     byte? byteParam = null;
 
-                    if (tokenClass is PushArrVar)
+                    if (tokenClass is PushArrVar arrayVar)
                     {
-                        var arrayVar = (PushArrVar)tokenClass;
-                        intParam = getSymbolId(symbols, arrayVar.symbol);
-                        byteParam = (byte)arrayVar.index;
+                        intParam = GetSymbolId(symbols, arrayVar.Symbol);
+                        byteParam = (byte) arrayVar.Index;
                     }
-                    else if (tokenClass is JumpToLabel)
+                    else if (tokenClass is JumpToLabel label)
                     {
                         //TODO: this is token id, should be changed to token stack location later
-                        intParam = labels[((JumpToLabel)tokenClass).label];
+                        intParam = labels[label.Label];
                     }
-                    else if (tokenClass is SymbolInstruction)
+                    else if (tokenClass is SymbolInstruction instruction)
                     {
-                        intParam = getSymbolId(symbols, ((SymbolInstruction)tokenClass).symbol);
+                        intParam = GetSymbolId(symbols, instruction.Symbol);
                     }
-                    else if (tokenClass is ValueInstruction)
+                    else if (tokenClass is ValueInstruction valueInstruction)
                     {
-                        intParam = (int)((ValueInstruction)tokenClass).value;
+                        intParam = (int) valueInstruction.Value;
                     }
-                    else if (tokenClass is AddressInstruction)
+                    else if (tokenClass is AddressInstruction addressInstruction)
                     {
-                        intParam = ((AddressInstruction)tokenClass).address;
+                        intParam = addressInstruction.Address;
                     }
 
-                    return new DatToken { TokenType = tokenType, IntParam = intParam, ByteParam = byteParam };
+                    return new DatToken {TokenType = tokenType, IntParam = intParam, ByteParam = byteParam};
                 });
 
             return new DatFile

@@ -10,13 +10,13 @@ namespace DaedalusCompiler.Compilation
 {
     public class DaedalusParserListener : DaedalusBaseListener
     {
-        private readonly AssemblyBuilder assemblyBuilder;
-        private readonly int sourceFileNumber;
+        private readonly AssemblyBuilder _assemblyBuilder;
+        private readonly int _sourceFileNumber;
 
         public DaedalusParserListener(AssemblyBuilder assemblyBuilder, int sourceFileNumber)
         {
-            this.assemblyBuilder = assemblyBuilder;
-            this.sourceFileNumber = sourceFileNumber;
+            _assemblyBuilder = assemblyBuilder;
+            _sourceFileNumber = sourceFileNumber;
         }
 
         public override void ExitParameterList(DaedalusParser.ParameterListContext context)
@@ -24,57 +24,55 @@ namespace DaedalusCompiler.Compilation
             var parametrDeclContexts = context.parameterDecl();
             foreach (var parameterDeclContext in parametrDeclContexts.Reverse())
             {
-                ExecBlock execBlock = assemblyBuilder.execBlocks.Last();
-                string execBlockName = execBlock.symbol.Name;
+                ExecBlock execBlock = _assemblyBuilder.ExecBlocks.Last();
+                string execBlockName = execBlock.Symbol.Name;
                 string parameterLocalName = parameterDeclContext.nameNode().GetText();
                 string parameterName = $"{execBlockName}.{parameterLocalName}";
-                DatSymbol parameterSymbol = assemblyBuilder.resolveSymbol(parameterName);
+                DatSymbol parameterSymbol = _assemblyBuilder.ResolveSymbol(parameterName);
 
                 var assignInstruction =
                     AssemblyBuilderHelpers.GetAssignInstructionForDatSymbolType(parameterSymbol.Type);
 
                 if (parameterSymbol.Type is DatSymbolType.Class)
                 {
-                    assemblyBuilder.addInstruction(new PushInstance(parameterSymbol));
+                    _assemblyBuilder.AddInstruction(new PushInstance(parameterSymbol));
                 }
                 else
                 {
-                    assemblyBuilder.addInstruction(new PushVar(parameterSymbol));
+                    _assemblyBuilder.AddInstruction(new PushVar(parameterSymbol));
                 }
 
-                assemblyBuilder.addInstruction(assignInstruction);
+                _assemblyBuilder.AddInstruction(assignInstruction);
             }
         }
 
         public override void EnterParameterDecl(DaedalusParser.ParameterDeclContext context)
         {
-            ExecBlock execBlock = assemblyBuilder.execBlocks.Last();
-            string execBlockName = execBlock.symbol.Name;
+            ExecBlock execBlock = _assemblyBuilder.ExecBlocks.Last();
+            string execBlockName = execBlock.Symbol.Name;
             string parameterLocalName = context.nameNode().GetText();
             string parameterName = $"{execBlockName}.{parameterLocalName}";
 
             int parentId = -1;
-            DatSymbol parentSymbol = null;
 
             string parameterTypeName = context.typeReference().GetText();
             DatSymbolType? parameterType = DatSymbolTypeFromString(parameterTypeName);
             if (parameterType is DatSymbolType.Class)
             {
-                parentSymbol = assemblyBuilder.resolveSymbol(parameterTypeName);
-                parentId = assemblyBuilder.getSymbolId(parentSymbol);
+                var parentSymbol = _assemblyBuilder.ResolveSymbol(parameterTypeName);
+                parentId = _assemblyBuilder.GetSymbolId(parentSymbol);
             }
 
-            DatSymbol symbol = null;
+            DatSymbol symbol;
             var location = GetLocation(context);
 
-            uint arrIndex = 0;
             var simpleValueContext = context.simpleValue();
 
             if (simpleValueContext != null)
             {
-                if (!uint.TryParse(simpleValueContext.GetText(), out arrIndex))
+                if (!uint.TryParse(simpleValueContext.GetText(), out var arrIndex))
                 {
-                    var constSymbol = assemblyBuilder.resolveSymbol(simpleValueContext.GetText());
+                    var constSymbol = _assemblyBuilder.ResolveSymbol(simpleValueContext.GetText());
                     if (constSymbol.Flags != DatSymbolFlag.Const || constSymbol.Type != DatSymbolType.Int)
                     {
                         throw new Exception($"Expected integer constant: {simpleValueContext.GetText()}");
@@ -90,12 +88,12 @@ namespace DaedalusCompiler.Compilation
                 symbol = SymbolBuilder.BuildVariable(parameterName, parameterType.Value, location, parentId);
             }
 
-            assemblyBuilder.addSymbol(symbol);
+            _assemblyBuilder.AddSymbol(symbol);
         }
 
         public override void EnterConstDef([NotNull] DaedalusParser.ConstDefContext context)
         {
-            assemblyBuilder.constDefStart();   
+            _assemblyBuilder.ConstDefStart();
             var typeName = context.typeReference().GetText();
             var type = DatSymbolTypeFromString(typeName);
 
@@ -106,35 +104,33 @@ namespace DaedalusCompiler.Compilation
                 if (constContext is TerminalNodeImpl)
                     continue; // skips ',' 
 
-                if (constContext is DaedalusParser.ConstValueDefContext)
+                if (constContext is DaedalusParser.ConstValueDefContext constValueContext)
                 {
-                    var constValueContext = (DaedalusParser.ConstValueDefContext) constContext;
                     var name = constValueContext.nameNode().GetText();
-                    if (assemblyBuilder.isContextInsideExecBlock())
+                    if (_assemblyBuilder.IsContextInsideExecBlock())
                     {
-                        ExecBlock execBlock = assemblyBuilder.execBlocks.Last();
-                        string execBlockName = execBlock.symbol.Name;
+                        ExecBlock execBlock = _assemblyBuilder.ExecBlocks.Last();
+                        string execBlockName = execBlock.Symbol.Name;
                         name = $"{execBlockName}.{name}";
                     }
 
                     var location = GetLocation(context);
                     var assignmentExpression = constValueContext.constValueAssignment().expressionBlock().expression();
-                    var value = EvaluatorHelper.EvaluateConst(assignmentExpression, assemblyBuilder, type.Value);
+                    var value = EvaluatorHelper.EvaluateConst(assignmentExpression, _assemblyBuilder, type);
 
-                    var symbol = SymbolBuilder.BuildConst(name, type.Value, value, location); // TODO : Validate params
-                    assemblyBuilder.addSymbol(symbol);
+                    var symbol = SymbolBuilder.BuildConst(name, type, value, location); // TODO : Validate params
+                    _assemblyBuilder.AddSymbol(symbol);
 
                     continue;
                 }
 
-                if (constContext is DaedalusParser.ConstArrayDefContext)
+                if (constContext is DaedalusParser.ConstArrayDefContext constArrayContext)
                 {
-                    var constArrayContext = (DaedalusParser.ConstArrayDefContext) constContext;
                     var name = constArrayContext.nameNode().GetText();
                     var location = GetLocation(context);
-                    var size = EvaluatorHelper.EvaluteArraySize(constArrayContext.simpleValue(), assemblyBuilder);
+                    var size = EvaluatorHelper.EvaluteArraySize(constArrayContext.simpleValue(), _assemblyBuilder);
                     var content = constArrayContext.constArrayAssignment().expressionBlock()
-                        .Select(expr => EvaluatorHelper.EvaluateConst(expr.expression(), assemblyBuilder, type.Value))
+                        .Select(expr => EvaluatorHelper.EvaluateConst(expr.expression(), _assemblyBuilder, type))
                         .ToArray();
 
                     if (size != content.Length)
@@ -142,22 +138,20 @@ namespace DaedalusCompiler.Compilation
                             $"Invalid const array definition '{constArrayContext.GetText()}'. Invalid items count: expected = {size}, readed = {content.Length}");
 
                     var symbol =
-                        SymbolBuilder.BuildArrOfConst(name, type.Value, content, location); // TODO : Validate params
-                    assemblyBuilder.addSymbol(symbol);
-
-                    continue;
+                        SymbolBuilder.BuildArrOfConst(name, type, content, location); // TODO : Validate params
+                    _assemblyBuilder.AddSymbol(symbol);
                 }
             }
         }
 
         public override void ExitConstDef([NotNull] DaedalusParser.ConstDefContext context)
         {
-            assemblyBuilder.constDefEnd();
+            _assemblyBuilder.ConstDefEnd();
         }
 
         public override void EnterVarDecl([NotNull] DaedalusParser.VarDeclContext context)
         {
-            if (context.Parent is DaedalusParser.DaedalusFileContext || assemblyBuilder.isContextInsideExecBlock())
+            if (context.Parent is DaedalusParser.DaedalusFileContext || _assemblyBuilder.IsContextInsideExecBlock())
             {
                 var typeName = context.typeReference().GetText();
                 var type = DatSymbolTypeFromString(typeName);
@@ -169,46 +163,43 @@ namespace DaedalusCompiler.Compilation
                     if (varContext is TerminalNodeImpl)
                         continue; // skips ',' 
 
-                    if (varContext is DaedalusParser.VarValueDeclContext)
+                    if (varContext is DaedalusParser.VarValueDeclContext varValueContext)
                     {
-                        var varValueContext = (DaedalusParser.VarValueDeclContext) varContext;
                         var name = varValueContext.nameNode().GetText();
-                        if (assemblyBuilder.isContextInsideExecBlock())
+                        if (_assemblyBuilder.IsContextInsideExecBlock())
                         {
                             // TODO consider making assemblyBuilder.active public and using it here
-                            ExecBlock execBlock = assemblyBuilder.execBlocks.Last();
-                            string execBlockName = execBlock.symbol.Name;
+                            ExecBlock execBlock = _assemblyBuilder.ExecBlocks.Last();
+                            string execBlockName = execBlock.Symbol.Name;
                             name = $"{execBlockName}.{name}";
                         }
 
                         var location = GetLocation(context);
 
                         int parentId = -1;
-                        DatSymbol parentSymbol = null;
                         string parameterTypeName = context.typeReference().GetText();
                         DatSymbolType? parameterType = DatSymbolTypeFromString(parameterTypeName);
                         if (parameterType is DatSymbolType.Class)
                         {
-                            parentSymbol = assemblyBuilder.resolveSymbol(parameterTypeName);
-                            parentId = assemblyBuilder.getSymbolId(parentSymbol);
+                            var parentSymbol = _assemblyBuilder.ResolveSymbol(parameterTypeName);
+                            parentId = _assemblyBuilder.GetSymbolId(parentSymbol);
                         }
 
                         var symbol =
-                            SymbolBuilder.BuildVariable(name, type.Value, location, parentId); // TODO : Validate params
-                        assemblyBuilder.addSymbol(symbol);
+                            SymbolBuilder.BuildVariable(name, type, location, parentId); // TODO : Validate params
+                        _assemblyBuilder.AddSymbol(symbol);
                     }
 
-                    if (varContext is DaedalusParser.VarArrayDeclContext)
+                    if (varContext is DaedalusParser.VarArrayDeclContext varArrayContext)
                     {
-                        var varArrayContext = (DaedalusParser.VarArrayDeclContext) varContext;
                         var name = varArrayContext.nameNode().GetText();
                         var location = GetLocation(context);
-                        var size = EvaluatorHelper.EvaluteArraySize(varArrayContext.simpleValue(), assemblyBuilder);
+                        var size = EvaluatorHelper.EvaluteArraySize(varArrayContext.simpleValue(), _assemblyBuilder);
 
                         var symbol =
-                            SymbolBuilder.BuildArrOfVariables(name, type.Value, (uint) size,
+                            SymbolBuilder.BuildArrOfVariables(name, type, (uint) size,
                                 location); // TODO : Validate params
-                        assemblyBuilder.addSymbol(symbol);
+                        _assemblyBuilder.AddSymbol(symbol);
                     }
                 }
             }
@@ -218,9 +209,9 @@ namespace DaedalusCompiler.Compilation
         {
             var className = context.nameNode().GetText();
             var classSymbol = SymbolBuilder.BuildClass(className, 0, 0, GetLocation(context));
-            assemblyBuilder.addSymbol(classSymbol);
+            _assemblyBuilder.AddSymbol(classSymbol);
 
-            var classId = assemblyBuilder.getSymbolId(classSymbol);
+            var classId = _assemblyBuilder.GetSymbolId(classSymbol);
             int classVarOffset = 0;
             uint classLength = 0;
 
@@ -237,30 +228,28 @@ namespace DaedalusCompiler.Compilation
                     if (varContext is TerminalNodeImpl)
                         continue; // skips ',' 
 
-                    if (varContext is DaedalusParser.VarValueDeclContext)
+                    if (varContext is DaedalusParser.VarValueDeclContext varValueContext)
                     {
-                        var varValueContext = (DaedalusParser.VarValueDeclContext) varContext;
                         var name = varValueContext.nameNode().GetText();
                         var location = GetLocation(context);
 
-                        var symbol = SymbolBuilder.BuildClassVar(name, type.Value, 1, className, classId,
+                        var symbol = SymbolBuilder.BuildClassVar(name, type, 1, className, classId,
                             classVarOffset, location); // TODO : Validate params
-                        assemblyBuilder.addSymbol(symbol);
+                        _assemblyBuilder.AddSymbol(symbol);
 
                         classVarOffset += (type == DatSymbolType.String ? 20 : 4);
                         classLength++;
                     }
 
-                    if (varContext is DaedalusParser.VarArrayDeclContext)
+                    if (varContext is DaedalusParser.VarArrayDeclContext varArrayContext)
                     {
-                        var varArrayContext = (DaedalusParser.VarArrayDeclContext) varContext;
                         var name = varArrayContext.nameNode().GetText();
                         var location = GetLocation(context);
-                        var size = EvaluatorHelper.EvaluteArraySize(varArrayContext.simpleValue(), assemblyBuilder);
+                        var size = EvaluatorHelper.EvaluteArraySize(varArrayContext.simpleValue(), _assemblyBuilder);
 
-                        var symbol = SymbolBuilder.BuildClassVar(name, type.Value, (uint) size, className, classId,
+                        var symbol = SymbolBuilder.BuildClassVar(name, type, (uint) size, className, classId,
                             classVarOffset, location); // TODO : Validate params
-                        assemblyBuilder.addSymbol(symbol);
+                        _assemblyBuilder.AddSymbol(symbol);
 
                         classVarOffset += (type == DatSymbolType.String ? 20 : 4) * size;
                         classLength++;
@@ -276,46 +265,46 @@ namespace DaedalusCompiler.Compilation
         {
             var prototypeName = context.nameNode().GetText();
             var referenceName = context.referenceNode().GetText();
-            var refSymbol = assemblyBuilder.getSymbolByName(referenceName);
-            var referenceSymbolId = assemblyBuilder.getSymbolId(refSymbol);
+            var refSymbol = _assemblyBuilder.GetSymbolByName(referenceName);
+            var referenceSymbolId = _assemblyBuilder.GetSymbolId(refSymbol);
             var location = GetLocation(context);
 
             var firstTokenAddress = 0; // TODO: Populate first token addres
             var prototypeSymbol =
                 SymbolBuilder.BuildPrototype(prototypeName, referenceSymbolId, firstTokenAddress,
                     location); // TODO: Validate params
-            assemblyBuilder.addSymbol(prototypeSymbol);
+            _assemblyBuilder.AddSymbol(prototypeSymbol);
 
-            assemblyBuilder.execBlockStart(prototypeSymbol, ExecutebleBlockType.PrototypeConstructor);
+            _assemblyBuilder.ExecBlockStart(prototypeSymbol, ExecutebleBlockType.PrototypeConstructor);
         }
 
         public override void ExitPrototypeDef(DaedalusParser.PrototypeDefContext context)
         {
             // we invoke execBlockEnd, thanks that ab will assign all instructions
             // to currently exited prototype constructor
-            assemblyBuilder.addInstruction(new Ret());
-            assemblyBuilder.execBlockEnd();
+            _assemblyBuilder.AddInstruction(new Ret());
+            _assemblyBuilder.ExecBlockEnd();
         }
 
         public override void EnterInstanceDef(DaedalusParser.InstanceDefContext context)
         {
             var instanceName = context.nameNode().GetText();
             var referenceName = context.referenceNode().GetText();
-            var refSymbol = assemblyBuilder.getSymbolByName(referenceName);
-            var referenceSymbolId = assemblyBuilder.getSymbolId(refSymbol);
+            var refSymbol = _assemblyBuilder.GetSymbolByName(referenceName);
+            var referenceSymbolId = _assemblyBuilder.GetSymbolId(refSymbol);
             var location = GetLocation(context);
 
             var firstTokenAddress = 0; // TODO: Populate first token addres
             var prototypeSymbol =
                 SymbolBuilder.BuildPrototype(instanceName, referenceSymbolId, firstTokenAddress,
                     location); // TODO: Validate params, actually should be BuildInstance
-            assemblyBuilder.addSymbol(prototypeSymbol);
+            _assemblyBuilder.AddSymbol(prototypeSymbol);
 
-            assemblyBuilder.execBlockStart(prototypeSymbol, ExecutebleBlockType.InstanceConstructor);
+            _assemblyBuilder.ExecBlockStart(prototypeSymbol, ExecutebleBlockType.InstanceConstructor);
 
             if (refSymbol.Type == DatSymbolType.Prototype)
             {
-                assemblyBuilder.addInstruction(new Call(refSymbol));
+                _assemblyBuilder.AddInstruction(new Call(refSymbol));
             }
         }
 
@@ -323,8 +312,8 @@ namespace DaedalusCompiler.Compilation
         {
             // we invoke execBlockEnd, thanks that ab will assign all instructions
             // to currently exited instance constructor
-            assemblyBuilder.addInstruction(new Ret());
-            assemblyBuilder.execBlockEnd();
+            _assemblyBuilder.AddInstruction(new Ret());
+            _assemblyBuilder.ExecBlockEnd();
         }
 
         public override void EnterFunctionDef([NotNull] DaedalusParser.FunctionDefContext context)
@@ -333,126 +322,126 @@ namespace DaedalusCompiler.Compilation
             var typeName = context.typeReference().GetText();
             var type = DatSymbolTypeFromString(typeName);
 
-            var symbol = SymbolBuilder.BuildFunc(name, type.Value); // TODO : Validate params
-            assemblyBuilder.addSymbol(symbol);
-            assemblyBuilder.execBlockStart(symbol, ExecutebleBlockType.Function);
+            var symbol = SymbolBuilder.BuildFunc(name, type); // TODO : Validate params
+            _assemblyBuilder.AddSymbol(symbol);
+            _assemblyBuilder.ExecBlockStart(symbol, ExecutebleBlockType.Function);
         }
 
         public override void ExitFunctionDef([NotNull] DaedalusParser.FunctionDefContext context)
         {
             // we invoke execBlockEnd, thanks that ab will assign all instructions
             // to currently exited function
-            assemblyBuilder.addInstruction(new Ret());
-            assemblyBuilder.execBlockEnd();
+            _assemblyBuilder.AddInstruction(new Ret());
+            _assemblyBuilder.ExecBlockEnd();
         }
 
         public override void ExitReturnStatement([NotNull] DaedalusParser.ReturnStatementContext context)
         {
-            assemblyBuilder.addInstruction(new Ret());
+            _assemblyBuilder.AddInstruction(new Ret());
         }
 
         public override void EnterIfBlockStatement(DaedalusParser.IfBlockStatementContext context)
         {
-            assemblyBuilder.conditionalStart();
+            _assemblyBuilder.ConditionalStart();
         }
 
         public override void ExitIfBlockStatement(DaedalusParser.IfBlockStatementContext context)
         {
-            assemblyBuilder.conditionalEnd();
+            _assemblyBuilder.ConditionalEnd();
             //assemblyBuilder.ifStatementEnd();
         }
 
 
         public override void EnterIfBlock(DaedalusParser.IfBlockContext context)
         {
-            assemblyBuilder.conditionalBlockConditionStart(IfBlockType.If);
+            _assemblyBuilder.ConditionalBlockConditionStart(IfBlockType.If);
         }
 
         public override void ExitIfBlock(DaedalusParser.IfBlockContext context)
         {
-            assemblyBuilder.conditionalBlockBodyEnd();
+            _assemblyBuilder.ConditionalBlockBodyEnd();
         }
 
         public override void EnterElseIfBlock(DaedalusParser.ElseIfBlockContext context)
         {
-            assemblyBuilder.conditionalBlockConditionStart(IfBlockType.ElseIf);
+            _assemblyBuilder.ConditionalBlockConditionStart(IfBlockType.ElseIf);
         }
 
         public override void ExitElseIfBlock(DaedalusParser.ElseIfBlockContext context)
         {
-            assemblyBuilder.conditionalBlockBodyEnd();
+            _assemblyBuilder.ConditionalBlockBodyEnd();
         }
 
         public override void EnterElseBlock(DaedalusParser.ElseBlockContext context)
         {
-            assemblyBuilder.conditionalBlockConditionStart(IfBlockType.Else);
+            _assemblyBuilder.ConditionalBlockConditionStart(IfBlockType.Else);
             // else does't have condition so we call here end of condition
-            assemblyBuilder.conditionalBlockConditionEnd();
+            _assemblyBuilder.ConditionalBlockConditionEnd();
         }
 
         public override void ExitElseBlock(DaedalusParser.ElseBlockContext context)
         {
-            assemblyBuilder.conditionalBlockBodyEnd();
+            _assemblyBuilder.ConditionalBlockBodyEnd();
         }
 
         public override void ExitIfCondition(DaedalusParser.IfConditionContext context)
         {
-            assemblyBuilder.conditionalBlockConditionEnd();
+            _assemblyBuilder.ConditionalBlockConditionEnd();
         }
 
         public override void EnterBitMoveOperator(DaedalusParser.BitMoveOperatorContext context)
         {
-            assemblyBuilder.expressionRightSideStart();
+            _assemblyBuilder.ExpressionRightSideStart();
         }
 
         public override void EnterBitMoveExpression(DaedalusParser.BitMoveExpressionContext context)
         {
-            assemblyBuilder.expressionLeftSideStart();
+            _assemblyBuilder.ExpressionLeftSideStart();
         }
 
         public override void ExitBitMoveExpression(DaedalusParser.BitMoveExpressionContext context)
         {
             var exprOperator = context.bitMoveOperator().GetText();
             var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator);
-            assemblyBuilder.expressionEnd(instruction);
+            _assemblyBuilder.ExpressionEnd(instruction);
         }
 
         public override void EnterCompExpression(DaedalusParser.CompExpressionContext context)
         {
-            assemblyBuilder.expressionLeftSideStart();
+            _assemblyBuilder.ExpressionLeftSideStart();
         }
 
         public override void ExitCompExpression(DaedalusParser.CompExpressionContext context)
         {
             var exprOperator = context.compOperator().GetText();
             var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator);
-            assemblyBuilder.expressionEnd(instruction);
+            _assemblyBuilder.ExpressionEnd(instruction);
         }
 
         public override void EnterCompOperator(DaedalusParser.CompOperatorContext context)
         {
-            assemblyBuilder.expressionRightSideStart();
+            _assemblyBuilder.ExpressionRightSideStart();
         }
 
         public override void EnterEqExpression(DaedalusParser.EqExpressionContext context)
         {
-            assemblyBuilder.expressionLeftSideStart();
+            _assemblyBuilder.ExpressionLeftSideStart();
         }
 
         public override void ExitEqExpression(DaedalusParser.EqExpressionContext context)
         {
             var exprOperator = context.eqOperator().GetText();
             var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator);
-            assemblyBuilder.expressionEnd(instruction);
+            _assemblyBuilder.ExpressionEnd(instruction);
         }
 
         public override void EnterEqOperator(DaedalusParser.EqOperatorContext context)
         {
-            assemblyBuilder.expressionRightSideStart();
+            _assemblyBuilder.ExpressionRightSideStart();
         }
 
 
-        public List<AssemblyInstruction> GetComplexReferenceNodeInstructions(
+        private List<AssemblyInstruction> GetComplexReferenceNodeInstructions(
             DaedalusParser.ComplexReferenceNodeContext[] complexReferenceNodes)
         {
             var symbolPart = complexReferenceNodes[0];
@@ -463,7 +452,7 @@ namespace DaedalusCompiler.Compilation
             {
                 if (!int.TryParse(simpleValueContext.GetText(), out arrIndex))
                 {
-                    var constSymbol = assemblyBuilder.resolveSymbol(simpleValueContext.GetText());
+                    var constSymbol = _assemblyBuilder.ResolveSymbol(simpleValueContext.GetText());
                     if (constSymbol.Flags != DatSymbolFlag.Const || constSymbol.Type != DatSymbolType.Int)
                     {
                         throw new Exception($"Expected integer constant: {simpleValueContext.GetText()}");
@@ -473,14 +462,14 @@ namespace DaedalusCompiler.Compilation
                 }
             }
 
-            var symbol = assemblyBuilder.resolveSymbol(symbolPart.referenceNode().GetText());
+            var symbol = _assemblyBuilder.ResolveSymbol(symbolPart.referenceNode().GetText());
 
             if (complexReferenceNodes.Length == 2)
             {
-                string typeName = assemblyBuilder.symbols[symbol.Parent].Name;
+                string typeName = _assemblyBuilder.Symbols[symbol.Parent].Name;
                 string attributeName = complexReferenceNodes[1].GetText();
 
-                DatSymbol attribute = assemblyBuilder.resolveSymbol($"{typeName}.{attributeName}");
+                DatSymbol attribute = _assemblyBuilder.ResolveSymbol($"{typeName}.{attributeName}");
 
                 return new List<AssemblyInstruction>
                 {
@@ -511,7 +500,7 @@ namespace DaedalusCompiler.Compilation
         {
             var complexReferenceNodes = context.complexReferenceNode();
             List<AssemblyInstruction> instructions = GetComplexReferenceNodeInstructions(complexReferenceNodes);
-            assemblyBuilder.addInstructions(instructions.ToArray());
+            _assemblyBuilder.AddInstructions(instructions.ToArray());
         }
 
 
@@ -519,26 +508,26 @@ namespace DaedalusCompiler.Compilation
         {
             var complexReferenceNodes = context.complexReferenceLeftSide().complexReferenceNode();
             List<AssemblyInstruction> instructions = GetComplexReferenceNodeInstructions(complexReferenceNodes);
-            assemblyBuilder.assigmentStart(Array.ConvertAll(instructions.ToArray(), item => (SymbolInstruction) item));
+            _assemblyBuilder.AssigmentStart(Array.ConvertAll(instructions.ToArray(), item => (SymbolInstruction) item));
         }
 
 
         public override void ExitAssignment(DaedalusParser.AssignmentContext context)
         {
             string assignmentOperator = context.assigmentOperator().GetText();
-            assemblyBuilder.assigmentEnd(assignmentOperator);
+            _assemblyBuilder.AssigmentEnd(assignmentOperator);
         }
 
         public override void EnterFuncCallValue(DaedalusParser.FuncCallValueContext context)
         {
-            assemblyBuilder.expressionLeftSideStart();
-            assemblyBuilder.funcCallStart();
+            _assemblyBuilder.ExpressionLeftSideStart();
+            _assemblyBuilder.FuncCallStart();
         }
 
         public override void ExitFuncCallValue(DaedalusParser.FuncCallValueContext context)
         {
             var funcName = context.funcCall().nameNode().GetText();
-            var symbol = assemblyBuilder.getSymbolByName(funcName);
+            var symbol = _assemblyBuilder.GetSymbolByName(funcName);
 
             if (symbol == null)
             {
@@ -546,167 +535,163 @@ namespace DaedalusCompiler.Compilation
             }
 
             //todo implement call external
-            assemblyBuilder.funcCallEnd(new Call(symbol));
+            _assemblyBuilder.FuncCallEnd(new Call(symbol));
         }
 
         public override void EnterFuncArgExpression(DaedalusParser.FuncArgExpressionContext context)
         {
-            assemblyBuilder.funcCallArgStart();
+            _assemblyBuilder.FuncCallArgStart();
         }
 
         public override void ExitFuncArgExpression(DaedalusParser.FuncArgExpressionContext context)
         {
-            assemblyBuilder.funcCallArgEnd();
+            _assemblyBuilder.FuncCallArgEnd();
         }
 
         public override void EnterIntegerLiteralValue(DaedalusParser.IntegerLiteralValueContext context)
         {
-            if (assemblyBuilder.isInsideConstDefContext() == false)
+            if (_assemblyBuilder.IsInsideConstDefContext() == false)
             {
-                assemblyBuilder.addInstruction(new PushInt(int.Parse(context.GetText())));
+                _assemblyBuilder.AddInstruction(new PushInt(int.Parse(context.GetText())));
             }
         }
 
         public override void EnterStringLiteralValue(DaedalusParser.StringLiteralValueContext context)
         {
-            if (assemblyBuilder.isInsideConstDefContext() == false)
+            if (_assemblyBuilder.IsInsideConstDefContext() == false)
             {
                 DatSymbolLocation location = GetLocation(context);
                 string value = context.GetText().Replace("\"", "");
-                string symbolName = assemblyBuilder.newStringSymbolName();
+                string symbolName = _assemblyBuilder.NewStringSymbolName();
                 DatSymbol symbol = SymbolBuilder.BuildConst(symbolName, DatSymbolType.String, value, location);
-                assemblyBuilder.addSymbol(symbol);
-                assemblyBuilder.addInstruction(new PushVar(symbol));
+                _assemblyBuilder.AddSymbol(symbol);
+                _assemblyBuilder.AddInstruction(new PushVar(symbol));
             }
         }
 
         public override void EnterAddExpression(DaedalusParser.AddExpressionContext context)
         {
-            assemblyBuilder.expressionLeftSideStart();
+            _assemblyBuilder.ExpressionLeftSideStart();
         }
 
         public override void ExitAddExpression(DaedalusParser.AddExpressionContext context)
         {
             var exprOperator = context.addOperator().GetText();
             var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator);
-            assemblyBuilder.expressionEnd(instruction);
+            _assemblyBuilder.ExpressionEnd(instruction);
         }
 
         public override void EnterAddOperator(DaedalusParser.AddOperatorContext context)
         {
             //TODO add comment why here we invoke that
-            assemblyBuilder.expressionRightSideStart();
+            _assemblyBuilder.ExpressionRightSideStart();
         }
 
         public override void EnterMultOperator(DaedalusParser.MultOperatorContext context)
         {
             //TODO add comment why here we invoke that
-            assemblyBuilder.expressionRightSideStart();
+            _assemblyBuilder.ExpressionRightSideStart();
         }
 
         public override void EnterMultExpression(DaedalusParser.MultExpressionContext context)
         {
-            assemblyBuilder.expressionLeftSideStart();
+            _assemblyBuilder.ExpressionLeftSideStart();
         }
 
         public override void ExitMultExpression(DaedalusParser.MultExpressionContext context)
         {
             var exprOperator = context.multOperator().GetText();
             var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator);
-            assemblyBuilder.expressionEnd(instruction);
+            _assemblyBuilder.ExpressionEnd(instruction);
         }
 
         public override void EnterBinAndOperator(DaedalusParser.BinAndOperatorContext context)
         {
-            assemblyBuilder.expressionRightSideStart();
+            _assemblyBuilder.ExpressionRightSideStart();
         }
 
         public override void EnterBinAndExpression(DaedalusParser.BinAndExpressionContext context)
         {
-            assemblyBuilder.expressionLeftSideStart();
+            _assemblyBuilder.ExpressionLeftSideStart();
         }
 
         public override void ExitBinAndExpression(DaedalusParser.BinAndExpressionContext context)
         {
             var exprOperator = context.binAndOperator().GetText();
             var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator);
-            assemblyBuilder.expressionEnd(instruction);
+            _assemblyBuilder.ExpressionEnd(instruction);
         }
 
         public override void EnterBinOrOperator(DaedalusParser.BinOrOperatorContext context)
         {
-            assemblyBuilder.expressionRightSideStart();
+            _assemblyBuilder.ExpressionRightSideStart();
         }
 
         public override void EnterBinOrExpression(DaedalusParser.BinOrExpressionContext context)
         {
-            assemblyBuilder.expressionLeftSideStart();
+            _assemblyBuilder.ExpressionLeftSideStart();
         }
 
         public override void ExitBinOrExpression(DaedalusParser.BinOrExpressionContext context)
         {
             var exprOperator = context.binOrOperator().GetText();
             var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator);
-            assemblyBuilder.expressionEnd(instruction);
+            _assemblyBuilder.ExpressionEnd(instruction);
         }
 
         public override void EnterLogAndOperator(DaedalusParser.LogAndOperatorContext context)
         {
-            assemblyBuilder.expressionRightSideStart();
+            _assemblyBuilder.ExpressionRightSideStart();
         }
 
         public override void EnterLogAndExpression(DaedalusParser.LogAndExpressionContext context)
         {
-            assemblyBuilder.expressionLeftSideStart();
+            _assemblyBuilder.ExpressionLeftSideStart();
         }
 
         public override void ExitLogAndExpression(DaedalusParser.LogAndExpressionContext context)
         {
             var exprOperator = context.logAndOperator().GetText();
             var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator);
-            assemblyBuilder.expressionEnd(instruction);
+            _assemblyBuilder.ExpressionEnd(instruction);
         }
 
         public override void EnterLogOrOperator(DaedalusParser.LogOrOperatorContext context)
         {
-            assemblyBuilder.expressionRightSideStart();
+            _assemblyBuilder.ExpressionRightSideStart();
         }
 
         public override void EnterLogOrExpression(DaedalusParser.LogOrExpressionContext context)
         {
-            assemblyBuilder.expressionLeftSideStart();
+            _assemblyBuilder.ExpressionLeftSideStart();
         }
 
         public override void ExitLogOrExpression(DaedalusParser.LogOrExpressionContext context)
         {
             var exprOperator = context.logOrOperator().GetText();
             var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator);
-            assemblyBuilder.expressionEnd(instruction);
+            _assemblyBuilder.ExpressionEnd(instruction);
         }
 
         public override void ExitOneArgExpression(DaedalusParser.OneArgExpressionContext context)
         {
             var exprOperator = context.oneArgOperator().GetText();
             var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator, false);
-            assemblyBuilder.addInstruction(instruction);
+            _assemblyBuilder.AddInstruction(instruction);
         }
 
         // TODO change return type from DatSymbolType? to DatSymbolType
-        private DatSymbolType? DatSymbolTypeFromString(string typeName)
+        private DatSymbolType DatSymbolTypeFromString(string typeName)
         {
-            if (String.IsNullOrWhiteSpace(typeName))
-                return null;
-
             string capitalizedTypeName = typeName.First().ToString().ToUpper() + typeName.Substring(1).ToLower();
 
-            DatSymbolType type;
-            if (Enum.TryParse(capitalizedTypeName, out type))
+            if (Enum.TryParse(capitalizedTypeName, out DatSymbolType type))
             {
                 return type;
             }
             else
             {
-                var symbol = assemblyBuilder.resolveSymbol(typeName);
+                var symbol = _assemblyBuilder.ResolveSymbol(typeName);
                 return symbol.Type;
             }
         }
@@ -715,7 +700,7 @@ namespace DaedalusCompiler.Compilation
         {
             return new DatSymbolLocation
             {
-                FileNumber = sourceFileNumber,
+                FileNumber = _sourceFileNumber,
                 Line = context.Start.Line,
                 LinesCount = context.Stop.Line - context.Start.Line + 1,
                 Position = context.Start.StartIndex,
