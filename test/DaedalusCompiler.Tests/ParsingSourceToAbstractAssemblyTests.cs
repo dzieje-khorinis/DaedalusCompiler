@@ -1743,7 +1743,7 @@ namespace DaedalusCompiler.Tests
             AssertSymbolsMatch();
         }
 
-        [Fact(Skip = "floats don't generate PushInt yet")]
+        [Fact]
         public void TestFloatExpressions()
         {
             _code = @"
@@ -1837,9 +1837,9 @@ namespace DaedalusCompiler.Tests
             };
             AssertSymbolsMatch();
 
-            AssertRefContentEqual("a", -10.0);
-            AssertRefContentEqual("b", 20.0);
-            AssertRefContentEqual("c", -12.5);
+            AssertRefContentEqual("a", -10.0f);
+            AssertRefContentEqual("b", 20.0f);
+            AssertRefContentEqual("testFunc.c", -12.5f);
         }
 
         [Fact]

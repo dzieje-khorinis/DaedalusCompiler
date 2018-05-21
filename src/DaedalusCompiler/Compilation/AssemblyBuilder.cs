@@ -286,6 +286,7 @@ namespace DaedalusCompiler.Compilation
         private int _labelIndexGenerator;
         private int _nextStringSymbolNumber;
         private bool _isInsideConstDefContext;
+        private bool _ignoreAddedInstructions;
 
         public AssemblyBuilder()
         {
@@ -299,21 +300,13 @@ namespace DaedalusCompiler.Compilation
             _labelIndexGenerator = 0;
             _nextStringSymbolNumber = 10000;
             _isInsideConstDefContext = false;
+            _ignoreAddedInstructions = false;
         }
 
-        public void ConstDefStart()
+        public bool IgnoreAddedInstructions
         {
-            _isInsideConstDefContext = true;
-        }
-
-        public void ConstDefEnd()
-        {
-            _isInsideConstDefContext = false;
-        }
-
-        public bool IsInsideConstDefContext()
-        {
-            return _isInsideConstDefContext;
+            get => _ignoreAddedInstructions;
+            set => _ignoreAddedInstructions = value;
         }
 
         public string NewStringSymbolName()
@@ -345,12 +338,18 @@ namespace DaedalusCompiler.Compilation
 
         public void AddInstruction(AssemblyInstruction instruction)
         {
-            _currentBuildCtx.Body.Add(instruction);
+            if (!_ignoreAddedInstructions && !_isInsideConstDefContext)
+            {
+                _currentBuildCtx.Body.Add(instruction);   
+            }
         }
 
         public void AddInstructions(IEnumerable<AssemblyElement> instructions)
         {
-            _currentBuildCtx.Body.AddRange(instructions);
+            if (!_ignoreAddedInstructions && !_isInsideConstDefContext)
+            {
+                _currentBuildCtx.Body.AddRange(instructions);
+            }
         }
 
         public void ExecBlockStart(DatSymbol symbol, ExecutebleBlockType blockType)
