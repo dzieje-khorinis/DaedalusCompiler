@@ -3,6 +3,7 @@ using DaedalusCompiler.Dat;
 using System;
 using System.Globalization;
 using System.Linq;
+using Antlr4.Runtime;
 
 namespace DaedalusCompiler.Compilation
 {
@@ -27,7 +28,7 @@ namespace DaedalusCompiler.Compilation
                 case DatSymbolType.String:
                     return EvaluateConstStringExpression(expression);
                 case DatSymbolType.Float:
-                    return EvaluateConstFloatExpression(expression);
+                    return EvaluateConstFloatExpression(expression.GetText());
                 case DatSymbolType.Int:
                     return EvaluateConstIntExpression(expression, assemblyBuilder);
                 default:
@@ -44,13 +45,31 @@ namespace DaedalusCompiler.Compilation
                 $"Unable to evaluate constant. Expression '{expression.GetText()}' contains unsupported operations.");
         }
 
-        private static float EvaluateConstFloatExpression(DaedalusParser.ExpressionContext expression)
+        public static int EvaluateFloatExpression(string value)
         {
-            if (expression is DaedalusParser.ValExpressionContext context)
-                return float.Parse(context.value().GetChild(0).GetText(), CultureInfo.InvariantCulture);
+            var parsedFloatValue = GetFloat(value);
 
-            throw new Exception(
-                $"Unable to evaluate constant. Expression '{expression.GetText()}' contains unsupported operations.");
+            return BitConverter.ToInt32(BitConverter.GetBytes(parsedFloatValue), 0);
+        }
+
+        private static float EvaluateConstFloatExpression(string value)
+        {
+            return GetFloat(value);
+        }
+
+        private static float GetFloat(string value)
+        {
+            var isCastingSuccessful = float.TryParse(value, out var parsedFloat);
+
+            if (isCastingSuccessful)
+            {
+                return parsedFloat;
+            }
+            else
+            {   
+                throw new Exception(
+                    $"Unable to evaluate constant. Expression '{value}' contains unsupported operations.");
+            }
         }
 
         private static int EvaluateConstIntExpression(DaedalusParser.ExpressionContext expression,

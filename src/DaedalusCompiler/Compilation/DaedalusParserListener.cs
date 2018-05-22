@@ -93,7 +93,7 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterConstDef([NotNull] DaedalusParser.ConstDefContext context)
         {
-            _assemblyBuilder.ConstDefStart();
+            _assemblyBuilder.IgnoreAddedInstructions = true;
             var typeName = context.typeReference().GetText();
             var type = DatSymbolTypeFromString(typeName);
 
@@ -146,7 +146,7 @@ namespace DaedalusCompiler.Compilation
 
         public override void ExitConstDef([NotNull] DaedalusParser.ConstDefContext context)
         {
-            _assemblyBuilder.ConstDefEnd();
+            _assemblyBuilder.IgnoreAddedInstructions = false;
         }
 
         public override void EnterVarDecl([NotNull] DaedalusParser.VarDeclContext context)
@@ -462,7 +462,7 @@ namespace DaedalusCompiler.Compilation
                 }
             }
 
-            var symbol = _assemblyBuilder.ResolveSymbol(symbolPart.referenceNode().GetText());
+            var symbol = GetSymbolFromComplexReferenceNode(symbolPart);
 
             if (complexReferenceNodes.Length == 2)
             {
@@ -496,6 +496,11 @@ namespace DaedalusCompiler.Compilation
             }
         }
 
+        private DatSymbol GetSymbolFromComplexReferenceNode(DaedalusParser.ComplexReferenceNodeContext complexReferenceNode)
+        {
+            return _assemblyBuilder.ResolveSymbol(complexReferenceNode.referenceNode().GetText());
+        }
+
         public override void ExitComplexReference(DaedalusParser.ComplexReferenceContext context)
         {
             var complexReferenceNodes = context.complexReferenceNode();
@@ -507,14 +512,24 @@ namespace DaedalusCompiler.Compilation
         public override void EnterAssignment(DaedalusParser.AssignmentContext context)
         {
             var complexReferenceNodes = context.complexReferenceLeftSide().complexReferenceNode();
+            var assigmentSymbol = GetSymbolFromComplexReferenceNode(complexReferenceNodes[0]);
             List<AssemblyInstruction> instructions = GetComplexReferenceNodeInstructions(complexReferenceNodes);
             _assemblyBuilder.AssigmentStart(Array.ConvertAll(instructions.ToArray(), item => (SymbolInstruction) item));
+
+            if (assigmentSymbol.Type == DatSymbolType.Float)
+            {
+                var parsedFloat = EvaluatorHelper.EvaluateFloatExpression(context.expressionBlock().GetText());
+                _assemblyBuilder.AddInstruction(new PushInt(parsedFloat));
+                _assemblyBuilder.IgnoreAddedInstructions = true;
+            }
         }
 
 
         public override void ExitAssignment(DaedalusParser.AssignmentContext context)
         {
             string assignmentOperator = context.assigmentOperator().GetText();
+
+            _assemblyBuilder.IgnoreAddedInstructions = false;
             _assemblyBuilder.AssigmentEnd(assignmentOperator);
         }
 
@@ -550,15 +565,12 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterIntegerLiteralValue(DaedalusParser.IntegerLiteralValueContext context)
         {
-            if (_assemblyBuilder.IsInsideConstDefContext() == false)
-            {
-                _assemblyBuilder.AddInstruction(new PushInt(int.Parse(context.GetText())));
-            }
+            _assemblyBuilder.AddInstruction(new PushInt(int.Parse(context.GetText())));
         }
 
         public override void EnterStringLiteralValue(DaedalusParser.StringLiteralValueContext context)
         {
-            if (_assemblyBuilder.IsInsideConstDefContext() == false)
+            if (!_assemblyBuilder.IgnoreAddedInstructions)
             {
                 DatSymbolLocation location = GetLocation(context);
                 string value = context.GetText().Replace("\"", "");
