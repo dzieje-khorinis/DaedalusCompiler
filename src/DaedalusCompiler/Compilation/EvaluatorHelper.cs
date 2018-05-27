@@ -59,7 +59,7 @@ namespace DaedalusCompiler.Compilation
 
         private static float GetFloat(string value)
         {
-            var isCastingSuccessful = float.TryParse(value, out var parsedFloat);
+            var isCastingSuccessful = float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedFloat);
 
             if (isCastingSuccessful)
             {
