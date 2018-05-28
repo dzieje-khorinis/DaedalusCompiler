@@ -90,6 +90,8 @@ namespace DaedalusCompiler.Compilation
             var symbol = new DatSymbol
             {
                 Name = name,
+                Type = DatSymbolType.Func,
+                Flags = DatSymbolFlag.Const,
                 ReturnType = returnType,
                 Parent = -1,
             };

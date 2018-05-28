@@ -174,11 +174,11 @@ namespace DaedalusCompiler.Compilation
         }
     }
 
-    public class PushArrVar : SymbolInstruction
+    public class PushArrayVar : SymbolInstruction
     {
         public readonly int Index;
 
-        public PushArrVar(DatSymbol symbol, int index) : base(symbol)
+        public PushArrayVar(DatSymbol symbol, int index) : base(symbol)
         {
             Index = index;
         }
@@ -285,8 +285,7 @@ namespace DaedalusCompiler.Compilation
         private FuncArgsBodyContext _funcArgsBodyCtx;
         private int _labelIndexGenerator;
         private int _nextStringSymbolNumber;
-        private bool _isInsideConstDefContext;
-        private bool _ignoreAddedInstructions;
+        public bool IgnoreAddedInstructions;
 
         public AssemblyBuilder()
         {
@@ -299,19 +298,17 @@ namespace DaedalusCompiler.Compilation
             _funcArgsBodyCtx = new FuncArgsBodyContext(null);
             _labelIndexGenerator = 0;
             _nextStringSymbolNumber = 10000;
-            _isInsideConstDefContext = false;
-            _ignoreAddedInstructions = false;
-        }
-
-        public bool IgnoreAddedInstructions
-        {
-            get => _ignoreAddedInstructions;
-            set => _ignoreAddedInstructions = value;
+            IgnoreAddedInstructions = false;
         }
 
         public string NewStringSymbolName()
         {
             return $"{(char) 255}{_nextStringSymbolNumber++}";
+        }
+
+        public DatSymbol GetCurrentSymbol()
+        {
+            return _active.Symbol;
         }
 
         public List<DatSymbol> GetAllSymbols()
@@ -338,15 +335,15 @@ namespace DaedalusCompiler.Compilation
 
         public void AddInstruction(AssemblyInstruction instruction)
         {
-            if (!_ignoreAddedInstructions && !_isInsideConstDefContext)
+            if (!IgnoreAddedInstructions)
             {
-                _currentBuildCtx.Body.Add(instruction);   
+                _currentBuildCtx.Body.Add(instruction);
             }
         }
 
         public void AddInstructions(IEnumerable<AssemblyElement> instructions)
         {
-            if (!_ignoreAddedInstructions && !_isInsideConstDefContext)
+            if (!IgnoreAddedInstructions)
             {
                 _currentBuildCtx.Body.AddRange(instructions);
             }
@@ -697,9 +694,8 @@ namespace DaedalusCompiler.Compilation
 
         public void SaveToDat()
         {
-            // todo finish
-            var datFile = AssemblyBuilderToDat.GetDatFile(ExecBlocks, GetAllSymbols());
-
+            DatBuilder datBuilder = new DatBuilder(this);
+            DatFile datFile = datBuilder.GetDatFile();
             datFile.Save("./test.dat");
         }
     }

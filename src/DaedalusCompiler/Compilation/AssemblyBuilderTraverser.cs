@@ -52,7 +52,7 @@ namespace DaedalusCompiler.Compilation
             {
                 _buildAcc += $"PushVar {pushVarElement.Symbol.Name}\n";
             }
-            else if (element is PushArrVar pushArrVarElement)
+            else if (element is PushArrayVar pushArrVarElement)
             {
                 _buildAcc += $"PushArrVar {pushArrVarElement.Symbol.Name}[{pushArrVarElement.Index}]\n";
             }
