@@ -50,8 +50,7 @@ namespace DaedalusCompiler.Compilation
                         _currentAddress += 1;
                         break;
                     }
-                    
-                    
+
 
                     case AssemblyLabel assemblyLabel:
                     {
@@ -75,8 +74,8 @@ namespace DaedalusCompiler.Compilation
                 {
                     continue;
                 }
-                
-                
+
+
                 int? intParam = null;
                 byte? byteParam = null;
                 switch (instruction)
@@ -109,12 +108,13 @@ namespace DaedalusCompiler.Compilation
                     }
                 }
 
-                
+
                 string tokenName = instruction.GetType().Name;
-                if (tokenName.EndsWith("ToLabel"))
+                if (instruction is JumpToLabel)
                 {
                     tokenName = tokenName.Substring(0, tokenName.Length - "ToLabel".Length);
                 }
+
                 DatTokenType datTokenType = Enum.Parse<DatTokenType>(tokenName);
                 tokens.Add(new DatToken {TokenType = datTokenType, IntParam = intParam, ByteParam = byteParam});
             }
@@ -127,7 +127,7 @@ namespace DaedalusCompiler.Compilation
             List<DatToken> tokens = new List<DatToken>();
             foreach (var execBlock in _execBlocks)
             {
-                execBlock.Symbol.Content = new object[] { _currentAddress };
+                execBlock.Symbol.Content = new object[] {_currentAddress};
                 tokens.AddRange(GetTokens(execBlock));
             }
 
