@@ -104,14 +104,14 @@ namespace DaedalusCompiler.Tests
                         ((SymbolInstruction) instruction).Symbol
                     );
                     break;
-                case PushArrVar pushArrVarInstruction:
+                case PushArrayVar pushArrVarInstruction:
                 {
                     Assert.Equal(
                         ((SymbolInstruction) expectedInstruction).Symbol,
                         ((SymbolInstruction) instruction).Symbol
                     );
                     Assert.Equal(
-                        ((PushArrVar) expectedInstruction).Index,
+                        ((PushArrayVar) expectedInstruction).Index,
                         pushArrVarInstruction.Index
                     );
                     break;
@@ -1005,17 +1005,17 @@ namespace DaedalusCompiler.Tests
 
                 // tab[1] = 3;
                 new PushInt(3),
-                new PushArrVar(Ref("tab"), 1),
+                new PushArrayVar(Ref("tab"), 1),
                 new Assign(),
 
                 // tab[2] = x;
                 new PushVar(Ref("x")),
-                new PushArrVar(Ref("tab"), 2),
+                new PushArrayVar(Ref("tab"), 2),
                 new Assign(),
 
                 // x = tab[0] + tab[1] * tab[2];
-                new PushArrVar(Ref("tab"), 2),
-                new PushArrVar(Ref("tab"), 1),
+                new PushArrayVar(Ref("tab"), 2),
+                new PushArrayVar(Ref("tab"), 1),
                 new Multiply(),
                 new PushVar(Ref("tab")),
                 new Add(),
@@ -1071,17 +1071,17 @@ namespace DaedalusCompiler.Tests
 
                 // tab[INDEX_ONE] = 3;
                 new PushInt(3),
-                new PushArrVar(Ref("tab"), 1),
+                new PushArrayVar(Ref("tab"), 1),
                 new Assign(),
 
                 //  tab[INDEX_TWO] = x;
                 new PushVar(Ref("x")),
-                new PushArrVar(Ref("tab"), 2),
+                new PushArrayVar(Ref("tab"), 2),
                 new Assign(),
 
                 // x = tab[INDEX_ZERO] + tab[INDEX_ONE] * tab[INDEX_TWO];
-                new PushArrVar(Ref("tab"), 2),
-                new PushArrVar(Ref("tab"), 1),
+                new PushArrayVar(Ref("tab"), 2),
+                new PushArrayVar(Ref("tab"), 1),
                 new Multiply(),
                 new PushVar(Ref("tab")),
                 new Add(),
@@ -1140,17 +1140,17 @@ namespace DaedalusCompiler.Tests
 
                 // tab[INDEX_ONE] = 3;
                 new PushInt(3),
-                new PushArrVar(Ref("tab"), 1),
+                new PushArrayVar(Ref("tab"), 1),
                 new Assign(),
 
                 //  tab[INDEX_TWO] = x;
                 new PushVar(Ref("x")),
-                new PushArrVar(Ref("tab"), 2),
+                new PushArrayVar(Ref("tab"), 2),
                 new Assign(),
 
                 // x = tab[INDEX_ZERO] + tab[INDEX_ONE] * tab[INDEX_TWO];
-                new PushArrVar(Ref("tab"), 2),
-                new PushArrVar(Ref("tab"), 1),
+                new PushArrayVar(Ref("tab"), 2),
+                new PushArrayVar(Ref("tab"), 1),
                 new Multiply(),
                 new PushVar(Ref("tab")),
                 new Add(),
@@ -1212,17 +1212,17 @@ namespace DaedalusCompiler.Tests
 
                 // tab[1] = 3;
                 new PushInt(3),
-                new PushArrVar(Ref("testFunc.tab"), 1),
+                new PushArrayVar(Ref("testFunc.tab"), 1),
                 new Assign(),
 
                 // tab[2] = x;
                 new PushVar(Ref("testFunc.x")),
-                new PushArrVar(Ref("testFunc.tab"), 2),
+                new PushArrayVar(Ref("testFunc.tab"), 2),
                 new Assign(),
 
                 // x = tab[0] + tab[1] * tab[2];
-                new PushArrVar(Ref("testFunc.tab"), 2),
-                new PushArrVar(Ref("testFunc.tab"), 1),
+                new PushArrayVar(Ref("testFunc.tab"), 2),
+                new PushArrayVar(Ref("testFunc.tab"), 1),
                 new Multiply(),
                 new PushVar(Ref("testFunc.tab")),
                 new Add(),

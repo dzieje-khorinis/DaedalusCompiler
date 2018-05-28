@@ -331,6 +331,7 @@ namespace DaedalusCompiler.Compilation
         {
             // we invoke execBlockEnd, thanks that ab will assign all instructions
             // to currently exited function
+            _assemblyBuilder.GetCurrentSymbol().Location = GetLocation(context);
             _assemblyBuilder.AddInstruction(new Ret());
             _assemblyBuilder.ExecBlockEnd();
         }
@@ -483,7 +484,7 @@ namespace DaedalusCompiler.Compilation
                 {
                     return new List<AssemblyInstruction>
                     {
-                        new PushArrVar(symbol, arrIndex)
+                        new PushArrayVar(symbol, arrIndex)
                     };
                 }
                 else
