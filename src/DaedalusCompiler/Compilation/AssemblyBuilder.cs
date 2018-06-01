@@ -285,7 +285,7 @@ namespace DaedalusCompiler.Compilation
         private FuncArgsBodyContext _funcArgsBodyCtx;
         private int _labelIndexGenerator;
         private int _nextStringSymbolNumber;
-        public bool IgnoreAddedInstructions;
+        public bool IsInsideEvalableStatement;
 
         public AssemblyBuilder()
         {
@@ -298,7 +298,7 @@ namespace DaedalusCompiler.Compilation
             _funcArgsBodyCtx = new FuncArgsBodyContext(null);
             _labelIndexGenerator = 0;
             _nextStringSymbolNumber = 10000;
-            IgnoreAddedInstructions = false;
+            IsInsideEvalableStatement = false;
         }
 
         public string NewStringSymbolName()
@@ -335,18 +335,12 @@ namespace DaedalusCompiler.Compilation
 
         public void AddInstruction(AssemblyInstruction instruction)
         {
-            if (!IgnoreAddedInstructions)
-            {
-                _currentBuildCtx.Body.Add(instruction);
-            }
+            _currentBuildCtx.Body.Add(instruction);
         }
 
         public void AddInstructions(IEnumerable<AssemblyElement> instructions)
         {
-            if (!IgnoreAddedInstructions)
-            {
-                _currentBuildCtx.Body.AddRange(instructions);
-            }
+            _currentBuildCtx.Body.AddRange(instructions);
         }
 
         public void ExecBlockStart(DatSymbol symbol, ExecutebleBlockType blockType)
@@ -392,7 +386,10 @@ namespace DaedalusCompiler.Compilation
             var assignmentInstruction =
                 AssemblyBuilderHelpers.GetInstructionForOperator(assignmentOperator, true, operationType);
 
-            AddInstructions(_assignmentLeftSide.ToArray());
+            if (!IsInsideEvalableStatement)
+            {
+                AddInstructions(_assignmentLeftSide.ToArray());   
+            }
             _assignmentLeftSide = new List<SymbolInstruction>();
             AddInstruction(assignmentInstruction);
         }

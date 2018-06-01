@@ -93,7 +93,7 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterConstDef([NotNull] DaedalusParser.ConstDefContext context)
         {
-            _assemblyBuilder.IgnoreAddedInstructions = true;
+            _assemblyBuilder.IsInsideEvalableStatement = true;
             var typeName = context.typeReference().GetText();
             var type = DatSymbolTypeFromString(typeName);
 
@@ -146,7 +146,7 @@ namespace DaedalusCompiler.Compilation
 
         public override void ExitConstDef([NotNull] DaedalusParser.ConstDefContext context)
         {
-            _assemblyBuilder.IgnoreAddedInstructions = false;
+            _assemblyBuilder.IsInsideEvalableStatement = false;
         }
 
         public override void EnterVarDecl([NotNull] DaedalusParser.VarDeclContext context)
@@ -506,7 +506,11 @@ namespace DaedalusCompiler.Compilation
         {
             var complexReferenceNodes = context.complexReferenceNode();
             List<AssemblyInstruction> instructions = GetComplexReferenceNodeInstructions(complexReferenceNodes);
-            _assemblyBuilder.AddInstructions(instructions.ToArray());
+
+            if (!_assemblyBuilder.IsInsideEvalableStatement)
+            {
+                _assemblyBuilder.AddInstructions(instructions.ToArray());   
+            }
         }
 
 
@@ -521,7 +525,7 @@ namespace DaedalusCompiler.Compilation
             {
                 var parsedFloat = EvaluatorHelper.EvaluateFloatExpression(context.expressionBlock().GetText());
                 _assemblyBuilder.AddInstruction(new PushInt(parsedFloat));
-                _assemblyBuilder.IgnoreAddedInstructions = true;
+                _assemblyBuilder.IsInsideEvalableStatement = true; // we invoke here 
             }
         }
 
@@ -530,7 +534,7 @@ namespace DaedalusCompiler.Compilation
         {
             string assignmentOperator = context.assigmentOperator().GetText();
 
-            _assemblyBuilder.IgnoreAddedInstructions = false;
+            _assemblyBuilder.IsInsideEvalableStatement = false;
             _assemblyBuilder.AssigmentEnd(assignmentOperator);
         }
 
@@ -566,12 +570,15 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterIntegerLiteralValue(DaedalusParser.IntegerLiteralValueContext context)
         {
-            _assemblyBuilder.AddInstruction(new PushInt(int.Parse(context.GetText())));
+            if (!_assemblyBuilder.IsInsideEvalableStatement)
+            {
+                _assemblyBuilder.AddInstruction(new PushInt(int.Parse(context.GetText())));   
+            }
         }
 
         public override void EnterStringLiteralValue(DaedalusParser.StringLiteralValueContext context)
         {
-            if (!_assemblyBuilder.IgnoreAddedInstructions)
+            if (!_assemblyBuilder.IsInsideEvalableStatement)
             {
                 DatSymbolLocation location = GetLocation(context);
                 string value = context.GetText().Replace("\"", "");
@@ -690,7 +697,11 @@ namespace DaedalusCompiler.Compilation
         {
             var exprOperator = context.oneArgOperator().GetText();
             var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator, false);
-            _assemblyBuilder.AddInstruction(instruction);
+
+            if (!_assemblyBuilder.IsInsideEvalableStatement)
+            {
+                _assemblyBuilder.AddInstruction(instruction);   
+            }
         }
 
         // TODO change return type from DatSymbolType? to DatSymbolType
