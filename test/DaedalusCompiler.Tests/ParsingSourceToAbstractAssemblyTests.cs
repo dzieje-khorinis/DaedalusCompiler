@@ -46,12 +46,7 @@ namespace DaedalusCompiler.Tests
         {
             _parsed = true;
 
-            AntlrInputStream inputStream = new AntlrInputStream(_code);
-            DaedalusLexer lexer = new DaedalusLexer(inputStream);
-            CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
-            DaedalusParser parser = new DaedalusParser(commonTokenStream);
-
-            ParseTreeWalker.Default.Walk(new DaedalusParserListener(_assemblyBuilder, 0), parser.daedalusFile());
+            Utils.WalkSourceCode(_code, _assemblyBuilder);
         }
 
         private void AssertRefContentEqual(string symbolName, object expectedValue)

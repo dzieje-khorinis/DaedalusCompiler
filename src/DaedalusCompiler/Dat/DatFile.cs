@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace DaedalusCompiler.Dat
 {
@@ -16,15 +17,28 @@ namespace DaedalusCompiler.Dat
 
         public IEnumerable<DatToken> Tokens { get; set; }
 
+        private void Load(Stream stream)
+        {
+            var reader = new DatBinaryReader(stream);
+
+            Version = reader.ReadChar();
+            Symbols = LoadSymbols(reader);
+            Tokens = LoadTokens(reader);
+        }
+        
         public void Load(string path)
         {
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
             {
-                var reader = new DatBinaryReader(stream);
+                Load(stream);
+            }
+        }
 
-                Version = reader.ReadChar();
-                Symbols = LoadSymbols(reader);
-                Tokens = LoadTokens(reader);
+        public void Load(byte[] bytes)
+        {
+            using (var stream = new MemoryStream(bytes))
+            {
+                Load(stream);
             }
         }
 
@@ -34,9 +48,26 @@ namespace DaedalusCompiler.Dat
             {
                 var writer = new DatBinaryWriter(stream);
 
-                writer.Write(Version);
-                SaveSymbols(writer, Symbols);
-                SaveTokens(writer, Tokens);
+                writeToStreamProgram(writer);
+            }
+        }
+
+        private void writeToStreamProgram(DatBinaryWriter writer)
+        {
+            writer.Write(Version);
+            SaveSymbols(writer, Symbols);
+            SaveTokens(writer, Tokens);
+        }
+
+        public byte[] getBinary()
+        {
+            using (var stream = new MemoryStream())
+            {
+                var writer = new DatBinaryWriter(stream);
+                
+                writeToStreamProgram(writer);
+
+                return stream.ToArray();
             }
         }
 
