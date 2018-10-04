@@ -136,7 +136,7 @@ namespace DaedalusCompiler.Dat
                         writer.Write((string)obj);
                         break;
                     case DatSymbolType.Float:
-                        writer.Write((float)obj);
+                        writer.Write(Convert.ToSingle(obj));
                         break;
                     default:
                         writer.Write((int)obj);
