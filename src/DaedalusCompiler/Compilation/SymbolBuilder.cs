@@ -87,11 +87,17 @@ namespace DaedalusCompiler.Compilation
 
         public static DatSymbol BuildFunc(string name, [NotNull] DatSymbolType returnType)
         {
+            DatSymbolFlag Flags = DatSymbolFlag.Const;
+            if (returnType != DatSymbolType.Void)
+            {
+                Flags |= DatSymbolFlag.Return;
+            }
+            
             var symbol = new DatSymbol
             {
                 Name = name,
                 Type = DatSymbolType.Func,
-                Flags = DatSymbolFlag.Const,
+                Flags = Flags,
                 ReturnType = returnType,
                 Parent = -1,
             };

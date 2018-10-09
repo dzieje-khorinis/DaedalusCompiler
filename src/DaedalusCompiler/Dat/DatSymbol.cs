@@ -48,7 +48,7 @@ namespace DaedalusCompiler.Dat
         public DatSymbolType Type { get; set; }
 
         /// <summary>
-        /// Symbol flags ex. 'const' or 'return'
+        /// Symbol flags ex. 'const' or 'return' or 'const, external, return'
         /// </summary>
         public DatSymbolFlag Flags { get; set; }
 
