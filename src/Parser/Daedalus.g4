@@ -34,7 +34,7 @@ constDef: Const typeReference (constValueDef | constArrayDef) (',' (constValueDe
 classDef: Class nameNode '{' ( varDecl ';' )*? '}';
 prototypeDef: Prototype nameNode '(' referenceNode ')' statementBlock;
 instanceDef: Instance nameNode '(' referenceNode ')' statementBlock;
-instanceDecl: Instance nameNode ( ',' referenceNode )*? '(' nameNode ')';
+instanceDecl: Instance nameNode ( ',' nameNode )*? '(' referenceNode ')';
 varDecl: Var typeReference (varValueDecl | varArrayDecl) (',' (varValueDecl | varArrayDecl) )* ;
 
 constArrayDef: nameNode '[' simpleValue ']' constArrayAssignment;

@@ -581,11 +581,8 @@ public partial class DaedalusParser : Parser {
 		public NameNodeContext nameNode(int i) {
 			return GetRuleContext<NameNodeContext>(i);
 		}
-		public ReferenceNodeContext[] referenceNode() {
-			return GetRuleContexts<ReferenceNodeContext>();
-		}
-		public ReferenceNodeContext referenceNode(int i) {
-			return GetRuleContext<ReferenceNodeContext>(i);
+		public ReferenceNodeContext referenceNode() {
+			return GetRuleContext<ReferenceNodeContext>(0);
 		}
 		public InstanceDeclContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
@@ -620,7 +617,7 @@ public partial class DaedalusParser : Parser {
 					{
 					{
 					State = 163; Match(T__1);
-					State = 164; referenceNode();
+					State = 164; nameNode();
 					}
 					} 
 				}
@@ -629,7 +626,7 @@ public partial class DaedalusParser : Parser {
 				_alt = Interpreter.AdaptivePredict(TokenStream,6,Context);
 			}
 			State = 170; Match(T__4);
-			State = 171; nameNode();
+			State = 171; referenceNode();
 			State = 172; Match(T__5);
 			}
 		}
@@ -3461,12 +3458,12 @@ public partial class DaedalusParser : Parser {
 		'\xA0', '\xA1', '\a', '\b', '\x2', '\x2', '\xA1', '\xA2', '\x5', '\"', 
 		'\x12', '\x2', '\xA2', '\r', '\x3', '\x2', '\x2', '\x2', '\xA3', '\xA4', 
 		'\a', '\x30', '\x2', '\x2', '\xA4', '\xA9', '\x5', 'H', '%', '\x2', '\xA5', 
-		'\xA6', '\a', '\x4', '\x2', '\x2', '\xA6', '\xA8', '\x5', 'J', '&', '\x2', 
+		'\xA6', '\a', '\x4', '\x2', '\x2', '\xA6', '\xA8', '\x5', 'H', '%', '\x2', 
 		'\xA7', '\xA5', '\x3', '\x2', '\x2', '\x2', '\xA8', '\xAB', '\x3', '\x2', 
 		'\x2', '\x2', '\xA9', '\xAA', '\x3', '\x2', '\x2', '\x2', '\xA9', '\xA7', 
 		'\x3', '\x2', '\x2', '\x2', '\xAA', '\xAC', '\x3', '\x2', '\x2', '\x2', 
 		'\xAB', '\xA9', '\x3', '\x2', '\x2', '\x2', '\xAC', '\xAD', '\a', '\a', 
-		'\x2', '\x2', '\xAD', '\xAE', '\x5', 'H', '%', '\x2', '\xAE', '\xAF', 
+		'\x2', '\x2', '\xAD', '\xAE', '\x5', 'J', '&', '\x2', '\xAE', '\xAF', 
 		'\a', '\b', '\x2', '\x2', '\xAF', '\xF', '\x3', '\x2', '\x2', '\x2', '\xB0', 
 		'\xB1', '\a', '%', '\x2', '\x2', '\xB1', '\xB4', '\x5', '\x46', '$', '\x2', 
 		'\xB2', '\xB5', '\x5', '\x1C', '\xF', '\x2', '\xB3', '\xB5', '\x5', '\x1A', 
