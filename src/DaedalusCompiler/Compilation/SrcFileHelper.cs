@@ -39,25 +39,21 @@ namespace DaedalusCompiler.Compilation
         {
             List<string> result = new List<string>();
 
-            foreach (var l in srcLines.Where(x => String.IsNullOrWhiteSpace(x) == false))
+            foreach (string line in srcLines.Where(x => String.IsNullOrWhiteSpace(x) == false))
             {
                 try
                 {
-                    var containsWildcard = l.Contains("*");
-                    var fullPath = Path.Combine(basePath, l).Replace('*', 'x').Trim();
-                    var pathExtension = Path.GetExtension(fullPath).ToLower();
+                    bool containsWildcard = line.Contains("*");
+                    string fullPath = Path.Combine(basePath, line).Trim();
+                    string pathExtension = Path.GetExtension(fullPath).ToLower();
 
                     if (containsWildcard && pathExtension == ".d")
                     {
-                        var dirPath = Path.GetDirectoryName(fullPath);
-                        var dirFiles = Directory.GetFiles(dirPath);
-                        var wildcardMath = fullPath.Substring(0, fullPath.Length - 3);
-
-                        var matchFiles = dirFiles
-                            .Where(x => Path.GetExtension(x).ToLower() == ".d" &&
-                                        x.IndexOf(wildcardMath, StringComparison.Ordinal) == 0);
-
-                        result.AddRange(matchFiles);
+                        string dirPath = Path.GetDirectoryName(fullPath);
+                        string filenamePattern = Path.GetFileName(fullPath);
+                        
+                        string[] fileNames = Directory.GetFiles(dirPath, filenamePattern);
+                        result.AddRange(fileNames);
                     }
                     else if (pathExtension == ".d")
                     {
@@ -74,7 +70,7 @@ namespace DaedalusCompiler.Compilation
                 }
                 catch (Exception exc)
                 {
-                    throw new Exception($"Invalid line {Array.IndexOf(srcLines, l) + 1}: '{l}'", exc);
+                    throw new Exception($"Invalid line {Array.IndexOf(srcLines, line) + 1}: '{line}'", exc);
                 }
             }
 
