@@ -10,12 +10,12 @@ namespace DaedalusCompiler.Dat
     public enum DatTokenType : byte
     {
         Add = 0,
-        Subract = 1,
+        Subtract = 1,
         Multiply = 2,
         Divide = 3,
-        Mod = 4,
-        BinOr = 5,
-        BinAnd = 6,
+        Modulo = 4,
+        BitOr = 5,
+        BitAnd = 6,
         Less = 7,
         Greater = 8,
         Assign = 9,

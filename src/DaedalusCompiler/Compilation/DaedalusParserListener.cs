@@ -33,7 +33,7 @@ namespace DaedalusCompiler.Compilation
                 var assignInstruction =
                     AssemblyBuilderHelpers.GetAssignInstructionForDatSymbolType(parameterSymbol.Type);
 
-                if (parameterSymbol.Type is DatSymbolType.Class)
+                if (parameterSymbol.Type is DatSymbolType.Instance)
                 {
                     _assemblyBuilder.AddInstruction(new PushInstance(parameterSymbol));
                 }
@@ -56,11 +56,12 @@ namespace DaedalusCompiler.Compilation
             int parentId = -1;
 
             string parameterTypeName = context.typeReference().GetText();
-            DatSymbolType? parameterType = DatSymbolTypeFromString(parameterTypeName);
+            DatSymbolType? parameterType = DatSymbolTypeFromString(parameterTypeName);     
             if (parameterType is DatSymbolType.Class)
             {
+                parameterType = DatSymbolType.Instance;
                 var parentSymbol = _assemblyBuilder.ResolveSymbol(parameterTypeName);
-                parentId = _assemblyBuilder.GetSymbolId(parentSymbol);
+                parentId = parentSymbol.Index;
             }
 
             DatSymbol symbol;
@@ -96,7 +97,11 @@ namespace DaedalusCompiler.Compilation
             _assemblyBuilder.IsInsideEvalableStatement = true;
             var typeName = context.typeReference().GetText();
             var type = DatSymbolTypeFromString(typeName);
-
+            if (type == DatSymbolType.Func)
+            {
+                type = DatSymbolType.Int;
+            }
+            
             for (int i = 0; i < context.ChildCount; i++)
             {
                 var constContext = context.GetChild(i);
@@ -155,7 +160,11 @@ namespace DaedalusCompiler.Compilation
             {
                 var typeName = context.typeReference().GetText();
                 var type = DatSymbolTypeFromString(typeName);
-
+                if (type == DatSymbolType.Class)
+                {
+                    type = DatSymbolType.Instance;
+                }
+                
                 for (int i = 0; i < context.ChildCount; i++)
                 {
                     var varContext = context.GetChild(i);
@@ -182,11 +191,10 @@ namespace DaedalusCompiler.Compilation
                         if (parameterType is DatSymbolType.Class)
                         {
                             var parentSymbol = _assemblyBuilder.ResolveSymbol(parameterTypeName);
-                            parentId = _assemblyBuilder.GetSymbolId(parentSymbol);
+                            parentId = parentSymbol.Index;
                         }
 
-                        var symbol =
-                            SymbolBuilder.BuildVariable(name, type, location, parentId); // TODO : Validate params
+                        var symbol = SymbolBuilder.BuildVariable(name, type, location, parentId); // TODO : Validate params
                         _assemblyBuilder.AddSymbol(symbol);
                     }
 
@@ -211,7 +219,7 @@ namespace DaedalusCompiler.Compilation
             var classSymbol = SymbolBuilder.BuildClass(className, 0, 0, GetLocation(context));
             _assemblyBuilder.AddSymbol(classSymbol);
 
-            var classId = _assemblyBuilder.GetSymbolId(classSymbol);
+            var classId = classSymbol.Index;
             int classVarOffset = 0;
             uint classLength = 0;
 
@@ -266,13 +274,10 @@ namespace DaedalusCompiler.Compilation
             var prototypeName = context.nameNode().GetText();
             var referenceName = context.referenceNode().GetText();
             var refSymbol = _assemblyBuilder.GetSymbolByName(referenceName);
-            var referenceSymbolId = _assemblyBuilder.GetSymbolId(refSymbol);
+            var referenceSymbolId = refSymbol.Index;
             var location = GetLocation(context);
 
-            var firstTokenAddress = 0; // TODO: Populate first token addres
-            var prototypeSymbol =
-                SymbolBuilder.BuildPrototype(prototypeName, referenceSymbolId, firstTokenAddress,
-                    location); // TODO: Validate params
+            var prototypeSymbol = SymbolBuilder.BuildPrototype(prototypeName, referenceSymbolId, location); // TODO: Validate params
             _assemblyBuilder.AddSymbol(prototypeSymbol);
 
             _assemblyBuilder.ExecBlockStart(prototypeSymbol, ExecutebleBlockType.PrototypeConstructor);
@@ -291,13 +296,10 @@ namespace DaedalusCompiler.Compilation
             var instanceName = context.nameNode().GetText();
             var referenceName = context.referenceNode().GetText();
             var refSymbol = _assemblyBuilder.GetSymbolByName(referenceName);
-            var referenceSymbolId = _assemblyBuilder.GetSymbolId(refSymbol);
+            var referenceSymbolId = refSymbol.Index;
             var location = GetLocation(context);
 
-            var firstTokenAddress = 0; // TODO: Populate first token addres
-            var prototypeSymbol =
-                SymbolBuilder.BuildPrototype(instanceName, referenceSymbolId, firstTokenAddress,
-                    location); // TODO: Validate params, actually should be BuildInstance
+            var prototypeSymbol = SymbolBuilder.BuildPrototype(instanceName, referenceSymbolId, location); // TODO: Validate params, actually should be BuildInstance
             _assemblyBuilder.AddSymbol(prototypeSymbol);
 
             _assemblyBuilder.ExecBlockStart(prototypeSymbol, ExecutebleBlockType.InstanceConstructor);
@@ -307,7 +309,7 @@ namespace DaedalusCompiler.Compilation
                 _assemblyBuilder.AddInstruction(new Call(refSymbol));
             }
         }
-
+     
         public override void ExitInstanceDef(DaedalusParser.InstanceDefContext context)
         {
             // we invoke execBlockEnd, thanks that ab will assign all instructions
@@ -315,14 +317,30 @@ namespace DaedalusCompiler.Compilation
             _assemblyBuilder.AddInstruction(new Ret());
             _assemblyBuilder.ExecBlockEnd();
         }
+        
+        public override void EnterInstanceDecl(DaedalusParser.InstanceDeclContext context)
+        {
+            var referenceName = context.referenceNode().GetText();
+            var refSymbol = _assemblyBuilder.GetSymbolByName(referenceName);
+            var referenceSymbolId = refSymbol.Index;
+            var location = GetLocation(context);
+            
+            for (int i = 0; i < context.nameNode().Length; ++i)
+            {
+                string instanceName = context.nameNode()[i].GetText();
+                DatSymbol instanceSymbol = SymbolBuilder.BuildInstance(instanceName, referenceSymbolId, location); // TODO: Validate params
+                _assemblyBuilder.AddSymbol(instanceSymbol);
+            }
+        }
 
         public override void EnterFunctionDef([NotNull] DaedalusParser.FunctionDefContext context)
         {
             var name = context.nameNode().GetText();
             var typeName = context.typeReference().GetText();
             var type = DatSymbolTypeFromString(typeName);
+            uint parametersCount = (uint)context.parameterList().parameterDecl().Length;
 
-            var symbol = SymbolBuilder.BuildFunc(name, type); // TODO : Validate params
+            var symbol = SymbolBuilder.BuildFunc(name, parametersCount, type); // TODO : Validate params
             _assemblyBuilder.AddSymbol(symbol);
             _assemblyBuilder.ExecBlockStart(symbol, ExecutebleBlockType.Function);
         }
@@ -336,9 +354,15 @@ namespace DaedalusCompiler.Compilation
             _assemblyBuilder.ExecBlockEnd();
         }
 
+        public override void EnterReturnStatement([NotNull] DaedalusParser.ReturnStatementContext context)
+        {
+            _assemblyBuilder.IsInsideReturnStatement = true;
+        }
+        
         public override void ExitReturnStatement([NotNull] DaedalusParser.ReturnStatementContext context)
         {
             _assemblyBuilder.AddInstruction(new Ret());
+            _assemblyBuilder.IsInsideReturnStatement = false;
         }
 
         public override void EnterIfBlockStatement(DaedalusParser.IfBlockStatementContext context)
@@ -385,9 +409,15 @@ namespace DaedalusCompiler.Compilation
             _assemblyBuilder.ConditionalBlockBodyEnd();
         }
 
+        public override void EnterIfCondition(DaedalusParser.IfConditionContext context)
+        {
+            _assemblyBuilder.IsInsideIfCondition = true;
+        }
+        
         public override void ExitIfCondition(DaedalusParser.IfConditionContext context)
         {
             _assemblyBuilder.ConditionalBlockConditionEnd();
+            _assemblyBuilder.IsInsideIfCondition = false;
         }
 
         public override void EnterBitMoveOperator(DaedalusParser.BitMoveOperatorContext context)
@@ -441,20 +471,68 @@ namespace DaedalusCompiler.Compilation
             _assemblyBuilder.ExpressionRightSideStart();
         }
 
-
-        private List<AssemblyInstruction> GetComplexReferenceNodeInstructions(
-            DaedalusParser.ComplexReferenceNodeContext[] complexReferenceNodes)
+        public AssemblyInstruction PushSymbol(DatSymbol symbol, DatSymbolType? asType=null)
         {
-            var symbolPart = complexReferenceNodes[0];
+            if (asType == DatSymbolType.Func || (asType == DatSymbolType.Int && symbol.Type != DatSymbolType.Int))
+            {
+                return new PushInt(symbol.Index);
+            }
 
+            if (symbol.Type == DatSymbolType.Instance || asType == DatSymbolType.Instance)  /* DatSymbolType.Class isn't possible */
+            {
+                return new PushInstance(symbol);
+            }
+            return new PushVar(symbol);
+        }
+
+        public AssemblyInstruction GetProperPushInstruction(DatSymbol symbol, int arrIndex)
+        {
+            ExecBlock activeBlock = _assemblyBuilder.ActiveExecBlock;
+            bool isInsideArgList = _assemblyBuilder.IsInsideArgList;
+            bool isInsideAssignment = _assemblyBuilder.IsInsideAssignment;
+            bool isInsideIfCondition = _assemblyBuilder.IsInsideIfCondition;
+            bool isInsideReturnStatement = _assemblyBuilder.IsInsideReturnStatement;
+            
+            if (arrIndex > 0)
+            {
+                return new PushArrayVar(symbol, arrIndex);
+            }
+            
+            if (isInsideArgList)
+            {
+                return PushSymbol(symbol, _assemblyBuilder.GetParameterType());
+            }
+            
+            if (isInsideReturnStatement && activeBlock != null)
+            {
+                return PushSymbol(symbol, activeBlock.Symbol.ReturnType);
+            }
+            
+            if (isInsideAssignment)
+            {
+                return PushSymbol(symbol, _assemblyBuilder.AssignmentType);
+            }
+            
+            if (isInsideIfCondition)
+            {
+                return PushSymbol(symbol, DatSymbolType.Int);
+            }
+
+            return PushSymbol(symbol);
+        }
+        
+        public int GetArrayIndex(DaedalusParser.ComplexReferenceNodeContext context)
+        {
+            var simpleValueContext = context.simpleValue();
+            
+            
             int arrIndex = 0;
-            var simpleValueContext = symbolPart.simpleValue();
             if (simpleValueContext != null)
             {
                 if (!int.TryParse(simpleValueContext.GetText(), out arrIndex))
                 {
                     var constSymbol = _assemblyBuilder.ResolveSymbol(simpleValueContext.GetText());
-                    if (constSymbol.Flags != DatSymbolFlag.Const || constSymbol.Type != DatSymbolType.Int)
+                    if (!constSymbol.Flags.HasFlag(DatSymbolFlag.Const) || constSymbol.Type != DatSymbolType.Int)
                     {
                         throw new Exception($"Expected integer constant: {simpleValueContext.GetText()}");
                     }
@@ -463,43 +541,77 @@ namespace DaedalusCompiler.Compilation
                 }
             }
 
-            var symbol = GetSymbolFromComplexReferenceNode(symbolPart);
+            return arrIndex;
+        }
+        
+        public bool IsArgListKeyword(string symbolName)
+        {
+            return symbolName == "nofunc" || symbolName == "null";
+        }
+
+        public List<AssemblyInstruction> GetKeywordInstructions(string symbolName)
+        {
+            if (symbolName == "nofunc")
+            {
+                return new List<AssemblyInstruction> { new PushInt(-1) };
+            }
+
+            if (symbolName == "null")
+            {
+                DatSymbol symbol = _assemblyBuilder.ResolveSymbol($"{(char)255}instance_help");
+                return new List<AssemblyInstruction> { new PushInstance(symbol) };
+            }
+            
+            return new List<AssemblyInstruction>();
+        }
+        
+        public List<AssemblyInstruction> GetComplexReferenceNodeInstructions(
+            DaedalusParser.ComplexReferenceNodeContext[] complexReferenceNodes)
+        {
+            ExecBlock activeBlock = _assemblyBuilder.ActiveExecBlock;
+            bool isInsideArgList = _assemblyBuilder.IsInsideArgList;
+            bool isInsideAssignment = _assemblyBuilder.IsInsideAssignment;
+
+            var symbolPart = complexReferenceNodes[0];
+            string symbolName = symbolPart.referenceNode().GetText().ToLower();
+
+
+            if (isInsideArgList && IsArgListKeyword(symbolName))
+            {
+                return GetKeywordInstructions(symbolName);
+            }
+
+            DatSymbol symbol = GetComplexReferenceNodeSymbol(complexReferenceNodes[0]);
+            List<AssemblyInstruction> instructions = new List<AssemblyInstruction>();
+            
+            if (complexReferenceNodes.Length == 1)
+            {
+                int arrIndex = GetArrayIndex(symbolPart);
+                instructions.Add(GetProperPushInstruction(symbol, arrIndex));
+                return instructions;
+            }
 
             if (complexReferenceNodes.Length == 2)
             {
-                string typeName = _assemblyBuilder.Symbols[symbol.Parent].Name;
-                string attributeName = complexReferenceNodes[1].GetText();
+                var attributePart = complexReferenceNodes[1];
+                string attributeName = attributePart.referenceNode().GetText();
+                DatSymbol attribute = _assemblyBuilder.ResolveAttribute(symbol, attributeName);
 
-                DatSymbol attribute = _assemblyBuilder.ResolveSymbol($"{typeName}.{attributeName}");
-
-                return new List<AssemblyInstruction>
+                if (
+                    activeBlock != null
+                    && symbol != activeBlock.Symbol
+                    && !(isInsideAssignment && _assemblyBuilder.AssignmentType == DatSymbolType.Func)
+                    && !(isInsideArgList && (_assemblyBuilder.GetParameterType() == DatSymbolType.Instance || _assemblyBuilder.GetParameterType() == DatSymbolType.Func))
+                    )
                 {
-                    new SetInstance(symbol),
-                    new PushVar(attribute)
-                };
-            }
-            else
-            {
-                if (arrIndex > 0)
-                {
-                    return new List<AssemblyInstruction>
-                    {
-                        new PushArrayVar(symbol, arrIndex)
-                    };
+                    instructions.Add(new SetInstance(symbol));
                 }
-                else
-                {
-                    return new List<AssemblyInstruction>
-                    {
-                        new PushVar(symbol)
-                    };
-                }
+                int arrIndex = GetArrayIndex(attributePart);
+                instructions.Add(GetProperPushInstruction(attribute, arrIndex));
+                return instructions;
             }
-        }
 
-        private DatSymbol GetSymbolFromComplexReferenceNode(DaedalusParser.ComplexReferenceNodeContext complexReferenceNode)
-        {
-            return _assemblyBuilder.ResolveSymbol(complexReferenceNode.referenceNode().GetText());
+            throw new Exception("Unexpected error.");
         }
 
         public override void ExitComplexReference(DaedalusParser.ComplexReferenceContext context)
@@ -512,29 +624,72 @@ namespace DaedalusCompiler.Compilation
                 _assemblyBuilder.AddInstructions(instructions.ToArray());   
             }
         }
+        
+        private DatSymbol GetComplexReferenceNodeSymbol(DaedalusParser.ComplexReferenceNodeContext context)
+        {
+            string symbolNameLower = context.referenceNode().GetText().ToLower();
+            ExecBlock activeBlock = _assemblyBuilder.ActiveExecBlock;
 
+            if (
+                activeBlock != null
+                && (activeBlock.Symbol.Type == DatSymbolType.Instance || activeBlock.Symbol.Type == DatSymbolType.Prototype)
+                && (symbolNameLower == "slf" || symbolNameLower == "self")
+            )
+            {
+                return activeBlock.Symbol;
+            }
+            
+            return _assemblyBuilder.ResolveSymbol(context.referenceNode().GetText());
+        }
+        
+        public DatSymbolType GetComplexReferenceType(DaedalusParser.ComplexReferenceNodeContext[] complexReferenceNodes)
+        {
+            string leftPart = complexReferenceNodes[0].referenceNode().GetText();
+
+            DatSymbol symbol;
+
+            DatSymbol activeSymbol = _assemblyBuilder.ActiveExecBlock.Symbol;
+            if ((activeSymbol.Type == DatSymbolType.Instance || activeSymbol.Type == DatSymbolType.Prototype) && (leftPart == "slf" || leftPart == "self"))
+            {
+                symbol = activeSymbol;
+            }
+            else
+            {
+                symbol = _assemblyBuilder.ResolveSymbol(leftPart);
+            }
+
+            if (complexReferenceNodes.Length == 1)
+            {
+                return symbol.Type;
+
+            }
+            if (complexReferenceNodes.Length == 2)
+            {
+                string rightPart = complexReferenceNodes[1].referenceNode().GetText();
+                DatSymbol attribute = _assemblyBuilder.ResolveAttribute(symbol, rightPart);
+                return attribute.Type;
+            }
+
+            return DatSymbolType.Void;
+        }
+        
 
         public override void EnterAssignment(DaedalusParser.AssignmentContext context)
         {
             var complexReferenceNodes = context.complexReferenceLeftSide().complexReferenceNode();
-            var assigmentSymbol = GetSymbolFromComplexReferenceNode(complexReferenceNodes[0]);
             List<AssemblyInstruction> instructions = GetComplexReferenceNodeInstructions(complexReferenceNodes);
             _assemblyBuilder.AssigmentStart(Array.ConvertAll(instructions.ToArray(), item => (SymbolInstruction) item));
-
-            if (assigmentSymbol.Type == DatSymbolType.Float)
-            {
-                var parsedFloat = EvaluatorHelper.EvaluateFloatExpression(context.expressionBlock().GetText());
-                _assemblyBuilder.AddInstruction(new PushInt(parsedFloat));
-                _assemblyBuilder.IsInsideEvalableStatement = true; // we invoke here 
-            }
+            _assemblyBuilder.IsInsideAssignment = true;
+            _assemblyBuilder.AssignmentType = GetComplexReferenceType(complexReferenceNodes);
         }
 
 
         public override void ExitAssignment(DaedalusParser.AssignmentContext context)
         {
+            _assemblyBuilder.IsInsideAssignment = false;
+            
             string assignmentOperator = context.assigmentOperator().GetText();
 
-            _assemblyBuilder.IsInsideEvalableStatement = false;
             _assemblyBuilder.AssigmentEnd(assignmentOperator);
         }
 
@@ -542,6 +697,15 @@ namespace DaedalusCompiler.Compilation
         {
             _assemblyBuilder.ExpressionLeftSideStart();
             _assemblyBuilder.FuncCallStart();
+            
+            string funcName = context.funcCall().nameNode().GetText();
+            DatSymbol symbol = _assemblyBuilder.GetSymbolByName(funcName);
+
+            for (int i = 1; i <= symbol.ParametersCount; ++i)
+            {
+                DatSymbol parameter = _assemblyBuilder.Symbols[symbol.Index + i];
+                _assemblyBuilder.ParametersTypes.Add(parameter.Type);
+            }
         }
 
         public override void ExitFuncCallValue(DaedalusParser.FuncCallValueContext context)
@@ -554,8 +718,14 @@ namespace DaedalusCompiler.Compilation
                 throw new Exception($"Function '{funcName}' not defined");
             }
 
-            //todo implement call external
-            _assemblyBuilder.FuncCallEnd(new Call(symbol));
+            if (symbol.Flags.HasFlag(DatSymbolFlag.External))
+            {
+                _assemblyBuilder.FuncCallEnd(new CallExternal(symbol));
+            }
+            else
+            {
+                _assemblyBuilder.FuncCallEnd(new Call(symbol));
+            }
         }
 
         public override void EnterFuncArgExpression(DaedalusParser.FuncArgExpressionContext context)
@@ -572,7 +742,24 @@ namespace DaedalusCompiler.Compilation
         {
             if (!_assemblyBuilder.IsInsideEvalableStatement)
             {
-                _assemblyBuilder.AddInstruction(new PushInt(int.Parse(context.GetText())));   
+                if (_assemblyBuilder.IsInsideAssignment && _assemblyBuilder.AssignmentType == DatSymbolType.Float)
+                {
+                    int parsedFloat = EvaluatorHelper.EvaluateFloatExpression(context.Parent.Parent.GetText());
+                    _assemblyBuilder.AddInstruction(new PushInt(parsedFloat));
+                }
+                else
+                {
+                    _assemblyBuilder.AddInstruction(new PushInt(int.Parse(context.GetText())));   
+                }
+            }
+        }
+        
+        public override void EnterFloatLiteralValue(DaedalusParser.FloatLiteralValueContext context)
+        {
+            if (!_assemblyBuilder.IsInsideEvalableStatement)
+            {
+                int parsedFloat = EvaluatorHelper.EvaluateFloatExpression(context.Parent.Parent.GetText());
+                _assemblyBuilder.AddInstruction(new PushInt(parsedFloat));
             }
         }
 
@@ -695,16 +882,14 @@ namespace DaedalusCompiler.Compilation
 
         public override void ExitOneArgExpression(DaedalusParser.OneArgExpressionContext context)
         {
-            var exprOperator = context.oneArgOperator().GetText();
-            var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator, false);
-
-            if (!_assemblyBuilder.IsInsideEvalableStatement)
+            if (!_assemblyBuilder.IsInsideEvalableStatement && _assemblyBuilder.AssignmentType != DatSymbolType.Float)
             {
+                var exprOperator = context.oneArgOperator().GetText();
+                var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator, false);
                 _assemblyBuilder.AddInstruction(instruction);   
             }
         }
 
-        // TODO change return type from DatSymbolType? to DatSymbolType
         private DatSymbolType DatSymbolTypeFromString(string typeName)
         {
             string capitalizedTypeName = typeName.First().ToString().ToUpper() + typeName.Substring(1).ToLower();
