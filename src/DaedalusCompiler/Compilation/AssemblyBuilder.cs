@@ -253,6 +253,44 @@ namespace DaedalusCompiler.Compilation
         }
     }
 
+    public class LazyComplexReferenceNodeInstructions : AssemblyInstruction
+    {
+        public readonly DaedalusParser.ComplexReferenceNodeContext[] ComplexReferenceNodes;
+        public readonly AssemblyBuilderSnapshot AssemblyBuilderSnapshot;
+        
+        public LazyComplexReferenceNodeInstructions(
+            AssemblyBuilderSnapshot assemblyBuilderSnapshot,
+            DaedalusParser.ComplexReferenceNodeContext[] complexReferenceNodes)
+        {
+            AssemblyBuilderSnapshot = assemblyBuilderSnapshot;
+            ComplexReferenceNodes = complexReferenceNodes;
+        }
+    }
+
+    public class AssemblyBuilderSnapshot
+    {
+        public readonly ExecBlock ActiveExecBlock;
+        
+        public readonly bool IsInsideArgList;
+        public readonly bool IsInsideAssignment;
+        public readonly bool IsInsideIfCondition;
+        public readonly bool IsInsideReturnStatement;
+        public readonly DatSymbolType AssignmentType;
+        public readonly FuncCallContext FuncCallCtx;
+
+        public AssemblyBuilderSnapshot(AssemblyBuilder assemblyBuilder)
+        {
+            ActiveExecBlock = assemblyBuilder.ActiveExecBlock;
+           
+            IsInsideArgList = assemblyBuilder.IsInsideArgList;
+            IsInsideAssignment = assemblyBuilder.IsInsideAssignment;
+            IsInsideIfCondition = assemblyBuilder.IsInsideIfCondition;
+            IsInsideReturnStatement = assemblyBuilder.IsInsideReturnStatement;
+            AssignmentType = assemblyBuilder.AssignmentType;
+            FuncCallCtx = FuncCallContext.Clone(assemblyBuilder.FuncCallCtx);
+        }
+    }
+    
     public class AssemblyBuildContext
     {
         public AssemblyOperatorStatement CurrentOperatorStatement;
@@ -278,14 +316,42 @@ namespace DaedalusCompiler.Compilation
     {
         public List<DatSymbolType> ParametersTypes;
         public int ArgIndex;
-        public readonly FuncCallContext Parent;
+        public FuncCallContext Parent;
 
-        public FuncCallContext(FuncCallContext parent)
+        public FuncCallContext(FuncCallContext parent=null)
         {
             ParametersTypes = new List<DatSymbolType>();
             ArgIndex = -1;
             Parent = parent;
         }
+
+        public static FuncCallContext Clone(FuncCallContext ctx)
+        {
+            if (ctx == null)
+            {
+                return new FuncCallContext
+                {
+                    ParametersTypes = new List<DatSymbolType>(),
+                    ArgIndex = -1,
+                    Parent = null
+                };
+            }
+            else
+            {
+                return new FuncCallContext
+                {
+                    ParametersTypes = ctx.ParametersTypes,
+                    ArgIndex = ctx.ArgIndex,
+                    Parent = ctx.Parent
+                };
+            }
+        }
+        
+        public DatSymbolType GetParameterType()
+        {
+            return ParametersTypes[ArgIndex];
+        }
+        
     }
 
     public class AssemblyBuilder
@@ -298,7 +364,7 @@ namespace DaedalusCompiler.Compilation
         private AssemblyBuildContext _currentBuildCtx;
         private List<SymbolInstruction> _assignmentLeftSide;
         private FuncArgsBodyContext _funcArgsBodyCtx;
-        private FuncCallContext _funcCallCtx;
+        public FuncCallContext FuncCallCtx;
         private int _labelIndexGenerator;
         private int _nextStringSymbolNumber;
         public bool IsInsideEvalableStatement;
@@ -321,7 +387,7 @@ namespace DaedalusCompiler.Compilation
             ActiveExecBlock = null;
             _assignmentLeftSide = new List<SymbolInstruction>();
             _funcArgsBodyCtx = new FuncArgsBodyContext(null);
-            _funcCallCtx = null;
+            FuncCallCtx = null;
             _labelIndexGenerator = 0;
             _nextStringSymbolNumber = 10000;
             IsInsideEvalableStatement = false;
@@ -334,9 +400,21 @@ namespace DaedalusCompiler.Compilation
             _nextSymbolIndex = 0;
         }
         
-        public DatSymbolType GetParameterType()
+        public AssemblyBuilderSnapshot MakeSnapshot()
         {
-            return _funcCallCtx.ParametersTypes[_funcCallCtx.ArgIndex];
+            return new AssemblyBuilderSnapshot(this);
+        }
+
+        public void LoadStateFromSnapshot(AssemblyBuilderSnapshot snapshot)
+        {
+            ActiveExecBlock = snapshot.ActiveExecBlock;
+            
+            IsInsideArgList = snapshot.IsInsideArgList;
+            IsInsideAssignment = snapshot.IsInsideAssignment;
+            IsInsideIfCondition = snapshot.IsInsideIfCondition;
+            IsInsideReturnStatement = snapshot.IsInsideReturnStatement;
+            AssignmentType = snapshot.AssignmentType;
+            FuncCallCtx = snapshot.FuncCallCtx;
         }
 
         public string NewStringSymbolName()
@@ -435,7 +513,7 @@ namespace DaedalusCompiler.Compilation
             
             if (IsInsideArgList)
             {
-                return PushSymbol(symbol, GetParameterType());
+                return PushSymbol(symbol, FuncCallCtx.GetParameterType());
             }
             
             if (IsInsideReturnStatement && activeBlock != null)
@@ -486,11 +564,11 @@ namespace DaedalusCompiler.Compilation
                 var attributePart = complexReferenceNodes[1];
                 string attributeName = attributePart.referenceNode().GetText();
                 DatSymbol attribute = ResolveAttribute(symbol, attributeName);
-                
+
                 bool isInsideExecBlock = ActiveExecBlock != null;
                 bool isSymbolSelf = symbol == ActiveExecBlock?.Symbol; // self.attribute, slf.attribute cases
-                bool isSymbolPassedToInstanceParameter = IsInsideArgList && GetParameterType() == DatSymbolType.Instance;
-                bool isSymbolPassedToFuncParameter = IsInsideArgList && GetParameterType() == DatSymbolType.Func;
+                bool isSymbolPassedToInstanceParameter = IsInsideArgList && FuncCallCtx.GetParameterType() == DatSymbolType.Instance;
+                bool isSymbolPassedToFuncParameter = IsInsideArgList && FuncCallCtx.GetParameterType() == DatSymbolType.Func;
                 bool isInsideFuncAssignment = IsInsideAssignment && AssignmentType == DatSymbolType.Func;
                 
                 if (isInsideExecBlock
@@ -606,7 +684,7 @@ namespace DaedalusCompiler.Compilation
         public void FuncCallArgStart()
         {
             _currentBuildCtx = GetEmptyBuildContext();
-            _funcCallCtx.ArgIndex++;
+            FuncCallCtx.ArgIndex++;
         }
 
         public void FuncCallArgEnd()
@@ -618,18 +696,7 @@ namespace DaedalusCompiler.Compilation
         public void FuncCallStart(DaedalusParser.FuncCallValueContext context)
         {
             _funcArgsBodyCtx = new FuncArgsBodyContext(_funcArgsBodyCtx);
-            _funcCallCtx = new FuncCallContext(_funcCallCtx);
-            
-            /*
-            if (IsInsideArgList)
-            {
-                ArgIndexStack.Push(ArgIndex);
-                ParametersTypesStack.Push(ParametersTypes);
-            }
-
-            ArgIndex = -1;
-            ParametersTypes = new List<DatSymbolType>();
-            */
+            FuncCallCtx = new FuncCallContext(FuncCallCtx);
             
             IsInsideArgList = true;
             
@@ -640,7 +707,7 @@ namespace DaedalusCompiler.Compilation
             for (int i = 1; i <= symbol.ParametersCount; ++i)
             {
                 DatSymbol parameter = Symbols[symbol.Index + i];
-                _funcCallCtx.ParametersTypes.Add(parameter.Type);
+                FuncCallCtx.ParametersTypes.Add(parameter.Type);
             }
         }
 
@@ -651,8 +718,8 @@ namespace DaedalusCompiler.Compilation
             _currentBuildCtx.Body.Add(instruction);
 
             _funcArgsBodyCtx = _funcArgsBodyCtx.Parent;
-            _funcCallCtx = _funcCallCtx.Parent;
-            if (_funcCallCtx == null)
+            FuncCallCtx = FuncCallCtx.Parent;
+            if (FuncCallCtx == null)
             {
                 IsInsideArgList = false;
             }
@@ -999,6 +1066,24 @@ namespace DaedalusCompiler.Compilation
             }
             
             Symbols = Symbols.Concat(_stringLiteralSymbols).ToList();
+            
+            int counter = 0;
+            int maxCounter = ExecBlocks.Count;
+            foreach (ExecBlock execBlock in ExecBlocks)
+            {
+                Console.WriteLine($"{++counter}/{maxCounter} lazy references resolved");
+                for (int i = 0; i < execBlock.Body.Count; ++i)
+                {
+                    AssemblyElement element = execBlock.Body[i];
+                    if (element is LazyComplexReferenceNodeInstructions nodeInstructions)
+                    {
+                        LoadStateFromSnapshot(nodeInstructions.AssemblyBuilderSnapshot);
+                        List<AssemblyInstruction> instructions = GetComplexReferenceNodeInstructions(nodeInstructions.ComplexReferenceNodes);
+                        execBlock.Body.RemoveAt(i);
+                        execBlock.Body.InsertRange(i, instructions);
+                    }
+                }
+            }
         }
     }
 }

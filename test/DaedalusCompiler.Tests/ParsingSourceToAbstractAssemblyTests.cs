@@ -4292,5 +4292,727 @@ namespace DaedalusCompiler.Tests
             };
             AssertSymbolsMatch(); 
         }
+        
+        
+        [Fact]
+        public void TestLazyReferenceFunctionCall()
+        {
+            _code = @"
+                class person {
+                    var int age;
+                };
+                
+                func void firstFunc (var int par) {};
+                func void secondFunc (var person par) {};
+    
+                func void testFunc () {
+                    firstFunc(a);
+                    firstFunc(b);
+                    firstFunc(8);
+
+                    secondFunc(a);
+                };
+                
+                var person a;
+                var int b;
+            ";
+            
+            _instructions = GetExecBlockInstructions("firstFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // parameters
+                new PushVar(Ref("firstFunc.par")),
+                new Assign(),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            _instructions = GetExecBlockInstructions("secondFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // parameters
+                new PushInstance(Ref("secondFunc.par")),
+                new AssignInstance(),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // firstFunc(a);
+                new PushInt(RefIndex("a")),
+                new Call(Ref("firstFunc")),
+                
+                // firstFunc(b);
+                new PushVar(Ref("b")),
+                new Call(Ref("firstFunc")),
+                
+                // firstFunc(8);
+                new PushInt(8),
+                new Call(Ref("firstFunc")),
+                
+                // secondFunc(a);
+                new PushInstance(Ref("a")),
+                new Call(Ref("secondFunc")),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+
+            _expectedSymbols = new List<DatSymbol>
+            {
+                Ref("person"),
+                Ref("person.age"),
+                Ref("firstFunc"),
+                Ref("firstFunc.par"),
+                Ref("secondFunc"),
+                Ref("secondFunc.par"),
+                Ref("testFunc"),
+                Ref("a"),
+                Ref("b"),
+            };
+            AssertSymbolsMatch(); 
+        }
+        
+        
+        
+        [Fact]
+        public void TestLazyReferenceExternalFunctionCall()
+        {
+            _externalCode = @"
+                func int NPC_HasNews(var instance par0, var int par1, var instance par2, var instance par3) {};
+            ";
+            _code = @"
+                class C_NPC { var int data [200]; };
+
+                func int firstFunc(var C_NPC par0, var C_NPC par1, var C_NPC par2) {};
+
+                func int testFunc()
+                {
+                    firstFunc(person, person, person);
+                    NPC_HasNews(person, person, person, person);
+                };
+                
+                instance person(C_NPC);
+            ";
+            
+            _instructions = GetExecBlockInstructions("firstFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // parameters
+                new PushInstance(Ref("firstFunc.par2")),
+                new AssignInstance(),
+                
+                new PushInstance(Ref("firstFunc.par1")),
+                new AssignInstance(),
+                
+                new PushInstance(Ref("firstFunc.par0")),
+                new AssignInstance(),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // firstFunc(person, person, person);
+                new PushInstance(Ref("person")),
+                new PushInstance(Ref("person")),
+                new PushInstance(Ref("person")),
+                new Call(Ref("firstFunc")),
+                
+                // NPC_HasNews(person, person, person, person);
+                new PushInstance(Ref("person")),
+                new PushInt(RefIndex("person")),
+                new PushInstance(Ref("person")),
+                new PushInstance(Ref("person")),
+                new CallExternal(Ref("NPC_HasNews")),
+
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+
+            _expectedSymbols = new List<DatSymbol>
+            {
+                Ref("NPC_HasNews"),
+                Ref("NPC_HasNews.par0"),
+                Ref("NPC_HasNews.par1"),
+                Ref("NPC_HasNews.par2"),
+                Ref("NPC_HasNews.par3"),
+                
+                Ref("C_NPC"),
+                Ref("C_NPC.data"),
+                Ref("firstFunc"),
+                Ref("firstFunc.par0"),
+                Ref("firstFunc.par1"),
+                Ref("firstFunc.par2"),
+                Ref("testFunc"),
+                Ref("person"),
+            };
+            AssertSymbolsMatch(); 
+        }
+        
+        
+        [Fact]
+        public void TestLazyReferenceAssignFunctionCall()
+        {
+            _code = @"
+                class person {
+                    var int age;
+                };
+                func int firstFunc (var int par) {
+                    return par;
+                };
+                func int secondFunc (var person par) {
+                    return par;
+                };
+                
+                func void testFunc () {
+                    var int c;
+                
+                    c = firstFunc(a);
+                    c = firstFunc(b);
+                    c = firstFunc(8);
+                    
+                    c = secondFunc(a);
+                };
+                
+                var person a;
+                var int b;
+            ";
+            
+            _instructions = GetExecBlockInstructions("firstFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // parameters
+                new PushVar(Ref("firstFunc.par")),
+                new Assign(),
+                
+                // return par;
+                new PushVar(Ref("firstFunc.par")),
+                new Ret(),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            /* TODO not working but probably never happens in Gothic code
+            _instructions = GetExecBlockInstructions("secondFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // parameters
+                new PushInstance(Ref("secondFunc.par")),
+                new AssignInstance(),
+                
+                // return par;
+                new PushInt(RefIndex("secondFunc.par")),
+                new Ret(),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            */
+            
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // c = firstFunc(a);
+                new PushInt(RefIndex("a")),
+                new Call(Ref("firstFunc")),
+                new PushVar(Ref("testFunc.c")),
+                new Assign(),
+                
+                // c = firstFunc(b);
+                new PushVar(Ref("b")),
+                new Call(Ref("firstFunc")),
+                new PushVar(Ref("testFunc.c")),
+                new Assign(),
+                
+                // c = firstFunc(8);
+                new PushInt(8),
+                new Call(Ref("firstFunc")),
+                new PushVar(Ref("testFunc.c")),
+                new Assign(),
+                
+                // c = secondFunc(a);
+                new PushInstance(Ref("a")),
+                new Call(Ref("secondFunc")),
+                new PushVar(Ref("testFunc.c")),
+                new Assign(),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+
+            _expectedSymbols = new List<DatSymbol>
+            {
+                Ref("person"),
+                Ref("person.age"),
+                Ref("firstFunc"),
+                Ref("firstFunc.par"),
+                Ref("secondFunc"),
+                Ref("secondFunc.par"),
+                Ref("testFunc"),
+                Ref("testFunc.c"),
+                Ref("a"),
+                Ref("b"),
+            };
+            AssertSymbolsMatch(); 
+        }
+        [Fact]
+        public void TestLazyReferenceAssignIntString()
+        {
+            _code = @"
+                func void testFunc () {
+                    var int e;
+                    var string f;
+                    
+                    e = a;
+                    f = b;
+                    
+                    e = c;
+                    f = d;
+                };
+                
+                const int a = 1;
+                const string b = ""super"";
+                
+                var int c;
+                var string d;
+            ";
+            
+           
+            
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // e = a;
+                new PushVar(Ref("a")),
+                new PushVar(Ref("testFunc.e")),
+                new Assign(),
+                
+                // f = b;
+                new PushVar(Ref("b")),
+                new PushVar(Ref("testFunc.f")),
+                new AssignString(),
+                
+                // e = c;
+                new PushVar(Ref("c")),
+                new PushVar(Ref("testFunc.e")),
+                new Assign(),
+                
+                // f = d;
+                new PushVar(Ref("d")),
+                new PushVar(Ref("testFunc.f")),
+                new AssignString(),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+
+            _expectedSymbols = new List<DatSymbol>
+            {
+                Ref("testFunc"),
+                Ref("testFunc.e"),
+                Ref("testFunc.f"),
+                Ref("a"),
+                Ref("b"),
+                Ref("c"),
+                Ref("d"),
+            };
+            AssertSymbolsMatch(); 
+        }
+        
+        [Fact]
+        public void TestLazyReferenceInsideIfCondition()
+        {
+            _code = @"
+                func int intFunc(var int par) {
+                    return 0;
+                };
+                
+                func void testFunc () {
+                    var int c;
+                    
+                    if (intFunc(d)) {
+                        c = 0;
+                    }else if (d == a) {
+                        c = 1;
+                    } else if (d == b) {
+                        c = 2;
+                    } else if (d == 100) {
+                        c = 3;
+                    } else {
+                        c = d;
+                    };
+                
+                    var int d;
+                };
+                
+                const int a = 1;
+                var int b;
+            ";
+            
+            
+            _instructions = GetExecBlockInstructions("intFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // parameters
+                new PushVar(Ref("intFunc.par")),
+                new Assign(),
+                
+                // return 0;
+                new PushInt(0),
+                new Ret(),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // if(intFunc(d))
+                new PushVar(Ref("testFunc.d")),
+                new Call(Ref("intFunc")),
+                new JumpIfToLabel("label_1"),
+
+                // c = 0;
+                new PushInt(0),
+                new PushVar(Ref("testFunc.c")),
+                new Assign(),
+                new JumpToLabel("label_0"),
+                
+                // else if(d == a)
+                new AssemblyLabel("label_1"),
+                new PushVar(Ref("a")),
+                new PushVar(Ref("testFunc.d")),
+                new Equal(),
+                new JumpIfToLabel("label_2"),
+                
+                // c = 1;
+                new PushInt(1),
+                new PushVar(Ref("testFunc.c")),
+                new Assign(),
+                new JumpToLabel("label_0"),
+                
+                // else if(d == b)
+                new AssemblyLabel("label_2"),
+                new PushVar(Ref("b")),
+                new PushVar(Ref("testFunc.d")),
+                new Equal(),
+                new JumpIfToLabel("label_3"),
+                
+                // c = 2;
+                new PushInt(2),
+                new PushVar(Ref("testFunc.c")),
+                new Assign(),
+                new JumpToLabel("label_0"),
+                
+                // else if(d == 100)
+                new AssemblyLabel("label_3"),
+                new PushInt(100),
+                new PushVar(Ref("testFunc.d")),
+                new Equal(),
+                new JumpIfToLabel("label_4"),
+                
+                // c = 3;
+                new PushInt(3),
+                new PushVar(Ref("testFunc.c")),
+                new Assign(),
+                new JumpToLabel("label_0"),
+                
+                // else
+                new AssemblyLabel("label_4"),
+                
+                // c = d;
+                new PushVar(Ref("testFunc.d")),
+                new PushVar(Ref("testFunc.c")),
+                new Assign(),
+                
+                new AssemblyLabel("label_0"),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+
+            _expectedSymbols = new List<DatSymbol>
+            {
+                Ref("intFunc"),
+                Ref("intFunc.par"),
+                Ref("testFunc"),
+                Ref("testFunc.c"),
+                Ref("testFunc.d"),
+                Ref("a"),
+                Ref("b"),
+            };
+            AssertSymbolsMatch(); 
+        }
+        
+        
+        [Fact]
+        public void TestLazyReferenceReturn()
+        {
+            _code = @"
+                class person {
+                    var int age;
+                };
+                
+                func int firstFunc() {
+                    return a;
+                };
+                
+                func string secondFunc() {
+                    return b;
+                };
+                
+                func int thirdFunc() {
+                    return c;
+                };
+                
+                var int a;
+                var string b;
+                instance c(person);
+            ";
+            
+            _instructions = GetExecBlockInstructions("firstFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // return a;
+                new PushVar(Ref("a")),
+                new Ret(),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            _instructions = GetExecBlockInstructions("secondFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // return b;
+                new PushVar(Ref("b")),
+                new Ret(),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            _instructions = GetExecBlockInstructions("thirdFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // return c;
+                new PushInt(RefIndex("c")),
+                new Ret(),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            
+            _expectedSymbols = new List<DatSymbol>
+            {
+                Ref("person"),
+                Ref("person.age"),
+                Ref("firstFunc"),
+                Ref("secondFunc"),
+                Ref("thirdFunc"),
+                Ref("a"),
+                Ref("b"),
+                Ref("c"),
+            };
+            AssertSymbolsMatch(); 
+        }
+        
+        [Fact]
+        public void TestLazyReferenceInsideComplexIfCondition()
+        {
+            _externalCode = @"
+                func int NPC_HasItems(var instance par0, var int par1) {};
+            ";
+            _code = @"
+                class C_NPC { var int data [200]; };
+
+                func int testFunc()
+                {
+                    var int newWeapon;
+                    
+                    if (NPC_HasItems(person, sword) >= 1)
+                    {
+                        return sword;
+                    };
+                    if ( (oldWeapon == axe) || (oldWeapon == sword) )
+                    {
+                        newWeapon = 0;
+                    };
+                    var int oldWeapon;
+                };
+                instance person(C_NPC);
+                instance sword (C_NPC){};
+                instance axe (C_NPC){};
+            ";
+            
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // if (NPC_HasItems(person, sword) >= 1)
+                new PushInt(1),
+                new PushInstance(Ref("person")),
+                new PushInt(RefIndex("sword")),
+                new CallExternal(Ref("NPC_HasItems")),
+                new GreaterOrEqual(),
+                new JumpIfToLabel("label_0"),
+                
+                // return sword;
+                new PushInt(RefIndex("sword")),
+                new Ret(),
+                
+                // endif
+                new AssemblyLabel("label_0"),
+                
+                // if ( (oldWeapon == axe) || (oldWeapon == sword) )
+                new PushInt(RefIndex("sword")),
+                new PushVar(Ref("testFunc.oldWeapon")),
+                new Equal(),
+                new PushInt(RefIndex("axe")),
+                new PushVar(Ref("testFunc.oldWeapon")),
+                new Equal(),
+                new LogOr(),
+                new JumpIfToLabel("label_1"),
+                
+                // newWeapon = 0;
+                new PushInt(0),
+                new PushVar(Ref("testFunc.newWeapon")),
+                new Assign(),
+                
+                //endif
+                new AssemblyLabel("label_1"),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            
+            _expectedSymbols = new List<DatSymbol>
+            {
+                Ref("NPC_HasItems"),
+                Ref("NPC_HasItems.par0"),
+                Ref("NPC_HasItems.par1"),
+                
+                Ref("C_NPC"),
+                Ref("C_NPC.data"),
+                Ref("testFunc"),
+                Ref("testFunc.newWeapon"),
+                Ref("testFunc.oldWeapon"),
+                Ref("person"),
+                Ref("sword"),
+                Ref("axe"),
+
+            };
+            AssertSymbolsMatch(); 
+        }
+        
+        
+        [Fact]
+        public void TestNestedFunctionCallsWithLazyFunctionsAsArguments()
+        {
+            
+            _externalCode = $@"
+                var instance instance_help;
+                func void Info_AddChoice(var int par0, var string par1, var func par2) {{}};
+                func int NPC_IsInState(var instance par0, var func par1) {{}};
+            ";
+            _code = @"
+                class C_NPC {
+                    var int data [200];
+                };
+
+                instance other(C_NPC);
+
+
+                func string firstFunc(var string text, var int num)
+                {
+                    return text;
+                };
+                
+                func int secondFunc(var C_NPC oth, var int talent, var int skill)
+                {
+                    return 0;
+                };
+                
+                func void testFunc()
+                {
+                    Info_AddChoice(info, firstFunc(""test"", secondFunc(other, 1, 2)), thirdFunc);
+                    NPC_IsInState(NULL, NOFUNC);
+                };
+        
+                class C_INFO {
+                    var int data[12];
+                };
+                instance info(C_INFO){};
+        
+                func void thirdFunc(){};
+            ";
+            
+            char prefix = (char) 255;
+            
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // Info_AddChoice(info, firstFunc(""test"", secondFunc(other, 1, 2)), thirdFunc);
+                new PushInt(RefIndex("info")),
+                new PushVar(Ref($"{prefix}10000")),
+                new PushInstance(Ref("other")),
+                new PushInt(1),
+                new PushInt(2),
+                new Call(Ref("secondFunc")),
+                new Call(Ref("firstFunc")),
+                new PushInt(RefIndex("thirdFunc")),
+                new CallExternal(Ref("Info_AddChoice")),
+                
+                // NPC_IsInState(NULL, NOFUNC);
+                new PushInstance(Ref($"{prefix}instance_help")), //NULL = {prefix}instance_help
+                new PushInt(-1), //NOFUNC = -1
+                new CallExternal(Ref("NPC_IsInState")), 
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            
+            _expectedSymbols = new List<DatSymbol>
+            {
+                Ref($"{prefix}instance_help"),
+                Ref("Info_AddChoice"),
+                Ref("Info_AddChoice.par0"),
+                Ref("Info_AddChoice.par1"),
+                Ref("Info_AddChoice.par2"),
+                Ref("NPC_IsInState"),
+                Ref("NPC_IsInState.par0"),
+                Ref("NPC_IsInState.par1"),
+                Ref("C_NPC"),
+                Ref("C_NPC.data"),
+                Ref("other"),
+                Ref("firstFunc"),
+                Ref("firstFunc.text"),
+                Ref("firstFunc.num"),
+                Ref("secondFunc"),
+                Ref("secondFunc.oth"),
+                Ref("secondFunc.talent"),
+                Ref("secondFunc.skill"),
+                Ref("testFunc"),
+                Ref("C_INFO"),
+                Ref("C_INFO.data"),
+                Ref("info"),
+                Ref("thirdFunc"),
+                Ref($"{prefix}10000"),
+
+            };
+            AssertSymbolsMatch(); 
+        }
     }
 }
