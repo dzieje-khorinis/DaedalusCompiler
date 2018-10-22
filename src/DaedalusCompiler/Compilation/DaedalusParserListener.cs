@@ -475,8 +475,17 @@ namespace DaedalusCompiler.Compilation
         public override void ExitComplexReference(DaedalusParser.ComplexReferenceContext context)
         {
             var complexReferenceNodes = context.complexReferenceNode();
-            List<AssemblyInstruction> instructions = _assemblyBuilder.GetComplexReferenceNodeInstructions(complexReferenceNodes);
-
+            
+            List<AssemblyInstruction> instructions = new List<AssemblyInstruction>();
+            if (_assemblyBuilder.IsInsideArgList || _assemblyBuilder.IsInsideAssignment || _assemblyBuilder.IsInsideIfCondition || _assemblyBuilder.IsInsideReturnStatement)
+            {
+                instructions.Add(new LazyComplexReferenceNodeInstructions(_assemblyBuilder, complexReferenceNodes));
+            }
+            else
+            {
+                instructions = _assemblyBuilder.GetComplexReferenceNodeInstructions(complexReferenceNodes);
+            }
+            
             if (!_assemblyBuilder.IsInsideEvalableStatement)
             {
                 _assemblyBuilder.AddInstructions(instructions.ToArray());   
