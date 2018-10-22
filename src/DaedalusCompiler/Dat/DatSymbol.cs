@@ -28,10 +28,13 @@ namespace DaedalusCompiler.Dat
         External = 8,
         Merged = 16,
     }
+    
 
     [DebuggerDisplay("{Type} {ReturnType} {Name} '{Flags}'")]
     public class DatSymbol
     {
+        public const int NULL_INDEX = -1;
+        
         /// <summary>
         /// Symbol's index, id. It shows how many symbols were loaded before this one.
         /// </summary>
