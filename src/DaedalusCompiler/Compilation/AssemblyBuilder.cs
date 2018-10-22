@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
@@ -346,8 +345,13 @@ namespace DaedalusCompiler.Compilation
                     Parent = ctx.Parent
                 };
             }
-                
         }
+        
+        public DatSymbolType GetParameterType()
+        {
+            return ParametersTypes[ArgIndex];
+        }
+        
     }
 
     public class AssemblyBuilder
@@ -395,7 +399,7 @@ namespace DaedalusCompiler.Compilation
             AssignmentType = DatSymbolType.Void;
             _nextSymbolIndex = 0;
         }
-
+        
         public AssemblyBuilderSnapshot MakeSnapshot()
         {
             return new AssemblyBuilderSnapshot(this);
@@ -411,11 +415,6 @@ namespace DaedalusCompiler.Compilation
             IsInsideReturnStatement = snapshot.IsInsideReturnStatement;
             AssignmentType = snapshot.AssignmentType;
             FuncCallCtx = snapshot.FuncCallCtx;
-        }
-        
-        public DatSymbolType GetParameterType()
-        {
-            return FuncCallCtx.ParametersTypes[FuncCallCtx.ArgIndex];
         }
 
         public string NewStringSymbolName()
@@ -514,7 +513,7 @@ namespace DaedalusCompiler.Compilation
             
             if (IsInsideArgList)
             {
-                return PushSymbol(symbol, GetParameterType());
+                return PushSymbol(symbol, FuncCallCtx.GetParameterType());
             }
             
             if (IsInsideReturnStatement && activeBlock != null)
@@ -565,11 +564,11 @@ namespace DaedalusCompiler.Compilation
                 var attributePart = complexReferenceNodes[1];
                 string attributeName = attributePart.referenceNode().GetText();
                 DatSymbol attribute = ResolveAttribute(symbol, attributeName);
-                
+
                 bool isInsideExecBlock = ActiveExecBlock != null;
                 bool isSymbolSelf = symbol == ActiveExecBlock?.Symbol; // self.attribute, slf.attribute cases
-                bool isSymbolPassedToInstanceParameter = IsInsideArgList && GetParameterType() == DatSymbolType.Instance;
-                bool isSymbolPassedToFuncParameter = IsInsideArgList && GetParameterType() == DatSymbolType.Func;
+                bool isSymbolPassedToInstanceParameter = IsInsideArgList && FuncCallCtx.GetParameterType() == DatSymbolType.Instance;
+                bool isSymbolPassedToFuncParameter = IsInsideArgList && FuncCallCtx.GetParameterType() == DatSymbolType.Func;
                 bool isInsideFuncAssignment = IsInsideAssignment && AssignmentType == DatSymbolType.Func;
                 
                 if (isInsideExecBlock
@@ -698,17 +697,6 @@ namespace DaedalusCompiler.Compilation
         {
             _funcArgsBodyCtx = new FuncArgsBodyContext(_funcArgsBodyCtx);
             FuncCallCtx = new FuncCallContext(FuncCallCtx);
-            
-            /*
-            if (IsInsideArgList)
-            {
-                ArgIndexStack.Push(ArgIndex);
-                ParametersTypesStack.Push(ParametersTypes);
-            }
-
-            ArgIndex = -1;
-            ParametersTypes = new List<DatSymbolType>();
-            */
             
             IsInsideArgList = true;
             
