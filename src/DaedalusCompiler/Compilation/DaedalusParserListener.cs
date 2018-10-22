@@ -479,7 +479,7 @@ namespace DaedalusCompiler.Compilation
             List<AssemblyInstruction> instructions = new List<AssemblyInstruction>();
             if (_assemblyBuilder.IsInsideArgList || _assemblyBuilder.IsInsideAssignment || _assemblyBuilder.IsInsideIfCondition || _assemblyBuilder.IsInsideReturnStatement)
             {
-                instructions.Add(new LazyComplexReferenceNodeInstructions(_assemblyBuilder, complexReferenceNodes));
+                instructions.Add(new LazyComplexReferenceNodeInstructions(_assemblyBuilder.MakeSnapshot(), complexReferenceNodes));
             }
             else
             {

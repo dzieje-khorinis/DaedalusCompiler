@@ -256,48 +256,39 @@ namespace DaedalusCompiler.Compilation
 
     public class LazyComplexReferenceNodeInstructions : AssemblyInstruction
     {
-        private readonly DaedalusParser.ComplexReferenceNodeContext[] _complexReferenceNodes;
-        private readonly AssemblyBuilder _assemblyBuilder;
-        private readonly DaedalusParserListener _parserListener;
-        
-        private readonly ExecBlock _activeExecBlock;
-        
-        private readonly bool _isInsideArgList;
-        private readonly bool _isInsideAssignment;
-        private readonly bool _isInsideIfCondition;
-        private readonly bool _isInsideReturnStatement;
-        private readonly DatSymbolType _assignmentType;
-        private readonly FuncCallContext _funcCallCtx;
+        public readonly DaedalusParser.ComplexReferenceNodeContext[] ComplexReferenceNodes;
+        public readonly AssemblyBuilderSnapshot AssemblyBuilderSnapshot;
         
         public LazyComplexReferenceNodeInstructions(
-            AssemblyBuilder assemblyBuilder,
+            AssemblyBuilderSnapshot assemblyBuilderSnapshot,
             DaedalusParser.ComplexReferenceNodeContext[] complexReferenceNodes)
         {
-            _complexReferenceNodes = complexReferenceNodes;
-            _assemblyBuilder = assemblyBuilder;
-            
-            _activeExecBlock = assemblyBuilder.ActiveExecBlock;
-           
-            _isInsideArgList = assemblyBuilder.IsInsideArgList;
-            _isInsideAssignment = assemblyBuilder.IsInsideAssignment;
-            _isInsideIfCondition = assemblyBuilder.IsInsideIfCondition;
-            _isInsideReturnStatement = assemblyBuilder.IsInsideReturnStatement;
-            _assignmentType = assemblyBuilder.AssignmentType;
-            _funcCallCtx = FuncCallContext.Clone(assemblyBuilder.FuncCallCtx);
+            AssemblyBuilderSnapshot = assemblyBuilderSnapshot;
+            ComplexReferenceNodes = complexReferenceNodes;
         }
+    }
+
+    public class AssemblyBuilderSnapshot
+    {
+        public readonly ExecBlock ActiveExecBlock;
         
-        public List<AssemblyInstruction> Evaluate()
+        public readonly bool IsInsideArgList;
+        public readonly bool IsInsideAssignment;
+        public readonly bool IsInsideIfCondition;
+        public readonly bool IsInsideReturnStatement;
+        public readonly DatSymbolType AssignmentType;
+        public readonly FuncCallContext FuncCallCtx;
+
+        public AssemblyBuilderSnapshot(AssemblyBuilder assemblyBuilder)
         {
-            _assemblyBuilder.ActiveExecBlock = _activeExecBlock;
-            
-            _assemblyBuilder.IsInsideArgList = _isInsideArgList;
-            _assemblyBuilder.IsInsideAssignment = _isInsideAssignment;
-            _assemblyBuilder.IsInsideIfCondition = _isInsideIfCondition;
-            _assemblyBuilder.IsInsideReturnStatement = _isInsideReturnStatement;
-            _assemblyBuilder.AssignmentType = _assignmentType;
-            _assemblyBuilder.FuncCallCtx = _funcCallCtx;
-            
-            return _assemblyBuilder.GetComplexReferenceNodeInstructions(_complexReferenceNodes);
+            ActiveExecBlock = assemblyBuilder.ActiveExecBlock;
+           
+            IsInsideArgList = assemblyBuilder.IsInsideArgList;
+            IsInsideAssignment = assemblyBuilder.IsInsideAssignment;
+            IsInsideIfCondition = assemblyBuilder.IsInsideIfCondition;
+            IsInsideReturnStatement = assemblyBuilder.IsInsideReturnStatement;
+            AssignmentType = assemblyBuilder.AssignmentType;
+            FuncCallCtx = FuncCallContext.Clone(assemblyBuilder.FuncCallCtx);
         }
     }
     
@@ -403,6 +394,23 @@ namespace DaedalusCompiler.Compilation
             IsInsideReturnStatement = false;
             AssignmentType = DatSymbolType.Void;
             _nextSymbolIndex = 0;
+        }
+
+        public AssemblyBuilderSnapshot MakeSnapshot()
+        {
+            return new AssemblyBuilderSnapshot(this);
+        }
+
+        public void LoadStateFromSnapshot(AssemblyBuilderSnapshot snapshot)
+        {
+            ActiveExecBlock = snapshot.ActiveExecBlock;
+            
+            IsInsideArgList = snapshot.IsInsideArgList;
+            IsInsideAssignment = snapshot.IsInsideAssignment;
+            IsInsideIfCondition = snapshot.IsInsideIfCondition;
+            IsInsideReturnStatement = snapshot.IsInsideReturnStatement;
+            AssignmentType = snapshot.AssignmentType;
+            FuncCallCtx = snapshot.FuncCallCtx;
         }
         
         public DatSymbolType GetParameterType()
@@ -1079,9 +1087,10 @@ namespace DaedalusCompiler.Compilation
                 for (int i = 0; i < execBlock.Body.Count; ++i)
                 {
                     AssemblyElement element = execBlock.Body[i];
-                    if (element is LazyComplexReferenceNodeInstructions)
+                    if (element is LazyComplexReferenceNodeInstructions nodeInstructions)
                     {
-                        List<AssemblyInstruction> instructions = ((LazyComplexReferenceNodeInstructions) element).Evaluate();
+                        LoadStateFromSnapshot(nodeInstructions.AssemblyBuilderSnapshot);
+                        List<AssemblyInstruction> instructions = GetComplexReferenceNodeInstructions(nodeInstructions.ComplexReferenceNodes);
                         execBlock.Body.RemoveAt(i);
                         execBlock.Body.InsertRange(i, instructions);
                     }
