@@ -18,11 +18,6 @@ namespace DaedalusCompiler.Compilation
             _execBlocks = assemblyBuilder.ExecBlocks;
         }
 
-        private int GetSymbolId(DatSymbol symbol)
-        {
-            return _symbols.IndexOf(symbol);
-        }
-
         private Dictionary<string, int> GetLabelToAddressDict(ExecBlock execBlock)
         {
             Dictionary<string, int> labelToAddress = new Dictionary<string, int>();
@@ -82,7 +77,7 @@ namespace DaedalusCompiler.Compilation
                 {
                     case PushArrayVar pushArrVar:
                     {
-                        intParam = GetSymbolId(pushArrVar.Symbol);
+                        intParam = pushArrVar.Symbol.Index;
                         byteParam = (byte) pushArrVar.Index;
                         break;
                     }
@@ -93,7 +88,7 @@ namespace DaedalusCompiler.Compilation
                     }
                     case SymbolInstruction symbolInstruction:
                     {
-                        intParam = GetSymbolId(symbolInstruction.Symbol);
+                        intParam = symbolInstruction.Symbol.Index;
                         break;
                     }
                     case ValueInstruction valueInstruction:
@@ -127,7 +122,11 @@ namespace DaedalusCompiler.Compilation
             List<DatToken> tokens = new List<DatToken>();
             foreach (var execBlock in _execBlocks)
             {
-                execBlock.Symbol.Content = new object[] {_currentAddress};
+                if (execBlock.Symbol.Flags.HasFlag(DatSymbolFlag.External))
+                {
+                    continue;
+                }
+                execBlock.Symbol.FirstTokenAddress = _currentAddress;
                 tokens.AddRange(GetTokens(execBlock));
             }
 

@@ -98,6 +98,9 @@ namespace DaedalusCompiler.Compilation
 
             if (expression is DaedalusParser.EqExpressionContext)
                 return EvaluateIntBinaryExpression(expression, assemblyBuilder);
+            
+            if (expression is DaedalusParser.BinOrExpressionContext)
+                return EvaluateIntBinaryExpression(expression, assemblyBuilder);
 
             throw new Exception(
                 $"Unable to evaluate constant. Expression '{expression.GetText()}' contains unsupported operations.");
@@ -126,7 +129,15 @@ namespace DaedalusCompiler.Compilation
                     if (referenceSymbol == null)
                         throw new Exception($"Reference symbol {referenceName} is not declared.");
 
-                    var referenceValue = referenceSymbol.Content.First();
+                    object referenceValue;
+                    if (referenceSymbol.Type == DatSymbolType.Func)
+                    {
+                        referenceValue = referenceSymbol.Index;
+                    }
+                    else
+                    {
+                        referenceValue = referenceSymbol.Content.First();
+                    }
 
                     if (referenceValue is int == false)
                         throw new Exception(

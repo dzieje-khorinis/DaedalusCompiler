@@ -1,5 +1,6 @@
 ﻿using Antlr4.Runtime;
 using System;
+using System.IO;
 using System.Linq;
 using Antlr4.Runtime.Tree;
 
@@ -10,10 +11,22 @@ namespace DaedalusCompiler.Compilation
         public void CompileFromSrc(string srcFilePath, bool compileToAssembly)
         {
             try
-            {
-                var paths = SrcFileHelper.LoadScriptsFilePaths(srcFilePath).ToArray();
+            {              
                 var assemblyBuilder = new AssemblyBuilder();
-
+                string[] paths = SrcFileHelper.LoadScriptsFilePaths(srcFilePath).ToArray();
+                
+                
+                string runtimePath = Path.Combine("DaedalusBuiltins", Path.GetFileNameWithoutExtension(srcFilePath).ToLower() + ".d");
+                if (File.Exists(runtimePath))
+                {
+                    assemblyBuilder.IsCurrentlyParsingExternals = true;
+                    Console.WriteLine($"[0/{paths.Length}]Compiling runtime: {runtimePath}");
+                    var parser = GetParser(runtimePath);
+                    ParseTreeWalker.Default.Walk(new DaedalusParserListener(assemblyBuilder, -1), parser.daedalusFile());
+                    assemblyBuilder.IsCurrentlyParsingExternals = false;
+                }
+                
+                
                 for (int i = 0; i < paths.Length; i++)
                 {
                     Console.WriteLine($"[{i + 1}/{paths.Length}]Compiling: {paths[i]}");
@@ -23,7 +36,8 @@ namespace DaedalusCompiler.Compilation
 
                     ParseTreeWalker.Default.Walk(new DaedalusParserListener(assemblyBuilder, i), parser.daedalusFile());
                 }
-
+    
+                assemblyBuilder.Finish();
                 if (compileToAssembly)
                 {
                     Console.WriteLine(assemblyBuilder.GetAssembler());

@@ -16,10 +16,7 @@ namespace DaedalusCompiler.Compilation
                 Content = type == DatSymbolType.String ? new object[] {string.Empty} : new object[] {0},
                 Flags = 0,
                 Location = location,
-                ReturnType = null,
-                ClassSize = null,
-                ClassVarOffset = null,
-                Parent = parent,
+                ParentIndex = parent,
             };
 
             return symbol;
@@ -28,18 +25,35 @@ namespace DaedalusCompiler.Compilation
         public static DatSymbol BuildArrOfVariables(string name, DatSymbolType type, uint size,
             DatSymbolLocation location = null)
         {
+            object[] content = new object[size];
+            for (int i = 0; i < content.Length; ++i)
+            {
+                switch (type)
+                {
+                    case DatSymbolType.Int:
+                        content[i] = 0;
+                        break;
+                    
+                    case DatSymbolType.Float:
+                        content[i] = 0.0;
+                        break;
+                    
+                    case DatSymbolType.String:
+                        content[i] = string.Empty;  // TODO shouldn't it be string in some kind of Gothic's format?
+                        break;
+                }              
+            }
+  
+            
             var symbol = new DatSymbol
             {
                 Name = name,
                 Type = type,
                 ArrayLength = size,
-                Content = type == DatSymbolType.String ? new object[] {string.Empty} : new object[] {0},
+                Content = content,
                 Flags = 0,
                 Location = location,
-                ReturnType = null,
-                ClassSize = null,
-                ClassVarOffset = null,
-                Parent = -1,
+                ParentIndex = -1,
             };
 
             return symbol;
@@ -56,10 +70,7 @@ namespace DaedalusCompiler.Compilation
                 Content = new[] {value},
                 Flags = DatSymbolFlag.Const,
                 Location = location,
-                ReturnType = null,
-                ClassSize = null,
-                ClassVarOffset = null,
-                Parent = -1,
+                ParentIndex = -1,
             };
 
             return symbol;
@@ -76,16 +87,13 @@ namespace DaedalusCompiler.Compilation
                 Content = values,
                 Flags = DatSymbolFlag.Const,
                 Location = location,
-                ReturnType = null,
-                ClassSize = null,
-                ClassVarOffset = null,
-                Parent = -1,
+                ParentIndex = -1,
             };
 
             return symbol;
         }
 
-        public static DatSymbol BuildFunc(string name, [NotNull] DatSymbolType returnType)
+        public static DatSymbol BuildFunc(string name, uint parametersCount, [NotNull] DatSymbolType returnType)
         {
             DatSymbolFlag Flags = DatSymbolFlag.Const;
             if (returnType != DatSymbolType.Void)
@@ -98,8 +106,11 @@ namespace DaedalusCompiler.Compilation
                 Name = name,
                 Type = DatSymbolType.Func,
                 Flags = Flags,
+                Content = null,
+                FirstTokenAddress = -1,
                 ReturnType = returnType,
-                Parent = -1,
+                ParentIndex = -1,
+                ParametersCount = parametersCount,
             };
 
             return symbol;
@@ -113,13 +124,12 @@ namespace DaedalusCompiler.Compilation
                 Name = name,
                 Type = DatSymbolType.Class,
                 ArrayLength = classLength,
+                ClassOffset = 0,
                 Content = null,
                 Flags = 0,
                 Location = location,
-                ReturnType = null,
                 ClassSize = classSize,
-                ClassVarOffset = null,
-                Parent = -1,
+                ParentIndex = -1,
             };
 
             return symbol;
@@ -136,42 +146,45 @@ namespace DaedalusCompiler.Compilation
                 Content = null,
                 Flags = DatSymbolFlag.Classvar,
                 Location = location,
-                ReturnType = null,
-                ClassSize = null,
                 ClassVarOffset = classVarOffset,
-                Parent = classId,
+                ParentIndex = classId,
             };
 
             return symbol;
         }
 
-        public static DatSymbol BuildPrototype(string name, int referenceId, int firstTokenAddress,
-            DatSymbolLocation location = null)
+        public static DatSymbol BuildPrototype(string name, int referenceId, DatSymbolLocation location = null)
         {
             var symbol = new DatSymbol
             {
                 Name = name,
                 Type = DatSymbolType.Prototype,
                 ArrayLength = 0,
-                Content = new object[] {firstTokenAddress},
+                Content = null,
+                FirstTokenAddress = -1,
                 Flags = 0,
                 Location = location,
-                ReturnType = null,
-                ClassSize = null,
-                ClassVarOffset = null,
-                Parent = referenceId,
+                ParentIndex = referenceId,
             };
 
             return symbol;
         }
 
-        /*
-        public static DatSymbol BuildInstance(string name)
+        public static DatSymbol BuildInstance(string name, int referenceId, DatSymbolLocation location = null)
         {
-            var symbol = new DatSymbol {Name = name};
+            var symbol = new DatSymbol
+            {
+                Name = name,
+                Type = DatSymbolType.Instance,
+                ArrayLength = 0,
+                Content = null,
+                FirstTokenAddress = -1,
+                Flags = DatSymbolFlag.Const,
+                Location = location,
+                ParentIndex = referenceId,
+            };
 
             return symbol;
         }
-        */
     }
 }
