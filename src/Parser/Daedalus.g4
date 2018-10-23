@@ -85,8 +85,8 @@ expression
     | value #valExpression
     ;
 
-arrayIndex : IntegerLiteral | referenceNode;
-arraySize : IntegerLiteral | referenceNode;
+arrayIndex : IntegerLiteral | Identifier;
+arraySize : IntegerLiteral | Identifier;
 
 value
     : IntegerLiteral #integerLiteralValue
@@ -100,7 +100,7 @@ value
 complexReferenceLeftSide: complexReferenceNode ( '.' complexReferenceNode )?;
 complexReference: complexReferenceNode ( '.' complexReferenceNode )?;
 complexReferenceNode: referenceNode ( '[' arrayIndex ']')?;
-typeReference:  ( referenceNode  | Void | Int | Float | String | Func | Instance);
+typeReference:  ( Identifier | Void | Int | Float | String | Func | Instance);
 nameNode: Identifier;
 referenceNode: Identifier;
 assigmentOperator:  '=' | '+=' | '-=' | '*=' | '/=';
