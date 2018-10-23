@@ -607,6 +607,26 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitReferenceNode([NotNull] DaedalusParser.ReferenceNodeContext context);
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.integerSymbolReference"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterIntegerSymbolReference([NotNull] DaedalusParser.IntegerSymbolReferenceContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.integerSymbolReference"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitIntegerSymbolReference([NotNull] DaedalusParser.IntegerSymbolReferenceContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.classLikeSymbolReference"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterClassLikeSymbolReference([NotNull] DaedalusParser.ClassLikeSymbolReferenceContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.classLikeSymbolReference"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitClassLikeSymbolReference([NotNull] DaedalusParser.ClassLikeSymbolReferenceContext context);
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.assigmentOperator"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

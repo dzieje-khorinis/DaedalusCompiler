@@ -40,9 +40,9 @@ daedalusFile: (( functionDef | constDef | varDecl | classDef | prototypeDef | in
 functionDef: Func typeReference nameNode parameterList statementBlock;
 constDef: Const typeReference (constValueDef | constArrayDef) (',' (constValueDef | constArrayDef) )*;
 classDef: Class nameNode '{' ( varDecl ';' )*? '}';
-prototypeDef: Prototype nameNode '(' referenceNode ')' statementBlock;
-instanceDef: Instance nameNode '(' referenceNode ')' statementBlock;
-instanceDecl: Instance nameNode ( ',' nameNode )*? '(' referenceNode ')';
+prototypeDef: Prototype nameNode '(' classLikeSymbolReference ')' statementBlock;
+instanceDef: Instance nameNode '(' classLikeSymbolReference ')' statementBlock;
+instanceDecl: Instance nameNode ( ',' nameNode )*? '(' classLikeSymbolReference ')';
 varDecl: Var typeReference (varValueDecl | varArrayDecl) (',' (varValueDecl | varArrayDecl) )* ;
 
 constArrayDef: nameNode '[' arraySize ']' constArrayAssignment;
@@ -85,8 +85,8 @@ expression
     | value #valExpression
     ;
 
-arrayIndex : IntegerLiteral | Identifier;
-arraySize : IntegerLiteral | Identifier;
+arrayIndex : IntegerLiteral | integerSymbolReference;
+arraySize : IntegerLiteral | integerSymbolReference;
 
 value
     : IntegerLiteral #integerLiteralValue
@@ -103,6 +103,11 @@ complexReferenceNode: referenceNode ( '[' arrayIndex ']')?;
 typeReference:  ( Identifier | Void | Int | Float | String | Func | Instance);
 nameNode: Identifier;
 referenceNode: Identifier;
+
+integerSymbolReference: Identifier;
+classLikeSymbolReference: Identifier; // can be reference to class or to prototype
+
+
 assigmentOperator:  '=' | '+=' | '-=' | '*=' | '/=';
 addOperator: '+' | '-';
 bitMoveOperator: '<<' | '>>';

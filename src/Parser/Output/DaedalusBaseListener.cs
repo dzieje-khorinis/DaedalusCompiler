@@ -719,6 +719,30 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitReferenceNode([NotNull] DaedalusParser.ReferenceNodeContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.integerSymbolReference"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterIntegerSymbolReference([NotNull] DaedalusParser.IntegerSymbolReferenceContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.integerSymbolReference"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitIntegerSymbolReference([NotNull] DaedalusParser.IntegerSymbolReferenceContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.classLikeSymbolReference"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterClassLikeSymbolReference([NotNull] DaedalusParser.ClassLikeSymbolReferenceContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.classLikeSymbolReference"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitClassLikeSymbolReference([NotNull] DaedalusParser.ClassLikeSymbolReferenceContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.assigmentOperator"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
