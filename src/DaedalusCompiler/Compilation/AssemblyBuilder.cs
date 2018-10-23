@@ -467,18 +467,18 @@ namespace DaedalusCompiler.Compilation
         
         public int GetArrayIndex(DaedalusParser.ComplexReferenceNodeContext context)
         {
-            var simpleValueContext = context.simpleValue();
+            var indexContext = context.arrayIndex();
             
             
             int arrIndex = 0;
-            if (simpleValueContext != null)
+            if (indexContext != null)
             {
-                if (!int.TryParse(simpleValueContext.GetText(), out arrIndex))
+                if (!int.TryParse(indexContext.GetText(), out arrIndex))
                 {
-                    var constSymbol = ResolveSymbol(simpleValueContext.GetText());
+                    var constSymbol = ResolveSymbol(indexContext.GetText());
                     if (!constSymbol.Flags.HasFlag(DatSymbolFlag.Const) || constSymbol.Type != DatSymbolType.Int)
                     {
-                        throw new Exception($"Expected integer constant: {simpleValueContext.GetText()}");
+                        throw new Exception($"Expected integer constant: {indexContext.GetText()}");
                     }
 
                     arrIndex = (int) constSymbol.Content[0];

@@ -455,15 +455,25 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitLogAndExpression([NotNull] DaedalusParser.LogAndExpressionContext context);
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.simpleValue"/>.
+	/// Enter a parse tree produced by <see cref="DaedalusParser.arrayIndex"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void EnterSimpleValue([NotNull] DaedalusParser.SimpleValueContext context);
+	void EnterArrayIndex([NotNull] DaedalusParser.ArrayIndexContext context);
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.simpleValue"/>.
+	/// Exit a parse tree produced by <see cref="DaedalusParser.arrayIndex"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void ExitSimpleValue([NotNull] DaedalusParser.SimpleValueContext context);
+	void ExitArrayIndex([NotNull] DaedalusParser.ArrayIndexContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.arraySize"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterArraySize([NotNull] DaedalusParser.ArraySizeContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.arraySize"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitArraySize([NotNull] DaedalusParser.ArraySizeContext context);
 	/// <summary>
 	/// Enter a parse tree produced by the <c>integerLiteralValue</c>
 	/// labeled alternative in <see cref="DaedalusParser.value"/>.

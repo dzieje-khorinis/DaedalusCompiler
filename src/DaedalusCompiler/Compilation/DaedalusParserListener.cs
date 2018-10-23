@@ -67,16 +67,16 @@ namespace DaedalusCompiler.Compilation
             DatSymbol symbol;
             var location = GetLocation(context);
 
-            var simpleValueContext = context.simpleValue();
+            var arraySizeContext = context.arraySize();
 
-            if (simpleValueContext != null)
+            if (arraySizeContext != null)
             {
-                if (!uint.TryParse(simpleValueContext.GetText(), out var arrIndex))
+                if (!uint.TryParse(arraySizeContext.GetText(), out var arrIndex))
                 {
-                    var constSymbol = _assemblyBuilder.ResolveSymbol(simpleValueContext.GetText());
+                    var constSymbol = _assemblyBuilder.ResolveSymbol(arraySizeContext.GetText());
                     if (constSymbol.Flags != DatSymbolFlag.Const || constSymbol.Type != DatSymbolType.Int)
                     {
-                        throw new Exception($"Expected integer constant: {simpleValueContext.GetText()}");
+                        throw new Exception($"Expected integer constant: {arraySizeContext.GetText()}");
                     }
 
                     arrIndex = (uint) (int) constSymbol.Content[0];
@@ -133,7 +133,7 @@ namespace DaedalusCompiler.Compilation
                 {
                     var name = constArrayContext.nameNode().GetText();
                     var location = GetLocation(context);
-                    var size = EvaluatorHelper.EvaluteArraySize(constArrayContext.simpleValue(), _assemblyBuilder);
+                    var size = EvaluatorHelper.EvaluteArraySize(constArrayContext.arraySize(), _assemblyBuilder);
                     var content = constArrayContext.constArrayAssignment().expressionBlock()
                         .Select(expr => EvaluatorHelper.EvaluateConst(expr.expression(), _assemblyBuilder, type))
                         .ToArray();
@@ -202,7 +202,7 @@ namespace DaedalusCompiler.Compilation
                     {
                         var name = varArrayContext.nameNode().GetText();
                         var location = GetLocation(context);
-                        var size = EvaluatorHelper.EvaluteArraySize(varArrayContext.simpleValue(), _assemblyBuilder);
+                        var size = EvaluatorHelper.EvaluteArraySize(varArrayContext.arraySize(), _assemblyBuilder);
 
                         var symbol =
                             SymbolBuilder.BuildArrOfVariables(name, type, (uint) size,
@@ -253,7 +253,7 @@ namespace DaedalusCompiler.Compilation
                     {
                         var name = varArrayContext.nameNode().GetText();
                         var location = GetLocation(context);
-                        var size = EvaluatorHelper.EvaluteArraySize(varArrayContext.simpleValue(), _assemblyBuilder);
+                        var size = EvaluatorHelper.EvaluteArraySize(varArrayContext.arraySize(), _assemblyBuilder);
 
                         var symbol = SymbolBuilder.BuildClassVar(name, type, (uint) size, className, classId,
                             classVarOffset, location); // TODO : Validate params

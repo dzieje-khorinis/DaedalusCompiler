@@ -16,15 +16,23 @@ Prototype: 'prototype' | 'PROTOTYPE';
 Instance: 'instance' | 'INSTANCE';
 Null: 'null' | 'Null';
 
-Identifier : [a-zA-Z_] ([0-9] | [a-zA-Z_])*;
-IntegerLiteral : [0-9]+;
-FloatLiteral : [0-9]+ '.' [0-9]+;
+Identifier : IdStart IdContinue*;
+IntegerLiteral : Digit+;
+FloatLiteral : PointFloat | ExponentFloat;
 StringLiteral : '"' (~["\\\r\n] | '\\' (. | EOF))* '"';
 
 Whitespace : [ \t]+ -> skip;
 Newline : ('\r''\n'?| '\n') -> skip;
 BlockComment :   '/*' .*? '*/' -> skip;
 LineComment :   '//' ~[\r\n]* -> skip ;
+
+// fragments
+fragment IdStart : [a-zA-Z_];
+fragment IdContinue : IdStart | Digit;
+fragment Digit : [0-9];
+fragment PointFloat : Digit* '.' Digit+ | Digit+ '.';
+fragment ExponentFloat : (Digit+ | PointFloat) Exponent;
+fragment Exponent : [eE] [+-]? Digit+;
 
 //parser
 daedalusFile: (( functionDef | constDef | varDecl | classDef | prototypeDef | instanceDef | instanceDecl )';')*?;
@@ -37,17 +45,17 @@ instanceDef: Instance nameNode '(' referenceNode ')' statementBlock;
 instanceDecl: Instance nameNode ( ',' nameNode )*? '(' referenceNode ')';
 varDecl: Var typeReference (varValueDecl | varArrayDecl) (',' (varValueDecl | varArrayDecl) )* ;
 
-constArrayDef: nameNode '[' simpleValue ']' constArrayAssignment;
+constArrayDef: nameNode '[' arraySize ']' constArrayAssignment;
 constArrayAssignment: '=' '{' ( expressionBlock (',' expressionBlock)*? ) '}';
 
 constValueDef: nameNode constValueAssignment;
 constValueAssignment: '=' expressionBlock;
 
-varArrayDecl: nameNode '[' simpleValue ']';
+varArrayDecl: nameNode '[' arraySize ']';
 varValueDecl: nameNode;
 
 parameterList: '(' (parameterDecl (',' parameterDecl)*? )? ')';
-parameterDecl: Var typeReference nameNode ('[' simpleValue ']')?;
+parameterDecl: Var typeReference nameNode ('[' arraySize ']')?;
 statementBlock: '{' ( ( (statement ';')  | ( ifBlockStatement ( ';' )? ) ) )*? '}';
 statement: assignment | returnStatement | constDef | varDecl | expression;
 funcCall: nameNode '(' ( funcArgExpression ( ',' funcArgExpression )*? )? ')';
@@ -77,7 +85,9 @@ expression
     | value #valExpression
     ;
 
-simpleValue: IntegerLiteral | referenceNode;
+arrayIndex : IntegerLiteral | referenceNode;
+arraySize : IntegerLiteral | referenceNode;
+
 value
     : IntegerLiteral #integerLiteralValue
     | FloatLiteral #floatLiteralValue
@@ -89,7 +99,7 @@ value
     
 complexReferenceLeftSide: complexReferenceNode ( '.' complexReferenceNode )?;
 complexReference: complexReferenceNode ( '.' complexReferenceNode )?;
-complexReferenceNode: referenceNode ( '[' simpleValue ']')?;
+complexReferenceNode: referenceNode ( '[' arrayIndex ']')?;
 typeReference:  ( referenceNode  | Void | Int | Float | String | Func | Instance);
 nameNode: Identifier;
 referenceNode: Identifier;
