@@ -16,15 +16,23 @@ Prototype: 'prototype' | 'PROTOTYPE';
 Instance: 'instance' | 'INSTANCE';
 Null: 'null' | 'Null';
 
-Identifier : [a-zA-Z_] ([0-9] | [a-zA-Z_])*;
-IntegerLiteral : [0-9]+;
-FloatLiteral : [0-9]+ '.' [0-9]+;
+Identifier : IdStart IdContinue*;
+IntegerLiteral : Digit+;
+FloatLiteral : PointFloat | ExponentFloat;
 StringLiteral : '"' (~["\\\r\n] | '\\' (. | EOF))* '"';
 
 Whitespace : [ \t]+ -> skip;
 Newline : ('\r''\n'?| '\n') -> skip;
 BlockComment :   '/*' .*? '*/' -> skip;
 LineComment :   '//' ~[\r\n]* -> skip ;
+
+// fragments
+fragment IdStart : [a-zA-Z_];
+fragment IdContinue : IdStart | Digit;
+fragment Digit : [0-9];
+fragment PointFloat : Digit* '.' Digit+ | Digit+ '.';
+fragment ExponentFloat : (Digit+ | PointFloat) Exponent;
+fragment Exponent : [eE] [+-]? Digit+;
 
 //parser
 daedalusFile: (( functionDef | constDef | varDecl | classDef | prototypeDef | instanceDef | instanceDecl )';')*?;

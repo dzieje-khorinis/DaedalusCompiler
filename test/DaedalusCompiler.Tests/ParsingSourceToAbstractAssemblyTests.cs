@@ -2326,10 +2326,19 @@ namespace DaedalusCompiler.Tests
                 
                 const float a = -10;
                 const float b = +20;
+                const float c = 10.;
+                const float d = .5;
+                const float e = 12.5e+001;
+                const float f = -12.e-002;
 
                 func void testFunc(var float y) {
-                    const float c = -12.5;
+                    const float q = -12.5;
                     y = 5.5;
+                    y = 5.;
+                    y = .5;
+                    y = .5e+001;
+                    y = 5.e-001;
+
                     x = -1.5;
                     x = -1;
                     x = 0;
@@ -2356,6 +2365,26 @@ namespace DaedalusCompiler.Tests
 
                 // y = 5.5;
                 new PushInt(1085276160),
+                new PushVar(Ref("testFunc.y")),
+                new AssignFloat(),
+                
+                // y = 5.;
+                new PushInt(1084227584),
+                new PushVar(Ref("testFunc.y")),
+                new AssignFloat(),
+                
+                // y = .5;
+                new PushInt(1056964608),
+                new PushVar(Ref("testFunc.y")),
+                new AssignFloat(),
+                
+                // y = .5e+001;
+                new PushInt(1084227584),
+                new PushVar(Ref("testFunc.y")),
+                new AssignFloat(),
+                
+                // y = 5.e-001;
+                new PushInt(1056964608),
                 new PushVar(Ref("testFunc.y")),
                 new AssignFloat(),
 
@@ -2404,15 +2433,23 @@ namespace DaedalusCompiler.Tests
                 Ref("otherFunc"),
                 Ref("a"),
                 Ref("b"),
+                Ref("c"),
+                Ref("d"),
+                Ref("e"),
+                Ref("f"),
                 Ref("testFunc"),
                 Ref("testFunc.y"),
-                Ref("testFunc.c"),
+                Ref("testFunc.q"),
             };
             AssertSymbolsMatch();
 
             AssertRefContentEqual("a", -10.0f);
             AssertRefContentEqual("b", 20.0f);
-            AssertRefContentEqual("testFunc.c", -12.5f);
+            AssertRefContentEqual("c", 10.0f);
+            AssertRefContentEqual("d", 0.5f);
+            AssertRefContentEqual("e", 125.0f);
+            AssertRefContentEqual("f", -0.12f);
+            AssertRefContentEqual("testFunc.q", -12.5f);
         }
 
         [Fact]
