@@ -647,18 +647,6 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitReferenceValue([NotNull] DaedalusParser.ReferenceValueContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.referenceNode"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterReferenceNode([NotNull] DaedalusParser.ReferenceNodeContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.referenceNode"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitReferenceNode([NotNull] DaedalusParser.ReferenceNodeContext context) { }
-	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.referenceAtom"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>

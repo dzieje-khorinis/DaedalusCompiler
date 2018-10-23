@@ -547,16 +547,6 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitReferenceValue([NotNull] DaedalusParser.ReferenceValueContext context);
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.referenceNode"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterReferenceNode([NotNull] DaedalusParser.ReferenceNodeContext context);
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.referenceNode"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitReferenceNode([NotNull] DaedalusParser.ReferenceNodeContext context);
-	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.referenceAtom"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

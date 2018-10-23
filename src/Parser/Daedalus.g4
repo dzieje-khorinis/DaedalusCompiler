@@ -97,8 +97,7 @@ value
     | reference #referenceValue
     ;
     
-referenceNode: Identifier;
-referenceAtom: referenceNode ( '[' arrayIndex ']')?;
+referenceAtom: Identifier ( '[' arrayIndex ']')?;
 reference: referenceAtom ( '.' referenceAtom )?;
 referenceLeftSide: referenceAtom ( '.' referenceAtom )?;
 
