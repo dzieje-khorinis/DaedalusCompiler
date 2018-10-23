@@ -2269,8 +2269,8 @@ public partial class DaedalusParser : Parser {
 
 	public partial class ArrayIndexContext : ParserRuleContext {
 		public ITerminalNode IntegerLiteral() { return GetToken(DaedalusParser.IntegerLiteral, 0); }
-		public ReferenceContext reference() {
-			return GetRuleContext<ReferenceContext>(0);
+		public ReferenceAtomContext referenceAtom() {
+			return GetRuleContext<ReferenceAtomContext>(0);
 		}
 		public ArrayIndexContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
@@ -2304,7 +2304,7 @@ public partial class DaedalusParser : Parser {
 			case Identifier:
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 372; reference();
+				State = 372; referenceAtom();
 				}
 				break;
 			default:
@@ -2324,8 +2324,8 @@ public partial class DaedalusParser : Parser {
 
 	public partial class ArraySizeContext : ParserRuleContext {
 		public ITerminalNode IntegerLiteral() { return GetToken(DaedalusParser.IntegerLiteral, 0); }
-		public ReferenceContext reference() {
-			return GetRuleContext<ReferenceContext>(0);
+		public ReferenceAtomContext referenceAtom() {
+			return GetRuleContext<ReferenceAtomContext>(0);
 		}
 		public ArraySizeContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
@@ -2359,7 +2359,7 @@ public partial class DaedalusParser : Parser {
 			case Identifier:
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 376; reference();
+				State = 376; referenceAtom();
 				}
 				break;
 			default:
@@ -3622,10 +3622,10 @@ public partial class DaedalusParser : Parser {
 		'\x170', '\x3', '\x2', '\x2', '\x2', '\x172', '\x173', '\x3', '\x2', '\x2', 
 		'\x2', '\x173', ';', '\x3', '\x2', '\x2', '\x2', '\x174', '\x172', '\x3', 
 		'\x2', '\x2', '\x2', '\x175', '\x178', '\a', '\x33', '\x2', '\x2', '\x176', 
-		'\x178', '\x5', '\x44', '#', '\x2', '\x177', '\x175', '\x3', '\x2', '\x2', 
+		'\x178', '\x5', '\x42', '\"', '\x2', '\x177', '\x175', '\x3', '\x2', '\x2', 
 		'\x2', '\x177', '\x176', '\x3', '\x2', '\x2', '\x2', '\x178', '=', '\x3', 
 		'\x2', '\x2', '\x2', '\x179', '\x17C', '\a', '\x33', '\x2', '\x2', '\x17A', 
-		'\x17C', '\x5', '\x44', '#', '\x2', '\x17B', '\x179', '\x3', '\x2', '\x2', 
+		'\x17C', '\x5', '\x42', '\"', '\x2', '\x17B', '\x179', '\x3', '\x2', '\x2', 
 		'\x2', '\x17B', '\x17A', '\x3', '\x2', '\x2', '\x2', '\x17C', '?', '\x3', 
 		'\x2', '\x2', '\x2', '\x17D', '\x184', '\a', '\x33', '\x2', '\x2', '\x17E', 
 		'\x184', '\a', '\x34', '\x2', '\x2', '\x17F', '\x184', '\a', '\x35', '\x2', 

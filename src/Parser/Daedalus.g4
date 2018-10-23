@@ -85,8 +85,8 @@ expression
     | value #valExpression
     ;
 
-arrayIndex : IntegerLiteral | reference;
-arraySize : IntegerLiteral | reference;
+arrayIndex : IntegerLiteral | referenceAtom;
+arraySize : IntegerLiteral | referenceAtom;
 
 value
     : IntegerLiteral #integerLiteralValue
