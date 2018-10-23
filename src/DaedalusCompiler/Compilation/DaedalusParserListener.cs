@@ -471,10 +471,9 @@ namespace DaedalusCompiler.Compilation
             _assemblyBuilder.ExpressionRightSideStart();
         }
         
-
-        public override void ExitComplexReference(DaedalusParser.ComplexReferenceContext context)
+        public override void ExitReference(DaedalusParser.ReferenceContext context)
         {
-            var complexReferenceNodes = context.complexReferenceNode();
+            var complexReferenceNodes = context.referenceAtom();
             
             List<AssemblyInstruction> instructions = new List<AssemblyInstruction>();
             if (_assemblyBuilder.IsInsideArgList || _assemblyBuilder.IsInsideAssignment || _assemblyBuilder.IsInsideIfCondition || _assemblyBuilder.IsInsideReturnStatement)
@@ -493,7 +492,7 @@ namespace DaedalusCompiler.Compilation
         }
         
         
-        public DatSymbolType GetComplexReferenceType(DaedalusParser.ComplexReferenceNodeContext[] complexReferenceNodes)
+        public DatSymbolType GetComplexReferenceType(DaedalusParser.ReferenceAtomContext[] complexReferenceNodes)
         {
             string leftPart = complexReferenceNodes[0].referenceNode().GetText();
 
@@ -527,7 +526,7 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterAssignment(DaedalusParser.AssignmentContext context)
         {
-            var complexReferenceNodes = context.complexReferenceLeftSide().complexReferenceNode();
+            var complexReferenceNodes = context.referenceLeftSide().referenceAtom();
             List<AssemblyInstruction> instructions = _assemblyBuilder.GetComplexReferenceNodeInstructions(complexReferenceNodes);
             _assemblyBuilder.AssigmentStart(Array.ConvertAll(instructions.ToArray(), item => (SymbolInstruction) item));
             _assemblyBuilder.IsInsideAssignment = true;

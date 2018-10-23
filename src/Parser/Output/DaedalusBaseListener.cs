@@ -633,67 +633,19 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitFuncCallValue([NotNull] DaedalusParser.FuncCallValueContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by the <c>complexReferenceValue</c>
+	/// Enter a parse tree produced by the <c>referenceValue</c>
 	/// labeled alternative in <see cref="DaedalusParser.value"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterComplexReferenceValue([NotNull] DaedalusParser.ComplexReferenceValueContext context) { }
+	public virtual void EnterReferenceValue([NotNull] DaedalusParser.ReferenceValueContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by the <c>complexReferenceValue</c>
+	/// Exit a parse tree produced by the <c>referenceValue</c>
 	/// labeled alternative in <see cref="DaedalusParser.value"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitComplexReferenceValue([NotNull] DaedalusParser.ComplexReferenceValueContext context) { }
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.complexReferenceLeftSide"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterComplexReferenceLeftSide([NotNull] DaedalusParser.ComplexReferenceLeftSideContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.complexReferenceLeftSide"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitComplexReferenceLeftSide([NotNull] DaedalusParser.ComplexReferenceLeftSideContext context) { }
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.complexReference"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterComplexReference([NotNull] DaedalusParser.ComplexReferenceContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.complexReference"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitComplexReference([NotNull] DaedalusParser.ComplexReferenceContext context) { }
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.complexReferenceNode"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterComplexReferenceNode([NotNull] DaedalusParser.ComplexReferenceNodeContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.complexReferenceNode"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitComplexReferenceNode([NotNull] DaedalusParser.ComplexReferenceNodeContext context) { }
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.typeReference"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterTypeReference([NotNull] DaedalusParser.TypeReferenceContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.typeReference"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitTypeReference([NotNull] DaedalusParser.TypeReferenceContext context) { }
+	public virtual void ExitReferenceValue([NotNull] DaedalusParser.ReferenceValueContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.referenceNode"/>.
 	/// <para>The default implementation does nothing.</para>
@@ -706,6 +658,54 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitReferenceNode([NotNull] DaedalusParser.ReferenceNodeContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.referenceAtom"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterReferenceAtom([NotNull] DaedalusParser.ReferenceAtomContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.referenceAtom"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitReferenceAtom([NotNull] DaedalusParser.ReferenceAtomContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.reference"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterReference([NotNull] DaedalusParser.ReferenceContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.reference"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitReference([NotNull] DaedalusParser.ReferenceContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.referenceLeftSide"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterReferenceLeftSide([NotNull] DaedalusParser.ReferenceLeftSideContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.referenceLeftSide"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitReferenceLeftSide([NotNull] DaedalusParser.ReferenceLeftSideContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.typeReference"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterTypeReference([NotNull] DaedalusParser.TypeReferenceContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.typeReference"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitTypeReference([NotNull] DaedalusParser.TypeReferenceContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.nameNode"/>.
 	/// <para>The default implementation does nothing.</para>

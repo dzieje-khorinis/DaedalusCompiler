@@ -59,7 +59,7 @@ parameterDecl: Var typeReference nameNode ('[' arraySize ']')?;
 statementBlock: '{' ( ( (statement ';')  | ( ifBlockStatement ( ';' )? ) ) )*? '}';
 statement: assignment | returnStatement | constDef | varDecl | expression;
 funcCall: nameNode '(' ( funcArgExpression ( ',' funcArgExpression )*? )? ')';
-assignment: complexReferenceLeftSide assigmentOperator expressionBlock;
+assignment: referenceLeftSide assigmentOperator expressionBlock;
 ifCondition: expressionBlock;
 elseBlock: Else statementBlock;
 elseIfBlock: Else If ifCondition statementBlock;
@@ -94,14 +94,15 @@ value
     | StringLiteral #stringLiteralValue
     | Null #nullLiteralValue
     | funcCall #funcCallValue
-    | complexReference #complexReferenceValue
+    | reference #referenceValue
     ;
     
-complexReferenceLeftSide: complexReferenceNode ( '.' complexReferenceNode )?;
-complexReference: complexReferenceNode ( '.' complexReferenceNode )?;
-complexReferenceNode: referenceNode ( '[' arrayIndex ']')?;
-typeReference:  ( Identifier | Void | Int | Float | String | Func | Instance);
 referenceNode: Identifier;
+referenceAtom: referenceNode ( '[' arrayIndex ']')?;
+reference: referenceAtom ( '.' referenceAtom )?;
+referenceLeftSide: referenceAtom ( '.' referenceAtom )?;
+
+typeReference:  ( Identifier | Void | Int | Float | String | Func | Instance);
 
 nameNode: Identifier;
 
