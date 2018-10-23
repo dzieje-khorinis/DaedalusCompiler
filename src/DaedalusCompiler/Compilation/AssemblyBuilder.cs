@@ -352,12 +352,12 @@ namespace DaedalusCompiler.Compilation
             return ParametersTypes[ArgIndex];
         }
 
-        public void addFuncCallArgInstructions(List<AssemblyElement> instructions)
+        public void AddFuncCallArgInstructions(List<AssemblyElement> instructions)
         {
             _funcArgsBodyContext.Body.AddRange(instructions);
         }
 
-        public List<AssemblyElement> getFuncCallArgInstructions()
+        public List<AssemblyElement> GetFuncCallArgInstructions()
         {
             return _funcArgsBodyContext.Body;
         }
@@ -696,7 +696,7 @@ namespace DaedalusCompiler.Compilation
 
         public void FuncCallArgEnd()
         {
-            FuncCallCtx.addFuncCallArgInstructions(_currentBuildCtx.Body);
+            FuncCallCtx.AddFuncCallArgInstructions(_currentBuildCtx.Body);
             _currentBuildCtx = _currentBuildCtx.Parent;
         }
 
@@ -720,7 +720,7 @@ namespace DaedalusCompiler.Compilation
         public void FuncCallEnd(AssemblyElement instruction)
         {
             _currentBuildCtx = _currentBuildCtx.Parent;
-            _currentBuildCtx.Body.AddRange(FuncCallCtx.getFuncCallArgInstructions());
+            _currentBuildCtx.Body.AddRange(FuncCallCtx.GetFuncCallArgInstructions());
             _currentBuildCtx.Body.Add(instruction);
 
             FuncCallCtx = FuncCallCtx.Parent;
