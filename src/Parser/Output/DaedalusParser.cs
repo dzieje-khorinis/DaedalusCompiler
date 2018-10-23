@@ -54,9 +54,9 @@ public partial class DaedalusParser : Parser {
 		RULE_elseBlock = 21, RULE_elseIfBlock = 22, RULE_ifBlock = 23, RULE_ifBlockStatement = 24, 
 		RULE_returnStatement = 25, RULE_funcArgExpression = 26, RULE_expressionBlock = 27, 
 		RULE_expression = 28, RULE_arrayIndex = 29, RULE_arraySize = 30, RULE_value = 31, 
-		RULE_complexReferenceLeftSide = 32, RULE_complexReference = 33, RULE_complexReferenceNode = 34, 
-		RULE_typeReference = 35, RULE_nameNode = 36, RULE_referenceNode = 37, 
-		RULE_assigmentOperator = 38, RULE_addOperator = 39, RULE_bitMoveOperator = 40, 
+		RULE_referenceAtom = 32, RULE_reference = 33, RULE_referenceLeftSide = 34, 
+		RULE_typeReference = 35, RULE_nameNode = 36, RULE_parentReference = 37, 
+		RULE_assignmentOperator = 38, RULE_addOperator = 39, RULE_bitMoveOperator = 40, 
 		RULE_compOperator = 41, RULE_eqOperator = 42, RULE_oneArgOperator = 43, 
 		RULE_multOperator = 44, RULE_binAndOperator = 45, RULE_binOrOperator = 46, 
 		RULE_logAndOperator = 47, RULE_logOrOperator = 48;
@@ -67,11 +67,10 @@ public partial class DaedalusParser : Parser {
 		"parameterList", "parameterDecl", "statementBlock", "statement", "funcCall", 
 		"assignment", "ifCondition", "elseBlock", "elseIfBlock", "ifBlock", "ifBlockStatement", 
 		"returnStatement", "funcArgExpression", "expressionBlock", "expression", 
-		"arrayIndex", "arraySize", "value", "complexReferenceLeftSide", "complexReference", 
-		"complexReferenceNode", "typeReference", "nameNode", "referenceNode", 
-		"assigmentOperator", "addOperator", "bitMoveOperator", "compOperator", 
-		"eqOperator", "oneArgOperator", "multOperator", "binAndOperator", "binOrOperator", 
-		"logAndOperator", "logOrOperator"
+		"arrayIndex", "arraySize", "value", "referenceAtom", "reference", "referenceLeftSide", 
+		"typeReference", "nameNode", "parentReference", "assignmentOperator", 
+		"addOperator", "bitMoveOperator", "compOperator", "eqOperator", "oneArgOperator", 
+		"multOperator", "binAndOperator", "binOrOperator", "logAndOperator", "logOrOperator"
 	};
 
 	private static readonly string[] _LiteralNames = {
@@ -474,8 +473,8 @@ public partial class DaedalusParser : Parser {
 		public NameNodeContext nameNode() {
 			return GetRuleContext<NameNodeContext>(0);
 		}
-		public ReferenceNodeContext referenceNode() {
-			return GetRuleContext<ReferenceNodeContext>(0);
+		public ParentReferenceContext parentReference() {
+			return GetRuleContext<ParentReferenceContext>(0);
 		}
 		public StatementBlockContext statementBlock() {
 			return GetRuleContext<StatementBlockContext>(0);
@@ -505,7 +504,7 @@ public partial class DaedalusParser : Parser {
 			State = 149; Match(Prototype);
 			State = 150; nameNode();
 			State = 151; Match(T__4);
-			State = 152; referenceNode();
+			State = 152; parentReference();
 			State = 153; Match(T__5);
 			State = 154; statementBlock();
 			}
@@ -526,8 +525,8 @@ public partial class DaedalusParser : Parser {
 		public NameNodeContext nameNode() {
 			return GetRuleContext<NameNodeContext>(0);
 		}
-		public ReferenceNodeContext referenceNode() {
-			return GetRuleContext<ReferenceNodeContext>(0);
+		public ParentReferenceContext parentReference() {
+			return GetRuleContext<ParentReferenceContext>(0);
 		}
 		public StatementBlockContext statementBlock() {
 			return GetRuleContext<StatementBlockContext>(0);
@@ -557,7 +556,7 @@ public partial class DaedalusParser : Parser {
 			State = 156; Match(Instance);
 			State = 157; nameNode();
 			State = 158; Match(T__4);
-			State = 159; referenceNode();
+			State = 159; parentReference();
 			State = 160; Match(T__5);
 			State = 161; statementBlock();
 			}
@@ -581,8 +580,8 @@ public partial class DaedalusParser : Parser {
 		public NameNodeContext nameNode(int i) {
 			return GetRuleContext<NameNodeContext>(i);
 		}
-		public ReferenceNodeContext referenceNode() {
-			return GetRuleContext<ReferenceNodeContext>(0);
+		public ParentReferenceContext parentReference() {
+			return GetRuleContext<ParentReferenceContext>(0);
 		}
 		public InstanceDeclContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
@@ -626,7 +625,7 @@ public partial class DaedalusParser : Parser {
 				_alt = Interpreter.AdaptivePredict(TokenStream,6,Context);
 			}
 			State = 172; Match(T__4);
-			State = 173; referenceNode();
+			State = 173; parentReference();
 			State = 174; Match(T__5);
 			}
 		}
@@ -1421,11 +1420,11 @@ public partial class DaedalusParser : Parser {
 	}
 
 	public partial class AssignmentContext : ParserRuleContext {
-		public ComplexReferenceLeftSideContext complexReferenceLeftSide() {
-			return GetRuleContext<ComplexReferenceLeftSideContext>(0);
+		public ReferenceLeftSideContext referenceLeftSide() {
+			return GetRuleContext<ReferenceLeftSideContext>(0);
 		}
-		public AssigmentOperatorContext assigmentOperator() {
-			return GetRuleContext<AssigmentOperatorContext>(0);
+		public AssignmentOperatorContext assignmentOperator() {
+			return GetRuleContext<AssignmentOperatorContext>(0);
 		}
 		public ExpressionBlockContext expressionBlock() {
 			return GetRuleContext<ExpressionBlockContext>(0);
@@ -1452,8 +1451,8 @@ public partial class DaedalusParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 283; complexReferenceLeftSide();
-			State = 284; assigmentOperator();
+			State = 283; referenceLeftSide();
+			State = 284; assignmentOperator();
 			State = 285; expressionBlock();
 			}
 		}
@@ -2270,8 +2269,8 @@ public partial class DaedalusParser : Parser {
 
 	public partial class ArrayIndexContext : ParserRuleContext {
 		public ITerminalNode IntegerLiteral() { return GetToken(DaedalusParser.IntegerLiteral, 0); }
-		public ReferenceNodeContext referenceNode() {
-			return GetRuleContext<ReferenceNodeContext>(0);
+		public ReferenceAtomContext referenceAtom() {
+			return GetRuleContext<ReferenceAtomContext>(0);
 		}
 		public ArrayIndexContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
@@ -2305,7 +2304,7 @@ public partial class DaedalusParser : Parser {
 			case Identifier:
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 372; referenceNode();
+				State = 372; referenceAtom();
 				}
 				break;
 			default:
@@ -2325,8 +2324,8 @@ public partial class DaedalusParser : Parser {
 
 	public partial class ArraySizeContext : ParserRuleContext {
 		public ITerminalNode IntegerLiteral() { return GetToken(DaedalusParser.IntegerLiteral, 0); }
-		public ReferenceNodeContext referenceNode() {
-			return GetRuleContext<ReferenceNodeContext>(0);
+		public ReferenceAtomContext referenceAtom() {
+			return GetRuleContext<ReferenceAtomContext>(0);
 		}
 		public ArraySizeContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
@@ -2360,7 +2359,7 @@ public partial class DaedalusParser : Parser {
 			case Identifier:
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 376; referenceNode();
+				State = 376; referenceAtom();
 				}
 				break;
 			default:
@@ -2426,20 +2425,6 @@ public partial class DaedalusParser : Parser {
 			if (typedListener != null) typedListener.ExitStringLiteralValue(this);
 		}
 	}
-	public partial class ComplexReferenceValueContext : ValueContext {
-		public ComplexReferenceContext complexReference() {
-			return GetRuleContext<ComplexReferenceContext>(0);
-		}
-		public ComplexReferenceValueContext(ValueContext context) { CopyFrom(context); }
-		public override void EnterRule(IParseTreeListener listener) {
-			IDaedalusListener typedListener = listener as IDaedalusListener;
-			if (typedListener != null) typedListener.EnterComplexReferenceValue(this);
-		}
-		public override void ExitRule(IParseTreeListener listener) {
-			IDaedalusListener typedListener = listener as IDaedalusListener;
-			if (typedListener != null) typedListener.ExitComplexReferenceValue(this);
-		}
-	}
 	public partial class NullLiteralValueContext : ValueContext {
 		public ITerminalNode Null() { return GetToken(DaedalusParser.Null, 0); }
 		public NullLiteralValueContext(ValueContext context) { CopyFrom(context); }
@@ -2464,6 +2449,20 @@ public partial class DaedalusParser : Parser {
 		public override void ExitRule(IParseTreeListener listener) {
 			IDaedalusListener typedListener = listener as IDaedalusListener;
 			if (typedListener != null) typedListener.ExitFuncCallValue(this);
+		}
+	}
+	public partial class ReferenceValueContext : ValueContext {
+		public ReferenceContext reference() {
+			return GetRuleContext<ReferenceContext>(0);
+		}
+		public ReferenceValueContext(ValueContext context) { CopyFrom(context); }
+		public override void EnterRule(IParseTreeListener listener) {
+			IDaedalusListener typedListener = listener as IDaedalusListener;
+			if (typedListener != null) typedListener.EnterReferenceValue(this);
+		}
+		public override void ExitRule(IParseTreeListener listener) {
+			IDaedalusListener typedListener = listener as IDaedalusListener;
+			if (typedListener != null) typedListener.ExitReferenceValue(this);
 		}
 	}
 
@@ -2511,10 +2510,10 @@ public partial class DaedalusParser : Parser {
 				}
 				break;
 			case 6:
-				_localctx = new ComplexReferenceValueContext(_localctx);
+				_localctx = new ReferenceValueContext(_localctx);
 				EnterOuterAlt(_localctx, 6);
 				{
-				State = 384; complexReference();
+				State = 384; reference();
 				}
 				break;
 			}
@@ -2530,47 +2529,45 @@ public partial class DaedalusParser : Parser {
 		return _localctx;
 	}
 
-	public partial class ComplexReferenceLeftSideContext : ParserRuleContext {
-		public ComplexReferenceNodeContext[] complexReferenceNode() {
-			return GetRuleContexts<ComplexReferenceNodeContext>();
+	public partial class ReferenceAtomContext : ParserRuleContext {
+		public ITerminalNode Identifier() { return GetToken(DaedalusParser.Identifier, 0); }
+		public ArrayIndexContext arrayIndex() {
+			return GetRuleContext<ArrayIndexContext>(0);
 		}
-		public ComplexReferenceNodeContext complexReferenceNode(int i) {
-			return GetRuleContext<ComplexReferenceNodeContext>(i);
-		}
-		public ComplexReferenceLeftSideContext(ParserRuleContext parent, int invokingState)
+		public ReferenceAtomContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
 		}
-		public override int RuleIndex { get { return RULE_complexReferenceLeftSide; } }
+		public override int RuleIndex { get { return RULE_referenceAtom; } }
 		public override void EnterRule(IParseTreeListener listener) {
 			IDaedalusListener typedListener = listener as IDaedalusListener;
-			if (typedListener != null) typedListener.EnterComplexReferenceLeftSide(this);
+			if (typedListener != null) typedListener.EnterReferenceAtom(this);
 		}
 		public override void ExitRule(IParseTreeListener listener) {
 			IDaedalusListener typedListener = listener as IDaedalusListener;
-			if (typedListener != null) typedListener.ExitComplexReferenceLeftSide(this);
+			if (typedListener != null) typedListener.ExitReferenceAtom(this);
 		}
 	}
 
 	[RuleVersion(0)]
-	public ComplexReferenceLeftSideContext complexReferenceLeftSide() {
-		ComplexReferenceLeftSideContext _localctx = new ComplexReferenceLeftSideContext(Context, State);
-		EnterRule(_localctx, 64, RULE_complexReferenceLeftSide);
-		int _la;
+	public ReferenceAtomContext referenceAtom() {
+		ReferenceAtomContext _localctx = new ReferenceAtomContext(Context, State);
+		EnterRule(_localctx, 64, RULE_referenceAtom);
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 387; complexReferenceNode();
-			State = 390;
+			State = 387; Match(Identifier);
+			State = 392;
 			ErrorHandler.Sync(this);
-			_la = TokenStream.LA(1);
-			if (_la==T__9) {
+			switch ( Interpreter.AdaptivePredict(TokenStream,29,Context) ) {
+			case 1:
 				{
-				State = 388; Match(T__9);
-				State = 389; complexReferenceNode();
+				State = 388; Match(T__6);
+				State = 389; arrayIndex();
+				State = 390; Match(T__7);
 				}
+				break;
 			}
-
 			}
 		}
 		catch (RecognitionException re) {
@@ -2584,43 +2581,43 @@ public partial class DaedalusParser : Parser {
 		return _localctx;
 	}
 
-	public partial class ComplexReferenceContext : ParserRuleContext {
-		public ComplexReferenceNodeContext[] complexReferenceNode() {
-			return GetRuleContexts<ComplexReferenceNodeContext>();
+	public partial class ReferenceContext : ParserRuleContext {
+		public ReferenceAtomContext[] referenceAtom() {
+			return GetRuleContexts<ReferenceAtomContext>();
 		}
-		public ComplexReferenceNodeContext complexReferenceNode(int i) {
-			return GetRuleContext<ComplexReferenceNodeContext>(i);
+		public ReferenceAtomContext referenceAtom(int i) {
+			return GetRuleContext<ReferenceAtomContext>(i);
 		}
-		public ComplexReferenceContext(ParserRuleContext parent, int invokingState)
+		public ReferenceContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
 		}
-		public override int RuleIndex { get { return RULE_complexReference; } }
+		public override int RuleIndex { get { return RULE_reference; } }
 		public override void EnterRule(IParseTreeListener listener) {
 			IDaedalusListener typedListener = listener as IDaedalusListener;
-			if (typedListener != null) typedListener.EnterComplexReference(this);
+			if (typedListener != null) typedListener.EnterReference(this);
 		}
 		public override void ExitRule(IParseTreeListener listener) {
 			IDaedalusListener typedListener = listener as IDaedalusListener;
-			if (typedListener != null) typedListener.ExitComplexReference(this);
+			if (typedListener != null) typedListener.ExitReference(this);
 		}
 	}
 
 	[RuleVersion(0)]
-	public ComplexReferenceContext complexReference() {
-		ComplexReferenceContext _localctx = new ComplexReferenceContext(Context, State);
-		EnterRule(_localctx, 66, RULE_complexReference);
+	public ReferenceContext reference() {
+		ReferenceContext _localctx = new ReferenceContext(Context, State);
+		EnterRule(_localctx, 66, RULE_reference);
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 392; complexReferenceNode();
-			State = 395;
+			State = 394; referenceAtom();
+			State = 397;
 			ErrorHandler.Sync(this);
 			switch ( Interpreter.AdaptivePredict(TokenStream,30,Context) ) {
 			case 1:
 				{
-				State = 393; Match(T__9);
-				State = 394; complexReferenceNode();
+				State = 395; Match(T__9);
+				State = 396; referenceAtom();
 				}
 				break;
 			}
@@ -2637,47 +2634,47 @@ public partial class DaedalusParser : Parser {
 		return _localctx;
 	}
 
-	public partial class ComplexReferenceNodeContext : ParserRuleContext {
-		public ReferenceNodeContext referenceNode() {
-			return GetRuleContext<ReferenceNodeContext>(0);
+	public partial class ReferenceLeftSideContext : ParserRuleContext {
+		public ReferenceAtomContext[] referenceAtom() {
+			return GetRuleContexts<ReferenceAtomContext>();
 		}
-		public ArrayIndexContext arrayIndex() {
-			return GetRuleContext<ArrayIndexContext>(0);
+		public ReferenceAtomContext referenceAtom(int i) {
+			return GetRuleContext<ReferenceAtomContext>(i);
 		}
-		public ComplexReferenceNodeContext(ParserRuleContext parent, int invokingState)
+		public ReferenceLeftSideContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
 		}
-		public override int RuleIndex { get { return RULE_complexReferenceNode; } }
+		public override int RuleIndex { get { return RULE_referenceLeftSide; } }
 		public override void EnterRule(IParseTreeListener listener) {
 			IDaedalusListener typedListener = listener as IDaedalusListener;
-			if (typedListener != null) typedListener.EnterComplexReferenceNode(this);
+			if (typedListener != null) typedListener.EnterReferenceLeftSide(this);
 		}
 		public override void ExitRule(IParseTreeListener listener) {
 			IDaedalusListener typedListener = listener as IDaedalusListener;
-			if (typedListener != null) typedListener.ExitComplexReferenceNode(this);
+			if (typedListener != null) typedListener.ExitReferenceLeftSide(this);
 		}
 	}
 
 	[RuleVersion(0)]
-	public ComplexReferenceNodeContext complexReferenceNode() {
-		ComplexReferenceNodeContext _localctx = new ComplexReferenceNodeContext(Context, State);
-		EnterRule(_localctx, 68, RULE_complexReferenceNode);
+	public ReferenceLeftSideContext referenceLeftSide() {
+		ReferenceLeftSideContext _localctx = new ReferenceLeftSideContext(Context, State);
+		EnterRule(_localctx, 68, RULE_referenceLeftSide);
+		int _la;
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 397; referenceNode();
+			State = 399; referenceAtom();
 			State = 402;
 			ErrorHandler.Sync(this);
-			switch ( Interpreter.AdaptivePredict(TokenStream,31,Context) ) {
-			case 1:
+			_la = TokenStream.LA(1);
+			if (_la==T__9) {
 				{
-				State = 398; Match(T__6);
-				State = 399; arrayIndex();
-				State = 400; Match(T__7);
+				State = 400; Match(T__9);
+				State = 401; referenceAtom();
 				}
-				break;
 			}
+
 			}
 		}
 		catch (RecognitionException re) {
@@ -2692,9 +2689,7 @@ public partial class DaedalusParser : Parser {
 	}
 
 	public partial class TypeReferenceContext : ParserRuleContext {
-		public ReferenceNodeContext referenceNode() {
-			return GetRuleContext<ReferenceNodeContext>(0);
-		}
+		public ITerminalNode Identifier() { return GetToken(DaedalusParser.Identifier, 0); }
 		public ITerminalNode Void() { return GetToken(DaedalusParser.Void, 0); }
 		public ITerminalNode Int() { return GetToken(DaedalusParser.Int, 0); }
 		public ITerminalNode Float() { return GetToken(DaedalusParser.Float, 0); }
@@ -2720,49 +2715,18 @@ public partial class DaedalusParser : Parser {
 	public TypeReferenceContext typeReference() {
 		TypeReferenceContext _localctx = new TypeReferenceContext(Context, State);
 		EnterRule(_localctx, 70, RULE_typeReference);
+		int _la;
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 411;
-			ErrorHandler.Sync(this);
-			switch (TokenStream.LA(1)) {
-			case Identifier:
-				{
-				State = 404; referenceNode();
-				}
-				break;
-			case Void:
-				{
-				State = 405; Match(Void);
-				}
-				break;
-			case Int:
-				{
-				State = 406; Match(Int);
-				}
-				break;
-			case Float:
-				{
-				State = 407; Match(Float);
-				}
-				break;
-			case String:
-				{
-				State = 408; Match(String);
-				}
-				break;
-			case Func:
-				{
-				State = 409; Match(Func);
-				}
-				break;
-			case Instance:
-				{
-				State = 410; Match(Instance);
-				}
-				break;
-			default:
-				throw new NoViableAltException(this);
+			State = 404;
+			_la = TokenStream.LA(1);
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << Int) | (1L << Func) | (1L << String) | (1L << Void) | (1L << Float) | (1L << Instance) | (1L << Identifier))) != 0)) ) {
+			ErrorHandler.RecoverInline(this);
+			}
+			else {
+				ErrorHandler.ReportMatch(this);
+			    Consume();
 			}
 			}
 		}
@@ -2801,7 +2765,7 @@ public partial class DaedalusParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 413; Match(Identifier);
+			State = 406; Match(Identifier);
 			}
 		}
 		catch (RecognitionException re) {
@@ -2815,31 +2779,31 @@ public partial class DaedalusParser : Parser {
 		return _localctx;
 	}
 
-	public partial class ReferenceNodeContext : ParserRuleContext {
+	public partial class ParentReferenceContext : ParserRuleContext {
 		public ITerminalNode Identifier() { return GetToken(DaedalusParser.Identifier, 0); }
-		public ReferenceNodeContext(ParserRuleContext parent, int invokingState)
+		public ParentReferenceContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
 		}
-		public override int RuleIndex { get { return RULE_referenceNode; } }
+		public override int RuleIndex { get { return RULE_parentReference; } }
 		public override void EnterRule(IParseTreeListener listener) {
 			IDaedalusListener typedListener = listener as IDaedalusListener;
-			if (typedListener != null) typedListener.EnterReferenceNode(this);
+			if (typedListener != null) typedListener.EnterParentReference(this);
 		}
 		public override void ExitRule(IParseTreeListener listener) {
 			IDaedalusListener typedListener = listener as IDaedalusListener;
-			if (typedListener != null) typedListener.ExitReferenceNode(this);
+			if (typedListener != null) typedListener.ExitParentReference(this);
 		}
 	}
 
 	[RuleVersion(0)]
-	public ReferenceNodeContext referenceNode() {
-		ReferenceNodeContext _localctx = new ReferenceNodeContext(Context, State);
-		EnterRule(_localctx, 74, RULE_referenceNode);
+	public ParentReferenceContext parentReference() {
+		ParentReferenceContext _localctx = new ParentReferenceContext(Context, State);
+		EnterRule(_localctx, 74, RULE_parentReference);
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 415; Match(Identifier);
+			State = 408; Match(Identifier);
 			}
 		}
 		catch (RecognitionException re) {
@@ -2853,31 +2817,31 @@ public partial class DaedalusParser : Parser {
 		return _localctx;
 	}
 
-	public partial class AssigmentOperatorContext : ParserRuleContext {
-		public AssigmentOperatorContext(ParserRuleContext parent, int invokingState)
+	public partial class AssignmentOperatorContext : ParserRuleContext {
+		public AssignmentOperatorContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
 		}
-		public override int RuleIndex { get { return RULE_assigmentOperator; } }
+		public override int RuleIndex { get { return RULE_assignmentOperator; } }
 		public override void EnterRule(IParseTreeListener listener) {
 			IDaedalusListener typedListener = listener as IDaedalusListener;
-			if (typedListener != null) typedListener.EnterAssigmentOperator(this);
+			if (typedListener != null) typedListener.EnterAssignmentOperator(this);
 		}
 		public override void ExitRule(IParseTreeListener listener) {
 			IDaedalusListener typedListener = listener as IDaedalusListener;
-			if (typedListener != null) typedListener.ExitAssigmentOperator(this);
+			if (typedListener != null) typedListener.ExitAssignmentOperator(this);
 		}
 	}
 
 	[RuleVersion(0)]
-	public AssigmentOperatorContext assigmentOperator() {
-		AssigmentOperatorContext _localctx = new AssigmentOperatorContext(Context, State);
-		EnterRule(_localctx, 76, RULE_assigmentOperator);
+	public AssignmentOperatorContext assignmentOperator() {
+		AssignmentOperatorContext _localctx = new AssignmentOperatorContext(Context, State);
+		EnterRule(_localctx, 76, RULE_assignmentOperator);
 		int _la;
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 417;
+			State = 410;
 			_la = TokenStream.LA(1);
 			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__8) | (1L << T__10) | (1L << T__11) | (1L << T__12) | (1L << T__13))) != 0)) ) {
 			ErrorHandler.RecoverInline(this);
@@ -2923,7 +2887,7 @@ public partial class DaedalusParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 419;
+			State = 412;
 			_la = TokenStream.LA(1);
 			if ( !(_la==T__14 || _la==T__15) ) {
 			ErrorHandler.RecoverInline(this);
@@ -2969,7 +2933,7 @@ public partial class DaedalusParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 421;
+			State = 414;
 			_la = TokenStream.LA(1);
 			if ( !(_la==T__16 || _la==T__17) ) {
 			ErrorHandler.RecoverInline(this);
@@ -3015,7 +2979,7 @@ public partial class DaedalusParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 423;
+			State = 416;
 			_la = TokenStream.LA(1);
 			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__18) | (1L << T__19) | (1L << T__20) | (1L << T__21))) != 0)) ) {
 			ErrorHandler.RecoverInline(this);
@@ -3061,7 +3025,7 @@ public partial class DaedalusParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 425;
+			State = 418;
 			_la = TokenStream.LA(1);
 			if ( !(_la==T__22 || _la==T__23) ) {
 			ErrorHandler.RecoverInline(this);
@@ -3107,7 +3071,7 @@ public partial class DaedalusParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 427;
+			State = 420;
 			_la = TokenStream.LA(1);
 			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__14) | (1L << T__15) | (1L << T__24) | (1L << T__25))) != 0)) ) {
 			ErrorHandler.RecoverInline(this);
@@ -3153,7 +3117,7 @@ public partial class DaedalusParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 429;
+			State = 422;
 			_la = TokenStream.LA(1);
 			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__26) | (1L << T__27) | (1L << T__28))) != 0)) ) {
 			ErrorHandler.RecoverInline(this);
@@ -3198,7 +3162,7 @@ public partial class DaedalusParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 431; Match(T__29);
+			State = 424; Match(T__29);
 			}
 		}
 		catch (RecognitionException re) {
@@ -3235,7 +3199,7 @@ public partial class DaedalusParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 433; Match(T__30);
+			State = 426; Match(T__30);
 			}
 		}
 		catch (RecognitionException re) {
@@ -3272,7 +3236,7 @@ public partial class DaedalusParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 435; Match(T__31);
+			State = 428; Match(T__31);
 			}
 		}
 		catch (RecognitionException re) {
@@ -3309,7 +3273,7 @@ public partial class DaedalusParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 437; Match(T__32);
+			State = 430; Match(T__32);
 			}
 		}
 		catch (RecognitionException re) {
@@ -3346,7 +3310,7 @@ public partial class DaedalusParser : Parser {
 
 	private static char[] _serializedATN = {
 		'\x3', '\x608B', '\xA72A', '\x8133', '\xB9ED', '\x417C', '\x3BE7', '\x7786', 
-		'\x5964', '\x3', '\x39', '\x1BA', '\x4', '\x2', '\t', '\x2', '\x4', '\x3', 
+		'\x5964', '\x3', '\x39', '\x1B3', '\x4', '\x2', '\t', '\x2', '\x4', '\x3', 
 		'\t', '\x3', '\x4', '\x4', '\t', '\x4', '\x4', '\x5', '\t', '\x5', '\x4', 
 		'\x6', '\t', '\x6', '\x4', '\a', '\t', '\a', '\x4', '\b', '\t', '\b', 
 		'\x4', '\t', '\t', '\t', '\x4', '\n', '\t', '\n', '\x4', '\v', '\t', '\v', 
@@ -3424,36 +3388,36 @@ public partial class DaedalusParser : Parser {
 		'\x5', '\x1F', '\x178', '\n', '\x1F', '\x3', ' ', '\x3', ' ', '\x5', ' ', 
 		'\x17C', '\n', ' ', '\x3', '!', '\x3', '!', '\x3', '!', '\x3', '!', '\x3', 
 		'!', '\x3', '!', '\x5', '!', '\x184', '\n', '!', '\x3', '\"', '\x3', '\"', 
-		'\x3', '\"', '\x5', '\"', '\x189', '\n', '\"', '\x3', '#', '\x3', '#', 
-		'\x3', '#', '\x5', '#', '\x18E', '\n', '#', '\x3', '$', '\x3', '$', '\x3', 
+		'\x3', '\"', '\x3', '\"', '\x3', '\"', '\x5', '\"', '\x18B', '\n', '\"', 
+		'\x3', '#', '\x3', '#', '\x3', '#', '\x5', '#', '\x190', '\n', '#', '\x3', 
 		'$', '\x3', '$', '\x3', '$', '\x5', '$', '\x195', '\n', '$', '\x3', '%', 
-		'\x3', '%', '\x3', '%', '\x3', '%', '\x3', '%', '\x3', '%', '\x3', '%', 
-		'\x5', '%', '\x19E', '\n', '%', '\x3', '&', '\x3', '&', '\x3', '\'', '\x3', 
-		'\'', '\x3', '(', '\x3', '(', '\x3', ')', '\x3', ')', '\x3', '*', '\x3', 
-		'*', '\x3', '+', '\x3', '+', '\x3', ',', '\x3', ',', '\x3', '-', '\x3', 
-		'-', '\x3', '.', '\x3', '.', '\x3', '/', '\x3', '/', '\x3', '\x30', '\x3', 
-		'\x30', '\x3', '\x31', '\x3', '\x31', '\x3', '\x32', '\x3', '\x32', '\x3', 
-		'\x32', '\n', 'q', '\x92', '\xAB', '\xCF', '\xE7', '\x103', '\x116', '\x133', 
-		'\x3', ':', '\x33', '\x2', '\x4', '\x6', '\b', '\n', '\f', '\xE', '\x10', 
-		'\x12', '\x14', '\x16', '\x18', '\x1A', '\x1C', '\x1E', ' ', '\"', '$', 
-		'&', '(', '*', ',', '.', '\x30', '\x32', '\x34', '\x36', '\x38', ':', 
-		'<', '>', '@', '\x42', '\x44', '\x46', 'H', 'J', 'L', 'N', 'P', 'R', 'T', 
-		'V', 'X', 'Z', '\\', '^', '`', '\x62', '\x2', '\t', '\x4', '\x2', '\v', 
-		'\v', '\r', '\x10', '\x3', '\x2', '\x11', '\x12', '\x3', '\x2', '\x13', 
-		'\x14', '\x3', '\x2', '\x15', '\x18', '\x3', '\x2', '\x19', '\x1A', '\x4', 
-		'\x2', '\x11', '\x12', '\x1B', '\x1C', '\x3', '\x2', '\x1D', '\x1F', '\x2', 
-		'\x1C2', '\x2', 'q', '\x3', '\x2', '\x2', '\x2', '\x4', 't', '\x3', '\x2', 
-		'\x2', '\x2', '\x6', 'z', '\x3', '\x2', '\x2', '\x2', '\b', '\x8A', '\x3', 
-		'\x2', '\x2', '\x2', '\n', '\x97', '\x3', '\x2', '\x2', '\x2', '\f', '\x9E', 
-		'\x3', '\x2', '\x2', '\x2', '\xE', '\xA5', '\x3', '\x2', '\x2', '\x2', 
-		'\x10', '\xB2', '\x3', '\x2', '\x2', '\x2', '\x12', '\xC2', '\x3', '\x2', 
-		'\x2', '\x2', '\x14', '\xC8', '\x3', '\x2', '\x2', '\x2', '\x16', '\xD4', 
-		'\x3', '\x2', '\x2', '\x2', '\x18', '\xD7', '\x3', '\x2', '\x2', '\x2', 
-		'\x1A', '\xDA', '\x3', '\x2', '\x2', '\x2', '\x1C', '\xDF', '\x3', '\x2', 
-		'\x2', '\x2', '\x1E', '\xE1', '\x3', '\x2', '\x2', '\x2', ' ', '\xEE', 
-		'\x3', '\x2', '\x2', '\x2', '\"', '\xF7', '\x3', '\x2', '\x2', '\x2', 
-		'$', '\x10D', '\x3', '\x2', '\x2', '\x2', '&', '\x10F', '\x3', '\x2', 
-		'\x2', '\x2', '(', '\x11D', '\x3', '\x2', '\x2', '\x2', '*', '\x121', 
+		'\x3', '%', '\x3', '&', '\x3', '&', '\x3', '\'', '\x3', '\'', '\x3', '(', 
+		'\x3', '(', '\x3', ')', '\x3', ')', '\x3', '*', '\x3', '*', '\x3', '+', 
+		'\x3', '+', '\x3', ',', '\x3', ',', '\x3', '-', '\x3', '-', '\x3', '.', 
+		'\x3', '.', '\x3', '/', '\x3', '/', '\x3', '\x30', '\x3', '\x30', '\x3', 
+		'\x31', '\x3', '\x31', '\x3', '\x32', '\x3', '\x32', '\x3', '\x32', '\n', 
+		'q', '\x92', '\xAB', '\xCF', '\xE7', '\x103', '\x116', '\x133', '\x3', 
+		':', '\x33', '\x2', '\x4', '\x6', '\b', '\n', '\f', '\xE', '\x10', '\x12', 
+		'\x14', '\x16', '\x18', '\x1A', '\x1C', '\x1E', ' ', '\"', '$', '&', '(', 
+		'*', ',', '.', '\x30', '\x32', '\x34', '\x36', '\x38', ':', '<', '>', 
+		'@', '\x42', '\x44', '\x46', 'H', 'J', 'L', 'N', 'P', 'R', 'T', 'V', 'X', 
+		'Z', '\\', '^', '`', '\x62', '\x2', '\n', '\b', '\x2', '\'', '\'', ')', 
+		'*', ',', ',', '.', '.', '\x30', '\x30', '\x32', '\x32', '\x4', '\x2', 
+		'\v', '\v', '\r', '\x10', '\x3', '\x2', '\x11', '\x12', '\x3', '\x2', 
+		'\x13', '\x14', '\x3', '\x2', '\x15', '\x18', '\x3', '\x2', '\x19', '\x1A', 
+		'\x4', '\x2', '\x11', '\x12', '\x1B', '\x1C', '\x3', '\x2', '\x1D', '\x1F', 
+		'\x2', '\x1B5', '\x2', 'q', '\x3', '\x2', '\x2', '\x2', '\x4', 't', '\x3', 
+		'\x2', '\x2', '\x2', '\x6', 'z', '\x3', '\x2', '\x2', '\x2', '\b', '\x8A', 
+		'\x3', '\x2', '\x2', '\x2', '\n', '\x97', '\x3', '\x2', '\x2', '\x2', 
+		'\f', '\x9E', '\x3', '\x2', '\x2', '\x2', '\xE', '\xA5', '\x3', '\x2', 
+		'\x2', '\x2', '\x10', '\xB2', '\x3', '\x2', '\x2', '\x2', '\x12', '\xC2', 
+		'\x3', '\x2', '\x2', '\x2', '\x14', '\xC8', '\x3', '\x2', '\x2', '\x2', 
+		'\x16', '\xD4', '\x3', '\x2', '\x2', '\x2', '\x18', '\xD7', '\x3', '\x2', 
+		'\x2', '\x2', '\x1A', '\xDA', '\x3', '\x2', '\x2', '\x2', '\x1C', '\xDF', 
+		'\x3', '\x2', '\x2', '\x2', '\x1E', '\xE1', '\x3', '\x2', '\x2', '\x2', 
+		' ', '\xEE', '\x3', '\x2', '\x2', '\x2', '\"', '\xF7', '\x3', '\x2', '\x2', 
+		'\x2', '$', '\x10D', '\x3', '\x2', '\x2', '\x2', '&', '\x10F', '\x3', 
+		'\x2', '\x2', '\x2', '(', '\x11D', '\x3', '\x2', '\x2', '\x2', '*', '\x121', 
 		'\x3', '\x2', '\x2', '\x2', ',', '\x123', '\x3', '\x2', '\x2', '\x2', 
 		'.', '\x126', '\x3', '\x2', '\x2', '\x2', '\x30', '\x12B', '\x3', '\x2', 
 		'\x2', '\x2', '\x32', '\x12F', '\x3', '\x2', '\x2', '\x2', '\x34', '\x139', 
@@ -3461,16 +3425,16 @@ public partial class DaedalusParser : Parser {
 		'\x38', '\x13F', '\x3', '\x2', '\x2', '\x2', ':', '\x14A', '\x3', '\x2', 
 		'\x2', '\x2', '<', '\x177', '\x3', '\x2', '\x2', '\x2', '>', '\x17B', 
 		'\x3', '\x2', '\x2', '\x2', '@', '\x183', '\x3', '\x2', '\x2', '\x2', 
-		'\x42', '\x185', '\x3', '\x2', '\x2', '\x2', '\x44', '\x18A', '\x3', '\x2', 
-		'\x2', '\x2', '\x46', '\x18F', '\x3', '\x2', '\x2', '\x2', 'H', '\x19D', 
-		'\x3', '\x2', '\x2', '\x2', 'J', '\x19F', '\x3', '\x2', '\x2', '\x2', 
-		'L', '\x1A1', '\x3', '\x2', '\x2', '\x2', 'N', '\x1A3', '\x3', '\x2', 
-		'\x2', '\x2', 'P', '\x1A5', '\x3', '\x2', '\x2', '\x2', 'R', '\x1A7', 
-		'\x3', '\x2', '\x2', '\x2', 'T', '\x1A9', '\x3', '\x2', '\x2', '\x2', 
-		'V', '\x1AB', '\x3', '\x2', '\x2', '\x2', 'X', '\x1AD', '\x3', '\x2', 
-		'\x2', '\x2', 'Z', '\x1AF', '\x3', '\x2', '\x2', '\x2', '\\', '\x1B1', 
-		'\x3', '\x2', '\x2', '\x2', '^', '\x1B3', '\x3', '\x2', '\x2', '\x2', 
-		'`', '\x1B5', '\x3', '\x2', '\x2', '\x2', '\x62', '\x1B7', '\x3', '\x2', 
+		'\x42', '\x185', '\x3', '\x2', '\x2', '\x2', '\x44', '\x18C', '\x3', '\x2', 
+		'\x2', '\x2', '\x46', '\x191', '\x3', '\x2', '\x2', '\x2', 'H', '\x196', 
+		'\x3', '\x2', '\x2', '\x2', 'J', '\x198', '\x3', '\x2', '\x2', '\x2', 
+		'L', '\x19A', '\x3', '\x2', '\x2', '\x2', 'N', '\x19C', '\x3', '\x2', 
+		'\x2', '\x2', 'P', '\x19E', '\x3', '\x2', '\x2', '\x2', 'R', '\x1A0', 
+		'\x3', '\x2', '\x2', '\x2', 'T', '\x1A2', '\x3', '\x2', '\x2', '\x2', 
+		'V', '\x1A4', '\x3', '\x2', '\x2', '\x2', 'X', '\x1A6', '\x3', '\x2', 
+		'\x2', '\x2', 'Z', '\x1A8', '\x3', '\x2', '\x2', '\x2', '\\', '\x1AA', 
+		'\x3', '\x2', '\x2', '\x2', '^', '\x1AC', '\x3', '\x2', '\x2', '\x2', 
+		'`', '\x1AE', '\x3', '\x2', '\x2', '\x2', '\x62', '\x1B0', '\x3', '\x2', 
 		'\x2', '\x2', '\x64', 'l', '\x5', '\x4', '\x3', '\x2', '\x65', 'l', '\x5', 
 		'\x6', '\x4', '\x2', '\x66', 'l', '\x5', '\x10', '\t', '\x2', 'g', 'l', 
 		'\x5', '\b', '\x5', '\x2', 'h', 'l', '\x5', '\n', '\x6', '\x2', 'i', 'l', 
@@ -3595,7 +3559,7 @@ public partial class DaedalusParser : Parser {
 		'\x111', '\x3', '\x2', '\x2', '\x2', '\x119', '\x11A', '\x3', '\x2', '\x2', 
 		'\x2', '\x11A', '\x11B', '\x3', '\x2', '\x2', '\x2', '\x11B', '\x11C', 
 		'\a', '\b', '\x2', '\x2', '\x11C', '\'', '\x3', '\x2', '\x2', '\x2', '\x11D', 
-		'\x11E', '\x5', '\x42', '\"', '\x2', '\x11E', '\x11F', '\x5', 'N', '(', 
+		'\x11E', '\x5', '\x46', '$', '\x2', '\x11E', '\x11F', '\x5', 'N', '(', 
 		'\x2', '\x11F', '\x120', '\x5', '\x38', '\x1D', '\x2', '\x120', ')', '\x3', 
 		'\x2', '\x2', '\x2', '\x121', '\x122', '\x5', '\x38', '\x1D', '\x2', '\x122', 
 		'+', '\x3', '\x2', '\x2', '\x2', '\x123', '\x124', '\a', '(', '\x2', '\x2', 
@@ -3658,10 +3622,10 @@ public partial class DaedalusParser : Parser {
 		'\x170', '\x3', '\x2', '\x2', '\x2', '\x172', '\x173', '\x3', '\x2', '\x2', 
 		'\x2', '\x173', ';', '\x3', '\x2', '\x2', '\x2', '\x174', '\x172', '\x3', 
 		'\x2', '\x2', '\x2', '\x175', '\x178', '\a', '\x33', '\x2', '\x2', '\x176', 
-		'\x178', '\x5', 'L', '\'', '\x2', '\x177', '\x175', '\x3', '\x2', '\x2', 
+		'\x178', '\x5', '\x42', '\"', '\x2', '\x177', '\x175', '\x3', '\x2', '\x2', 
 		'\x2', '\x177', '\x176', '\x3', '\x2', '\x2', '\x2', '\x178', '=', '\x3', 
 		'\x2', '\x2', '\x2', '\x179', '\x17C', '\a', '\x33', '\x2', '\x2', '\x17A', 
-		'\x17C', '\x5', 'L', '\'', '\x2', '\x17B', '\x179', '\x3', '\x2', '\x2', 
+		'\x17C', '\x5', '\x42', '\"', '\x2', '\x17B', '\x179', '\x3', '\x2', '\x2', 
 		'\x2', '\x17B', '\x17A', '\x3', '\x2', '\x2', '\x2', '\x17C', '?', '\x3', 
 		'\x2', '\x2', '\x2', '\x17D', '\x184', '\a', '\x33', '\x2', '\x2', '\x17E', 
 		'\x184', '\a', '\x34', '\x2', '\x2', '\x17F', '\x184', '\a', '\x35', '\x2', 
@@ -3671,47 +3635,40 @@ public partial class DaedalusParser : Parser {
 		'\x2', '\x2', '\x2', '\x183', '\x17F', '\x3', '\x2', '\x2', '\x2', '\x183', 
 		'\x180', '\x3', '\x2', '\x2', '\x2', '\x183', '\x181', '\x3', '\x2', '\x2', 
 		'\x2', '\x183', '\x182', '\x3', '\x2', '\x2', '\x2', '\x184', '\x41', 
-		'\x3', '\x2', '\x2', '\x2', '\x185', '\x188', '\x5', '\x46', '$', '\x2', 
-		'\x186', '\x187', '\a', '\f', '\x2', '\x2', '\x187', '\x189', '\x5', '\x46', 
-		'$', '\x2', '\x188', '\x186', '\x3', '\x2', '\x2', '\x2', '\x188', '\x189', 
-		'\x3', '\x2', '\x2', '\x2', '\x189', '\x43', '\x3', '\x2', '\x2', '\x2', 
-		'\x18A', '\x18D', '\x5', '\x46', '$', '\x2', '\x18B', '\x18C', '\a', '\f', 
-		'\x2', '\x2', '\x18C', '\x18E', '\x5', '\x46', '$', '\x2', '\x18D', '\x18B', 
-		'\x3', '\x2', '\x2', '\x2', '\x18D', '\x18E', '\x3', '\x2', '\x2', '\x2', 
-		'\x18E', '\x45', '\x3', '\x2', '\x2', '\x2', '\x18F', '\x194', '\x5', 
-		'L', '\'', '\x2', '\x190', '\x191', '\a', '\t', '\x2', '\x2', '\x191', 
-		'\x192', '\x5', '<', '\x1F', '\x2', '\x192', '\x193', '\a', '\n', '\x2', 
-		'\x2', '\x193', '\x195', '\x3', '\x2', '\x2', '\x2', '\x194', '\x190', 
-		'\x3', '\x2', '\x2', '\x2', '\x194', '\x195', '\x3', '\x2', '\x2', '\x2', 
-		'\x195', 'G', '\x3', '\x2', '\x2', '\x2', '\x196', '\x19E', '\x5', 'L', 
-		'\'', '\x2', '\x197', '\x19E', '\a', ',', '\x2', '\x2', '\x198', '\x19E', 
-		'\a', '\'', '\x2', '\x2', '\x199', '\x19E', '\a', '.', '\x2', '\x2', '\x19A', 
-		'\x19E', '\a', '*', '\x2', '\x2', '\x19B', '\x19E', '\a', ')', '\x2', 
-		'\x2', '\x19C', '\x19E', '\a', '\x30', '\x2', '\x2', '\x19D', '\x196', 
-		'\x3', '\x2', '\x2', '\x2', '\x19D', '\x197', '\x3', '\x2', '\x2', '\x2', 
-		'\x19D', '\x198', '\x3', '\x2', '\x2', '\x2', '\x19D', '\x199', '\x3', 
-		'\x2', '\x2', '\x2', '\x19D', '\x19A', '\x3', '\x2', '\x2', '\x2', '\x19D', 
-		'\x19B', '\x3', '\x2', '\x2', '\x2', '\x19D', '\x19C', '\x3', '\x2', '\x2', 
-		'\x2', '\x19E', 'I', '\x3', '\x2', '\x2', '\x2', '\x19F', '\x1A0', '\a', 
-		'\x32', '\x2', '\x2', '\x1A0', 'K', '\x3', '\x2', '\x2', '\x2', '\x1A1', 
-		'\x1A2', '\a', '\x32', '\x2', '\x2', '\x1A2', 'M', '\x3', '\x2', '\x2', 
-		'\x2', '\x1A3', '\x1A4', '\t', '\x2', '\x2', '\x2', '\x1A4', 'O', '\x3', 
-		'\x2', '\x2', '\x2', '\x1A5', '\x1A6', '\t', '\x3', '\x2', '\x2', '\x1A6', 
-		'Q', '\x3', '\x2', '\x2', '\x2', '\x1A7', '\x1A8', '\t', '\x4', '\x2', 
-		'\x2', '\x1A8', 'S', '\x3', '\x2', '\x2', '\x2', '\x1A9', '\x1AA', '\t', 
-		'\x5', '\x2', '\x2', '\x1AA', 'U', '\x3', '\x2', '\x2', '\x2', '\x1AB', 
-		'\x1AC', '\t', '\x6', '\x2', '\x2', '\x1AC', 'W', '\x3', '\x2', '\x2', 
-		'\x2', '\x1AD', '\x1AE', '\t', '\a', '\x2', '\x2', '\x1AE', 'Y', '\x3', 
-		'\x2', '\x2', '\x2', '\x1AF', '\x1B0', '\t', '\b', '\x2', '\x2', '\x1B0', 
-		'[', '\x3', '\x2', '\x2', '\x2', '\x1B1', '\x1B2', '\a', ' ', '\x2', '\x2', 
-		'\x1B2', ']', '\x3', '\x2', '\x2', '\x2', '\x1B3', '\x1B4', '\a', '!', 
-		'\x2', '\x2', '\x1B4', '_', '\x3', '\x2', '\x2', '\x2', '\x1B5', '\x1B6', 
-		'\a', '\"', '\x2', '\x2', '\x1B6', '\x61', '\x3', '\x2', '\x2', '\x2', 
-		'\x1B7', '\x1B8', '\a', '#', '\x2', '\x2', '\x1B8', '\x63', '\x3', '\x2', 
-		'\x2', '\x2', '#', 'k', 'q', '~', '\x83', '\x87', '\x92', '\xAB', '\xB6', 
-		'\xBB', '\xBF', '\xCF', '\xE7', '\xEA', '\xF5', '\xFD', '\xFF', '\x103', 
-		'\x10D', '\x116', '\x119', '\x133', '\x137', '\x13B', '\x14A', '\x170', 
-		'\x172', '\x177', '\x17B', '\x183', '\x188', '\x18D', '\x194', '\x19D',
+		'\x3', '\x2', '\x2', '\x2', '\x185', '\x18A', '\a', '\x32', '\x2', '\x2', 
+		'\x186', '\x187', '\a', '\t', '\x2', '\x2', '\x187', '\x188', '\x5', '<', 
+		'\x1F', '\x2', '\x188', '\x189', '\a', '\n', '\x2', '\x2', '\x189', '\x18B', 
+		'\x3', '\x2', '\x2', '\x2', '\x18A', '\x186', '\x3', '\x2', '\x2', '\x2', 
+		'\x18A', '\x18B', '\x3', '\x2', '\x2', '\x2', '\x18B', '\x43', '\x3', 
+		'\x2', '\x2', '\x2', '\x18C', '\x18F', '\x5', '\x42', '\"', '\x2', '\x18D', 
+		'\x18E', '\a', '\f', '\x2', '\x2', '\x18E', '\x190', '\x5', '\x42', '\"', 
+		'\x2', '\x18F', '\x18D', '\x3', '\x2', '\x2', '\x2', '\x18F', '\x190', 
+		'\x3', '\x2', '\x2', '\x2', '\x190', '\x45', '\x3', '\x2', '\x2', '\x2', 
+		'\x191', '\x194', '\x5', '\x42', '\"', '\x2', '\x192', '\x193', '\a', 
+		'\f', '\x2', '\x2', '\x193', '\x195', '\x5', '\x42', '\"', '\x2', '\x194', 
+		'\x192', '\x3', '\x2', '\x2', '\x2', '\x194', '\x195', '\x3', '\x2', '\x2', 
+		'\x2', '\x195', 'G', '\x3', '\x2', '\x2', '\x2', '\x196', '\x197', '\t', 
+		'\x2', '\x2', '\x2', '\x197', 'I', '\x3', '\x2', '\x2', '\x2', '\x198', 
+		'\x199', '\a', '\x32', '\x2', '\x2', '\x199', 'K', '\x3', '\x2', '\x2', 
+		'\x2', '\x19A', '\x19B', '\a', '\x32', '\x2', '\x2', '\x19B', 'M', '\x3', 
+		'\x2', '\x2', '\x2', '\x19C', '\x19D', '\t', '\x3', '\x2', '\x2', '\x19D', 
+		'O', '\x3', '\x2', '\x2', '\x2', '\x19E', '\x19F', '\t', '\x4', '\x2', 
+		'\x2', '\x19F', 'Q', '\x3', '\x2', '\x2', '\x2', '\x1A0', '\x1A1', '\t', 
+		'\x5', '\x2', '\x2', '\x1A1', 'S', '\x3', '\x2', '\x2', '\x2', '\x1A2', 
+		'\x1A3', '\t', '\x6', '\x2', '\x2', '\x1A3', 'U', '\x3', '\x2', '\x2', 
+		'\x2', '\x1A4', '\x1A5', '\t', '\a', '\x2', '\x2', '\x1A5', 'W', '\x3', 
+		'\x2', '\x2', '\x2', '\x1A6', '\x1A7', '\t', '\b', '\x2', '\x2', '\x1A7', 
+		'Y', '\x3', '\x2', '\x2', '\x2', '\x1A8', '\x1A9', '\t', '\t', '\x2', 
+		'\x2', '\x1A9', '[', '\x3', '\x2', '\x2', '\x2', '\x1AA', '\x1AB', '\a', 
+		' ', '\x2', '\x2', '\x1AB', ']', '\x3', '\x2', '\x2', '\x2', '\x1AC', 
+		'\x1AD', '\a', '!', '\x2', '\x2', '\x1AD', '_', '\x3', '\x2', '\x2', '\x2', 
+		'\x1AE', '\x1AF', '\a', '\"', '\x2', '\x2', '\x1AF', '\x61', '\x3', '\x2', 
+		'\x2', '\x2', '\x1B0', '\x1B1', '\a', '#', '\x2', '\x2', '\x1B1', '\x63', 
+		'\x3', '\x2', '\x2', '\x2', '\"', 'k', 'q', '~', '\x83', '\x87', '\x92', 
+		'\xAB', '\xB6', '\xBB', '\xBF', '\xCF', '\xE7', '\xEA', '\xF5', '\xFD', 
+		'\xFF', '\x103', '\x10D', '\x116', '\x119', '\x133', '\x137', '\x13B', 
+		'\x14A', '\x170', '\x172', '\x177', '\x17B', '\x183', '\x18A', '\x18F', 
+		'\x194',
 	};
 
 	public static readonly ATN _ATN =

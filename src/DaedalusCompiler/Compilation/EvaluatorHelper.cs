@@ -116,9 +116,9 @@ namespace DaedalusCompiler.Compilation
                 return int.Parse(valueChild.GetText());
 
             // value is reference to other constant
-            if (valueChild is DaedalusParser.ComplexReferenceContext reference)
+            if (valueChild is DaedalusParser.ReferenceContext reference)
             {
-                var referenceName = reference.complexReferenceNode()?.FirstOrDefault()?.referenceNode()?.GetText();
+                var referenceName = reference.referenceAtom()?.FirstOrDefault()?.Identifier()?.GetText();
 
                 //TODO : Allow to reference arrays. Currently it is not possible. 
 

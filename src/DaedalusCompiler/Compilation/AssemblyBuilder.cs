@@ -253,17 +253,17 @@ namespace DaedalusCompiler.Compilation
         }
     }
 
-    public class LazyComplexReferenceNodeInstructions : AssemblyInstruction
+    public class LazyReferenceAtomInstructions : AssemblyInstruction
     {
-        public readonly DaedalusParser.ComplexReferenceNodeContext[] ComplexReferenceNodes;
+        public readonly DaedalusParser.ReferenceAtomContext[] ReferenceAtoms;
         public readonly AssemblyBuilderSnapshot AssemblyBuilderSnapshot;
         
-        public LazyComplexReferenceNodeInstructions(
+        public LazyReferenceAtomInstructions(
             AssemblyBuilderSnapshot assemblyBuilderSnapshot,
-            DaedalusParser.ComplexReferenceNodeContext[] complexReferenceNodes)
+            DaedalusParser.ReferenceAtomContext[] referenceAtoms)
         {
             AssemblyBuilderSnapshot = assemblyBuilderSnapshot;
-            ComplexReferenceNodes = complexReferenceNodes;
+            ReferenceAtoms = referenceAtoms;
         }
     }
 
@@ -455,9 +455,9 @@ namespace DaedalusCompiler.Compilation
             return new List<AssemblyInstruction>();
         }
         
-        private DatSymbol GetComplexReferenceNodeSymbol(DaedalusParser.ComplexReferenceNodeContext context)
+        private DatSymbol GetReferenceAtomSymbol(DaedalusParser.ReferenceAtomContext context)
         {
-            string symbolNameLower = context.referenceNode().GetText().ToLower();
+            string symbolNameLower = context.Identifier().GetText().ToLower();
             ExecBlock activeBlock = ActiveExecBlock;
 
             if (
@@ -469,10 +469,10 @@ namespace DaedalusCompiler.Compilation
                 return activeBlock.Symbol;
             }
             
-            return ResolveSymbol(context.referenceNode().GetText());
+            return ResolveSymbol(context.Identifier().GetText());
         }
         
-        public int GetArrayIndex(DaedalusParser.ComplexReferenceNodeContext context)
+        public int GetArrayIndex(DaedalusParser.ReferenceAtomContext context)
         {
             var indexContext = context.arrayIndex();
             
@@ -541,7 +541,7 @@ namespace DaedalusCompiler.Compilation
             return PushSymbol(symbol);
         }
 
-        public bool IsDottedReference(DaedalusParser.ComplexReferenceNodeContext[] nodes)
+        public bool IsDottedReference(DaedalusParser.ReferenceAtomContext[] nodes)
         {
             if (nodes.Length > 2)
             {
@@ -550,11 +550,11 @@ namespace DaedalusCompiler.Compilation
             return nodes.Length == 2;
         }
         
-        public List<AssemblyInstruction> GetComplexReferenceNodeInstructions(
-            DaedalusParser.ComplexReferenceNodeContext[] complexReferenceNodes)
+        public List<AssemblyInstruction> GetReferenceAtomInstructions(
+            DaedalusParser.ReferenceAtomContext[] referenceAtoms)
         {
-            var symbolPart = complexReferenceNodes[0];
-            string symbolName = symbolPart.referenceNode().GetText().ToLower();
+            var symbolPart = referenceAtoms[0];
+            string symbolName = symbolPart.Identifier().GetText().ToLower();
 
 
             if (IsInsideArgList && IsArgListKeyword(symbolName))
@@ -562,14 +562,14 @@ namespace DaedalusCompiler.Compilation
                 return GetKeywordInstructions(symbolName);
             }
 
-            DatSymbol symbol = GetComplexReferenceNodeSymbol(complexReferenceNodes[0]);
+            DatSymbol symbol = GetReferenceAtomSymbol(referenceAtoms[0]);
             List<AssemblyInstruction> instructions = new List<AssemblyInstruction>();
             
             
-            if (IsDottedReference(complexReferenceNodes))
+            if (IsDottedReference(referenceAtoms))
             {
-                var attributePart = complexReferenceNodes[1];
-                string attributeName = attributePart.referenceNode().GetText();
+                var attributePart = referenceAtoms[1];
+                string attributeName = attributePart.Identifier().GetText();
                 DatSymbol attribute = ResolveAttribute(symbol, attributeName);
 
                 bool isInsideExecBlock = ActiveExecBlock != null;
@@ -1080,10 +1080,10 @@ namespace DaedalusCompiler.Compilation
                 for (int i = 0; i < execBlock.Body.Count; ++i)
                 {
                     AssemblyElement element = execBlock.Body[i];
-                    if (element is LazyComplexReferenceNodeInstructions nodeInstructions)
+                    if (element is LazyReferenceAtomInstructions nodeInstructions)
                     {
                         LoadStateFromSnapshot(nodeInstructions.AssemblyBuilderSnapshot);
-                        List<AssemblyInstruction> instructions = GetComplexReferenceNodeInstructions(nodeInstructions.ComplexReferenceNodes);
+                        List<AssemblyInstruction> instructions = GetReferenceAtomInstructions(nodeInstructions.ReferenceAtoms);
                         execBlock.Body.RemoveAt(i);
                         execBlock.Body.InsertRange(i, instructions);
                     }

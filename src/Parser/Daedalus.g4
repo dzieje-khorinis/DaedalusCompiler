@@ -40,9 +40,9 @@ daedalusFile: (( functionDef | constDef | varDecl | classDef | prototypeDef | in
 functionDef: Func typeReference nameNode parameterList statementBlock;
 constDef: Const typeReference (constValueDef | constArrayDef) (',' (constValueDef | constArrayDef) )*;
 classDef: Class nameNode '{' ( varDecl ';' )*? '}';
-prototypeDef: Prototype nameNode '(' referenceNode ')' statementBlock;
-instanceDef: Instance nameNode '(' referenceNode ')' statementBlock;
-instanceDecl: Instance nameNode ( ',' nameNode )*? '(' referenceNode ')';
+prototypeDef: Prototype nameNode '(' parentReference ')' statementBlock;
+instanceDef: Instance nameNode '(' parentReference ')' statementBlock;
+instanceDecl: Instance nameNode ( ',' nameNode )*? '(' parentReference ')';
 varDecl: Var typeReference (varValueDecl | varArrayDecl) (',' (varValueDecl | varArrayDecl) )* ;
 
 constArrayDef: nameNode '[' arraySize ']' constArrayAssignment;
@@ -59,7 +59,7 @@ parameterDecl: Var typeReference nameNode ('[' arraySize ']')?;
 statementBlock: '{' ( ( (statement ';')  | ( ifBlockStatement ( ';' )? ) ) )*? '}';
 statement: assignment | returnStatement | constDef | varDecl | expression;
 funcCall: nameNode '(' ( funcArgExpression ( ',' funcArgExpression )*? )? ')';
-assignment: complexReferenceLeftSide assigmentOperator expressionBlock;
+assignment: referenceLeftSide assignmentOperator expressionBlock;
 ifCondition: expressionBlock;
 elseBlock: Else statementBlock;
 elseIfBlock: Else If ifCondition statementBlock;
@@ -85,8 +85,8 @@ expression
     | value #valExpression
     ;
 
-arrayIndex : IntegerLiteral | referenceNode;
-arraySize : IntegerLiteral | referenceNode;
+arrayIndex : IntegerLiteral | referenceAtom;
+arraySize : IntegerLiteral | referenceAtom;
 
 value
     : IntegerLiteral #integerLiteralValue
@@ -94,16 +94,20 @@ value
     | StringLiteral #stringLiteralValue
     | Null #nullLiteralValue
     | funcCall #funcCallValue
-    | complexReference #complexReferenceValue
+    | reference #referenceValue
     ;
     
-complexReferenceLeftSide: complexReferenceNode ( '.' complexReferenceNode )?;
-complexReference: complexReferenceNode ( '.' complexReferenceNode )?;
-complexReferenceNode: referenceNode ( '[' arrayIndex ']')?;
-typeReference:  ( referenceNode  | Void | Int | Float | String | Func | Instance);
+referenceAtom: Identifier ( '[' arrayIndex ']')?;
+reference: referenceAtom ( '.' referenceAtom )?;
+referenceLeftSide: referenceAtom ( '.' referenceAtom )?;
+
+typeReference:  ( Identifier | Void | Int | Float | String | Func | Instance);
+
 nameNode: Identifier;
-referenceNode: Identifier;
-assigmentOperator:  '=' | '+=' | '-=' | '*=' | '/=';
+
+parentReference: Identifier;
+
+assignmentOperator:  '=' | '+=' | '-=' | '*=' | '/=';
 addOperator: '+' | '-';
 bitMoveOperator: '<<' | '>>';
 compOperator: '<' | '>' | '<=' | '>=';
