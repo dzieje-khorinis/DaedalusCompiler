@@ -9,7 +9,7 @@ namespace DaedalusCompiler.Compilation
 {
     public static class EvaluatorHelper
     {
-        public static int EvaluteArraySize(DaedalusParser.SimpleValueContext context, AssemblyBuilder assemblyBuilder)
+        public static int EvaluteArraySize(DaedalusParser.ArraySizeContext context, AssemblyBuilder assemblyBuilder)
         {
             string arraySizeText = context.GetText();
 

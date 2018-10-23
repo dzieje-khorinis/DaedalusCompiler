@@ -45,17 +45,17 @@ instanceDef: Instance nameNode '(' referenceNode ')' statementBlock;
 instanceDecl: Instance nameNode ( ',' nameNode )*? '(' referenceNode ')';
 varDecl: Var typeReference (varValueDecl | varArrayDecl) (',' (varValueDecl | varArrayDecl) )* ;
 
-constArrayDef: nameNode '[' simpleValue ']' constArrayAssignment;
+constArrayDef: nameNode '[' arraySize ']' constArrayAssignment;
 constArrayAssignment: '=' '{' ( expressionBlock (',' expressionBlock)*? ) '}';
 
 constValueDef: nameNode constValueAssignment;
 constValueAssignment: '=' expressionBlock;
 
-varArrayDecl: nameNode '[' simpleValue ']';
+varArrayDecl: nameNode '[' arraySize ']';
 varValueDecl: nameNode;
 
 parameterList: '(' (parameterDecl (',' parameterDecl)*? )? ')';
-parameterDecl: Var typeReference nameNode ('[' simpleValue ']')?;
+parameterDecl: Var typeReference nameNode ('[' arraySize ']')?;
 statementBlock: '{' ( ( (statement ';')  | ( ifBlockStatement ( ';' )? ) ) )*? '}';
 statement: assignment | returnStatement | constDef | varDecl | expression;
 funcCall: nameNode '(' ( funcArgExpression ( ',' funcArgExpression )*? )? ')';
@@ -85,7 +85,9 @@ expression
     | value #valExpression
     ;
 
-simpleValue: IntegerLiteral | referenceNode;
+arrayIndex : IntegerLiteral | referenceNode;
+arraySize : IntegerLiteral | referenceNode;
+
 value
     : IntegerLiteral #integerLiteralValue
     | FloatLiteral #floatLiteralValue
@@ -97,7 +99,7 @@ value
     
 complexReferenceLeftSide: complexReferenceNode ( '.' complexReferenceNode )?;
 complexReference: complexReferenceNode ( '.' complexReferenceNode )?;
-complexReferenceNode: referenceNode ( '[' simpleValue ']')?;
+complexReferenceNode: referenceNode ( '[' arrayIndex ']')?;
 typeReference:  ( referenceNode  | Void | Int | Float | String | Func | Instance);
 nameNode: Identifier;
 referenceNode: Identifier;

@@ -539,17 +539,29 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitLogAndExpression([NotNull] DaedalusParser.LogAndExpressionContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.simpleValue"/>.
+	/// Enter a parse tree produced by <see cref="DaedalusParser.arrayIndex"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterSimpleValue([NotNull] DaedalusParser.SimpleValueContext context) { }
+	public virtual void EnterArrayIndex([NotNull] DaedalusParser.ArrayIndexContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.simpleValue"/>.
+	/// Exit a parse tree produced by <see cref="DaedalusParser.arrayIndex"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitSimpleValue([NotNull] DaedalusParser.SimpleValueContext context) { }
+	public virtual void ExitArrayIndex([NotNull] DaedalusParser.ArrayIndexContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.arraySize"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterArraySize([NotNull] DaedalusParser.ArraySizeContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.arraySize"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitArraySize([NotNull] DaedalusParser.ArraySizeContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by the <c>integerLiteralValue</c>
 	/// labeled alternative in <see cref="DaedalusParser.value"/>.
