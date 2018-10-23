@@ -707,29 +707,17 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitNameNode([NotNull] DaedalusParser.NameNodeContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.integerSymbolReference"/>.
+	/// Enter a parse tree produced by <see cref="DaedalusParser.parentReference"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterIntegerSymbolReference([NotNull] DaedalusParser.IntegerSymbolReferenceContext context) { }
+	public virtual void EnterParentReference([NotNull] DaedalusParser.ParentReferenceContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.integerSymbolReference"/>.
+	/// Exit a parse tree produced by <see cref="DaedalusParser.parentReference"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitIntegerSymbolReference([NotNull] DaedalusParser.IntegerSymbolReferenceContext context) { }
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.classLikeSymbolReference"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterClassLikeSymbolReference([NotNull] DaedalusParser.ClassLikeSymbolReferenceContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.classLikeSymbolReference"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitClassLikeSymbolReference([NotNull] DaedalusParser.ClassLikeSymbolReferenceContext context) { }
+	public virtual void ExitParentReference([NotNull] DaedalusParser.ParentReferenceContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.assignmentOperator"/>.
 	/// <para>The default implementation does nothing.</para>
