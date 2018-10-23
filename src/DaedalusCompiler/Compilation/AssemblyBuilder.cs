@@ -303,12 +303,10 @@ namespace DaedalusCompiler.Compilation
     public class FuncArgsBodyContext
     {
         public readonly List<AssemblyElement> Body;
-        public readonly FuncArgsBodyContext Parent;
 
-        public FuncArgsBodyContext(FuncArgsBodyContext parent)
+        public FuncArgsBodyContext()
         {
             Body = new List<AssemblyElement>();
-            Parent = parent;
         }
     }
 
@@ -317,12 +315,14 @@ namespace DaedalusCompiler.Compilation
         public List<DatSymbolType> ParametersTypes;
         public int ArgIndex;
         public FuncCallContext Parent;
+        private FuncArgsBodyContext _funcArgsBodyContext;
 
         public FuncCallContext(FuncCallContext parent=null)
         {
             ParametersTypes = new List<DatSymbolType>();
             ArgIndex = -1;
             Parent = parent;
+            _funcArgsBodyContext = new FuncArgsBodyContext();
         }
 
         public static FuncCallContext Clone(FuncCallContext ctx)
@@ -333,25 +333,34 @@ namespace DaedalusCompiler.Compilation
                 {
                     ParametersTypes = new List<DatSymbolType>(),
                     ArgIndex = -1,
-                    Parent = null
+                    Parent = null,
+                    _funcArgsBodyContext = new FuncArgsBodyContext()
                 };
             }
-            else
+
+            return new FuncCallContext
             {
-                return new FuncCallContext
-                {
-                    ParametersTypes = ctx.ParametersTypes,
-                    ArgIndex = ctx.ArgIndex,
-                    Parent = ctx.Parent
-                };
-            }
+                ParametersTypes = ctx.ParametersTypes,
+                ArgIndex = ctx.ArgIndex,
+                Parent = ctx.Parent,
+                _funcArgsBodyContext = ctx._funcArgsBodyContext
+            };
         }
         
         public DatSymbolType GetParameterType()
         {
             return ParametersTypes[ArgIndex];
         }
-        
+
+        public void addFuncCallArgInstructions(List<AssemblyElement> instructions)
+        {
+            _funcArgsBodyContext.Body.AddRange(instructions);
+        }
+
+        public List<AssemblyElement> getFuncCallArgInstructions()
+        {
+            return _funcArgsBodyContext.Body;
+        }
     }
 
     public class AssemblyBuilder
@@ -363,7 +372,6 @@ namespace DaedalusCompiler.Compilation
         public ExecBlock ActiveExecBlock;
         private AssemblyBuildContext _currentBuildCtx;
         private List<SymbolInstruction> _assignmentLeftSide;
-        private FuncArgsBodyContext _funcArgsBodyCtx;
         public FuncCallContext FuncCallCtx;
         private int _labelIndexGenerator;
         private int _nextStringSymbolNumber;
@@ -386,7 +394,6 @@ namespace DaedalusCompiler.Compilation
             _currentBuildCtx = GetEmptyBuildContext();
             ActiveExecBlock = null;
             _assignmentLeftSide = new List<SymbolInstruction>();
-            _funcArgsBodyCtx = new FuncArgsBodyContext(null);
             FuncCallCtx = null;
             _labelIndexGenerator = 0;
             _nextStringSymbolNumber = 10000;
@@ -689,13 +696,12 @@ namespace DaedalusCompiler.Compilation
 
         public void FuncCallArgEnd()
         {
-            _funcArgsBodyCtx.Body.AddRange(_currentBuildCtx.Body);
+            FuncCallCtx.addFuncCallArgInstructions(_currentBuildCtx.Body);
             _currentBuildCtx = _currentBuildCtx.Parent;
         }
 
         public void FuncCallStart(DaedalusParser.FuncCallValueContext context)
         {
-            _funcArgsBodyCtx = new FuncArgsBodyContext(_funcArgsBodyCtx);
             FuncCallCtx = new FuncCallContext(FuncCallCtx);
             
             IsInsideArgList = true;
@@ -714,10 +720,9 @@ namespace DaedalusCompiler.Compilation
         public void FuncCallEnd(AssemblyElement instruction)
         {
             _currentBuildCtx = _currentBuildCtx.Parent;
-            _currentBuildCtx.Body.AddRange(_funcArgsBodyCtx.Body);
+            _currentBuildCtx.Body.AddRange(FuncCallCtx.getFuncCallArgInstructions());
             _currentBuildCtx.Body.Add(instruction);
 
-            _funcArgsBodyCtx = _funcArgsBodyCtx.Parent;
             FuncCallCtx = FuncCallCtx.Parent;
             if (FuncCallCtx == null)
             {
