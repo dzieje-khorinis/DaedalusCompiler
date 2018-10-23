@@ -101,8 +101,9 @@ complexReferenceLeftSide: complexReferenceNode ( '.' complexReferenceNode )?;
 complexReference: complexReferenceNode ( '.' complexReferenceNode )?;
 complexReferenceNode: referenceNode ( '[' arrayIndex ']')?;
 typeReference:  ( Identifier | Void | Int | Float | String | Func | Instance);
-nameNode: Identifier;
 referenceNode: Identifier;
+
+nameNode: Identifier;
 
 integerSymbolReference: Identifier;
 classLikeSymbolReference: Identifier; // can be reference to class or to prototype

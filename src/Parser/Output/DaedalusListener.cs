@@ -587,16 +587,6 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitTypeReference([NotNull] DaedalusParser.TypeReferenceContext context);
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.nameNode"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterNameNode([NotNull] DaedalusParser.NameNodeContext context);
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.nameNode"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitNameNode([NotNull] DaedalusParser.NameNodeContext context);
-	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.referenceNode"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
@@ -606,6 +596,16 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitReferenceNode([NotNull] DaedalusParser.ReferenceNodeContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.nameNode"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterNameNode([NotNull] DaedalusParser.NameNodeContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.nameNode"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitNameNode([NotNull] DaedalusParser.NameNodeContext context);
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.integerSymbolReference"/>.
 	/// </summary>

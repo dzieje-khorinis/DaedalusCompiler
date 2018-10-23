@@ -695,18 +695,6 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitTypeReference([NotNull] DaedalusParser.TypeReferenceContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.nameNode"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterNameNode([NotNull] DaedalusParser.NameNodeContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.nameNode"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitNameNode([NotNull] DaedalusParser.NameNodeContext context) { }
-	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.referenceNode"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
@@ -718,6 +706,18 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitReferenceNode([NotNull] DaedalusParser.ReferenceNodeContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.nameNode"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterNameNode([NotNull] DaedalusParser.NameNodeContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.nameNode"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitNameNode([NotNull] DaedalusParser.NameNodeContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.integerSymbolReference"/>.
 	/// <para>The default implementation does nothing.</para>

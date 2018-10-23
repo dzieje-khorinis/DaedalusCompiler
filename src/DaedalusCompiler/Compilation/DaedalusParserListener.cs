@@ -272,7 +272,7 @@ namespace DaedalusCompiler.Compilation
         public override void EnterPrototypeDef([NotNull] DaedalusParser.PrototypeDefContext context)
         {
             var prototypeName = context.nameNode().GetText();
-            var referenceName = context.referenceNode().GetText();
+            var referenceName = context.classLikeSymbolReference().GetText();
             var refSymbol = _assemblyBuilder.GetSymbolByName(referenceName);
             var referenceSymbolId = refSymbol.Index;
             var location = GetLocation(context);
@@ -294,7 +294,7 @@ namespace DaedalusCompiler.Compilation
         public override void EnterInstanceDef(DaedalusParser.InstanceDefContext context)
         {
             var instanceName = context.nameNode().GetText();
-            var referenceName = context.referenceNode().GetText();
+            var referenceName = context.classLikeSymbolReference().GetText();
             var refSymbol = _assemblyBuilder.GetSymbolByName(referenceName);
             var referenceSymbolId = refSymbol.Index;
             var location = GetLocation(context);
@@ -320,7 +320,7 @@ namespace DaedalusCompiler.Compilation
         
         public override void EnterInstanceDecl(DaedalusParser.InstanceDeclContext context)
         {
-            var referenceName = context.referenceNode().GetText();
+            var referenceName = context.classLikeSymbolReference().GetText();
             var refSymbol = _assemblyBuilder.GetSymbolByName(referenceName);
             var referenceSymbolId = refSymbol.Index;
             var location = GetLocation(context);
