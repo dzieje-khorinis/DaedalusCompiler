@@ -56,7 +56,7 @@ public partial class DaedalusParser : Parser {
 		RULE_expression = 28, RULE_arrayIndex = 29, RULE_arraySize = 30, RULE_value = 31, 
 		RULE_referenceAtom = 32, RULE_reference = 33, RULE_referenceLeftSide = 34, 
 		RULE_typeReference = 35, RULE_nameNode = 36, RULE_integerSymbolReference = 37, 
-		RULE_classLikeSymbolReference = 38, RULE_assigmentOperator = 39, RULE_addOperator = 40, 
+		RULE_classLikeSymbolReference = 38, RULE_assignmentOperator = 39, RULE_addOperator = 40, 
 		RULE_bitMoveOperator = 41, RULE_compOperator = 42, RULE_eqOperator = 43, 
 		RULE_oneArgOperator = 44, RULE_multOperator = 45, RULE_binAndOperator = 46, 
 		RULE_binOrOperator = 47, RULE_logAndOperator = 48, RULE_logOrOperator = 49;
@@ -69,7 +69,7 @@ public partial class DaedalusParser : Parser {
 		"returnStatement", "funcArgExpression", "expressionBlock", "expression", 
 		"arrayIndex", "arraySize", "value", "referenceAtom", "reference", "referenceLeftSide", 
 		"typeReference", "nameNode", "integerSymbolReference", "classLikeSymbolReference", 
-		"assigmentOperator", "addOperator", "bitMoveOperator", "compOperator", 
+		"assignmentOperator", "addOperator", "bitMoveOperator", "compOperator", 
 		"eqOperator", "oneArgOperator", "multOperator", "binAndOperator", "binOrOperator", 
 		"logAndOperator", "logOrOperator"
 	};
@@ -1424,8 +1424,8 @@ public partial class DaedalusParser : Parser {
 		public ReferenceLeftSideContext referenceLeftSide() {
 			return GetRuleContext<ReferenceLeftSideContext>(0);
 		}
-		public AssigmentOperatorContext assigmentOperator() {
-			return GetRuleContext<AssigmentOperatorContext>(0);
+		public AssignmentOperatorContext assignmentOperator() {
+			return GetRuleContext<AssignmentOperatorContext>(0);
 		}
 		public ExpressionBlockContext expressionBlock() {
 			return GetRuleContext<ExpressionBlockContext>(0);
@@ -1453,7 +1453,7 @@ public partial class DaedalusParser : Parser {
 			EnterOuterAlt(_localctx, 1);
 			{
 			State = 285; referenceLeftSide();
-			State = 286; assigmentOperator();
+			State = 286; assignmentOperator();
 			State = 287; expressionBlock();
 			}
 		}
@@ -2856,26 +2856,26 @@ public partial class DaedalusParser : Parser {
 		return _localctx;
 	}
 
-	public partial class AssigmentOperatorContext : ParserRuleContext {
-		public AssigmentOperatorContext(ParserRuleContext parent, int invokingState)
+	public partial class AssignmentOperatorContext : ParserRuleContext {
+		public AssignmentOperatorContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
 		}
-		public override int RuleIndex { get { return RULE_assigmentOperator; } }
+		public override int RuleIndex { get { return RULE_assignmentOperator; } }
 		public override void EnterRule(IParseTreeListener listener) {
 			IDaedalusListener typedListener = listener as IDaedalusListener;
-			if (typedListener != null) typedListener.EnterAssigmentOperator(this);
+			if (typedListener != null) typedListener.EnterAssignmentOperator(this);
 		}
 		public override void ExitRule(IParseTreeListener listener) {
 			IDaedalusListener typedListener = listener as IDaedalusListener;
-			if (typedListener != null) typedListener.ExitAssigmentOperator(this);
+			if (typedListener != null) typedListener.ExitAssignmentOperator(this);
 		}
 	}
 
 	[RuleVersion(0)]
-	public AssigmentOperatorContext assigmentOperator() {
-		AssigmentOperatorContext _localctx = new AssigmentOperatorContext(Context, State);
-		EnterRule(_localctx, 78, RULE_assigmentOperator);
+	public AssignmentOperatorContext assignmentOperator() {
+		AssignmentOperatorContext _localctx = new AssignmentOperatorContext(Context, State);
+		EnterRule(_localctx, 78, RULE_assignmentOperator);
 		int _la;
 		try {
 			EnterOuterAlt(_localctx, 1);

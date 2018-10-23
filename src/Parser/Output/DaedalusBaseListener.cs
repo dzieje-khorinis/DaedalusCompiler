@@ -731,17 +731,17 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitClassLikeSymbolReference([NotNull] DaedalusParser.ClassLikeSymbolReferenceContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.assigmentOperator"/>.
+	/// Enter a parse tree produced by <see cref="DaedalusParser.assignmentOperator"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterAssigmentOperator([NotNull] DaedalusParser.AssigmentOperatorContext context) { }
+	public virtual void EnterAssignmentOperator([NotNull] DaedalusParser.AssignmentOperatorContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.assigmentOperator"/>.
+	/// Exit a parse tree produced by <see cref="DaedalusParser.assignmentOperator"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitAssigmentOperator([NotNull] DaedalusParser.AssigmentOperatorContext context) { }
+	public virtual void ExitAssignmentOperator([NotNull] DaedalusParser.AssignmentOperatorContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.addOperator"/>.
 	/// <para>The default implementation does nothing.</para>

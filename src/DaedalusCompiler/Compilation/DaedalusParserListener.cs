@@ -538,7 +538,7 @@ namespace DaedalusCompiler.Compilation
         {
             _assemblyBuilder.IsInsideAssignment = false;
             
-            string assignmentOperator = context.assigmentOperator().GetText();
+            string assignmentOperator = context.assignmentOperator().GetText();
 
             _assemblyBuilder.AssigmentEnd(assignmentOperator);
         }

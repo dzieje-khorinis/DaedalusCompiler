@@ -448,7 +448,7 @@ namespace DaedalusCompiler.Compilation
             return new List<AssemblyInstruction>();
         }
         
-        private DatSymbol GetComplexReferenceNodeSymbol(DaedalusParser.ReferenceAtomContext context)
+        private DatSymbol GetReferenceAtomSymbol(DaedalusParser.ReferenceAtomContext context)
         {
             string symbolNameLower = context.Identifier().GetText().ToLower();
             ExecBlock activeBlock = ActiveExecBlock;
@@ -544,9 +544,9 @@ namespace DaedalusCompiler.Compilation
         }
         
         public List<AssemblyInstruction> GetReferenceAtomInstructions(
-            DaedalusParser.ReferenceAtomContext[] complexReferenceNodes)
+            DaedalusParser.ReferenceAtomContext[] referenceAtoms)
         {
-            var symbolPart = complexReferenceNodes[0];
+            var symbolPart = referenceAtoms[0];
             string symbolName = symbolPart.Identifier().GetText().ToLower();
 
 
@@ -555,13 +555,13 @@ namespace DaedalusCompiler.Compilation
                 return GetKeywordInstructions(symbolName);
             }
 
-            DatSymbol symbol = GetComplexReferenceNodeSymbol(complexReferenceNodes[0]);
+            DatSymbol symbol = GetReferenceAtomSymbol(referenceAtoms[0]);
             List<AssemblyInstruction> instructions = new List<AssemblyInstruction>();
             
             
-            if (IsDottedReference(complexReferenceNodes))
+            if (IsDottedReference(referenceAtoms))
             {
-                var attributePart = complexReferenceNodes[1];
+                var attributePart = referenceAtoms[1];
                 string attributeName = attributePart.Identifier().GetText();
                 DatSymbol attribute = ResolveAttribute(symbol, attributeName);
 

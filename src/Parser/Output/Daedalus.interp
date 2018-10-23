@@ -154,7 +154,7 @@ typeReference
 nameNode
 integerSymbolReference
 classLikeSymbolReference
-assigmentOperator
+assignmentOperator
 addOperator
 bitMoveOperator
 compOperator

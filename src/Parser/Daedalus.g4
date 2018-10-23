@@ -59,7 +59,7 @@ parameterDecl: Var typeReference nameNode ('[' arraySize ']')?;
 statementBlock: '{' ( ( (statement ';')  | ( ifBlockStatement ( ';' )? ) ) )*? '}';
 statement: assignment | returnStatement | constDef | varDecl | expression;
 funcCall: nameNode '(' ( funcArgExpression ( ',' funcArgExpression )*? )? ')';
-assignment: referenceLeftSide assigmentOperator expressionBlock;
+assignment: referenceLeftSide assignmentOperator expressionBlock;
 ifCondition: expressionBlock;
 elseBlock: Else statementBlock;
 elseIfBlock: Else If ifCondition statementBlock;
@@ -109,7 +109,7 @@ integerSymbolReference: Identifier;
 classLikeSymbolReference: Identifier; // can be reference to class or to prototype
 
 
-assigmentOperator:  '=' | '+=' | '-=' | '*=' | '/=';
+assignmentOperator:  '=' | '+=' | '-=' | '*=' | '/=';
 addOperator: '+' | '-';
 bitMoveOperator: '<<' | '>>';
 compOperator: '<' | '>' | '<=' | '>=';

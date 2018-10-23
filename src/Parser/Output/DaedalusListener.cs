@@ -617,15 +617,15 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitClassLikeSymbolReference([NotNull] DaedalusParser.ClassLikeSymbolReferenceContext context);
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.assigmentOperator"/>.
+	/// Enter a parse tree produced by <see cref="DaedalusParser.assignmentOperator"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void EnterAssigmentOperator([NotNull] DaedalusParser.AssigmentOperatorContext context);
+	void EnterAssignmentOperator([NotNull] DaedalusParser.AssignmentOperatorContext context);
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.assigmentOperator"/>.
+	/// Exit a parse tree produced by <see cref="DaedalusParser.assignmentOperator"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void ExitAssigmentOperator([NotNull] DaedalusParser.AssigmentOperatorContext context);
+	void ExitAssignmentOperator([NotNull] DaedalusParser.AssignmentOperatorContext context);
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.addOperator"/>.
 	/// </summary>
