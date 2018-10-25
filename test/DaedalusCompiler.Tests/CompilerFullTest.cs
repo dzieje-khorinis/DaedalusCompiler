@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Text;
 using DaedalusCompiler.Compilation;
 using DaedalusCompiler.Dat;
 using Xunit;
@@ -12,6 +13,7 @@ namespace DaedalusCompiler.Tests
 
         public CompilerFullTest()
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             _assemblyBuilder = new AssemblyBuilder();
         }
 

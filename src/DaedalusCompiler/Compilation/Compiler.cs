@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Antlr4.Runtime.Tree;
 
 namespace DaedalusCompiler.Compilation
@@ -56,7 +57,8 @@ namespace DaedalusCompiler.Compilation
 
         private DaedalusParser GetParser(string scriptFilePath)
         {
-            AntlrFileStream inputStream = new AntlrFileStream(scriptFilePath);
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            AntlrFileStream inputStream = new AntlrFileStream(scriptFilePath, Encoding.GetEncoding(1250));
             DaedalusLexer lexer = new DaedalusLexer(inputStream);
             CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
             return new DaedalusParser(commonTokenStream);

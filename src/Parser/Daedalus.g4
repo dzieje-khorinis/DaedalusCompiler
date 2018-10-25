@@ -27,12 +27,14 @@ BlockComment :   '/*' .*? '*/' -> skip;
 LineComment :   '//' ~[\r\n]* -> skip ;
 
 // fragments
-fragment IdStart : [a-zA-Z_];
+fragment IdStart : GermanCharacter | [a-zA-Z_];
 fragment IdContinue : IdStart | Digit;
+fragment GermanCharacter : [\u00DF\u00E4\u00F6\u00FC]; //ядць
 fragment Digit : [0-9];
 fragment PointFloat : Digit* '.' Digit+ | Digit+ '.';
 fragment ExponentFloat : (Digit+ | PointFloat) Exponent;
 fragment Exponent : [eE] [+-]? Digit+;
+
 
 //parser
 daedalusFile: (( functionDef | constDef | varDecl | classDef | prototypeDef | instanceDef | instanceDecl )';')*?;

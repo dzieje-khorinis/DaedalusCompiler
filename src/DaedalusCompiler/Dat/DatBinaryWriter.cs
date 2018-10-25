@@ -50,10 +50,10 @@ namespace DaedalusCompiler.Dat
 
         public void Write(string value)
         {
-            var bytes = Encoding.ASCII.GetBytes(value).Concat(new byte[] { 0x0A }).ToArray();
+            var bytes = Encoding.GetEncoding(1250).GetBytes(value).Concat(new byte[] { 0x0A }).ToArray();
 
             // handling for special char FF
-            if (bytes[0] == 0x3F)
+            if (bytes[0] == 0x79)
                 bytes[0] = 0xFF;
 
             Write(bytes);
