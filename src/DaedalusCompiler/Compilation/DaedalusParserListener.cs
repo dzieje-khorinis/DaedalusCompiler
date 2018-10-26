@@ -612,7 +612,6 @@ namespace DaedalusCompiler.Compilation
                 string value = context.GetText().Replace("\"", "");
                 string symbolName = _assemblyBuilder.NewStringSymbolName();
                 DatSymbol symbol = SymbolBuilder.BuildConst(symbolName, DatSymbolType.String, value, location);
-                _assemblyBuilder.AddSymbol(symbol);
                 _assemblyBuilder.AddInstruction(new PushVar(symbol));
             }
         }

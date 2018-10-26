@@ -106,7 +106,7 @@ namespace DaedalusCompiler.Dat
         public int ParentIndex { get; set; }
 
         public DatSymbol()
-        {          
+        {
             ArrayLength = 0;
             ParametersCount = 0;
             ClassOffset = -9;
@@ -115,6 +115,11 @@ namespace DaedalusCompiler.Dat
             ClassSize = -9;
             ClassVarOffset = -9;
             ReturnType = DatSymbolType.Void;
+        }
+
+        public bool IsStringLiteralSymbol()
+        {
+            return Name.StartsWith($"{(char) 255}") && Type == DatSymbolType.String && Flags == DatSymbolFlag.Const;
         }
         
         /// <summary>

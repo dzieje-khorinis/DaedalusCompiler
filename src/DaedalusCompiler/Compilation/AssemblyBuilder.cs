@@ -368,7 +368,6 @@ namespace DaedalusCompiler.Compilation
         public readonly List<ExecBlock> ExecBlocks;
         public List<DatSymbol> Symbols;
         public Dictionary<string, DatSymbol> SymbolsDict;
-        private readonly List<DatSymbol> _stringLiteralSymbols;
         public ExecBlock ActiveExecBlock;
         private AssemblyBuildContext _currentBuildCtx;
         private List<SymbolInstruction> _assignmentLeftSide;
@@ -390,7 +389,6 @@ namespace DaedalusCompiler.Compilation
             ExecBlocks = new List<ExecBlock>();
             Symbols = new List<DatSymbol>();
             SymbolsDict = new Dictionary<string, DatSymbol>();
-            _stringLiteralSymbols = new List<DatSymbol>();
             _currentBuildCtx = GetEmptyBuildContext();
             ActiveExecBlock = null;
             _assignmentLeftSide = new List<SymbolInstruction>();
@@ -885,19 +883,11 @@ namespace DaedalusCompiler.Compilation
                 }
             }
             
-            
             SymbolsDict[symbol.Name.ToUpper()] = symbol;
-            if (symbol.Name.StartsWith($"{(char) 255}") && symbol.Type == DatSymbolType.String &&
-                symbol.Flags == DatSymbolFlag.Const)
-            {
-                _stringLiteralSymbols.Add(symbol);
-            }
-            else
-            {
-                Symbols.Add(symbol);
-                symbol.Index = _nextSymbolIndex;
-                _nextSymbolIndex++;
-            }
+            
+            Symbols.Add(symbol);
+            symbol.Index = _nextSymbolIndex;
+            _nextSymbolIndex++;
         }
 
         public DatSymbol ResolveAttribute(DatSymbol symbol, string attributeName)
@@ -1064,14 +1054,6 @@ namespace DaedalusCompiler.Compilation
         
         public void Finish()
         {
-            foreach (DatSymbol symbol in _stringLiteralSymbols)
-            {
-                symbol.Index = _nextSymbolIndex;
-                _nextSymbolIndex++;
-            }
-            
-            Symbols = Symbols.Concat(_stringLiteralSymbols).ToList();
-            
             int counter = 0;
             int maxCounter = ExecBlocks.Count;
             foreach (ExecBlock execBlock in ExecBlocks)
@@ -1086,6 +1068,11 @@ namespace DaedalusCompiler.Compilation
                         List<AssemblyInstruction> instructions = GetReferenceAtomInstructions(nodeInstructions.ReferenceAtoms);
                         execBlock.Body.RemoveAt(i);
                         execBlock.Body.InsertRange(i, instructions);
+                    }
+                    
+                    if (element is PushVar pushVar&& pushVar.Symbol.IsStringLiteralSymbol())
+                    {
+                        AddSymbol(pushVar.Symbol);
                     }
                 }
             }
