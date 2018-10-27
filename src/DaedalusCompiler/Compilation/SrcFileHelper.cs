@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace DaedalusCompiler.Compilation
 {
@@ -54,12 +55,12 @@ namespace DaedalusCompiler.Compilation
         {
             List<string> result = new List<string>();
 
-            foreach (string line in srcLines.Where(x => String.IsNullOrWhiteSpace(x) == false))
+            foreach (string line in srcLines.Where(x => String.IsNullOrWhiteSpace(x) == false).Select(item => item.Replace("\\", "/")))
             {
                 try
                 {
                     bool containsWildcard = line.Contains("*");
-                    string fullPath = Path.Combine(basePath, line).Trim().ToLower();
+                    string fullPath = Path.Combine(basePath, line).Trim();
                     string pathExtension = Path.GetExtension(fullPath).ToLower();
 
                     if (containsWildcard && pathExtension == ".d")
@@ -67,10 +68,28 @@ namespace DaedalusCompiler.Compilation
                         string dirPath = Path.GetDirectoryName(fullPath);
                         string filenamePattern = Path.GetFileName(fullPath);
                         
-                        string[] filePaths = Directory.GetFiles(dirPath, filenamePattern);
+                        Console.WriteLine("________");
+                        Console.WriteLine(filenamePattern);
+
+                        List<string> filePaths = Directory.GetFiles(dirPath, filenamePattern, new EnumerationOptions
+                        {
+                            MatchCasing = MatchCasing.CaseInsensitive
+                        }).ToList();
+
+                        filePaths.Sort((a, b) =>
+                        {
+                            if (a.StartsWith(b))
+                            {
+                                return a.Length > b.Length ? -1 : 1;
+                            }
+
+                            return string.Compare(a, b, StringComparison.Ordinal);
+                        });
+                        
+                        //string[] filePaths2 = Directory.EnumerateFiles(dirPath, "*", SearchOption.AllDirectories).Where(file => Regex.IsMatch(file, @"^\/anims\/", RegexOptions.IgnoreCase));
                         foreach (string filePath in filePaths)
                         {
-                            string filePathLower = filePath.ToLower();
+                            string filePathLower = filePath;
                             if (!alreadyLoadedFiles.Contains(filePathLower))
                             {
                                 alreadyLoadedFiles.Add(filePathLower);

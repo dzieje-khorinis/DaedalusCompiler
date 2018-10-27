@@ -16,6 +16,10 @@ namespace DaedalusCompiler.Compilation
                 var assemblyBuilder = new AssemblyBuilder();
                 string[] paths = SrcFileHelper.LoadScriptsFilePaths(srcFilePath).ToArray();
                 
+                var filesPaths = "";
+                paths.ToList().ForEach(item => filesPaths += $"{item.ToLower()}\n");
+                File.WriteAllText("./dupa.txt", filesPaths);
+                
                 
                 string runtimePath = Path.Combine("DaedalusBuiltins", Path.GetFileNameWithoutExtension(srcFilePath).ToLower() + ".d");
                 if (File.Exists(runtimePath))
