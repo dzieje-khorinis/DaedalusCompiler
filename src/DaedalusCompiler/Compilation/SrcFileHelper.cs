@@ -67,9 +67,6 @@ namespace DaedalusCompiler.Compilation
                     {
                         string dirPath = Path.GetDirectoryName(fullPath);
                         string filenamePattern = Path.GetFileName(fullPath);
-                        
-                        Console.WriteLine("________");
-                        Console.WriteLine(filenamePattern);
 
                         List<string> filePaths = Directory.GetFiles(dirPath, filenamePattern, new EnumerationOptions
                         {
@@ -85,8 +82,7 @@ namespace DaedalusCompiler.Compilation
 
                             return string.Compare(a, b, StringComparison.OrdinalIgnoreCase);
                         });
-                        
-                        //string[] filePaths2 = Directory.EnumerateFiles(dirPath, "*", SearchOption.AllDirectories).Where(file => Regex.IsMatch(file, @"^\/anims\/", RegexOptions.IgnoreCase));
+
                         foreach (string filePath in filePaths)
                         {
                             string filePathLower = filePath.ToLower();
