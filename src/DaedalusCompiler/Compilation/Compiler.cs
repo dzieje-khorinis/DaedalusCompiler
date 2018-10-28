@@ -17,7 +17,7 @@ namespace DaedalusCompiler.Compilation
                 string[] paths = SrcFileHelper.LoadScriptsFilePaths(srcFilePath).ToArray();
                 
                 var filesPaths = "";
-                paths.ToList().ForEach(item => filesPaths += $"{item.ToLower()}\n");
+                paths.ToList().ForEach(item => filesPaths += $"{item.ToLower()}\n".Replace("/users/artur/dev/dzieje/gothic-full/gothic ii/_work/data/scripts/content", ""));
                 File.WriteAllText("./dupa.txt", filesPaths);
                 
                 

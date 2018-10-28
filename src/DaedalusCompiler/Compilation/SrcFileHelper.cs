@@ -36,7 +36,7 @@ namespace DaedalusCompiler.Compilation
             if (alreadyLoadedFiles.Contains(srcFilePath))
                 throw new Exception($"Cyclic dependency detected. SRC file '{srcFilePath}' is already loaded");
             
-            alreadyLoadedFiles.Add(srcFilePath);
+            alreadyLoadedFiles.Add(srcFilePath.ToLower());
 
             try
             {
@@ -60,7 +60,7 @@ namespace DaedalusCompiler.Compilation
                 try
                 {
                     bool containsWildcard = line.Contains("*");
-                    string fullPath = Path.Combine(basePath, line).Trim();
+                    string fullPath = Path.Combine(basePath, line).Trim().ToLower();
                     string pathExtension = Path.GetExtension(fullPath).ToLower();
 
                     if (containsWildcard && pathExtension == ".d")
@@ -83,13 +83,13 @@ namespace DaedalusCompiler.Compilation
                                 return a.Length > b.Length ? -1 : 1;
                             }
 
-                            return string.Compare(a, b, StringComparison.Ordinal);
+                            return string.Compare(a, b, StringComparison.OrdinalIgnoreCase);
                         });
                         
                         //string[] filePaths2 = Directory.EnumerateFiles(dirPath, "*", SearchOption.AllDirectories).Where(file => Regex.IsMatch(file, @"^\/anims\/", RegexOptions.IgnoreCase));
                         foreach (string filePath in filePaths)
                         {
-                            string filePathLower = filePath;
+                            string filePathLower = filePath.ToLower();
                             if (!alreadyLoadedFiles.Contains(filePathLower))
                             {
                                 alreadyLoadedFiles.Add(filePathLower);
