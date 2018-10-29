@@ -6,7 +6,7 @@ namespace DaedalusCompiler.Compilation
     public static class SymbolBuilder
     {
         public static DatSymbol BuildVariable(string name, DatSymbolType type, DatSymbolLocation location = null,
-            int parent = -1)
+            int parentIndex = -1)
         {
             var symbol = new DatSymbol
             {
@@ -16,9 +16,23 @@ namespace DaedalusCompiler.Compilation
                 Content = type == DatSymbolType.String ? new object[] {string.Empty} : new object[] {0},
                 Flags = 0,
                 Location = location,
-                ParentIndex = parent,
+                ParentIndex = parentIndex,
             };
-
+            return symbol;
+        }
+        
+        public static DatSymbol BuildParameter(string name, DatSymbolType type, DatSymbolLocation location = null,
+            int parentIndex = -1)
+        {
+            return BuildVariable(name, type, location, parentIndex);
+        }
+        
+        public static DatSymbol BuildExternalParameter(string name, DatSymbolType type, DatSymbolLocation location = null,
+            int parentIndex = -1)
+        {
+            var symbol = BuildParameter(name, type, location, parentIndex);
+            symbol.ArrayLength = 0;
+            symbol.Content = null;
             return symbol;
         }
 
@@ -136,6 +150,12 @@ namespace DaedalusCompiler.Compilation
                 ClassSize = classSize,
                 ParentIndex = -1,
             };
+            
+            string lowerName = name.ToLower();
+            if (lowerName == "c_npc" || lowerName == "c_item")
+            {
+                symbol.ClassOffset = 288;
+            }
 
             return symbol;
         }
@@ -184,7 +204,7 @@ namespace DaedalusCompiler.Compilation
                 ArrayLength = 0,
                 Content = null,
                 FirstTokenAddress = -1,
-                Flags = DatSymbolFlag.Const,
+                Flags = 0,
                 Location = location,
                 ParentIndex = referenceId,
             };

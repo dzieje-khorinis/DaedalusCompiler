@@ -772,18 +772,6 @@ namespace DaedalusCompiler.Compilation
             {
                 IsInsideArgList = false;
             }
-            
-            /*
-            if (ArgIndexStack.Count > 0)
-            {
-                ArgIndex = ArgIndexStack.Pop();
-                ParametersTypes = ParametersTypesStack.Pop();
-            }
-            else
-            {
-                IsInsideArgList = false;
-            }
-            */
         }
 
         public void ExpressionEnd(AssemblyInstruction operatorInstruction)
@@ -917,7 +905,7 @@ namespace DaedalusCompiler.Compilation
         {
             if (IsCurrentlyParsingExternals)
             {
-                if (symbol.Type == DatSymbolType.Func)
+                if (symbol.Type == DatSymbolType.Func && symbol.Flags.HasFlag(DatSymbolFlag.Const))
                 {
                     symbol.Flags |= DatSymbolFlag.External;
                 }

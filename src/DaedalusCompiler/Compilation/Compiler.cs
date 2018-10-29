@@ -23,7 +23,7 @@ namespace DaedalusCompiler.Compilation
                     assemblyBuilder.IsCurrentlyParsingExternals = true;
                     Console.WriteLine($"[0/{paths.Length}]Compiling runtime: {runtimePath}");
                     var parser = GetParser(runtimePath);
-                    ParseTreeWalker.Default.Walk(new DaedalusParserListener(assemblyBuilder, -1), parser.daedalusFile());
+                    ParseTreeWalker.Default.Walk(new DaedalusParserListener(assemblyBuilder, 0), parser.daedalusFile());
                     assemblyBuilder.IsCurrentlyParsingExternals = false;
                 }
                 
