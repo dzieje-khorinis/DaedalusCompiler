@@ -68,7 +68,7 @@ namespace DaedalusCompiler.Dat
         /// <summary>
         /// Return type which is set only for 'func' symbols with 'return' flag set
         /// </summary>
-        public DatSymbolType? ReturnType { get; set; }
+        public DatSymbolType ReturnType { get; set; }
 
         /// <summary>
         /// Addres of parent 'class' symbol set only for 'classvar' symbol.
@@ -109,11 +109,11 @@ namespace DaedalusCompiler.Dat
         {
             ArrayLength = 0;
             ParametersCount = 0;
-            ClassOffset = -9;
-            FirstTokenAddress = -9;
-            ParentIndex = -9;
-            ClassSize = -9;
-            ClassVarOffset = -9;
+            ClassOffset = 0;
+            FirstTokenAddress = 0;
+            ParentIndex = -1;
+            ClassSize = 0;
+            ClassVarOffset = 0;
             ReturnType = DatSymbolType.Void;
         }
 
@@ -154,7 +154,7 @@ namespace DaedalusCompiler.Dat
 
             // Save ArrayLength & Type & Flags
             var bitField = 0u;
-            if (Type == DatSymbolType.Func)
+            if (Type == DatSymbolType.Func && !Flags.HasFlag(DatSymbolFlag.Classvar))
             {
                 bitField |= ParametersCount;
             }

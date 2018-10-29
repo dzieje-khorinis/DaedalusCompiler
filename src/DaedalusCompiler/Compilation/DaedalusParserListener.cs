@@ -86,7 +86,14 @@ namespace DaedalusCompiler.Compilation
             }
             else
             {
-                symbol = SymbolBuilder.BuildVariable(parameterName, parameterType.Value, location, parentIndex);
+                if (_assemblyBuilder.IsCurrentlyParsingExternals)
+                {
+                    symbol = SymbolBuilder.BuildExternalParameter(parameterName, parameterType.Value, location, parentIndex);
+                }
+                else
+                {
+                    symbol = SymbolBuilder.BuildParameter(parameterName, parameterType.Value, location, parentIndex);
+                }
             }
 
             _assemblyBuilder.AddSymbol(symbol);
@@ -220,7 +227,7 @@ namespace DaedalusCompiler.Compilation
             _assemblyBuilder.AddSymbol(classSymbol);
 
             var classId = classSymbol.Index;
-            int classVarOffset = 0;
+            int classVarOffset = classSymbol.ClassOffset;
             uint classLength = 0;
 
             // TODO: refactor later
@@ -266,7 +273,7 @@ namespace DaedalusCompiler.Compilation
             }
 
             classSymbol.ArrayLength = classLength;
-            classSymbol.ClassSize = classVarOffset;
+            classSymbol.ClassSize = classVarOffset - classSymbol.ClassOffset;
         }
 
         public override void EnterPrototypeDef([NotNull] DaedalusParser.PrototypeDefContext context)
@@ -277,7 +284,7 @@ namespace DaedalusCompiler.Compilation
             var referenceSymbolId = refSymbol.Index;
             var location = GetLocation(context);
 
-            var prototypeSymbol = SymbolBuilder.BuildPrototype(prototypeName, referenceSymbolId, location); // TODO: Validate params
+            var prototypeSymbol = SymbolBuilder.BuildPrototype(prototypeName, referenceSymbolId, location);
             _assemblyBuilder.AddSymbol(prototypeSymbol);
 
             _assemblyBuilder.ExecBlockStart(prototypeSymbol, ExecutebleBlockType.PrototypeConstructor);
@@ -300,6 +307,7 @@ namespace DaedalusCompiler.Compilation
             var location = GetLocation(context);
 
             var instanceSymbol = SymbolBuilder.BuildInstance(instanceName, referenceSymbolId, location);
+            instanceSymbol.Flags |= DatSymbolFlag.Const;
             _assemblyBuilder.AddSymbol(instanceSymbol);
 
             _assemblyBuilder.ExecBlockStart(instanceSymbol, ExecutebleBlockType.InstanceConstructor);

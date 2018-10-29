@@ -75,6 +75,11 @@ namespace DaedalusCompiler.Compilation
                 byte? byteParam = null;
                 switch (instruction)
                 {
+                    case Call call:
+                    {
+                        intParam = call.Symbol.FirstTokenAddress;
+                        break;
+                    }
                     case PushArrayVar pushArrVar:
                     {
                         intParam = pushArrVar.Symbol.Index;

@@ -106,6 +106,6 @@ namespace DaedalusCompiler.Dat
 
         public int? IntParam { get; set; }
 
-        public int? ByteParam { get; set; }
+        public byte? ByteParam { get; set; }
     }
 }

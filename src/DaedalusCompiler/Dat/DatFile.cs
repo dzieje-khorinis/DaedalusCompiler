@@ -109,7 +109,7 @@ namespace DaedalusCompiler.Dat
 
             var symbolsOrder = symbols
                 .Select((symbol, id) => new { Id = id, SymbolName = symbol.Name })
-                .OrderBy(s => s.SymbolName, StringComparer.Ordinal)
+                .OrderBy(s => s.SymbolName, StringComparer.OrdinalIgnoreCase)
                 .Select(s => s.Id)
                 .ToList();
             symbolsOrder.ForEach(id => writer.Write(id));
