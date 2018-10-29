@@ -590,7 +590,12 @@ namespace DaedalusCompiler.Compilation
         {
             if (!_assemblyBuilder.IsInsideEvalableStatement)
             {
-                if (_assemblyBuilder.IsInsideAssignment && _assemblyBuilder.AssignmentType == DatSymbolType.Float)
+                bool isInsideFloatAssignment = _assemblyBuilder.IsInsideAssignment
+                                               && _assemblyBuilder.AssignmentType == DatSymbolType.Float;
+                bool isInsideFloatArgument = _assemblyBuilder.IsInsideArgList
+                                             && _assemblyBuilder.FuncCallCtx.GetParameterType() == DatSymbolType.Float;
+                
+                if (isInsideFloatAssignment || isInsideFloatArgument)
                 {
                     int parsedFloat = EvaluatorHelper.EvaluateFloatExpression(context.Parent.Parent.GetText());
                     _assemblyBuilder.AddInstruction(new PushInt(parsedFloat));
@@ -728,28 +733,33 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterOneArgOperator(DaedalusParser.OneArgOperatorContext context)
         {
-            if (_assemblyBuilder.IsInsideNonFloatAssigment())
+            if (_assemblyBuilder.IsInsideOneArgOperatorsEvaluationMode())
             {
-                _assemblyBuilder.ExpressionRightSideStart();       
+                return;
             }
+
+            _assemblyBuilder.ExpressionRightSideStart();
         }
 
         public override void EnterOneArgExpression(DaedalusParser.OneArgExpressionContext context)
         {
-            if (_assemblyBuilder.IsInsideNonFloatAssigment())
+            if (_assemblyBuilder.IsInsideOneArgOperatorsEvaluationMode())
             {
-                _assemblyBuilder.ExpressionLeftSideStart();
+                return;
             }
+            _assemblyBuilder.ExpressionLeftSideStart();
         }
 
         public override void ExitOneArgExpression(DaedalusParser.OneArgExpressionContext context)
         {
-            if (_assemblyBuilder.IsInsideNonFloatAssigment())
+            if (_assemblyBuilder.IsInsideOneArgOperatorsEvaluationMode())
             {
-                var exprOperator = context.oneArgOperator().GetText();
-                var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator, false);
-                _assemblyBuilder.ExpressionEnd(instruction);
+                return;
             }
+            
+            var exprOperator = context.oneArgOperator().GetText();
+            var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator, false);
+            _assemblyBuilder.ExpressionEnd(instruction);
         }
 
         private DatSymbolType DatSymbolTypeFromString(string typeName)
