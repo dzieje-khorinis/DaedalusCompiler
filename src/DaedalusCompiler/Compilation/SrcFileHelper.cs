@@ -72,7 +72,8 @@ namespace DaedalusCompiler.Compilation
                         {
                             MatchCasing = MatchCasing.CaseInsensitive
                         }).ToList();
-
+                        
+                        // we make custom sort to achieve same sort results independent from OS 
                         filePaths.Sort((a, b) =>
                         {
                             if (a.StartsWith(b))
