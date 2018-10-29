@@ -474,21 +474,42 @@ namespace DaedalusCompiler.Compilation
             return new List<AssemblyInstruction>();
         }
         
-        private DatSymbol GetReferenceAtomSymbol(DaedalusParser.ReferenceAtomContext context)
+        private DatSymbol GetReferenceAtomSymbol(DaedalusParser.ReferenceAtomContext[] referenceAtoms)
         {
-            string symbolNameLower = context.Identifier().GetText().ToLower();
-            BaseExecBlock activeBlock = ActiveExecBlock;
+            var referenceAtom = referenceAtoms[0];
+            string symbolNameLower = referenceAtom.Identifier().GetText().ToLower();
+            bool isSymbolNameSelfKeyword = symbolNameLower == "slf" || symbolNameLower == "self";
 
-            if (
-                activeBlock != null
-                && (activeBlock.GetSymbol().Type == DatSymbolType.Instance || activeBlock.GetSymbol().Type == DatSymbolType.Prototype)
-                && (symbolNameLower == "slf" || symbolNameLower == "self")
-            )
+
+            if (ActiveExecBlock != null && isSymbolNameSelfKeyword)
             {
-                return activeBlock.GetSymbol();
+
+                bool isDottedReference = IsDottedReference(referenceAtoms);
+                DatSymbolType activeSymbolType = ActiveExecBlock.GetSymbol().Type;
+
+                if (
+                    activeSymbolType == DatSymbolType.Instance
+                    || (activeSymbolType == DatSymbolType.Prototype && isDottedReference)
+                )
+                {
+                    return ActiveExecBlock.GetSymbol();
+                }
             }
-            
-            return ResolveSymbol(context.Identifier().GetText());
+
+            return ResolveSymbol(referenceAtom.Identifier().GetText());
+        }
+        
+        public DatSymbolType GetReferenceType(DaedalusParser.ReferenceAtomContext[] referenceAtoms)
+        {
+            DatSymbol symbol = GetReferenceAtomSymbol(referenceAtoms);
+   
+            if (IsDottedReference(referenceAtoms))
+            {
+                string rightPart = referenceAtoms[1].Identifier().GetText();
+                DatSymbol attribute = ResolveAttribute(symbol, rightPart);
+                return attribute.Type;
+            }
+            return symbol.Type;
         }
         
         public int GetArrayIndex(DaedalusParser.ReferenceAtomContext context)
@@ -581,7 +602,7 @@ namespace DaedalusCompiler.Compilation
                 return GetKeywordInstructions(symbolName);
             }
 
-            DatSymbol symbol = GetReferenceAtomSymbol(referenceAtoms[0]);
+            DatSymbol symbol = GetReferenceAtomSymbol(referenceAtoms);
             List<AssemblyInstruction> instructions = new List<AssemblyInstruction>();
             
             

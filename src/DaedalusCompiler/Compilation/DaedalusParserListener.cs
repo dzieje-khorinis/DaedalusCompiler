@@ -299,10 +299,10 @@ namespace DaedalusCompiler.Compilation
             var referenceSymbolId = refSymbol.Index;
             var location = GetLocation(context);
 
-            var prototypeSymbol = SymbolBuilder.BuildPrototype(instanceName, referenceSymbolId, location); // TODO: Validate params, actually should be BuildInstance
-            _assemblyBuilder.AddSymbol(prototypeSymbol);
+            var instanceSymbol = SymbolBuilder.BuildInstance(instanceName, referenceSymbolId, location);
+            _assemblyBuilder.AddSymbol(instanceSymbol);
 
-            _assemblyBuilder.ExecBlockStart(prototypeSymbol, ExecutebleBlockType.InstanceConstructor);
+            _assemblyBuilder.ExecBlockStart(instanceSymbol, ExecutebleBlockType.InstanceConstructor);
 
             if (refSymbol.Type == DatSymbolType.Prototype)
             {
@@ -498,38 +498,6 @@ namespace DaedalusCompiler.Compilation
             }
         }
         
-        
-        public DatSymbolType GetReferenceType(DaedalusParser.ReferenceAtomContext[] referenceAtoms)
-        {
-            string leftPart = referenceAtoms[0].Identifier().GetText();
-
-            DatSymbol symbol;
-
-            DatSymbol activeSymbol = _assemblyBuilder.ActiveExecBlock.GetSymbol();
-            if ((activeSymbol.Type == DatSymbolType.Instance || activeSymbol.Type == DatSymbolType.Prototype) && (leftPart == "slf" || leftPart == "self"))
-            {
-                symbol = activeSymbol;
-            }
-            else
-            {
-                symbol = _assemblyBuilder.ResolveSymbol(leftPart);
-            }
-
-            if (referenceAtoms.Length == 1)
-            {
-                return symbol.Type;
-
-            }
-            if (referenceAtoms.Length == 2)
-            {
-                string rightPart = referenceAtoms[1].Identifier().GetText();
-                DatSymbol attribute = _assemblyBuilder.ResolveAttribute(symbol, rightPart);
-                return attribute.Type;
-            }
-
-            return DatSymbolType.Void;
-        }
-        
 
         public override void EnterAssignment(DaedalusParser.AssignmentContext context)
         {
@@ -537,7 +505,7 @@ namespace DaedalusCompiler.Compilation
             List<AssemblyInstruction> instructions = _assemblyBuilder.GetReferenceAtomInstructions(referenceAtoms);
             _assemblyBuilder.AssigmentStart(Array.ConvertAll(instructions.ToArray(), item => (SymbolInstruction) item));
             _assemblyBuilder.IsInsideAssignment = true;
-            _assemblyBuilder.AssignmentType = GetReferenceType(referenceAtoms);
+            _assemblyBuilder.AssignmentType = _assemblyBuilder.GetReferenceType(referenceAtoms);
         }
 
 
