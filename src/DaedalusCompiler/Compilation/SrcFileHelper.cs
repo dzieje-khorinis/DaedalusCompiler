@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace DaedalusCompiler.Compilation
 {
@@ -35,7 +36,7 @@ namespace DaedalusCompiler.Compilation
             if (alreadyLoadedFiles.Contains(srcFilePath))
                 throw new Exception($"Cyclic dependency detected. SRC file '{srcFilePath}' is already loaded");
             
-            alreadyLoadedFiles.Add(srcFilePath);
+            alreadyLoadedFiles.Add(srcFilePath.ToLower());
 
             try
             {
@@ -54,7 +55,7 @@ namespace DaedalusCompiler.Compilation
         {
             List<string> result = new List<string>();
 
-            foreach (string line in srcLines.Where(x => String.IsNullOrWhiteSpace(x) == false))
+            foreach (string line in srcLines.Where(x => String.IsNullOrWhiteSpace(x) == false).Select(item => item.Replace("\\", "/")))
             {
                 try
                 {
@@ -66,8 +67,23 @@ namespace DaedalusCompiler.Compilation
                     {
                         string dirPath = Path.GetDirectoryName(fullPath);
                         string filenamePattern = Path.GetFileName(fullPath);
+
+                        List<string> filePaths = Directory.GetFiles(dirPath, filenamePattern, new EnumerationOptions
+                        {
+                            MatchCasing = MatchCasing.CaseInsensitive
+                        }).ToList();
                         
-                        string[] filePaths = Directory.GetFiles(dirPath, filenamePattern);
+                        // we make custom sort to achieve same sort results independent from OS 
+                        filePaths.Sort((a, b) =>
+                        {
+                            if (a.StartsWith(b))
+                            {
+                                return a.Length > b.Length ? -1 : 1;
+                            }
+
+                            return string.Compare(a, b, StringComparison.OrdinalIgnoreCase);
+                        });
+
                         foreach (string filePath in filePaths)
                         {
                             string filePathLower = filePath.ToLower();
