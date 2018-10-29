@@ -2683,7 +2683,7 @@ namespace DaedalusCompiler.Tests
         }
 
         [Fact]
-        public void TestEmptyElseBlock()
+        public void TestNestedIfWithEmptyElse()
         {
             _externalCode = @"
                 func int NPC_IsDead(var instance par0) {};
