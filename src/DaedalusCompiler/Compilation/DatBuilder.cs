@@ -9,7 +9,7 @@ namespace DaedalusCompiler.Compilation
     {
         private int _currentAddress;
         private readonly List<DatSymbol> _symbols;
-        private readonly List<ExecBlock> _execBlocks;
+        private readonly List<BaseExecBlock> _execBlocks;
 
         public DatBuilder(AssemblyBuilder assemblyBuilder)
         {
@@ -18,7 +18,7 @@ namespace DaedalusCompiler.Compilation
             _execBlocks = assemblyBuilder.ExecBlocks;
         }
 
-        private Dictionary<string, int> GetLabelToAddressDict(ExecBlock execBlock)
+        private Dictionary<string, int> GetLabelToAddressDict(BaseExecBlock execBlock)
         {
             Dictionary<string, int> labelToAddress = new Dictionary<string, int>();
 
@@ -58,7 +58,7 @@ namespace DaedalusCompiler.Compilation
             return labelToAddress;
         }
 
-        private List<DatToken> GetTokens(ExecBlock execBlock)
+        private List<DatToken> GetTokens(BaseExecBlock execBlock)
         {
             List<DatToken> tokens = new List<DatToken>();
             Dictionary<string, int> labelToAddress = GetLabelToAddressDict(execBlock);
@@ -122,11 +122,21 @@ namespace DaedalusCompiler.Compilation
             List<DatToken> tokens = new List<DatToken>();
             foreach (var execBlock in _execBlocks)
             {
-                if (execBlock.Symbol.Flags.HasFlag(DatSymbolFlag.External))
+                if (execBlock.GetSymbol().Flags.HasFlag(DatSymbolFlag.External))
                 {
                     continue;
                 }
-                execBlock.Symbol.FirstTokenAddress = _currentAddress;
+                if (execBlock is SharedExecBlock sharedBlock)
+                {
+                    foreach (var symbol in sharedBlock.Symbols)
+                    {
+                        symbol.FirstTokenAddress = _currentAddress;
+                    }
+                }
+                else
+                {
+                    execBlock.GetSymbol().FirstTokenAddress = _currentAddress;
+                }
                 tokens.AddRange(GetTokens(execBlock));
             }
 

@@ -97,13 +97,32 @@ namespace DaedalusCompiler.Compilation
             _rightBody = rInstructions;
         }
     }
-
-    public class ExecBlock : AssemblyElement
+    
+    public abstract class BaseExecBlock : AssemblyElement
     {
         public List<AssemblyElement> Body;
-        public DatSymbol Symbol;
+        public abstract DatSymbol GetSymbol();
     }
+    
+    public class ExecBlock : BaseExecBlock
+    {
+        public DatSymbol Symbol;
 
+        public override DatSymbol GetSymbol()
+        {
+            return Symbol;
+        }
+    }
+    
+    public class SharedExecBlock : BaseExecBlock
+    {
+        public List<DatSymbol> Symbols;
+        public override DatSymbol GetSymbol()
+        {
+            return Symbols.FirstOrDefault();
+        }
+    }
+    
     public class FunctionBlock : ExecBlock
     {
     }
@@ -269,7 +288,7 @@ namespace DaedalusCompiler.Compilation
 
     public class AssemblyBuilderSnapshot
     {
-        public readonly ExecBlock ActiveExecBlock;
+        public readonly BaseExecBlock ActiveExecBlock;
         
         public readonly bool IsInsideArgList;
         public readonly bool IsInsideAssignment;
@@ -365,10 +384,10 @@ namespace DaedalusCompiler.Compilation
 
     public class AssemblyBuilder
     {
-        public readonly List<ExecBlock> ExecBlocks;
+        public readonly List<BaseExecBlock> ExecBlocks;
         public List<DatSymbol> Symbols;
         public Dictionary<string, DatSymbol> SymbolsDict;
-        public ExecBlock ActiveExecBlock;
+        public BaseExecBlock ActiveExecBlock;
         private AssemblyBuildContext _currentBuildCtx;
         private List<SymbolInstruction> _assignmentLeftSide;
         public FuncCallContext FuncCallCtx;
@@ -386,7 +405,7 @@ namespace DaedalusCompiler.Compilation
         
         public AssemblyBuilder()
         {
-            ExecBlocks = new List<ExecBlock>();
+            ExecBlocks = new List<BaseExecBlock>();
             Symbols = new List<DatSymbol>();
             SymbolsDict = new Dictionary<string, DatSymbol>();
             _currentBuildCtx = GetEmptyBuildContext();
@@ -429,7 +448,7 @@ namespace DaedalusCompiler.Compilation
 
         public DatSymbol GetCurrentSymbol()
         {
-            return ActiveExecBlock.Symbol;
+            return ActiveExecBlock.GetSymbol();
         }
         
         public bool IsArgListKeyword(string symbolName)
@@ -456,15 +475,15 @@ namespace DaedalusCompiler.Compilation
         private DatSymbol GetReferenceAtomSymbol(DaedalusParser.ReferenceAtomContext context)
         {
             string symbolNameLower = context.Identifier().GetText().ToLower();
-            ExecBlock activeBlock = ActiveExecBlock;
+            BaseExecBlock activeBlock = ActiveExecBlock;
 
             if (
                 activeBlock != null
-                && (activeBlock.Symbol.Type == DatSymbolType.Instance || activeBlock.Symbol.Type == DatSymbolType.Prototype)
+                && (activeBlock.GetSymbol().Type == DatSymbolType.Instance || activeBlock.GetSymbol().Type == DatSymbolType.Prototype)
                 && (symbolNameLower == "slf" || symbolNameLower == "self")
             )
             {
-                return activeBlock.Symbol;
+                return activeBlock.GetSymbol();
             }
             
             return ResolveSymbol(context.Identifier().GetText());
@@ -509,7 +528,7 @@ namespace DaedalusCompiler.Compilation
         
         public AssemblyInstruction GetProperPushInstruction(DatSymbol symbol, int arrIndex)
         {
-            ExecBlock activeBlock = ActiveExecBlock;
+            BaseExecBlock activeBlock = ActiveExecBlock;
             
             if (arrIndex > 0)
             {
@@ -523,7 +542,7 @@ namespace DaedalusCompiler.Compilation
             
             if (IsInsideReturnStatement && activeBlock != null)
             {
-                return PushSymbol(symbol, activeBlock.Symbol.ReturnType);
+                return PushSymbol(symbol, activeBlock.GetSymbol().ReturnType);
             }
             
             if (IsInsideAssignment)
@@ -571,7 +590,7 @@ namespace DaedalusCompiler.Compilation
                 DatSymbol attribute = ResolveAttribute(symbol, attributeName);
 
                 bool isInsideExecBlock = ActiveExecBlock != null;
-                bool isSymbolSelf = symbol == ActiveExecBlock?.Symbol; // self.attribute, slf.attribute cases
+                bool isSymbolSelf = symbol == ActiveExecBlock?.GetSymbol(); // self.attribute, slf.attribute cases
                 bool isSymbolPassedToInstanceParameter = IsInsideArgList && FuncCallCtx.GetParameterType() == DatSymbolType.Instance;
                 bool isSymbolPassedToFuncParameter = IsInsideArgList && FuncCallCtx.GetParameterType() == DatSymbolType.Func;
                 bool isInsideFuncAssignment = IsInsideAssignment && AssignmentType == DatSymbolType.Func;
@@ -625,6 +644,13 @@ namespace DaedalusCompiler.Compilation
             _currentBuildCtx.Body.AddRange(instructions);
         }
 
+        public void SharedBlockStart(List<DatSymbol> symbols)
+        {
+            ActiveExecBlock = new SharedExecBlock {Symbols = symbols};
+            ExecBlocks.Add(ActiveExecBlock);
+            _currentBuildCtx = GetEmptyBuildContext();
+        }
+        
         public void ExecBlockStart(DatSymbol symbol, ExecutebleBlockType blockType)
         {
             switch (blockType)
@@ -938,7 +964,7 @@ namespace DaedalusCompiler.Compilation
 
             if (ActiveExecBlock != null && !symbolName.Contains("."))
             {
-                DatSymbol currentExecBlockSymbol = ActiveExecBlock.Symbol;
+                DatSymbol currentExecBlockSymbol = ActiveExecBlock.GetSymbol();
 
                 while (currentExecBlockSymbol != null)
                 {
@@ -1061,7 +1087,7 @@ namespace DaedalusCompiler.Compilation
         {
             int counter = 0;
             int maxCounter = ExecBlocks.Count;
-            foreach (ExecBlock execBlock in ExecBlocks)
+            foreach (BaseExecBlock execBlock in ExecBlocks)
             {
                 Console.WriteLine($"{++counter}/{maxCounter} lazy references resolved");
                 for (int i = 0; i < execBlock.Body.Count; ++i)

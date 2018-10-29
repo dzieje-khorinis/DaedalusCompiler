@@ -46,7 +46,7 @@ namespace DaedalusCompiler.Tests
             }
 
             return _assemblyBuilder.ExecBlocks
-                .Find(execBlock => execBlock.Symbol.Name.ToUpper() == execBlockName.ToUpper()).Body;
+                .Find(execBlock => execBlock.GetSymbol().Name.ToUpper() == execBlockName.ToUpper()).Body;
         }
 
         private void ParseData()

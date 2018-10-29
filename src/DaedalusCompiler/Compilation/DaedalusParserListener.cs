@@ -24,8 +24,8 @@ namespace DaedalusCompiler.Compilation
             var parametrDeclContexts = context.parameterDecl();
             foreach (var parameterDeclContext in parametrDeclContexts.Reverse())
             {
-                ExecBlock execBlock = _assemblyBuilder.ExecBlocks.Last();
-                string execBlockName = execBlock.Symbol.Name;
+                BaseExecBlock baseExecBlock = _assemblyBuilder.ExecBlocks.Last();
+                string execBlockName = baseExecBlock.GetSymbol().Name;
                 string parameterLocalName = parameterDeclContext.nameNode().GetText();
                 string parameterName = $"{execBlockName}.{parameterLocalName}";
                 DatSymbol parameterSymbol = _assemblyBuilder.ResolveSymbol(parameterName);
@@ -48,8 +48,8 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterParameterDecl(DaedalusParser.ParameterDeclContext context)
         {
-            ExecBlock execBlock = _assemblyBuilder.ExecBlocks.Last();
-            string execBlockName = execBlock.Symbol.Name;
+            BaseExecBlock baseExecBlock = _assemblyBuilder.ExecBlocks.Last();
+            string execBlockName = baseExecBlock.GetSymbol().Name;
             string parameterLocalName = context.nameNode().GetText();
             string parameterName = $"{execBlockName}.{parameterLocalName}";
 
@@ -114,8 +114,8 @@ namespace DaedalusCompiler.Compilation
                     var name = constValueContext.nameNode().GetText();
                     if (_assemblyBuilder.IsContextInsideExecBlock())
                     {
-                        ExecBlock execBlock = _assemblyBuilder.ExecBlocks.Last();
-                        string execBlockName = execBlock.Symbol.Name;
+                        BaseExecBlock baseExecBlock = _assemblyBuilder.ExecBlocks.Last();
+                        string execBlockName = baseExecBlock.GetSymbol().Name;
                         name = $"{execBlockName}.{name}";
                     }
 
@@ -178,8 +178,8 @@ namespace DaedalusCompiler.Compilation
                         if (_assemblyBuilder.IsContextInsideExecBlock())
                         {
                             // TODO consider making assemblyBuilder.active public and using it here
-                            ExecBlock execBlock = _assemblyBuilder.ExecBlocks.Last();
-                            string execBlockName = execBlock.Symbol.Name;
+                            BaseExecBlock baseExecBlock = _assemblyBuilder.ExecBlocks.Last();
+                            string execBlockName = baseExecBlock.GetSymbol().Name;
                             name = $"{execBlockName}.{name}";
                         }
 
@@ -324,13 +324,20 @@ namespace DaedalusCompiler.Compilation
             var refSymbol = _assemblyBuilder.GetSymbolByName(referenceName);
             var referenceSymbolId = refSymbol.Index;
             var location = GetLocation(context);
+
+            List<DatSymbol> symbols = new List<DatSymbol>();
             
             for (int i = 0; i < context.nameNode().Length; ++i)
             {
                 string instanceName = context.nameNode()[i].GetText();
-                DatSymbol instanceSymbol = SymbolBuilder.BuildInstance(instanceName, referenceSymbolId, location); // TODO: Validate params
+                DatSymbol instanceSymbol = SymbolBuilder.BuildInstance(instanceName, referenceSymbolId, location);
                 _assemblyBuilder.AddSymbol(instanceSymbol);
+                symbols.Add(instanceSymbol);
             }
+            
+            _assemblyBuilder.SharedBlockStart(symbols);
+            _assemblyBuilder.AddInstruction(new Ret());
+            _assemblyBuilder.ExecBlockEnd();
         }
 
         public override void EnterFunctionDef([NotNull] DaedalusParser.FunctionDefContext context)
@@ -498,7 +505,7 @@ namespace DaedalusCompiler.Compilation
 
             DatSymbol symbol;
 
-            DatSymbol activeSymbol = _assemblyBuilder.ActiveExecBlock.Symbol;
+            DatSymbol activeSymbol = _assemblyBuilder.ActiveExecBlock.GetSymbol();
             if ((activeSymbol.Type == DatSymbolType.Instance || activeSymbol.Type == DatSymbolType.Prototype) && (leftPart == "slf" || leftPart == "self"))
             {
                 symbol = activeSymbol;
