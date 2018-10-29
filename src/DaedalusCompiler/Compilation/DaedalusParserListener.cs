@@ -720,13 +720,29 @@ namespace DaedalusCompiler.Compilation
             _assemblyBuilder.ExpressionEnd(instruction);
         }
 
+        public override void EnterOneArgOperator(DaedalusParser.OneArgOperatorContext context)
+        {
+            if (_assemblyBuilder.IsInsideStandardAssigment())
+            {
+                _assemblyBuilder.ExpressionRightSideStart();       
+            }
+        }
+
+        public override void EnterOneArgExpression(DaedalusParser.OneArgExpressionContext context)
+        {
+            if (_assemblyBuilder.IsInsideStandardAssigment())
+            {
+                _assemblyBuilder.ExpressionLeftSideStart();
+            }
+        }
+
         public override void ExitOneArgExpression(DaedalusParser.OneArgExpressionContext context)
         {
-            if (!_assemblyBuilder.IsInsideEvalableStatement && _assemblyBuilder.AssignmentType != DatSymbolType.Float)
+            if (_assemblyBuilder.IsInsideStandardAssigment())
             {
                 var exprOperator = context.oneArgOperator().GetText();
                 var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator, false);
-                _assemblyBuilder.AddInstruction(instruction);   
+                _assemblyBuilder.ExpressionEnd(instruction);
             }
         }
 

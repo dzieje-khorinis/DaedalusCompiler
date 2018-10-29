@@ -1040,6 +1040,11 @@ namespace DaedalusCompiler.Compilation
             return instructions;
         }
 
+        public bool IsInsideStandardAssigment()
+        {
+            return !IsInsideEvalableStatement && AssignmentType != DatSymbolType.Float;
+        }
+
         public string GetAssembler()
         {
             return new AssemblyBuilderTraverser().GetAssembler(ExecBlocks);
