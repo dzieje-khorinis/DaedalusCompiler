@@ -45,8 +45,12 @@ namespace DaedalusCompiler.Tests
                 ParseData();
             }
 
-            return _assemblyBuilder.ExecBlocks
-                .Find(execBlock => execBlock.GetSymbol().Name.ToUpper() == execBlockName.ToUpper()).Body;
+            
+            BaseExecBlock block = _assemblyBuilder.ExecBlocks.Find(execBlock =>
+                execBlock.GetSymbol().Name.ToUpper() == execBlockName.ToUpper());
+
+            _assemblyBuilder.ActiveExecBlock = block;
+            return block.Body;
         }
 
         private void ParseData()
@@ -99,27 +103,11 @@ namespace DaedalusCompiler.Tests
             Assert.Equal(expectedInstruction.GetType(), instruction.GetType());
             switch (instruction)
             {
-                case PushInt pushIntInstruction:
-                {
-                    Assert.Equal(
-                        ((PushInt) expectedInstruction).Value,
-                        pushIntInstruction.Value
-                    );
-                    break;
-                }
-                case Call _:
-                case CallExternal _:
-                case PushVar _:
-                    Assert.Equal(
-                        ((SymbolInstruction) expectedInstruction).Symbol,
-                        ((SymbolInstruction) instruction).Symbol
-                    );
-                    break;
                 case PushArrayVar pushArrVarInstruction:
                 {
                     Assert.Equal(
-                        ((SymbolInstruction) expectedInstruction).Symbol,
-                        ((SymbolInstruction) instruction).Symbol
+                        ((SymbolInstruction) expectedInstruction).Symbol.Index,
+                        ((SymbolInstruction) instruction).Symbol.Index
                     );
                     Assert.Equal(
                         ((PushArrayVar) expectedInstruction).Index,
@@ -127,6 +115,23 @@ namespace DaedalusCompiler.Tests
                     );
                     break;
                 }
+                
+                case ValueInstruction valueInstruction:
+                {
+                    Assert.Equal(
+                        ((PushInt) expectedInstruction).Value,
+                        valueInstruction.Value
+                    );
+                    break;
+                }
+
+                case SymbolInstruction _:
+                    Assert.Equal(
+                        ((SymbolInstruction) expectedInstruction).Symbol.Index,
+                        ((SymbolInstruction) instruction).Symbol.Index
+                    );
+                    break;
+                
                 case AssemblyLabel assemblyLabelInstruction:
                 {
                     Assert.Equal(
@@ -755,7 +760,7 @@ namespace DaedalusCompiler.Tests
                 
                 // varinstance.varint = varinstance2;
                 new PushInt(RefIndex("varinstance2")),
-                new SetInstance(Ref("varinstance2")),
+                new SetInstance(Ref("varinstance")),
                 new PushVar(Ref("C_NPC.varint")),
                 new Assign(),
                 
