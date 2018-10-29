@@ -1040,7 +1040,7 @@ namespace DaedalusCompiler.Compilation
             return instructions;
         }
 
-        public bool IsInsideStandardAssigment()
+        public bool IsInsideNonFloatAssigment()
         {
             return !IsInsideEvalableStatement && AssignmentType != DatSymbolType.Float;
         }
