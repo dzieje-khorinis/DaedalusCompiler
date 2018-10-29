@@ -119,7 +119,7 @@ namespace DaedalusCompiler.Compilation
         public List<DatSymbol> Symbols;
         public override DatSymbol GetSymbol()
         {
-            return Symbols.FirstOrDefault();;
+            return Symbols.FirstOrDefault();
         }
     }
     
