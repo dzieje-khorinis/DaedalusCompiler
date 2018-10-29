@@ -4549,7 +4549,9 @@ namespace DaedalusCompiler.Tests
                     var int flags;
                     var float price;
 	                var float prices[2];
-                };		
+                };
+
+                func void firstFunc(var C_NPC slf){};
                 
                 prototype NPC_Default (C_NPC)
                 {
@@ -4569,6 +4571,7 @@ namespace DaedalusCompiler.Tests
                     prices[0] = 3.5;
                     slf.prices[1] = 4;
                     slf.prices[1] = 4.5;
+                    firstFunc(self);
                 };
                 
                 instance self(C_NPC);
@@ -4605,6 +4608,7 @@ namespace DaedalusCompiler.Tests
                     // CreateInvItems (slf, sword, 1); // cannot use slf alone
                     CreateInvItems(self, sword, 2);
                     gainStrength(self, slf.attribute[ATR_STRENGTH], self.attribute[ATR_DEXTERITY]);
+                    firstFunc(self);
 
                     price = 0;
                     price = 0.5;
@@ -4696,6 +4700,10 @@ namespace DaedalusCompiler.Tests
                 new PushInt(1083179008),
                 new PushArrayVar(Ref("C_NPC.prices"), 1),
                 new AssignFloat(),
+                
+                // firstFunc(self);
+                new PushInstance(Ref("self")),
+                new Call(Ref("firstFunc")),
                 
                 new Ret(),
             };
@@ -4802,6 +4810,10 @@ namespace DaedalusCompiler.Tests
                 new PushArrayVar(Ref("C_NPC.attribute"), 5),
                 new Call(Ref("gainStrength")),
                 
+                // firstFunc(self);
+                new PushInstance(Ref("Geralt")),
+                new Call(Ref("firstFunc")),
+                
                 // price = 0;
                 new PushInt(0),
                 new PushVar(Ref("C_NPC.price")),
@@ -4898,6 +4910,8 @@ namespace DaedalusCompiler.Tests
                 Ref("C_NPC.flags"),
                 Ref("C_NPC.price"),
                 Ref("C_NPC.prices"),
+                Ref("firstFunc"),
+                Ref("firstFunc.slf"),
                 Ref("NPC_Default"),
                 Ref("NPC_Default.x"),
                 Ref("self"),
