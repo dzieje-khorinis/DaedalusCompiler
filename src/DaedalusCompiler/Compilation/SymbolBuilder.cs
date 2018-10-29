@@ -58,6 +58,11 @@ namespace DaedalusCompiler.Compilation
 
             return symbol;
         }
+        
+        public static DatSymbol BuildStringConst(object value, DatSymbolLocation location = null)
+        {
+            return BuildConst($"{(char) 255}", DatSymbolType.String, value, location);
+        }
 
         public static DatSymbol BuildConst(string name, DatSymbolType type, object value,
             DatSymbolLocation location = null)
