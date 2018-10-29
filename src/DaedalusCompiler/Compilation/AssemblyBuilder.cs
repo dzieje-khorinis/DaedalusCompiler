@@ -53,6 +53,7 @@ namespace DaedalusCompiler.Compilation
     {
         public IfBlock IfBlock;
         public List<AssemblyElement> ElseBody;
+        public bool HasElseBody;
         public readonly List<IfBlock> ElseIfBlock;
         public IfBlockType CurrentBlockType;
         public List<AssemblyElement> ConditionInstructionStack;
@@ -62,6 +63,7 @@ namespace DaedalusCompiler.Compilation
         {
             IfBlock = new IfBlock();
             ElseBody = new List<AssemblyElement>();
+            HasElseBody = false;
             ElseIfBlock = new List<IfBlock>();
         }
     }
@@ -888,10 +890,9 @@ namespace DaedalusCompiler.Compilation
             }
             else
             {
+                _currentBuildCtx.CurrentConditionStatement.HasElseBody = true;
                 _currentBuildCtx.CurrentConditionStatement.ElseBody = body;
             }
-
-            //currentAssemblyBuildContext
         }
 
         public void AddSymbol(DatSymbol symbol)
@@ -1016,7 +1017,7 @@ namespace DaedalusCompiler.Compilation
         {
             var instructions = new List<AssemblyElement>();
             var ifBlocks = new List<IfBlock>();
-            var haveElse = ifStatement.ElseBody.Count > 0;
+            var haveElse = ifStatement.HasElseBody;
             var statementEndLabel = GetNextLabel();
             var elseStartLabel = "";
 

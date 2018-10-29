@@ -2683,6 +2683,90 @@ namespace DaedalusCompiler.Tests
         }
 
         [Fact]
+        public void TestEmptyElseBlock()
+        {
+            _externalCode = @"
+                func int NPC_IsDead(var instance par0) {};
+            ";
+            _code = @"
+                class C_NPC { var int data [200]; };
+
+                instance self(C_NPC) {};
+                instance other(C_NPC) {};
+                instance victim(C_NPC) {};
+
+                func void testFunc ()
+                {
+                    if ( NPC_IsDead(self) == 1 )
+                    {
+                        if ( NPC_IsDead(other) == 0)
+                        {
+                            if ( NPC_IsDead(victim) == 1)
+                            {
+                                return; 
+                            };
+                        }
+                        else
+                        {
+                        
+                        };
+                    };
+                };
+            ";
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // if ( NPC_IsDead(self) == 1 )
+                new PushInt(1),
+                new PushInstance(Ref("self")),
+                new CallExternal(Ref("NPC_IsDead")),
+                new Equal(),
+                new JumpIfToLabel("label_3"),
+                
+                // if ( NPC_IsDead(other) == 0)
+                new PushInt(0),
+                new PushInstance(Ref("other")),
+                new CallExternal(Ref("NPC_IsDead")),
+                new Equal(),
+                new JumpIfToLabel("label_2"),
+                
+                // if ( NPC_IsDead(victim) == 1 )
+                new PushInt(1),
+                new PushInstance(Ref("victim")),
+                new CallExternal(Ref("NPC_IsDead")),
+                new Equal(),
+                new JumpIfToLabel("label_0"),
+ 
+                // return; 
+                new Ret(),
+                
+                // else start 
+                new AssemblyLabel("label_0"),
+                new JumpToLabel("label_1"),
+                new AssemblyLabel("label_2"),
+                new AssemblyLabel("label_1"),
+                // else end
+                
+                new AssemblyLabel("label_3"),
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+
+            _expectedSymbols = new List<DatSymbol>
+            {
+                Ref("NPC_IsDead"),
+                Ref("NPC_IsDead.par0"),
+                Ref("C_NPC"),
+                Ref("C_NPC.data"),
+                Ref("self"),
+                Ref("other"),
+                Ref("victim"),
+                Ref("testFunc"),
+            };
+            AssertSymbolsMatch();
+        }
+        
+        [Fact]
         public void TestIfInstructionFull()
         {
             _code = @"
