@@ -18,11 +18,11 @@ namespace DaedalusCompiler.Compilation
             return $"label_{_labelIdx++}";
         }
 
-        public string GetAssembler(List<ExecBlock> execBlocks)
+        public string GetAssembler(List<BaseExecBlock> execBlocks)
         {
             foreach (var function in execBlocks)
             {
-                _buildAcc += $"# func \"{function.Symbol.Name}\" start \n";
+                _buildAcc += $"# func \"{function.GetSymbol().Name}\" start \n";
 
                 //function.body
                 foreach (var element in function.Body)
@@ -30,7 +30,7 @@ namespace DaedalusCompiler.Compilation
                     VisitElement(element);
                 }
 
-                _buildAcc += $"# func \"{function.Symbol.Name}\" end \n";
+                _buildAcc += $"# func \"{function.GetSymbol().Name}\" end \n";
             }
 
             return _buildAcc;
