@@ -722,7 +722,7 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterOneArgOperator(DaedalusParser.OneArgOperatorContext context)
         {
-            if (_assemblyBuilder.IsInsideStandardAssigment())
+            if (_assemblyBuilder.IsInsideNonFloatAssigment())
             {
                 _assemblyBuilder.ExpressionRightSideStart();       
             }
@@ -730,7 +730,7 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterOneArgExpression(DaedalusParser.OneArgExpressionContext context)
         {
-            if (_assemblyBuilder.IsInsideStandardAssigment())
+            if (_assemblyBuilder.IsInsideNonFloatAssigment())
             {
                 _assemblyBuilder.ExpressionLeftSideStart();
             }
@@ -738,7 +738,7 @@ namespace DaedalusCompiler.Compilation
 
         public override void ExitOneArgExpression(DaedalusParser.OneArgExpressionContext context)
         {
-            if (_assemblyBuilder.IsInsideStandardAssigment())
+            if (_assemblyBuilder.IsInsideNonFloatAssigment())
             {
                 var exprOperator = context.oneArgOperator().GetText();
                 var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(exprOperator, false);
