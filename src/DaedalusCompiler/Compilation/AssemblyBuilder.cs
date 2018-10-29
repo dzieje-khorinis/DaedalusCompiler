@@ -1064,10 +1064,13 @@ namespace DaedalusCompiler.Compilation
             return instructions;
         }
 
-        public bool IsInsideNonFloatAssigment()
+        public bool IsInsideOneArgOperatorsEvaluationMode()
         {
-            return !IsInsideEvalableStatement && AssignmentType != DatSymbolType.Float;
+            bool isInsideFloatAssignment = IsInsideAssignment && AssignmentType == DatSymbolType.Float;
+            bool isInsideFloatArgument = IsInsideArgList && FuncCallCtx.GetParameterType() == DatSymbolType.Float;
+            return IsInsideEvalableStatement || isInsideFloatAssignment || isInsideFloatArgument;
         }
+
 
         public string GetAssembler()
         {

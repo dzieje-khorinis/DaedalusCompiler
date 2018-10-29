@@ -666,6 +666,211 @@ namespace DaedalusCompiler.Tests
             AssertSymbolsMatch();
         }
         
+        [Fact]
+        public void TestFullAssignmentLiterals()
+        {
+            _code = @"
+            func void testFunc() {
+                var float varfloat;
+                var int varint;
+            
+                varfloat = 0;
+                varfloat = 2.5;
+                varfloat = 5;
+                varfloat = -5;
+                varfloat = -2.5;
+                varfloat = +100;
+                
+                varint = 0;
+                varint = 5;
+                varint = -5;
+                varint = +100;
+                
+                varint = 0 - -1;
+                varint = 0 - +1;
+                varint = 0 - 1;
+                
+                varint = 5 - -1;
+                varint = 5 - +1;
+                varint = 5 - 1;
+                
+                varint = -5 - -1;
+                varint = -5 - +1;
+                varint = -5 - 1;
+                
+                varint = +100 - -1;
+                varint = +100 - +1;
+                varint = +100 - 1;
+            };
+
+            ";
+
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {    
+                
+                // varfloat = 0;
+                new PushInt(0),
+                new PushVar(Ref("testFunc.varfloat")),
+                new AssignFloat(),
+                
+                // varfloat = 2.5;
+                new PushInt(1075838976),
+                new PushVar(Ref("testFunc.varfloat")),
+                new AssignFloat(),
+                
+                // varfloat = 5;
+                new PushInt(1084227584),
+                new PushVar(Ref("testFunc.varfloat")),
+                new AssignFloat(),
+
+                // varfloat = -5;
+                new PushInt(-1063256064),
+                new PushVar(Ref("testFunc.varfloat")),
+                new AssignFloat(),
+
+                // varfloat = -2.5;
+                new PushInt(-1071644672),
+                new PushVar(Ref("testFunc.varfloat")),
+                new AssignFloat(),
+
+                // varfloat = +100;
+                new PushInt(1120403456),
+                new PushVar(Ref("testFunc.varfloat")),
+                new AssignFloat(),
+
+                // varint = 0;
+                new PushInt(0),
+                new PushVar(Ref("testFunc.varint")),
+                new Assign(),
+
+                // varint = 5;
+                new PushInt(5),
+                new PushVar(Ref("testFunc.varint")),
+                new Assign(),
+                
+                // varint = -5;
+                new PushInt(5),
+                new Minus(),
+                new PushVar(Ref("testFunc.varint")),
+                new Assign(),
+
+                // varint = +100;
+                new PushInt(100),
+                new Plus(),
+                new PushVar(Ref("testFunc.varint")),
+                new Assign(),
+                
+                // varint = 0 - -1;
+                new PushInt(1),
+                new Minus(),
+                new PushInt(0),
+                new Subtract(),
+                new PushVar(Ref("testFunc.varint")),
+                new Assign(),
+                
+                // varint = 0 - +1;
+                new PushInt(1),
+                new Plus(),
+                new PushInt(0),
+                new Subtract(),
+                new PushVar(Ref("testFunc.varint")),
+                new Assign(),
+                
+                // varint = 0 - 1;
+                new PushInt(1),
+                new PushInt(0),
+                new Subtract(),
+                new PushVar(Ref("testFunc.varint")),
+                new Assign(),
+                
+                // varint = 5 - -1;
+                new PushInt(1),
+                new Minus(),
+                new PushInt(5),
+                new Subtract(),
+                new PushVar(Ref("testFunc.varint")),
+                new Assign(),
+                
+                // varint = 5 - +1;
+                new PushInt(1),
+                new Plus(),
+                new PushInt(5),
+                new Subtract(),
+                new PushVar(Ref("testFunc.varint")),
+                new Assign(),
+                
+                // varint = 5 - 1;
+                new PushInt(1),
+                new PushInt(5),
+                new Subtract(),
+                new PushVar(Ref("testFunc.varint")),
+                new Assign(),
+                
+                // varint = -5 - -1;
+                new PushInt(1),
+                new Minus(),
+                new PushInt(5),
+                new Minus(),
+                new Subtract(),
+                new PushVar(Ref("testFunc.varint")),
+                new Assign(),
+                
+                // varint = -5 - +1;
+                new PushInt(1),
+                new Plus(),
+                new PushInt(5),
+                new Minus(),
+                new Subtract(),
+                new PushVar(Ref("testFunc.varint")),
+                new Assign(),
+                
+                // varint = -5 - 1;
+                new PushInt(1),
+                new PushInt(5),
+                new Minus(),
+                new Subtract(),
+                new PushVar(Ref("testFunc.varint")),
+                new Assign(),
+                
+                // varint = +100 - -1;
+                new PushInt(1),
+                new Minus(),
+                new PushInt(100),
+                new Plus(),
+                new Subtract(),
+                new PushVar(Ref("testFunc.varint")),
+                new Assign(),
+                
+                // varint = +100 - +1;
+                new PushInt(1),
+                new Plus(),
+                new PushInt(100),
+                new Plus(),
+                new Subtract(),
+                new PushVar(Ref("testFunc.varint")),
+                new Assign(),
+                
+                // varint = +100 - 1;
+                new PushInt(1),
+                new PushInt(100),
+                new Plus(),
+                new Subtract(),
+                new PushVar(Ref("testFunc.varint")),
+                new Assign(),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+
+            _expectedSymbols = new List<DatSymbol>
+            {
+                Ref("testFunc"),
+                Ref("testFunc.varfloat"),
+                Ref("testFunc.varint"),
+            };
+            AssertSymbolsMatch();
+        }
         
         [Fact]
         public void TestFullAttributeAssignment()
@@ -3582,6 +3787,203 @@ namespace DaedalusCompiler.Tests
             AssertSymbolsMatch();
         }
         
+        [Fact]
+        public void TestFuncCallsWithLiteralArguments()
+        {
+            _code = @"
+                func void parfloat(var float par) {};
+                func void parint(var int par) {};
+                func void parstring(var string par) {};
+                
+                
+                func void testFunc() {
+                    parfloat(0);
+                    parfloat(2.5);
+                    parfloat(5);
+                    parfloat(-5);
+                    parfloat(-2.5);
+                    parfloat(+100);
+                    
+                    parint(0);
+                    parint(5);
+                    parint(-5);
+                    parint(+100);
+                    
+                    parint(0 - -1);
+                    parint(0 - +1);
+                    parint(0 - 1);
+                
+                    parint(5 - -3);
+                    parint(5 - +3);
+                    parint(5 - 3);
+                    
+                    parint(-5 - -4);
+                    parint(-5 - +4);
+                    parint(-5 - 4);
+                    
+                    parint(+100 - -6);
+                    parint(+100 - +6);
+                    parint(+100 - 6);
+                
+                    parstring(""100"");
+                };
+            ";
+     
+
+            char prefix = (char)255;
+            
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // parfloat(0);
+                new PushInt(0),
+                new Call(Ref("parfloat")),
+                
+                // parfloat(2.5);
+                new PushInt(1075838976),
+                new Call(Ref("parfloat")),
+                
+                // parfloat(5);
+                new PushInt(1084227584),
+                new Call(Ref("parfloat")),
+                
+                // parfloat(-5);
+                new PushInt(-1063256064),
+                new Call(Ref("parfloat")),
+                
+                // parfloat(-2.5);
+                new PushInt(-1071644672),
+                new Call(Ref("parfloat")),
+                
+                // parfloat(+100);
+                new PushInt(1120403456),
+                new Call(Ref("parfloat")),
+                    
+                // parint(0);
+                new PushInt(0),
+                new Call(Ref("parint")),
+                
+                // parint(5);
+                new PushInt(5),
+                new Call(Ref("parint")),
+                
+                // parint(-5);
+                new PushInt(5),
+                new Minus(),
+                new Call(Ref("parint")),
+                
+                // parint(+100);
+                new PushInt(100),
+                new Plus(),
+                new Call(Ref("parint")),
+                    
+                // parint(0 - -1);
+                new PushInt(1),
+                new Minus(),
+                new PushInt(0),
+                new Subtract(),
+                new Call(Ref("parint")),
+                
+                // parint(0 - +1);
+                new PushInt(1),
+                new Plus(),
+                new PushInt(0),
+                new Subtract(),
+                new Call(Ref("parint")),
+                
+                // parint(0 - 1);
+                new PushInt(1),
+                new PushInt(0),
+                new Subtract(),
+                new Call(Ref("parint")),
+                
+                // parint(5 - -3);
+                new PushInt(3),
+                new Minus(),
+                new PushInt(5),
+                new Subtract(),
+                new Call(Ref("parint")),
+                
+                // parint(5 - +3);
+                new PushInt(3),
+                new Plus(),
+                new PushInt(5),
+                new Subtract(),
+                new Call(Ref("parint")),
+                
+                // parint(5 - 3);
+                new PushInt(3),
+                new PushInt(5),
+                new Subtract(),
+                new Call(Ref("parint")),
+                    
+                // parint(-5 - -4);
+                new PushInt(4),
+                new Minus(),
+                new PushInt(5),
+                new Minus(),
+                new Subtract(),
+                new Call(Ref("parint")),
+                
+                // parint(-5 - +4);
+                new PushInt(4),
+                new Plus(),
+                new PushInt(5),
+                new Minus(),
+                new Subtract(),
+                new Call(Ref("parint")),
+                
+                // parint(-5 - 4);
+                new PushInt(4),
+                new PushInt(5),
+                new Minus(),
+                new Subtract(),
+                new Call(Ref("parint")),
+                    
+                // parint(+100 - -6);
+                new PushInt(6),
+                new Minus(),
+                new PushInt(100),
+                new Plus(),
+                new Subtract(),
+                new Call(Ref("parint")),
+                
+                // parint(+100 - +6);
+                new PushInt(6),
+                new Plus(),
+                new PushInt(100),
+                new Plus(),
+                new Subtract(),
+                new Call(Ref("parint")),
+                
+                // parint(+100 - 6);
+                new PushInt(6),
+                new PushInt(100),
+                new Plus(),
+                new Subtract(),
+                new Call(Ref("parint")),
+                
+                // parstring(""100"");
+                new PushVar(Ref($"{prefix}10000")),
+                new Call(Ref("parstring")),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            _expectedSymbols = new List<DatSymbol>
+            {
+                Ref("parfloat"),
+                Ref("parfloat.par"),
+                Ref("parint"),
+                Ref("parint.par"),
+                Ref("parstring"),
+                Ref("parstring.par"),
+                Ref("testFunc"),
+                Ref($"{prefix}10000"),
+            };
+            AssertSymbolsMatch();
+        }
         
         [Fact]
         public void TestFuncCallsWithAttributeArguments()
@@ -4135,7 +4537,6 @@ namespace DaedalusCompiler.Tests
                 func void WLD_PlayEffect(var string par0, var instance par1, var instance par2, var int par3, var int par4, var int par5, var int par6) {};
                 func void NPC_ChangeAttribute(var instance par0, var int par1, var int par2) {};
                 func void CreateInvItems(var instance par0, var int par1, var int par2) {};
-                
             ";
             _code = @"
                 const int ATR_STRENGTH =  4;
