@@ -2683,6 +2683,102 @@ namespace DaedalusCompiler.Tests
         }
 
         [Fact]
+        public void TestIfInstructionWithoutParenthesis()
+        {
+            _code = @"
+                func void testFunc() {
+                    var int x;
+                    if x == 1
+                    {
+                    
+                    } else if x {
+                    
+                    };
+                };
+            ";
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // if x == 1
+                new PushInt(1),
+                new PushVar(Ref("testFunc.x")),
+                new Equal(),
+                new JumpIfToLabel("label_1"),
+                new JumpToLabel("label_0"),
+                // endif 
+                
+                // } else if x {
+                new AssemblyLabel("label_1"),
+                new PushVar(Ref("testFunc.x")),
+                new JumpIfToLabel("label_0"),
+                // endelseif
+                
+                new AssemblyLabel("label_0"),
+                new Ret()
+            };
+            AssertInstructionsMatch();
+
+            _expectedSymbols = new List<DatSymbol>
+            {
+                Ref("testFunc"),
+                Ref("testFunc.x"),
+            };
+            AssertSymbolsMatch();
+        }
+        
+        [Fact]
+        public void TestStringLiteralSymbolsOrder()
+        {
+            _code = @"
+                func int firstFunc(var string par){};
+                
+                func void testFunc() {
+                    if (firstFunc(""GOMEZ"") || firstFunc(""KRUK"") || firstFunc(""DIEGO"")) {
+                
+                    };
+                };
+            ";
+            
+            char prefix = (char) 255;
+            
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // if (firstFunc(""GOMEZ"") || firstFunc(""KRUK"") || firstFunc(""DIEGO"")) {
+                new PushVar(Ref($"{prefix}10000")),
+                new Call(Ref("firstFunc")),
+                new PushVar(Ref($"{prefix}10001")),
+                new Call(Ref("firstFunc")),
+                new PushVar(Ref($"{prefix}10002")),
+                new Call(Ref("firstFunc")),
+                new LogOr(),
+                new LogOr(),
+                new JumpIfToLabel("label_0"),
+                // endif 
+            
+                new AssemblyLabel("label_0"),    
+                new Ret()
+            };
+            AssertInstructionsMatch();
+
+            
+            _expectedSymbols = new List<DatSymbol>
+            {
+                Ref("firstFunc"),
+                Ref("firstFunc.par"),
+                Ref("testFunc"),
+                Ref($"{prefix}10000"),
+                Ref($"{prefix}10001"),
+                Ref($"{prefix}10002"),
+            };
+            AssertSymbolsMatch();
+
+            AssertRefContentEqual($"{prefix}10000", "DIEGO");
+            AssertRefContentEqual($"{prefix}10001", "KRUK");
+            AssertRefContentEqual($"{prefix}10002", "GOMEZ");
+        }
+        
+        [Fact]
         public void TestNestedIfWithEmptyElse()
         {
             _externalCode = @"

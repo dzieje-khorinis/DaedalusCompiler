@@ -658,16 +658,13 @@ namespace DaedalusCompiler.Compilation
             switch (blockType)
             {
                 case ExecutebleBlockType.Function:
-                    var function = new FunctionBlock {Symbol = symbol};
-                    ActiveExecBlock = function;
+                    ActiveExecBlock = new FunctionBlock {Symbol = symbol};
                     break;
                 case ExecutebleBlockType.InstanceConstructor:
-                    var instanceConstructor = new InstanceConstructorBlock {Symbol = symbol};
-                    ActiveExecBlock = instanceConstructor;
+                    ActiveExecBlock = new InstanceConstructorBlock {Symbol = symbol};
                     break;
                 case ExecutebleBlockType.PrototypeConstructor:
-                    var prototypeConstructor = new PrototypeContructorBlock {Symbol = symbol};
-                    ActiveExecBlock = prototypeConstructor;
+                    ActiveExecBlock = new PrototypeContructorBlock {Symbol = symbol};
                     break;
             }
 
@@ -1104,6 +1101,7 @@ namespace DaedalusCompiler.Compilation
                     
                     if (element is PushVar pushVar&& pushVar.Symbol.IsStringLiteralSymbol())
                     {
+                        pushVar.Symbol.Name = NewStringSymbolName();
                         AddSymbol(pushVar.Symbol);
                     }
                 }
