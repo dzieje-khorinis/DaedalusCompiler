@@ -60,7 +60,7 @@ namespace DaedalusCompiler.Compilation
                 try
                 {
                     bool containsWildcard = line.Contains("*");
-                    string fullPath = Path.Combine(basePath, line).Trim().ToLower();
+                    string fullPath = Path.Combine(basePath, line).Trim().ToLower().Replace("\\", "/");
                     string pathExtension = Path.GetExtension(fullPath).ToLower();
 
                     if (containsWildcard && pathExtension == ".d")
@@ -86,7 +86,7 @@ namespace DaedalusCompiler.Compilation
 
                         foreach (string filePath in filePaths)
                         {
-                            string filePathLower = filePath.ToLower();
+                            string filePathLower = filePath.ToLower().Replace("\\", "/");
                             if (!alreadyLoadedFiles.Contains(filePathLower))
                             {
                                 alreadyLoadedFiles.Add(filePathLower);
