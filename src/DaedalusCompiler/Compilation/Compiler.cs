@@ -15,9 +15,9 @@ namespace DaedalusCompiler.Compilation
             {              
                 var assemblyBuilder = new AssemblyBuilder();
                 string[] paths = SrcFileHelper.LoadScriptsFilePaths(srcFilePath).ToArray();
+                string srcFileName = Path.GetFileNameWithoutExtension(srcFilePath).ToLower();
                 
-                
-                string runtimePath = Path.Combine("DaedalusBuiltins", Path.GetFileNameWithoutExtension(srcFilePath).ToLower() + ".d");
+                string runtimePath = Path.Combine("DaedalusBuiltins", srcFileName + ".d");
                 if (File.Exists(runtimePath))
                 {
                     assemblyBuilder.IsCurrentlyParsingExternals = true;
@@ -45,7 +45,7 @@ namespace DaedalusCompiler.Compilation
                 }
                 else
                 {
-                    assemblyBuilder.SaveToDat();
+                    assemblyBuilder.SaveToDat(srcFileName + ".dat");
                 }
             }
             catch (Exception exc)

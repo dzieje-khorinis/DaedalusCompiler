@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using DaedalusCompiler.Dat;
 
@@ -1086,11 +1087,12 @@ namespace DaedalusCompiler.Compilation
             return new AssemblyBuilderTraverser().GetAssembler(ExecBlocks);
         }
 
-        public void SaveToDat()
+        public void SaveToDat(string filename)
         {
             DatBuilder datBuilder = new DatBuilder(this);
             DatFile datFile = datBuilder.GetDatFile();
-            datFile.Save("./test.dat");
+            Directory.CreateDirectory("./output");
+            datFile.Save($"./output/{filename}");
         }
         
         public void Finish()

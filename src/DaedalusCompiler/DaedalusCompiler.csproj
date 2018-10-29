@@ -16,5 +16,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="AntlrOutput\" />
+    <Folder Include="output" />
   </ItemGroup>
 </Project>
