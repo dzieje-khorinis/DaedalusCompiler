@@ -5051,5 +5051,63 @@ namespace DaedalusCompiler.Tests
             };
             AssertSymbolsMatch(); 
         }
+        
+        [Fact]
+        public void TestComplexIfCondition()
+        {
+            _code = @"
+               func void testFunc() {
+                   if (!(0 == 1 || 2 == 3))
+                   && (!(4 == 5 || 6 == 7))
+                   && (8 > 9) {
+                   
+                   };
+               };
+           ";
+   
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // (8 > 9)
+                new PushInt(9),
+                new PushInt(8),
+                new Greater(),
+       
+                // !(4 == 5 || 6 == 7)
+                new PushInt(7),
+                new PushInt(6),
+                new Equal(),
+                new PushInt(5),
+                new PushInt(4),
+                new Equal(),
+                new LogOr(),
+                new Not(),
+       
+                // !(0 == 1 || 2 == 3)
+                new PushInt(3),
+                new PushInt(2),
+                new Equal(),
+                new PushInt(1),
+                new PushInt(0),
+                new Equal(),
+                new LogOr(),
+                new Not(),       
+                new LogAnd(),
+                new LogAnd(),
+                new JumpIfToLabel("label_0"),
+                // endif
+       
+                new AssemblyLabel("label_0"),
+       
+                new Ret()
+            };
+            AssertInstructionsMatch();
+ 
+            _expectedSymbols = new List<DatSymbol>
+            {
+                Ref("testFunc"),
+            };
+            AssertSymbolsMatch();
+        }
     }
 }
