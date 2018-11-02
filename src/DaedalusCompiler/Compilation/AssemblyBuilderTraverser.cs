@@ -18,7 +18,7 @@ namespace DaedalusCompiler.Compilation
             return $"label_{_labelIdx++}";
         }
 
-        public string GetAssembler(List<BaseExecBlock> execBlocks)
+        public string GetAssembler(List<BaseExecBlockContext> execBlocks)
         {
             foreach (var function in execBlocks)
             {
@@ -60,11 +60,11 @@ namespace DaedalusCompiler.Compilation
             {
                 _buildAcc += $"SetInstance {setInstanceElement.Symbol.Name}\n";
             }
-            else if (element is AssemblyIfStatement ifElement)
+            else if (element is IfBlockStatementContext context)
             {
-                var ifBlock = ifElement.IfBlock;
-                var elseIfBlocks = ifElement.ElseIfBlock;
-                var elseInstructions = ifElement.ElseBody;
+                var ifBlock = context.IfBlock;
+                var elseIfBlocks = context.ElseIfBlocks;
+                var elseInstructions = context.ElseBlock.Body;
                 var ifStatementEndLabel = GetLabel();
                 var nextJumpLabel = ifStatementEndLabel;
 
