@@ -6,293 +6,9 @@ using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
 {
-    public enum ExecutebleBlockType
-    {
-        Function,
-        InstanceConstructor,
-        PrototypeConstructor
-    }
-
-    public class AssemblyElement
-    {
-    }
-
-    public class AssemblyInstruction : AssemblyElement
-    {
-    }
-
-    public class AssemblyLabel : AssemblyElement
-    {
-        public readonly string Label;
-
-        public AssemblyLabel(string label)
-        {
-            Label = label;
-        }
-    }
-
-    public class IfBlock
-    {
-        public List<AssemblyElement> Body;
-        public List<AssemblyElement> Condition;
-
-        public IfBlock()
-        {
-            Body = new List<AssemblyElement>();
-            Condition = new List<AssemblyElement>();
-        }
-    }
-
-    public enum IfBlockType
-    {
-        If,
-        ElseIf,
-        Else
-    }
-
-    public class AssemblyIfStatement : AssemblyElement
-    {
-        public IfBlock IfBlock;
-        public List<AssemblyElement> ElseBody;
-        public bool HasElseBody;
-        public readonly List<IfBlock> ElseIfBlock;
-        public IfBlockType CurrentBlockType;
-        public List<AssemblyElement> ConditionInstructionStack;
-
-
-        public AssemblyIfStatement()
-        {
-            IfBlock = new IfBlock();
-            ElseBody = new List<AssemblyElement>();
-            HasElseBody = false;
-            ElseIfBlock = new List<IfBlock>();
-        }
-    }
-
-    public class AssemblyOperatorStatement : AssemblyElement
-    {
-        private List<AssemblyElement> _leftBody;
-        private List<AssemblyElement> _rightBody;
-
-        public AssemblyOperatorStatement()
-        {
-            _leftBody = new List<AssemblyElement>();
-            _rightBody = new List<AssemblyElement>();
-        }
-
-        public List<AssemblyElement> GetLeft()
-        {
-            return _leftBody;
-        }
-
-        public List<AssemblyElement> GetRight()
-        {
-            return _rightBody;
-        }
-
-        public void SetLeft(List<AssemblyElement> lInstructions)
-        {
-            _leftBody = lInstructions;
-        }
-
-        public void SetRight(List<AssemblyElement> rInstructions)
-        {
-            _rightBody = rInstructions;
-        }
-    }
-    
-    public abstract class BaseExecBlock : AssemblyElement
-    {
-        public List<AssemblyElement> Body;
-        public abstract DatSymbol GetSymbol();
-    }
-    
-    public class ExecBlock : BaseExecBlock
-    {
-        public DatSymbol Symbol;
-
-        public override DatSymbol GetSymbol()
-        {
-            return Symbol;
-        }
-    }
-    
-    public class SharedExecBlock : BaseExecBlock
-    {
-        public List<DatSymbol> Symbols;
-        public override DatSymbol GetSymbol()
-        {
-            return Symbols.FirstOrDefault();
-        }
-    }
-    
-    public class FunctionBlock : ExecBlock
-    {
-    }
-
-    public class InstanceConstructorBlock : ExecBlock
-    {
-    }
-
-    public class PrototypeContructorBlock : ExecBlock
-    {
-    }
-
-    public class SymbolInstruction : AssemblyInstruction
-    {
-        public readonly DatSymbol Symbol;
-
-        protected SymbolInstruction(DatSymbol symbol)
-        {
-            Symbol = symbol;
-        }
-    }
-
-    public class ValueInstruction : AssemblyInstruction
-    {
-        public readonly object Value;
-
-        protected ValueInstruction(object value)
-        {
-            Value = value;
-        }
-    }
-
-    public abstract class AddressInstruction : AssemblyInstruction
-    {
-        public readonly int Address;
-
-        protected AddressInstruction(int address)
-        {
-            Address = address;
-        }
-    }
-
-    public class JumpToLabel : AssemblyInstruction
-    {
-        public readonly string Label;
-
-        public JumpToLabel(string label)
-        {
-            Label = label;
-        }
-    }
-
-    public class ParamLessInstruction : AssemblyInstruction
-    {
-    }
-
-    public class PushInt : ValueInstruction
-    {
-        public PushInt(int value) : base(value)
-        {
-        }
-    }
-
-    public class PushVar : SymbolInstruction
-    {
-        public PushVar(DatSymbol symbol) : base(symbol)
-        {
-        }
-    }
-
-    public class PushArrayVar : SymbolInstruction
-    {
-        public readonly int Index;
-
-        public PushArrayVar(DatSymbol symbol, int index) : base(symbol)
-        {
-            Index = index;
-        }
-    }
-
-    public class PushInstance : SymbolInstruction
-    {
-        public PushInstance(DatSymbol symbol) : base(symbol)
-        {
-        }
-    }
-
-    public class SetInstance : SymbolInstruction
-    {
-        public SetInstance(DatSymbol symbol) : base(symbol)
-        {
-        }
-    }
-
-    public class Equal : ParamLessInstruction {}
-    public class NotEqual : ParamLessInstruction {}
-    public class Less : ParamLessInstruction {}
-    public class LessOrEqual : ParamLessInstruction {}
-    public class Greater : ParamLessInstruction {}
-    public class GreaterOrEqual : ParamLessInstruction {}
-    public class Assign : ParamLessInstruction {}
-    public class AssignAdd : ParamLessInstruction {}
-    public class AssignSubtract : ParamLessInstruction {}
-    public class AssignMultiply : ParamLessInstruction {}
-    public class AssignDivide : ParamLessInstruction {}
-    public class AssignString : ParamLessInstruction {}
-    // public class AssignStringRef : ParamLessInstruction {}
-    public class AssignFunc : ParamLessInstruction {}
-    public class AssignFloat : ParamLessInstruction {}
-    public class AssignInstance : ParamLessInstruction {}
-    public class Ret : ParamLessInstruction {}
-    public class Add : ParamLessInstruction {}
-    public class Multiply : ParamLessInstruction {}
-    public class Divide : ParamLessInstruction {}
-    public class Subtract : ParamLessInstruction {}
-    public class Modulo : ParamLessInstruction {}
-    public class Not: ParamLessInstruction {}
-    public class Minus: ParamLessInstruction {}
-    public class Plus: ParamLessInstruction {}
-    public class Negate: ParamLessInstruction {}
-    public class ShiftLeft: ParamLessInstruction {}
-    public class ShiftRight: ParamLessInstruction {}
-    public class BitAnd: ParamLessInstruction {}
-    public class BitOr: ParamLessInstruction {}
-    public class LogAnd: ParamLessInstruction {}
-    public class LogOr: ParamLessInstruction {}
-    
-    public class JumpIfToLabel : JumpToLabel
-    {
-        public JumpIfToLabel(string name) : base(name)
-        {
-        }
-    }
-    //public class Call : LabelJumpInstruction {}
-
-    public class Call : SymbolInstruction
-    {
-        public Call(DatSymbol symbol) : base(symbol)
-        {
-        }
-    }
-
-    public class CallExternal : SymbolInstruction
-    {
-        public CallExternal(DatSymbol symbol) : base(symbol)
-        {
-        }
-    }
-
-    public class LazyReferenceAtomInstructions : AssemblyInstruction
-    {
-        public readonly DaedalusParser.ReferenceAtomContext[] ReferenceAtoms;
-        public readonly AssemblyBuilderSnapshot AssemblyBuilderSnapshot;
-        
-        public LazyReferenceAtomInstructions(
-            AssemblyBuilderSnapshot assemblyBuilderSnapshot,
-            DaedalusParser.ReferenceAtomContext[] referenceAtoms)
-        {
-            AssemblyBuilderSnapshot = assemblyBuilderSnapshot;
-            ReferenceAtoms = referenceAtoms;
-        }
-    }
-
     public class AssemblyBuilderSnapshot
     {
-        public readonly BaseExecBlock ActiveExecBlock;
-        
+        public readonly BaseExecBlockContext ActiveExecBlock;
         public readonly bool IsInsideArgList;
         public readonly bool IsInsideAssignment;
         public readonly bool IsInsideIfCondition;
@@ -303,100 +19,31 @@ namespace DaedalusCompiler.Compilation
         public AssemblyBuilderSnapshot(AssemblyBuilder assemblyBuilder)
         {
             ActiveExecBlock = assemblyBuilder.ActiveExecBlock;
-           
             IsInsideArgList = assemblyBuilder.IsInsideArgList;
             IsInsideAssignment = assemblyBuilder.IsInsideAssignment;
             IsInsideIfCondition = assemblyBuilder.IsInsideIfCondition;
             IsInsideReturnStatement = assemblyBuilder.IsInsideReturnStatement;
             AssignmentType = assemblyBuilder.AssignmentType;
-            FuncCallCtx = FuncCallContext.Clone(assemblyBuilder.FuncCallCtx);
+            FuncCallCtx = assemblyBuilder.FuncCallCtx == null ? null : new FuncCallContext(assemblyBuilder.FuncCallCtx);
         }
     }
     
-    public class AssemblyBuildContext
-    {
-        public AssemblyOperatorStatement CurrentOperatorStatement;
-        public AssemblyIfStatement CurrentConditionStatement;
-        public List<AssemblyElement> Body;
-        public AssemblyBuildContext Parent;
-        public bool IsOperatorContext;
-    }
-
-    public class FuncArgsBodyContext
-    {
-        public readonly List<AssemblyElement> Body;
-
-        public FuncArgsBodyContext()
-        {
-            Body = new List<AssemblyElement>();
-        }
-    }
-
-    public class FuncCallContext
-    {
-        public List<DatSymbolType> ParametersTypes;
-        public int ArgIndex;
-        public FuncCallContext Parent;
-        private FuncArgsBodyContext _funcArgsBodyContext;
-
-        public FuncCallContext(FuncCallContext parent=null)
-        {
-            ParametersTypes = new List<DatSymbolType>();
-            ArgIndex = -1;
-            Parent = parent;
-            _funcArgsBodyContext = new FuncArgsBodyContext();
-        }
-
-        public static FuncCallContext Clone(FuncCallContext ctx)
-        {
-            if (ctx == null)
-            {
-                return new FuncCallContext
-                {
-                    ParametersTypes = new List<DatSymbolType>(),
-                    ArgIndex = -1,
-                    Parent = null,
-                    _funcArgsBodyContext = new FuncArgsBodyContext()
-                };
-            }
-
-            return new FuncCallContext
-            {
-                ParametersTypes = ctx.ParametersTypes,
-                ArgIndex = ctx.ArgIndex,
-                Parent = ctx.Parent,
-                _funcArgsBodyContext = ctx._funcArgsBodyContext
-            };
-        }
-        
-        public DatSymbolType GetParameterType()
-        {
-            return ParametersTypes[ArgIndex];
-        }
-
-        public void AddFuncCallArgInstructions(List<AssemblyElement> instructions)
-        {
-            _funcArgsBodyContext.Body.AddRange(instructions);
-        }
-
-        public List<AssemblyElement> GetFuncCallArgInstructions()
-        {
-            return _funcArgsBodyContext.Body;
-        }
-    }
 
     public class AssemblyBuilder
     {
-        public readonly List<BaseExecBlock> ExecBlocks;
-        public List<DatSymbol> Symbols;
-        public Dictionary<string, DatSymbol> SymbolsDict;
-        public BaseExecBlock ActiveExecBlock;
-        private AssemblyBuildContext _currentBuildCtx;
+        public readonly List<BaseExecBlockContext> ExecBlocks;
+        public BaseExecBlockContext ActiveExecBlock;
+        
+        public readonly List<DatSymbol> Symbols;
+        private readonly Dictionary<string, DatSymbol> _symbolsDict;
+        
+        private AssemblyBuilderContext _activeContext;
         private List<SymbolInstruction> _assignmentLeftSide;
         public FuncCallContext FuncCallCtx;
-        private int _labelIndexGenerator;
+
+        
         private int _nextStringSymbolNumber;
-        public bool IsInsideEvalableStatement;
+        public bool IsInsideConstDef;
         public bool IsCurrentlyParsingExternals;
 
         public bool IsInsideArgList;
@@ -408,16 +55,17 @@ namespace DaedalusCompiler.Compilation
         
         public AssemblyBuilder()
         {
-            ExecBlocks = new List<BaseExecBlock>();
+            ExecBlocks = new List<BaseExecBlockContext>();
             Symbols = new List<DatSymbol>();
-            SymbolsDict = new Dictionary<string, DatSymbol>();
-            _currentBuildCtx = GetEmptyBuildContext();
+            _symbolsDict = new Dictionary<string, DatSymbol>();
+            _activeContext = null;
             ActiveExecBlock = null;
             _assignmentLeftSide = new List<SymbolInstruction>();
             FuncCallCtx = null;
-            _labelIndexGenerator = 0;
+
+            
             _nextStringSymbolNumber = 10000;
-            IsInsideEvalableStatement = false;
+            IsInsideConstDef = false;
             IsCurrentlyParsingExternals = false;
             
             IsInsideArgList = false;
@@ -449,30 +97,25 @@ namespace DaedalusCompiler.Compilation
             return $"{(char) 255}{_nextStringSymbolNumber++}";
         }
 
-        public DatSymbol GetCurrentSymbol()
-        {
-            return ActiveExecBlock.GetSymbol();
-        }
-        
         public bool IsArgListKeyword(string symbolName)
         {
             return symbolName == "nofunc" || symbolName == "null";
         }
 
-        public List<AssemblyInstruction> GetKeywordInstructions(string symbolName)
+        public List<AssemblyElement> GetKeywordInstructions(string symbolName)
         {
             if (symbolName == "nofunc")
             {
-                return new List<AssemblyInstruction> { new PushInt(-1) };
+                return new List<AssemblyElement> { new PushInt(-1) };
             }
 
             if (symbolName == "null")
             {
                 DatSymbol symbol = ResolveSymbol($"{(char)255}instance_help");
-                return new List<AssemblyInstruction> { new PushInstance(symbol) };
+                return new List<AssemblyElement> { new PushInstance(symbol) };
             }
             
-            return new List<AssemblyInstruction>();
+            return new List<AssemblyElement>();
         }
         
         private DatSymbol GetReferenceAtomSymbol(DaedalusParser.ReferenceAtomContext[] referenceAtoms)
@@ -550,9 +193,9 @@ namespace DaedalusCompiler.Compilation
             return new PushVar(symbol);
         }
         
-        public AssemblyInstruction GetProperPushInstruction(DatSymbol symbol, int arrIndex)
+        public AssemblyElement GetProperPushInstruction(DatSymbol symbol, int arrIndex)
         {
-            BaseExecBlock activeBlock = ActiveExecBlock;
+            BaseExecBlockContext activeBlock = ActiveExecBlock;
             
             if (arrIndex > 0)
             {
@@ -591,7 +234,7 @@ namespace DaedalusCompiler.Compilation
             return nodes.Length == 2;
         }
         
-        public List<AssemblyInstruction> GetReferenceAtomInstructions(
+        public List<AssemblyElement> GetReferenceAtomInstructions(
             DaedalusParser.ReferenceAtomContext[] referenceAtoms)
         {
             var symbolPart = referenceAtoms[0];
@@ -604,7 +247,7 @@ namespace DaedalusCompiler.Compilation
             }
 
             DatSymbol symbol = GetReferenceAtomSymbol(referenceAtoms);
-            List<AssemblyInstruction> instructions = new List<AssemblyInstruction>();
+            List<AssemblyElement> instructions = new List<AssemblyElement>();
             
             
             if (IsDottedReference(referenceAtoms))
@@ -641,18 +284,6 @@ namespace DaedalusCompiler.Compilation
 
         }
 
-        private AssemblyBuildContext GetEmptyBuildContext(bool isOperatorContext = false)
-        {
-            return new AssemblyBuildContext
-            {
-                Body = new List<AssemblyElement>(),
-                Parent = _currentBuildCtx,
-                CurrentConditionStatement = new AssemblyIfStatement(),
-                CurrentOperatorStatement = new AssemblyOperatorStatement(),
-                IsOperatorContext = isOperatorContext
-            };
-        }
-
         public bool IsContextInsideExecBlock()
         {
             return ActiveExecBlock != null;
@@ -660,248 +291,195 @@ namespace DaedalusCompiler.Compilation
 
         public void AddInstruction(AssemblyInstruction instruction)
         {
-            _currentBuildCtx.Body.Add(instruction);
+            AddInstructions(new List<AssemblyElement>() {instruction});
         }
 
-        public void AddInstructions(IEnumerable<AssemblyElement> instructions)
+        public void AddInstructions(List<AssemblyElement> instructions)
         {
-            _currentBuildCtx.Body.AddRange(instructions);
+            _activeContext.AddInstructions(instructions);
         }
 
         public void SharedBlockStart(List<DatSymbol> symbols)
         {
-            ActiveExecBlock = new SharedExecBlock {Symbols = symbols};
+            ActiveExecBlock = new SharedExecBlockContext(symbols);
+            _activeContext = ActiveExecBlock;
             ExecBlocks.Add(ActiveExecBlock);
-            _currentBuildCtx = GetEmptyBuildContext();
         }
         
-        public void ExecBlockStart(DatSymbol symbol, ExecutebleBlockType blockType)
+        public void ExecBlockStart(DatSymbol symbol, ExecBlockType blockType)
         {
             switch (blockType)
             {
-                case ExecutebleBlockType.Function:
-                    ActiveExecBlock = new FunctionBlock {Symbol = symbol};
+                case ExecBlockType.Function:
+                    ActiveExecBlock = new FunctionBlockContext(symbol);
                     break;
-                case ExecutebleBlockType.InstanceConstructor:
-                    ActiveExecBlock = new InstanceConstructorBlock {Symbol = symbol};
+                case ExecBlockType.Instance:
+                    ActiveExecBlock = new InstanceBlockContext(symbol);
                     break;
-                case ExecutebleBlockType.PrototypeConstructor:
-                    ActiveExecBlock = new PrototypeContructorBlock {Symbol = symbol};
+                case ExecBlockType.Prototype:
+                    ActiveExecBlock = new PrototypeBlockContext(symbol);
                     break;
+                default:
+                    throw new NotImplementedException();
             }
 
+            _activeContext = ActiveExecBlock;
             ExecBlocks.Add(ActiveExecBlock);
-            _currentBuildCtx = GetEmptyBuildContext();
+
         }
 
         public void ExecBlockEnd()
         {
-            ActiveExecBlock.Body = _currentBuildCtx.Body;
             ActiveExecBlock = null;
-
-            _currentBuildCtx = _currentBuildCtx.Parent;
+            ActiveContextEnd();
         }
 
-        public void AssigmentStart(SymbolInstruction[] instructions)
+        public void AssignmentStart(SymbolInstruction[] instructions)
         {
             _assignmentLeftSide.AddRange(instructions);
         }
 
-        public void AssigmentEnd(string assignmentOperator)
+        public void AssignmentEnd(string assignmentOperator)
         {
             //TODO check if there are any possibilities of assignmentLeftSide longer than 2 instructions?
             var operationType = _assignmentLeftSide.Last().Symbol.Type; 
             var assignmentInstruction =
                 AssemblyBuilderHelpers.GetInstructionForOperator(assignmentOperator, true, operationType);
 
-            if (!IsInsideEvalableStatement)
+            if (!IsInsideConstDef)
             {
-                AddInstructions(_assignmentLeftSide.ToArray());   
+                AddInstructions(new List<AssemblyElement>(_assignmentLeftSide));   
             }
             _assignmentLeftSide = new List<SymbolInstruction>();
             AddInstruction(assignmentInstruction);
         }
 
-        public void ExpressionLeftSideStart()
+        public void ExitOperator(string operatorText, bool twoArg=true)
         {
-            _currentBuildCtx = GetEmptyBuildContext(true);
+            var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(operatorText, twoArg);
+            _activeContext.SetEndInstruction(instruction);
         }
 
-        public void ExpressionRightSideStart()
-        {
-            _currentBuildCtx.CurrentOperatorStatement.SetLeft(_currentBuildCtx.Body);
-            _currentBuildCtx.Body = new List<AssemblyElement>();
-        }
+       
 
-        public void FuncCallArgStart()
+        public void FuncCallStart(string funcName)
         {
-            _currentBuildCtx = GetEmptyBuildContext();
-            FuncCallCtx.ArgIndex++;
-        }
-
-        public void FuncCallArgEnd()
-        {
-            FuncCallCtx.AddFuncCallArgInstructions(_currentBuildCtx.Body);
-            _currentBuildCtx = _currentBuildCtx.Parent;
-        }
-
-        public void FuncCallStart(DaedalusParser.FuncCallValueContext context)
-        {
-            FuncCallCtx = new FuncCallContext(FuncCallCtx);
-            
-            IsInsideArgList = true;
-            
-            
-            string funcName = context.funcCall().nameNode().GetText();
             DatSymbol symbol = GetSymbolByName(funcName);
-
+            
+            List<DatSymbolType> parametersTypes = new List<DatSymbolType>();
             for (int i = 1; i <= symbol.ParametersCount; ++i)
             {
                 DatSymbol parameter = Symbols[symbol.Index + i];
-                FuncCallCtx.ParametersTypes.Add(parameter.Type);
+                parametersTypes.Add(parameter.Type);
             }
+            
+            AssemblyInstruction instruction;
+            if (symbol.Flags.HasFlag(DatSymbolFlag.External))
+            {
+                instruction = new CallExternal(symbol);
+            }
+            else
+            {
+                instruction = new Call(symbol);
+            }
+
+            FuncCallCtx = new FuncCallContext(_activeContext, FuncCallCtx, parametersTypes);
+            _activeContext = FuncCallCtx;
+            _activeContext.SetEndInstruction(instruction);
+            
+            IsInsideArgList = true;
         }
 
-        public void FuncCallEnd(AssemblyElement instruction)
+        public void FuncCallEnd()
         {
-            _currentBuildCtx = _currentBuildCtx.Parent;
-            _currentBuildCtx.Body.AddRange(FuncCallCtx.GetFuncCallArgInstructions());
-            _currentBuildCtx.Body.Add(instruction);
-
-            FuncCallCtx = FuncCallCtx.Parent;
+            List<AssemblyElement> instructions = _activeContext.GetInstructions();
+            FuncCallCtx = FuncCallCtx.OuterCall;
+            _activeContext = _activeContext.Parent;
+            AddInstructions(instructions);
+            
             if (FuncCallCtx == null)
             {
                 IsInsideArgList = false;
             }
         }
-
-        public void ExpressionEnd(AssemblyInstruction operatorInstruction)
+        
+        
+        
+        public void FuncCallArgStart()
         {
-            //TODO add desc why
-            var currentOperatorStatement = _currentBuildCtx.CurrentOperatorStatement;
-            var parentBuildContext = _currentBuildCtx.Parent;
-            var currentBody = _currentBuildCtx.Body;
-            var currentLeftBody = currentOperatorStatement.GetLeft();
-            var currentRightBody = currentOperatorStatement.GetRight();
-            var newLeftBody = currentLeftBody;
-            var newRightBody = currentRightBody;
+            FuncCallCtx.ArgIndex++;
+            _activeContext = new BlockContext(_activeContext);
+        }
 
-            if (currentRightBody.Count > 0)
-            {
-                if (currentLeftBody.Count > 0)
-                {
-                    if (currentBody.Count > 0)
-                    {
-                        //TODO make sure if that case happen
-                        newRightBody = currentRightBody.Concat(currentBody).ToList();
-                    }
-                }
-                else
-                {
-                    newLeftBody = currentRightBody;
-                    newRightBody = currentBody;
-                }
-            }
-            else
-            {
-                newRightBody = currentBody;
-            }
+        public void FuncCallArgEnd()
+        {
+            ActiveContextEnd();
+        }
 
-            var instructions = newRightBody.Concat(newLeftBody).Append(operatorInstruction).ToList();
+        
+        
+        
+        public void ExpressionStart()
+        {
+            _activeContext = new ExpressionContext(_activeContext);
+        }
 
+        public void ExpressionEnd()
+        {
+            ActiveContextEnd();
+        }
 
-            if (!parentBuildContext.IsOperatorContext)
-            {
-                parentBuildContext.Body.AddRange(instructions);
-            }
-            else
-            {
-                var parentRight = parentBuildContext.CurrentOperatorStatement.GetRight();
-                var parentLeft = parentBuildContext.CurrentOperatorStatement.GetLeft();
-                var parentRightHasItems = parentRight.Count > 0;
-                var parentLeftHasItems = parentLeft.Count > 0;
+        
+        public void IfBlockStatementStart()
+        {
+            _activeContext = new IfBlockStatementContext(_activeContext);
+        }
 
-                if (parentRightHasItems && parentLeftHasItems)
-                {
-                    parentBuildContext.CurrentOperatorStatement.SetLeft(parentLeft.Concat(instructions).ToList());
-                }
-                else if (parentRightHasItems)
-                {
-                    //TODO add desc why
-                    parentBuildContext.CurrentOperatorStatement.SetRight(instructions);
-                    parentBuildContext.CurrentOperatorStatement.SetLeft(parentRight);
-                }
-                else
-                {
-                    //TODO add desc why
-                    parentBuildContext.CurrentOperatorStatement.SetRight(instructions);
-                }
-            }
-
-            _currentBuildCtx = parentBuildContext;
+        public void IfBlockStatementEnd()
+        {
+            ActiveContextEnd();
         }
 
 
-        public void ConditionalStart()
+        public void IfBlockStart()
         {
+            _activeContext = new IfBlockContext(_activeContext);
         }
 
-        public void ConditionalEnd()
+        public void IfBlockEnd()
         {
-            _currentBuildCtx.Body.AddRange(ResolveIfStatement(_currentBuildCtx.CurrentConditionStatement));
-
-            _currentBuildCtx.CurrentConditionStatement = new AssemblyIfStatement();
+            ActiveContextEnd();
+        }
+        
+        
+        public void ElseIfBlockStart()
+        {
+            _activeContext = new ElseIfBlockContext(_activeContext);
         }
 
-        public void ConditionalBlockConditionStart(IfBlockType blockType)
+        public void ElseIfBlockEnd()
         {
-            _currentBuildCtx.CurrentConditionStatement.CurrentBlockType = blockType;
-
-            _currentBuildCtx = GetEmptyBuildContext();
+            ActiveContextEnd();
         }
 
-        public void ConditionalBlockConditionEnd()
+        
+        public void ElseBlockStart()
         {
-            var body = _currentBuildCtx.Body;
-            // we need firstly get out from condition context
-            _currentBuildCtx = _currentBuildCtx.Parent;
-            _currentBuildCtx.CurrentConditionStatement.ConditionInstructionStack = body;
-
-            // we need create context for statement block
-            _currentBuildCtx = GetEmptyBuildContext();
+            _activeContext = new ElseBlockContext(_activeContext);
         }
 
-        public void ConditionalBlockBodyEnd()
+        public void ElseBlockEnd()
         {
-            var body = _currentBuildCtx.Body;
-            _currentBuildCtx = _currentBuildCtx.Parent;
-
-            var blocktype = _currentBuildCtx.CurrentConditionStatement.CurrentBlockType;
-
-            if (blocktype == IfBlockType.If || blocktype == IfBlockType.ElseIf)
-            {
-                var ifBlock = new IfBlock
-                {
-                    Body = body,
-                    Condition = _currentBuildCtx.CurrentConditionStatement.ConditionInstructionStack
-                };
-
-                if (blocktype == IfBlockType.If)
-                {
-                    _currentBuildCtx.CurrentConditionStatement.IfBlock = ifBlock;
-                }
-                else
-                {
-                    _currentBuildCtx.CurrentConditionStatement.ElseIfBlock.Add(ifBlock);
-                }
-            }
-            else
-            {
-                _currentBuildCtx.CurrentConditionStatement.HasElseBody = true;
-                _currentBuildCtx.CurrentConditionStatement.ElseBody = body;
-            }
+            ActiveContextEnd();
         }
 
+
+        public void ActiveContextEnd()
+        {
+            _activeContext.Parent?.FetchInstructions(_activeContext);
+            _activeContext = _activeContext.Parent;
+        }
+        
         public void AddSymbol(DatSymbol symbol)
         {
             if (IsCurrentlyParsingExternals)
@@ -917,7 +495,7 @@ namespace DaedalusCompiler.Compilation
                 }
             }
             
-            SymbolsDict[symbol.Name.ToUpper()] = symbol;
+            _symbolsDict[symbol.Name.ToUpper()] = symbol;
             
             Symbols.Add(symbol);
             symbol.Index = _nextSymbolIndex;
@@ -932,7 +510,7 @@ namespace DaedalusCompiler.Compilation
             
             while (symbol != null)
             {
-                attributeSymbol = SymbolsDict.GetValueOrDefault(attributePath.ToUpper(), null);
+                attributeSymbol = _symbolsDict.GetValueOrDefault(attributePath.ToUpper(), null);
                 
                 if (attributeSymbol == null)
                 {
@@ -977,7 +555,7 @@ namespace DaedalusCompiler.Compilation
                 while (currentExecBlockSymbol != null)
                 {
                     var targetSymbolName = $"{currentExecBlockSymbol.Name}.{symbolName}";
-                    symbol = SymbolsDict.GetValueOrDefault(targetSymbolName.ToUpper(), null);
+                    symbol = _symbolsDict.GetValueOrDefault(targetSymbolName.ToUpper(), null);
                     
                     
                     if (symbol == null)
@@ -996,7 +574,7 @@ namespace DaedalusCompiler.Compilation
                 }
             }
 
-            symbol = SymbolsDict.GetValueOrDefault(symbolName.ToUpper(), null);
+            symbol = _symbolsDict.GetValueOrDefault(symbolName.ToUpper(), null);
             
             if (symbol == null)
             {
@@ -1008,79 +586,15 @@ namespace DaedalusCompiler.Compilation
 
         public DatSymbol GetSymbolByName(string symbolName)
         {
-            return SymbolsDict.GetValueOrDefault(symbolName.ToUpper(), null);
-        }
-
-        private string GetNextLabel()
-        {
-            var labelVal = _labelIndexGenerator;
-
-            _labelIndexGenerator++;
-
-            return $"label_{labelVal}";
-        }
-
-        private List<AssemblyElement> ResolveIfStatement(AssemblyIfStatement ifStatement)
-        {
-            var instructions = new List<AssemblyElement>();
-            var ifBlocks = new List<IfBlock>();
-            var haveElse = ifStatement.HasElseBody;
-            var statementEndLabel = GetNextLabel();
-            var elseStartLabel = "";
-
-            ifBlocks.Add(ifStatement.IfBlock);
-            ifBlocks.AddRange(ifStatement.ElseIfBlock);
-
-            foreach (var ifBlock in ifBlocks)
-            {
-                var isLastOne = ifBlock == ifBlocks.Last();
-
-                instructions.AddRange(ifBlock.Condition);
-
-                if (!isLastOne)
-                {
-                    var nextJumpLabel = GetNextLabel();
-
-                    instructions.Add(new JumpIfToLabel(nextJumpLabel));
-                    instructions.AddRange(ifBlock.Body);
-                    instructions.Add(new JumpToLabel(statementEndLabel));
-                    instructions.Add(new AssemblyLabel(nextJumpLabel));
-                }
-                else
-                {
-                    if (haveElse)
-                    {
-                        elseStartLabel = GetNextLabel();
-                        instructions.Add(new JumpIfToLabel(elseStartLabel));
-                        instructions.AddRange(ifBlock.Body);
-                        instructions.Add(new JumpToLabel(statementEndLabel));
-                    }
-                    else
-                    {
-                        instructions.Add(new JumpIfToLabel(statementEndLabel));
-                        instructions.AddRange(ifBlock.Body);
-                    }
-                }
-            }
-
-            if (haveElse)
-            {
-                instructions.Add(new AssemblyLabel(elseStartLabel));
-                instructions.AddRange(ifStatement.ElseBody);
-            }
-
-            instructions.Add(new AssemblyLabel(statementEndLabel));
-
-            return instructions;
+            return _symbolsDict[symbolName.ToUpper()];
         }
 
         public bool IsInsideOneArgOperatorsEvaluationMode()
         {
             bool isInsideFloatAssignment = IsInsideAssignment && AssignmentType == DatSymbolType.Float;
             bool isInsideFloatArgument = IsInsideArgList && FuncCallCtx.GetParameterType() == DatSymbolType.Float;
-            return IsInsideEvalableStatement || isInsideFloatAssignment || isInsideFloatArgument;
+            return IsInsideConstDef || isInsideFloatAssignment || isInsideFloatArgument;
         }
-
 
         public string GetAssembler()
         {
@@ -1099,7 +613,7 @@ namespace DaedalusCompiler.Compilation
         {
             int counter = 0;
             int maxCounter = ExecBlocks.Count;
-            foreach (BaseExecBlock execBlock in ExecBlocks)
+            foreach (BaseExecBlockContext execBlock in ExecBlocks)
             {
                 Console.WriteLine($"{++counter}/{maxCounter} lazy references resolved");
                 for (int i = 0; i < execBlock.Body.Count; ++i)
@@ -1108,7 +622,7 @@ namespace DaedalusCompiler.Compilation
                     if (element is LazyReferenceAtomInstructions nodeInstructions)
                     {
                         LoadStateFromSnapshot(nodeInstructions.AssemblyBuilderSnapshot);
-                        List<AssemblyInstruction> instructions = GetReferenceAtomInstructions(nodeInstructions.ReferenceAtoms);
+                        List<AssemblyElement> instructions = GetReferenceAtomInstructions(nodeInstructions.ReferenceAtoms);
                         execBlock.Body.RemoveAt(i);
                         execBlock.Body.InsertRange(i, instructions);
                     }

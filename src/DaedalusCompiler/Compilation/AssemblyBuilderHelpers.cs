@@ -44,14 +44,14 @@ namespace DaedalusCompiler.Compilation
         public static ParamLessInstruction GetInstructionForOperator(
             string operatorVal,
             bool twoArg = true,
-            DatSymbolType rightSideType = DatSymbolType.Void)
+            DatSymbolType leftSideType = DatSymbolType.Void)
         {
             ParamLessInstruction instruction = new ParamLessInstruction();
 
             switch (operatorVal)
             {
                 case "=":
-                    instruction = GetAssignInstructionForDatSymbolType(rightSideType);
+                    instruction = GetAssignInstructionForDatSymbolType(leftSideType);
                     break;
                 case "+=":
                     instruction = new AssignAdd();
