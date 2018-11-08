@@ -28,8 +28,8 @@ namespace DaedalusCompiler.Tests
     
     public class Config
     {
-        private List<string> SRC_PATHS;
-        private List<string> DAT_PATHS;
+        public List<string> SRC_PATHS;
+        public List<string> DAT_PATHS;
         public string SCRIPTS_URL;
         public string SCRIPTS_PASSWORD;
 
