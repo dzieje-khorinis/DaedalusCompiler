@@ -17,6 +17,17 @@ namespace DaedalusCompiler.Dat
 
         public IEnumerable<DatToken> Tokens { get; set; }
 
+
+        public DatFile() {}
+
+        public DatFile(string filePath)
+        {
+            using (FileStream stream = File.Open(filePath, FileMode.Open))
+            {
+                Load(stream);
+            }
+        }
+
         private void Load(Stream stream)
         {
             var reader = new DatBinaryReader(stream);
