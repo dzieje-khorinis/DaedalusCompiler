@@ -70,7 +70,7 @@ namespace DaedalusCompiler.Compilation
 
                 if (directories.Length > 1)
                 {
-                    throw new DirectoryNotFoundException($"ERROR: Unambigous path '{Path.Combine(resultPath, relativePathPart)}'. Matches {String.Join(";", directories)}");;
+                    throw new DirectoryNotFoundException($"ERROR: Ambigous path '{Path.Combine(resultPath, relativePathPart)}'. Matches {String.Join(";", directories)}");;
                 }
 
                 resultPath = Path.Combine(resultPath, directories.First());
@@ -95,7 +95,7 @@ namespace DaedalusCompiler.Compilation
             List<string> filePaths = GetFilesInsensitive(dirPath, filenamePattern);
             if (filePaths.Count > 1)
             {
-                throw new DirectoryNotFoundException($"ERROR: Unambigous path '{Path.Combine(dirPath, filenamePattern)}'. Matches {String.Join(";", filePaths)}");;
+                throw new DirectoryNotFoundException($"ERROR: Ambigous path '{Path.Combine(dirPath, filenamePattern)}'. Matches {String.Join(";", filePaths)}");;
             }
 
             return filePaths.First();
