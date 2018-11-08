@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using DaedalusCompiler.Dat;
 
@@ -491,8 +490,13 @@ namespace DaedalusCompiler.Compilation
 
                 if (symbol.Name == "instance_help")
                 {
-                    symbol.Name = $"{(char) 255}instance_help";
+                    symbol.Name = $"{(char) 255}INSTANCE_HELP";
                 }
+            }
+
+            if (!symbol.Name.StartsWith($"{(char) 255}"))
+            {
+                symbol.Name = symbol.Name.ToUpper();
             }
             
             _symbolsDict[symbol.Name.ToUpper()] = symbol;
@@ -601,12 +605,11 @@ namespace DaedalusCompiler.Compilation
             return new AssemblyBuilderTraverser().GetAssembler(ExecBlocks);
         }
 
-        public void SaveToDat(string filename)
+        public void SaveToDat(string path)
         {
             DatBuilder datBuilder = new DatBuilder(this);
             DatFile datFile = datBuilder.GetDatFile();
-            Directory.CreateDirectory("./output");
-            datFile.Save($"./output/{filename}");
+            datFile.Save(path);
         }
         
         public void Finish()

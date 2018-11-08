@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace DaedalusCompiler.Compilation
 {
@@ -33,7 +32,7 @@ namespace DaedalusCompiler.Compilation
             if (Path.GetExtension(srcFilePath).ToLower() != ".src")
                 throw new Exception($"Invalid SRC file: '{srcFilePath}'.");
             
-            if (alreadyLoadedFiles.Contains(srcFilePath))
+            if (alreadyLoadedFiles.Contains(srcFilePath.ToLower()))
                 throw new Exception($"Cyclic dependency detected. SRC file '{srcFilePath}' is already loaded");
             
             alreadyLoadedFiles.Add(srcFilePath.ToLower());
@@ -51,27 +50,74 @@ namespace DaedalusCompiler.Compilation
             }
         }
 
+
+        private static string GetDirPathInsensitive(string basePath, string relativePath)
+        {
+            string resultPath = basePath;
+
+            EnumerationOptions options = new EnumerationOptions {MatchCasing = MatchCasing.CaseInsensitive};
+            string[] relativePathSplitted = relativePath.Split(Path.DirectorySeparatorChar);
+            int lastIndex = relativePathSplitted.Length - 1;
+
+            for (int i = 0; i < lastIndex; i++)
+            {
+                string relativePathPart = relativePathSplitted[i];
+                string[] directories = Directory.GetDirectories(resultPath, relativePathPart, options);
+                if (directories.Length == 0)
+                {
+                    throw new DirectoryNotFoundException($"ERROR: Could not find a part of the path '{Path.Combine(resultPath, relativePathPart)}'");
+                }
+
+                if (directories.Length > 1)
+                {
+                    throw new DirectoryNotFoundException($"ERROR: Ambigous path '{Path.Combine(resultPath, relativePathPart)}'. Matches {String.Join(";", directories)}");;
+                }
+
+                resultPath = Path.Combine(resultPath, directories.First());
+            }
+            return resultPath;
+        }
+
+        private static List<string> GetFilesInsensitive(string dirPath, string filenamePattern)
+        {
+            EnumerationOptions options = new EnumerationOptions {MatchCasing = MatchCasing.CaseInsensitive};
+            List<string> filePaths = Directory.GetFiles(dirPath, filenamePattern, options).ToList();
+            if (filePaths.Count == 0)
+            {
+                throw new FileNotFoundException($"ERROR: Could not find any files in '{dirPath}' that matches pattern '{filenamePattern}'");
+            }
+
+            return filePaths;
+        }
+
+        private static string GetFileInsensitive(string dirPath, string filenamePattern)
+        {
+            List<string> filePaths = GetFilesInsensitive(dirPath, filenamePattern);
+            if (filePaths.Count > 1)
+            {
+                throw new DirectoryNotFoundException($"ERROR: Ambigous path '{Path.Combine(dirPath, filenamePattern)}'. Matches {String.Join(";", filePaths)}");;
+            }
+
+            return filePaths.First();
+        }
+
         private static IEnumerable<string> LoadScriptsFilePaths(string basePath, string[] srcLines, HashSet<string> alreadyLoadedFiles)
         {
             List<string> result = new List<string>();
 
-            foreach (string line in srcLines.Where(x => String.IsNullOrWhiteSpace(x) == false).Select(item => item.Replace("\\", "/")))
+            foreach (string line in srcLines.Where(x => String.IsNullOrWhiteSpace(x) == false).Select(item => Path.Combine(item.Trim().Split("\\").ToArray())))
             {
                 try
                 {
                     bool containsWildcard = line.Contains("*");
-                    string fullPath = Path.Combine(basePath, line).Trim().ToLower().Replace("\\", "/");
-                    string pathExtension = Path.GetExtension(fullPath).ToLower();
+                    string relativePath = line;
+                    string dirPath = GetDirPathInsensitive(basePath, relativePath);
+                    string filenamePattern = Path.GetFileName(relativePath);
+                    string pathExtensionLower = Path.GetExtension(filenamePattern).ToLower();
 
-                    if (containsWildcard && pathExtension == ".d")
+                    if (containsWildcard && pathExtensionLower == ".d")
                     {
-                        string dirPath = Path.GetDirectoryName(fullPath);
-                        string filenamePattern = Path.GetFileName(fullPath);
-
-                        List<string> filePaths = Directory.GetFiles(dirPath, filenamePattern, new EnumerationOptions
-                        {
-                            MatchCasing = MatchCasing.CaseInsensitive
-                        }).ToList();
+                        List<string> filePaths = GetFilesInsensitive(dirPath, filenamePattern);
                         
                         // we make custom sort to achieve same sort results independent from OS 
                         filePaths.Sort((a, b) =>
@@ -86,24 +132,28 @@ namespace DaedalusCompiler.Compilation
 
                         foreach (string filePath in filePaths)
                         {
-                            string filePathLower = filePath.ToLower().Replace("\\", "/");
+                            string filePathLower = filePath.ToLower();
                             if (!alreadyLoadedFiles.Contains(filePathLower))
                             {
                                 alreadyLoadedFiles.Add(filePathLower);
-                                result.Add(filePathLower);
+                                result.Add(filePath);
                             }
                         }
                     }
-                    else if (pathExtension == ".d")
+                    else if (pathExtensionLower == ".d")
                     {
-                        if (!alreadyLoadedFiles.Contains(fullPath))
+                        string fullPath = GetFileInsensitive(dirPath, filenamePattern);
+
+                        string fullPathLower = fullPath.ToLower();
+                        if (!alreadyLoadedFiles.Contains(fullPathLower))
                         {
-                            alreadyLoadedFiles.Add(fullPath);
+                            alreadyLoadedFiles.Add(fullPathLower);
                             result.Add(fullPath);
                         }
                     }
-                    else if (pathExtension == ".src")
+                    else if (pathExtensionLower == ".src")
                     {
+                        string fullPath = GetFileInsensitive(dirPath, filenamePattern);
                         result.AddRange(LoadScriptsFilePaths(fullPath, alreadyLoadedFiles));
                     }
                     else
