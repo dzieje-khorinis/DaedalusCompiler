@@ -272,7 +272,6 @@ namespace DaedalusCompiler.Tests
             string solutionPath = baseDirectoryInfo.Parent?.Parent?.Parent?.Parent?.Parent?.ToString();
             
             
-            string runtimeDirPath = Path.Combine(solutionPath, "src", "DaedalusCompiler", "DaedalusBuiltins");
             string outputDirPath = Path.Combine(solutionPath, "test", "DaedalusCompiler.Tests", "output");
             
             foreach(KeyValuePair<string, string> entry in _srcPathToDatPath)
@@ -281,7 +280,7 @@ namespace DaedalusCompiler.Tests
                 string datPath = entry.Value;
                 string outputDatPath = Path.Combine(outputDirPath, Path.GetFileName(datPath).ToLower());
                 
-                Compiler compiler = new Compiler(runtimeDirPath,  outputDirPath);
+                Compiler compiler = new Compiler(outputDirPath);
                 compiler.CompileFromSrc(srcPath, compileToAssembly:false);
                 
                 CompareDats(datPath, outputDatPath);

@@ -51,8 +51,9 @@ namespace DaedalusCompiler.Compilation
         public bool IsInsideReturnStatement;
         public DatSymbolType AssignmentType;
         private int _nextSymbolIndex;
+        private bool _verbose;
         
-        public AssemblyBuilder()
+        public AssemblyBuilder(bool verbose = true)
         {
             ExecBlocks = new List<BaseExecBlockContext>();
             Symbols = new List<DatSymbol>();
@@ -72,6 +73,7 @@ namespace DaedalusCompiler.Compilation
             IsInsideReturnStatement = false;
             AssignmentType = DatSymbolType.Void;
             _nextSymbolIndex = 0;
+            _verbose = verbose;
         }
         
         public AssemblyBuilderSnapshot MakeSnapshot()
@@ -89,6 +91,16 @@ namespace DaedalusCompiler.Compilation
             IsInsideReturnStatement = snapshot.IsInsideReturnStatement;
             AssignmentType = snapshot.AssignmentType;
             FuncCallCtx = snapshot.FuncCallCtx;
+        }
+
+        public List<DatSymbol> GetSymbols()
+        {
+            return Symbols;
+        }
+        
+        public List<BaseExecBlockContext> GetExecBlocks()
+        {
+            return ExecBlocks;
         }
 
         public string NewStringSymbolName()
@@ -618,7 +630,7 @@ namespace DaedalusCompiler.Compilation
             int maxCounter = ExecBlocks.Count;
             foreach (BaseExecBlockContext execBlock in ExecBlocks)
             {
-                Console.WriteLine($"{++counter}/{maxCounter} lazy references resolved");
+                if(_verbose)Console.WriteLine($"{++counter}/{maxCounter} lazy references resolved");
                 for (int i = 0; i < execBlock.Body.Count; ++i)
                 {
                     AssemblyElement element = execBlock.Body[i];
