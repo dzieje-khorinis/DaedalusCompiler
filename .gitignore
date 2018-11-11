@@ -5,6 +5,10 @@ src/bin*
 src/obj*
 .antlr/
 src/DaedalusCompiler/output
+test/DaedalusCompiler.Tests/output
+test/DaedalusCompiler.Tests/Scripts
+test/DaedalusCompiler.Tests/Scripts.zip
+test/DaedalusCompiler.Tests/config.json
 
 /DaedalusLib/bin
 /DaedalusLib/obj

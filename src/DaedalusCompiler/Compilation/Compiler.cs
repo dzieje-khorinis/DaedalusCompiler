@@ -11,7 +11,13 @@ namespace DaedalusCompiler.Compilation
 {
     public class Compiler
     {
+        private string _outputDirPath;
         private AssemblyBuilder _assemblyBuilder;
+
+        public Compiler(string outputDirPath="output")
+        {
+            _outputDirPath = outputDirPath;
+        }
         
         public string GetBuiltinsPath()
         {
@@ -19,17 +25,17 @@ namespace DaedalusCompiler.Compilation
 
             return Path.Combine(Path.GetDirectoryName(programStartPath), "DaedalusBuiltins");
         }
-        
+
         public void CompileFromSrc(
             string srcFilePath, 
             bool compileToAssembly,
             bool verbose = true,
             bool saveDatToFile = true
-            )
+        )
         {
             try
-            {              
-                _assemblyBuilder = new AssemblyBuilder(verbose);
+            {
+                _assemblyBuilder = new AssemblyBuilder();
                 string[] paths = SrcFileHelper.LoadScriptsFilePaths(srcFilePath).ToArray();
                 string srcFileName = Path.GetFileNameWithoutExtension(srcFilePath).ToLower();
                 
@@ -37,13 +43,12 @@ namespace DaedalusCompiler.Compilation
                 if (File.Exists(runtimePath))
                 {
                     _assemblyBuilder.IsCurrentlyParsingExternals = true;
-                    if (verbose) Console.WriteLine($"[0/{paths.Length}]Compiling runtime: {runtimePath}");
+                    Console.WriteLine($"[0/{paths.Length}]Compiling runtime: {runtimePath}");
                     var parser = GetParser(runtimePath);
                     ParseTreeWalker.Default.Walk(new DaedalusParserListener(_assemblyBuilder, 0), parser.daedalusFile());
                     _assemblyBuilder.IsCurrentlyParsingExternals = false;
                 }
-                
-                
+
                 for (int i = 0; i < paths.Length; i++)
                 {
                     if (verbose) Console.WriteLine($"[{i + 1}/{paths.Length}]Compiling: {paths[i]}");
@@ -53,15 +58,17 @@ namespace DaedalusCompiler.Compilation
 
                     ParseTreeWalker.Default.Walk(new DaedalusParserListener(_assemblyBuilder, i), parser.daedalusFile());
                 }
-    
+
                 _assemblyBuilder.Finish();
                 if (compileToAssembly)
                 {
                     Console.WriteLine(_assemblyBuilder.GetAssembler());
                 }
-                else if (saveDatToFile)
+                else
                 {
-                    _assemblyBuilder.SaveToDat(srcFileName + ".dat");
+                    Directory.CreateDirectory(_outputDirPath);
+                    string datPath = Path.Combine(_outputDirPath, srcFileName + ".dat");
+                    _assemblyBuilder.SaveToDat(datPath);
                 }
             }
             catch (Exception exc)
