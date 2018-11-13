@@ -11,11 +11,16 @@ namespace DaedalusCompiler.Compilation
 {
     public class Compiler
     {
-        private string _outputDirPath;
-        private AssemblyBuilder _assemblyBuilder;
+
+        private readonly AssemblyBuilder _assemblyBuilder;
+        private readonly OutputUnitsBuilder _ouBuilder;
+        private readonly string _outputDirPath;
+        
 
         public Compiler(string outputDirPath="output")
         {
+            _assemblyBuilder = new AssemblyBuilder();
+            _ouBuilder = new OutputUnitsBuilder();
             _outputDirPath = outputDirPath;
         }
         
@@ -30,12 +35,12 @@ namespace DaedalusCompiler.Compilation
             string srcFilePath, 
             bool compileToAssembly,
             bool verbose = true,
-            bool saveDatToFile = true
+            bool saveDatToFile = true,
+            bool generateOutputUnits = true
         )
         {
             try
             {
-                _assemblyBuilder = new AssemblyBuilder();
                 string[] paths = SrcFileHelper.LoadScriptsFilePaths(srcFilePath).ToArray();
                 string srcFileName = Path.GetFileNameWithoutExtension(srcFilePath).ToLower();
                 
@@ -43,7 +48,7 @@ namespace DaedalusCompiler.Compilation
                 if (File.Exists(runtimePath))
                 {
                     _assemblyBuilder.IsCurrentlyParsingExternals = true;
-                    Console.WriteLine($"[0/{paths.Length}]Compiling runtime: {runtimePath}");
+                    if (verbose) Console.WriteLine($"[0/{paths.Length}]Compiling runtime: {runtimePath}");
                     var parser = GetParser(runtimePath);
                     ParseTreeWalker.Default.Walk(new DaedalusParserListener(_assemblyBuilder, 0), parser.daedalusFile());
                     _assemblyBuilder.IsCurrentlyParsingExternals = false;
@@ -52,14 +57,21 @@ namespace DaedalusCompiler.Compilation
                 for (int i = 0; i < paths.Length; i++)
                 {
                     if (verbose) Console.WriteLine($"[{i + 1}/{paths.Length}]Compiling: {paths[i]}");
-
-                    // create parser for specific file
-                    var parser = GetParser(paths[i]);
-
+                    DaedalusParser parser = GetParser(paths[i]);
                     ParseTreeWalker.Default.Walk(new DaedalusParserListener(_assemblyBuilder, i), parser.daedalusFile());
+                    if (generateOutputUnits)
+                    {
+                        _ouBuilder.ParseFile(paths[i]);
+                    }
                 }
 
+                if (generateOutputUnits)
+                {
+                    _ouBuilder.SaveOutputUnits(_outputDirPath);
+                }
+                
                 _assemblyBuilder.Finish();
+
                 if (compileToAssembly)
                 {
                     Console.WriteLine(_assemblyBuilder.GetAssembler());
@@ -88,6 +100,16 @@ namespace DaedalusCompiler.Compilation
             return _assemblyBuilder.GetExecBlocks();
         }
 
+        public void SetCompilationDateTimeText(string compilationDateTimeText)
+        {
+            _ouBuilder.SetGenerationDateTimeText(compilationDateTimeText);
+        }
+        
+        public void SetCompilationUserName(string userName)
+        {
+            _ouBuilder.SetGenerationUserName(userName);
+        }
+        
         private DaedalusParser GetParser(string scriptFilePath)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);

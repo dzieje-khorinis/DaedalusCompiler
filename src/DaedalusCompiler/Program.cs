@@ -23,8 +23,10 @@ namespace DaedalusCompiler
             );
             Console.WriteLine(
                 "Args description:\n" +
-                "--load-dat      loads Gothic DAT file and make analyze of that, in that case file_path should be DAT file" +
-                "--get-assembly  compile code to readable assembly"
+                "--load-dat      loads Gothic DAT file and make analyze of that, in that case file_path should be DAT file\n" +
+                "--get-assembly  compile code to readable assembly\n" +
+                "--gen-ou        generate output units files (ou.cls and ou.bin)\n" +
+                "--verbose"
             );
         }
         
@@ -33,11 +35,15 @@ namespace DaedalusCompiler
             var loadHelp = false;
             var loadDat = false;
             var compileToAssembly = false;
+            var generateOutputUnits = false;
+            var verbose = false;
 
             var p = new NDesk.Options.OptionSet () {
                 { "h|?|help",   v => loadHelp = true },
                 { "load-dat", v => loadDat = true },
                 { "get-assembly", v => compileToAssembly = true },
+                { "gen-ou", v => generateOutputUnits = true },
+                { "verbose", v => verbose = true },
             };
 
             List<string> extra;
@@ -63,11 +69,9 @@ namespace DaedalusCompiler
                 }
                 else
                 {
-                    CompileDaedalus(filePath, compileToAssembly);
+                    CompileDaedalus(filePath, compileToAssembly, verbose, generateOutputUnits);
                 }
             }
-            
-            return;
         }
 
         static void AnalyzeDATFile(string path)
@@ -81,12 +85,12 @@ namespace DaedalusCompiler
             dat.Save(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), fileName));
         }
 
-        static void CompileDaedalus(string path, bool compileToAssembly)
+        static void CompileDaedalus(string path, bool compileToAssembly, bool verbose, bool generateOutputUnits)
         {
             var compiler = new Compiler();
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
-            compiler.CompileFromSrc(path, compileToAssembly);
+            compiler.CompileFromSrc(path, compileToAssembly, verbose, generateOutputUnits);
 
             Console.WriteLine($"Compilation completed successfully. Total time: {stopwatch.Elapsed}");
         }

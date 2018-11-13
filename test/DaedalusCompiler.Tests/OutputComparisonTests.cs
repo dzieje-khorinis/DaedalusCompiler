@@ -18,6 +18,7 @@ namespace DaedalusCompiler.Tests
     {
         public const string SrcPathsLabel = "SRC_PATHS";
         public const string DatPathsLabel = "DAT_PATHS";
+        public const string OuPathsLabel = "OU_PATHS";
         public const string ScriptsUrlLabel = "SCRIPTS_URL";
         public const string ScriptsPasswordLabel = "SCRIPTS_PASSWORD";
         
@@ -30,6 +31,7 @@ namespace DaedalusCompiler.Tests
     {
         public List<string> SRC_PATHS;
         public List<string> DAT_PATHS;
+        public List<string> OU_PATHS;
         public string SCRIPTS_URL;
         public string SCRIPTS_PASSWORD;
 
@@ -41,6 +43,8 @@ namespace DaedalusCompiler.Tests
                     return SRC_PATHS;
                 case Constants.DatPathsLabel:
                     return DAT_PATHS;
+                case Constants.OuPathsLabel:
+                    return OU_PATHS;
                 default:
                     return null;
             }
@@ -129,8 +133,8 @@ namespace DaedalusCompiler.Tests
             List<string> srcPaths = GetPaths(Constants.SrcPathsLabel);
             List<string> datPaths = GetPaths(Constants.DatPathsLabel);
 
-            Dictionary<string, string> filenameToSrcPath = GetFilenameToPathMapping(srcPaths);
-            Dictionary<string, string> filenameToDatPath = GetFilenameToPathMapping(datPaths);
+            Dictionary<string, string> filenameToSrcPath = GetFilenameWithoutExtensionToPathMapping(srcPaths);
+            Dictionary<string, string> filenameToDatPath = GetFilenameWithoutExtensionToPathMapping(datPaths);
 
             foreach (string filename in filenameToSrcPath.Keys)
             {
@@ -180,11 +184,16 @@ namespace DaedalusCompiler.Tests
         }
 
 
-        private static Dictionary<string, string> GetFilenameToPathMapping(List<string> paths)
+        private static Dictionary<string, string> GetFilenameWithoutExtensionToPathMapping(List<string> paths)
         {
             return paths.ToDictionary(x => Path.GetFileNameWithoutExtension(x).ToLower(), x => x);
         }
+        
 
+        private static Dictionary<string, string> GetFilenameToPathMapping(List<string> paths)
+        {
+            return paths.ToDictionary(x => Path.GetFileName(x).ToLower(), x => x);
+        }
 
 
         private void CompareDats(string expectedDatPath, string datPath)
@@ -264,13 +273,25 @@ namespace DaedalusCompiler.Tests
             }
         }
 
+        private void CompareFilesByteByByte(string expectedOuPath, string ouPath)
+        {
+            using (FileStream expectedOu = new FileStream(expectedOuPath, FileMode.Open))
+            using (FileStream ou = new FileStream(ouPath, FileMode.Open))
+            {
+                Assert.Equal(expectedOu.Length, ou.Length);
+                for(int i = 0; i < expectedOu.Length; i++)
+                {
+                    Assert.Equal(expectedOu.ReadByte(), ou.ReadByte());
+                }
+            }
+        }
+
         [Fact]
-        public void TestIfCompiledScriptsMatchOriginalDatFiles()
+        public void TestIfCompiledScriptsMatchOriginalDatAndOuFiles()
         {
             string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
             DirectoryInfo baseDirectoryInfo = new DirectoryInfo(baseDirectory);
             string solutionPath = baseDirectoryInfo.Parent?.Parent?.Parent?.Parent?.Parent?.ToString();
-            
             
             string outputDirPath = Path.Combine(solutionPath, "test", "DaedalusCompiler.Tests", "output");
             
@@ -278,13 +299,31 @@ namespace DaedalusCompiler.Tests
             {
                 string srcPath = entry.Key;
                 string datPath = entry.Value;
-                string outputDatPath = Path.Combine(outputDirPath, Path.GetFileName(datPath).ToLower());
+                string datFileName = Path.GetFileName(datPath).ToLower();
+                string outputDatPath = Path.Combine(outputDirPath, datFileName);
+                bool generateOutputUnits = (datFileName == "gothic.dat");
                 
                 Compiler compiler = new Compiler(outputDirPath);
-                compiler.CompileFromSrc(srcPath, compileToAssembly:false);
-                
+                if (generateOutputUnits)
+                {
+                    compiler.SetCompilationDateTimeText("13.11.2018 15:30:55");
+                    compiler.SetCompilationUserName("kisio");
+                }
+                compiler.CompileFromSrc(srcPath, compileToAssembly:false, verbose:false, generateOutputUnits: generateOutputUnits);              
                 CompareDats(datPath, outputDatPath);
             }
-        }
+
+            string ouCslFileName = "ou.csl";
+            string ouBinFileName = "ou.bin";
+            
+            string outputOuCslPath = Path.Combine(outputDirPath, ouCslFileName);
+            string outputOuBinPath = Path.Combine(outputDirPath, ouBinFileName);
+            
+            List<string> ouPaths = GetPaths(Constants.OuPathsLabel);
+            Dictionary<string, string> filenameToOuPath = GetFilenameToPathMapping(ouPaths);
+
+            CompareFilesByteByByte(filenameToOuPath[ouCslFileName], outputOuCslPath);
+            CompareFilesByteByByte(filenameToOuPath[ouBinFileName], outputOuBinPath);
+        }        
     }
 }
