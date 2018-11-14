@@ -12,8 +12,8 @@ namespace DaedalusCompiler.Compilation
 {
     public class OutputUnitsBuilder
     {
-        private readonly Dictionary<string, string> _wavFileNameToDialogue;
-        private List<KeyValuePair<string, string>> _wavFileNameAndDialoguePairs;
+        private readonly Dictionary<string, string> _wavFileNameToSpokenSentence;
+        private List<KeyValuePair<string, string>> _wavFileNameAndSpokenSentencePairs;
         private string _generationDateTimeText;
         private string _userName;
 
@@ -23,8 +23,8 @@ namespace DaedalusCompiler.Compilation
 
         public OutputUnitsBuilder()
         {
-            _wavFileNameToDialogue = new Dictionary<string, string>();
-            _wavFileNameAndDialoguePairs = null;
+            _wavFileNameToSpokenSentence = new Dictionary<string, string>();
+            _wavFileNameAndSpokenSentencePairs = null;
             _generationDateTimeText = DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss", CultureInfo.InvariantCulture);
             _userName = Environment.UserName;
         }
@@ -39,25 +39,24 @@ namespace DaedalusCompiler.Compilation
             _userName = userName;
         }
 
-        private void AddDialoguesFromMatches(MatchCollection matches)
+        private void AddSpokenSentencesFromMatches(MatchCollection matches)
         {
             foreach (Match match in matches)
             {
                 string wavFileName = match.Groups[StringLiteral].Value;
                 string dialogue = match.Groups[Comment].Value.Trim();
-                if (_wavFileNameToDialogue.ContainsKey(wavFileName))
+                if (_wavFileNameToSpokenSentence.ContainsKey(wavFileName))
                 {
                     Console.WriteLine($"Already contains key '{wavFileName}'");
                 }
-                _wavFileNameToDialogue[wavFileName] = dialogue;
+                _wavFileNameToSpokenSentence[wavFileName] = dialogue;
             }
         }
         
-        public void ParseFile(string filePath)
+        public void ParseText(string fileContent)
         {
             string multilineComment = @"(?:/\*.*?\*/)";
             
-            string fileContent = File.ReadAllText(filePath, Encoding.GetEncoding(1250));
             fileContent = Regex.Replace(fileContent, multilineComment, "", RegexOptions.Singleline);
             fileContent = Regex.Replace(fileContent, "^.*//.*(?:ai_output|=).*$", "", RegexOptions.Multiline);
             
@@ -77,19 +76,19 @@ namespace DaedalusCompiler.Compilation
                 string cSvmInstanceBody = instanceMatch.Groups[InstanceBody].Value;
                 string assignmentPattern = $@"{identifier}{ws}={ws}{stringLiteral}{ws};{ws}{inlineComment}";
                 MatchCollection assignmentMatches = Regex.Matches(cSvmInstanceBody, assignmentPattern, options);
-                AddDialoguesFromMatches(assignmentMatches);
+                AddSpokenSentencesFromMatches(assignmentMatches);
             }
 
             string aiOutputCallPattern = $@"\bai_output{ws}\({ws}{identifier}{ws},{ws}{identifier}{ws},{ws}{stringLiteral}{ws}\){ws};{ws}{inlineComment}";
             MatchCollection aiOutputCallMatches = Regex.Matches(fileContent, aiOutputCallPattern, options);
-            AddDialoguesFromMatches(aiOutputCallMatches);
+            AddSpokenSentencesFromMatches(aiOutputCallMatches);
         }
         
         
         public void SaveOutputUnits(string dirPath)
         {
-            _wavFileNameAndDialoguePairs = _wavFileNameToDialogue.ToList();
-            _wavFileNameAndDialoguePairs.Sort((a, b) => string.Compare(a.Key, b.Key, StringComparison.Ordinal));
+            _wavFileNameAndSpokenSentencePairs = _wavFileNameToSpokenSentence.ToList();
+            _wavFileNameAndSpokenSentencePairs.Sort((a, b) => string.Compare(a.Key, b.Key, StringComparison.Ordinal));
             SaveToCsl(dirPath);
             SaveToBin(dirPath);
         }
@@ -102,7 +101,7 @@ namespace DaedalusCompiler.Compilation
             using (FileStream fileStream = new FileStream(cslPath, FileMode.Create, FileAccess.Write))
             using (StreamWriter streamWriter = new StreamWriter(fileStream, Encoding.GetEncoding(1250)))
             {
-                int count = _wavFileNameAndDialoguePairs.Count;
+                int count = _wavFileNameAndSpokenSentencePairs.Count;
                 
                 string csl = "ZenGin Archive\n";
                 csl += "ver 1\n";
@@ -118,7 +117,7 @@ namespace DaedalusCompiler.Compilation
                 csl += $"	NumOfItems=int:{count}\n";
                 streamWriter.Write(csl);
                 
-                foreach (KeyValuePair<string, string> pair in _wavFileNameAndDialoguePairs)
+                foreach (KeyValuePair<string, string> pair in _wavFileNameAndSpokenSentencePairs)
                 {   
                     string item = "";
                     item += $"	[% zCCSBlock 0 {index++}]\n";
@@ -151,7 +150,7 @@ namespace DaedalusCompiler.Compilation
             using (FileStream fileStream = new FileStream(binPath, FileMode.Create, FileAccess.Write))
             using (BinaryWriter binaryWriter = new BinaryWriter(fileStream, Encoding.GetEncoding(1250)))
             {
-                int count = _wavFileNameAndDialoguePairs.Count;
+                int count = _wavFileNameAndSpokenSentencePairs.Count;
                 
                 string binHeader = "ZenGin Archive\n";
                 binHeader += "ver 1\n";
@@ -186,7 +185,7 @@ namespace DaedalusCompiler.Compilation
                 binaryWriter.Write(count);
                 address += 1 + 4 + 1 + 4;
 
-                foreach (KeyValuePair<string, string> pair in _wavFileNameAndDialoguePairs)
+                foreach (KeyValuePair<string, string> pair in _wavFileNameAndSpokenSentencePairs)
                 {
                     // [% zCCSBlock 0 {index++}]
                     char[] zCCSBlockHeader = $"[% zCCSBlock 0 {index++}]".ToCharArray();
