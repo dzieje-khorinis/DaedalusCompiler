@@ -11,11 +11,17 @@ namespace DaedalusCompiler.Compilation
 {
     public class Compiler
     {
-        private string _outputDirPath;
-        private AssemblyBuilder _assemblyBuilder;
+
+        private readonly AssemblyBuilder _assemblyBuilder;
+        private readonly OutputUnitsBuilder _ouBuilder;
+        private readonly string _outputDirPath;
+        
 
         public Compiler(string outputDirPath="output")
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            _assemblyBuilder = new AssemblyBuilder();
+            _ouBuilder = new OutputUnitsBuilder();
             _outputDirPath = outputDirPath;
         }
         
@@ -30,12 +36,12 @@ namespace DaedalusCompiler.Compilation
             string srcFilePath, 
             bool compileToAssembly,
             bool verbose = true,
-            bool saveDatToFile = true
+            bool saveDatToFile = true,
+            bool generateOutputUnits = true
         )
         {
             try
             {
-                _assemblyBuilder = new AssemblyBuilder();
                 string[] paths = SrcFileHelper.LoadScriptsFilePaths(srcFilePath).ToArray();
                 string srcFileName = Path.GetFileNameWithoutExtension(srcFilePath).ToLower();
                 
@@ -43,8 +49,8 @@ namespace DaedalusCompiler.Compilation
                 if (File.Exists(runtimePath))
                 {
                     _assemblyBuilder.IsCurrentlyParsingExternals = true;
-                    Console.WriteLine($"[0/{paths.Length}]Compiling runtime: {runtimePath}");
-                    var parser = GetParser(runtimePath);
+                    if (verbose) Console.WriteLine($"[0/{paths.Length}]Compiling runtime: {runtimePath}");
+                    DaedalusParser parser = GetParserForScriptsFile(runtimePath);
                     ParseTreeWalker.Default.Walk(new DaedalusParserListener(_assemblyBuilder, 0), parser.daedalusFile());
                     _assemblyBuilder.IsCurrentlyParsingExternals = false;
                 }
@@ -53,13 +59,23 @@ namespace DaedalusCompiler.Compilation
                 {
                     if (verbose) Console.WriteLine($"[{i + 1}/{paths.Length}]Compiling: {paths[i]}");
 
-                    // create parser for specific file
-                    var parser = GetParser(paths[i]);
-
+                    string fileContent = GetFileContent(paths[i]);
+                    DaedalusParser parser = GetParserForText(fileContent);
+                    
                     ParseTreeWalker.Default.Walk(new DaedalusParserListener(_assemblyBuilder, i), parser.daedalusFile());
+                    if (generateOutputUnits)
+                    {
+                        _ouBuilder.ParseText(fileContent);
+                    }
                 }
 
+                if (generateOutputUnits)
+                {
+                    _ouBuilder.SaveOutputUnits(_outputDirPath);
+                }
+                
                 _assemblyBuilder.Finish();
+
                 if (compileToAssembly)
                 {
                     Console.WriteLine(_assemblyBuilder.GetAssembler());
@@ -88,13 +104,33 @@ namespace DaedalusCompiler.Compilation
             return _assemblyBuilder.GetExecBlocks();
         }
 
-        private DaedalusParser GetParser(string scriptFilePath)
+        public void SetCompilationDateTimeText(string compilationDateTimeText)
         {
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            AntlrFileStream inputStream = new AntlrFileStream(scriptFilePath, Encoding.GetEncoding(1250));
+            _ouBuilder.SetGenerationDateTimeText(compilationDateTimeText);
+        }
+        
+        public void SetCompilationUserName(string userName)
+        {
+            _ouBuilder.SetGenerationUserName(userName);
+        }
+
+        private string GetFileContent(string filePath)
+        {
+            return File.ReadAllText(filePath, Encoding.GetEncoding(1250));
+        }
+        
+        private DaedalusParser GetParserForText(string input)
+        {
+            AntlrInputStream inputStream = new AntlrInputStream(input);
             DaedalusLexer lexer = new DaedalusLexer(inputStream);
             CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
             return new DaedalusParser(commonTokenStream);
+        }
+
+        private DaedalusParser GetParserForScriptsFile(string scriptFilePath)
+        {
+            string fileContent = GetFileContent(scriptFilePath);
+            return GetParserForText(fileContent);
         }
     }
 }
