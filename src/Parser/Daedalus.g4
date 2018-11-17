@@ -29,7 +29,7 @@ LineComment :   '//' ~[\r\n]* -> skip ;
 // fragments
 fragment IdStart : GermanCharacter | [a-zA-Z_];
 fragment IdContinue : IdStart | Digit;
-fragment GermanCharacter : [\u00DF\u00E4\u00F6\u00FC]; //ßäöü
+fragment GermanCharacter : [\u00DF\u00E4\u00F6\u00FC];
 fragment Digit : [0-9];
 fragment PointFloat : Digit* '.' Digit+ | Digit+ '.';
 fragment ExponentFloat : (Digit+ | PointFloat) Exponent;
@@ -37,7 +37,10 @@ fragment Exponent : [eE] [+-]? Digit+;
 
 
 //parser
-daedalusFile: (( functionDef | constDef | varDecl | classDef | prototypeDef | instanceDef | instanceDecl )';')*?;
+daedalusFile:  (blockDef | inlineDef)*? EOF;
+blockDef : (functionDef  | classDef | prototypeDef | instanceDef)';'?;
+inlineDef :  (constDef | varDecl | instanceDecl )';';
+
 
 functionDef: Func typeReference nameNode parameterList statementBlock;
 constDef: Const typeReference (constValueDef | constArrayDef) (',' (constValueDef | constArrayDef) )*;
@@ -59,7 +62,7 @@ varValueDecl: nameNode;
 parameterList: '(' (parameterDecl (',' parameterDecl)*? )? ')';
 parameterDecl: Var typeReference nameNode ('[' arraySize ']')?;
 statementBlock: '{' ( ( (statement ';')  | ( ifBlockStatement ( ';' )? ) ) )*? '}';
-statement: assignment | returnStatement | constDef | varDecl | expression;
+statement: assignment | returnStatement | constDef | varDecl | funcCall;
 funcCall: nameNode '(' ( funcArgExpression ( ',' funcArgExpression )*? )? ')';
 assignment: referenceLeftSide assignmentOperator expressionBlock;
 ifCondition: expressionBlock;

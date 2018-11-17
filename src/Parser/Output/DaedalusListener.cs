@@ -41,6 +41,26 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitDaedalusFile([NotNull] DaedalusParser.DaedalusFileContext context);
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.blockDef"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterBlockDef([NotNull] DaedalusParser.BlockDefContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.blockDef"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitBlockDef([NotNull] DaedalusParser.BlockDefContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.inlineDef"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterInlineDef([NotNull] DaedalusParser.InlineDefContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.inlineDef"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitInlineDef([NotNull] DaedalusParser.InlineDefContext context);
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.functionDef"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
