@@ -47,6 +47,30 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitDaedalusFile([NotNull] DaedalusParser.DaedalusFileContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.blockDef"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterBlockDef([NotNull] DaedalusParser.BlockDefContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.blockDef"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitBlockDef([NotNull] DaedalusParser.BlockDefContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.inlineDef"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterInlineDef([NotNull] DaedalusParser.InlineDefContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.inlineDef"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitInlineDef([NotNull] DaedalusParser.InlineDefContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.functionDef"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>

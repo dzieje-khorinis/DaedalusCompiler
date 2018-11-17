@@ -163,7 +163,7 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterVarDecl([NotNull] DaedalusParser.VarDeclContext context)
         {
-            if (context.Parent is DaedalusParser.DaedalusFileContext || _assemblyBuilder.IsContextInsideExecBlock())
+            if (context.Parent.Parent is DaedalusParser.DaedalusFileContext || _assemblyBuilder.IsContextInsideExecBlock())
             {
                 var typeName = context.typeReference().GetText();
                 var type = DatSymbolTypeFromString(typeName);
@@ -481,15 +481,13 @@ namespace DaedalusCompiler.Compilation
         }
 
         
-        
-        
-        public override void EnterFuncCallValue(DaedalusParser.FuncCallValueContext context)
+        public override void EnterFuncCall(DaedalusParser.FuncCallContext context)
         {
-            string funcName = context.funcCall().nameNode().GetText();
+            string funcName = context.nameNode().GetText();
             _assemblyBuilder.FuncCallStart(funcName);
         }
 
-        public override void ExitFuncCallValue(DaedalusParser.FuncCallValueContext context)
+        public override void ExitFuncCall(DaedalusParser.FuncCallContext context)
         {
             _assemblyBuilder.FuncCallEnd();  
         }
