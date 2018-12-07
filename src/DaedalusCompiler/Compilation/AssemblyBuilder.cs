@@ -630,7 +630,7 @@ namespace DaedalusCompiler.Compilation
             int maxCounter = ExecBlocks.Count;
             foreach (BaseExecBlockContext execBlock in ExecBlocks)
             {
-                if(_verbose)Console.WriteLine($"{++counter}/{maxCounter} lazy references resolved");
+                if(_verbose) Console.Write($"\r{++counter}/{maxCounter} lazy references resolved");
                 for (int i = 0; i < execBlock.Body.Count; ++i)
                 {
                     AssemblyElement element = execBlock.Body[i];
@@ -649,6 +649,7 @@ namespace DaedalusCompiler.Compilation
                     }
                 }
             }
+            if(_verbose) Console.WriteLine("");
         }
     }
 }

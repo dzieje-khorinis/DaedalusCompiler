@@ -17,11 +17,11 @@ namespace DaedalusCompiler.Compilation
         private readonly string _outputDirPath;
         
 
-        public Compiler(string outputDirPath="output")
+        public Compiler(string outputDirPath="output", bool verbose=true)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            _assemblyBuilder = new AssemblyBuilder();
-            _ouBuilder = new OutputUnitsBuilder();
+            _assemblyBuilder = new AssemblyBuilder(verbose);
+            _ouBuilder = new OutputUnitsBuilder(verbose);
             _outputDirPath = outputDirPath;
         }
         
@@ -36,7 +36,6 @@ namespace DaedalusCompiler.Compilation
             string srcFilePath, 
             bool compileToAssembly,
             bool verbose = true,
-            bool saveDatToFile = true,
             bool generateOutputUnits = true
         )
         {
@@ -51,7 +50,7 @@ namespace DaedalusCompiler.Compilation
                     _assemblyBuilder.IsCurrentlyParsingExternals = true;
                     if (verbose) Console.WriteLine($"[0/{paths.Length}]Compiling runtime: {runtimePath}");
                     DaedalusParser parser = GetParserForScriptsFile(runtimePath);
-                    ParseTreeWalker.Default.Walk(new DaedalusParserListener(_assemblyBuilder, 0), parser.daedalusFile());
+                    ParseTreeWalker.Default.Walk(new DaedalusListener(_assemblyBuilder, 0), parser.daedalusFile());
                     _assemblyBuilder.IsCurrentlyParsingExternals = false;
                 }
 
@@ -62,7 +61,7 @@ namespace DaedalusCompiler.Compilation
                     string fileContent = GetFileContent(paths[i]);
                     DaedalusParser parser = GetParserForText(fileContent);
                     
-                    ParseTreeWalker.Default.Walk(new DaedalusParserListener(_assemblyBuilder, i), parser.daedalusFile());
+                    ParseTreeWalker.Default.Walk(new DaedalusListener(_assemblyBuilder, i), parser.daedalusFile());
                     if (generateOutputUnits)
                     {
                         _ouBuilder.ParseText(fileContent);

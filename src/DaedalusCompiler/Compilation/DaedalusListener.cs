@@ -8,12 +8,12 @@ using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
 {
-    public class DaedalusParserListener : DaedalusBaseListener
+    public class DaedalusListener : DaedalusBaseListener
     {
         private readonly AssemblyBuilder _assemblyBuilder;
         private readonly int _sourceFileNumber;
 
-        public DaedalusParserListener(AssemblyBuilder assemblyBuilder, int sourceFileNumber)
+        public DaedalusListener(AssemblyBuilder assemblyBuilder, int sourceFileNumber)
         {
             _assemblyBuilder = assemblyBuilder;
             _sourceFileNumber = sourceFileNumber;

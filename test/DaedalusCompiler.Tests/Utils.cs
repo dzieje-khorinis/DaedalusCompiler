@@ -13,7 +13,7 @@ namespace DaedalusCompiler.Tests
             var commonTokenStream = new CommonTokenStream(lexer);
             var parser = new DaedalusParser(commonTokenStream);
 
-            ParseTreeWalker.Default.Walk(new DaedalusParserListener(assemblyBuilder, 0), parser.daedalusFile());
+            ParseTreeWalker.Default.Walk(new DaedalusListener(assemblyBuilder, 0), parser.daedalusFile());
         }
     }
 }

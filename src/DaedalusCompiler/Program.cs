@@ -87,7 +87,7 @@ namespace DaedalusCompiler
 
         static void CompileDaedalus(string path, bool compileToAssembly, bool verbose, bool generateOutputUnits)
         {
-            var compiler = new Compiler();
+            var compiler = new Compiler("output", verbose);
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
             compiler.CompileFromSrc(path, compileToAssembly, verbose, generateOutputUnits);

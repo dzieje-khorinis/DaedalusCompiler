@@ -21,12 +21,15 @@ namespace DaedalusCompiler.Compilation
         private const string StringLiteral = "stringLiteral";
         private const string Comment = "comment";
 
-        public OutputUnitsBuilder()
+        private bool _verbose;
+
+        public OutputUnitsBuilder(bool verbose)
         {
             _wavFileNameToSpokenSentence = new Dictionary<string, string>();
             _wavFileNameAndSpokenSentencePairs = null;
             _generationDateTimeText = DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss", CultureInfo.InvariantCulture);
             _userName = Environment.UserName;
+            _verbose = verbose;
         }
 
         public void SetGenerationDateTimeText(string generationDateTimeText)
@@ -47,7 +50,7 @@ namespace DaedalusCompiler.Compilation
                 string dialogue = match.Groups[Comment].Value.Trim();
                 if (_wavFileNameToSpokenSentence.ContainsKey(wavFileName))
                 {
-                    Console.WriteLine($"Already contains key '{wavFileName}'");
+                    if (_verbose) Console.WriteLine($"Duplicated Wav: '{wavFileName}'");
                 }
                 _wavFileNameToSpokenSentence[wavFileName] = dialogue;
             }
@@ -134,8 +137,9 @@ namespace DaedalusCompiler.Compilation
                     item += $"	[]\n";
                     streamWriter.Write(item);
 
-                    Console.WriteLine($"{(index - 1) / 3}/{count} csl elements written");
+                    if (_verbose) Console.Write($"\r{(index - 1) / 3}/{count} csl elements written");
                 }
+                if (_verbose) Console.WriteLine("");
 
                 streamWriter.Write("[]\n");
             }
@@ -272,8 +276,9 @@ namespace DaedalusCompiler.Compilation
                     binaryWriter.Write("[]".ToCharArray());
                     address += 1 + 2 + 2;
                     
-                    Console.WriteLine($"{(index - 1) / 3}/{count} bin elements written");
+                    if (_verbose) Console.Write($"\r{(index - 1) / 3}/{count} bin elements written");
                 }
+                if (_verbose) Console.WriteLine("");
 
                 // []
                 binaryWriter.Write((Byte)1);
