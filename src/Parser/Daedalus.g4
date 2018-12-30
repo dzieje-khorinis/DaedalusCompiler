@@ -14,7 +14,8 @@ Return: 'return' | 'RETURN';
 Float: 'float' | 'FLOAT';
 Prototype: 'prototype' | 'PROTOTYPE';
 Instance: 'instance' | 'INSTANCE';
-Null: 'null' | 'Null';
+Null: 'null' | 'Null' | 'NULL' ;
+NoFunc: 'nofunc' | 'NoFunc' | 'NOFUNC';
 
 Identifier : IdStart IdContinue*;
 IntegerLiteral : Digit+;
@@ -64,7 +65,7 @@ parameterDecl: Var typeReference nameNode ('[' arraySize ']')?;
 statementBlock: '{' ( ( (statement ';')  | ( ifBlockStatement ( ';' )? ) ) )*? '}';
 statement: assignment | returnStatement | constDef | varDecl | funcCall;
 funcCall: nameNode '(' ( funcArgExpression ( ',' funcArgExpression )*? )? ')';
-assignment: referenceLeftSide assignmentOperator expressionBlock;
+assignment: reference assignmentOperator expressionBlock;
 ifCondition: expressionBlock;
 elseBlock: Else statementBlock;
 elseIfBlock: Else If ifCondition statementBlock;
@@ -98,13 +99,13 @@ value
     | FloatLiteral #floatLiteralValue
     | StringLiteral #stringLiteralValue
     | Null #nullLiteralValue
+    | NoFunc #noFuncLiteralValue
     | funcCall #funcCallValue
     | reference #referenceValue
     ;
     
 referenceAtom: Identifier ( '[' arrayIndex ']')?;
 reference: referenceAtom ( '.' referenceAtom )?;
-referenceLeftSide: referenceAtom ( '.' referenceAtom )?;
 
 typeReference:  ( Identifier | Void | Int | Float | String | Func | Instance);
 

@@ -161,15 +161,15 @@ namespace DaedalusCompiler.Compilation
 
     public class LazyReferenceAtomInstructions : AssemblyInstruction
     {
-        public readonly DaedalusParser.ReferenceAtomContext[] ReferenceAtoms;
+        public readonly DaedalusParser.ReferenceContext ReferenceContext;
         public readonly AssemblyBuilderSnapshot AssemblyBuilderSnapshot;
         
         public LazyReferenceAtomInstructions(
             AssemblyBuilderSnapshot assemblyBuilderSnapshot,
-            DaedalusParser.ReferenceAtomContext[] referenceAtoms)
+            DaedalusParser.ReferenceContext referenceContext)
         {
             AssemblyBuilderSnapshot = assemblyBuilderSnapshot;
-            ReferenceAtoms = referenceAtoms;
+            ReferenceContext = referenceContext;
         }
     }
     

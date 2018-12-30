@@ -363,12 +363,14 @@ namespace DaedalusCompiler.Compilation
         private readonly List<AssemblyElement> _instructions;
         private AssemblyElement _callInstruction;
 
+        private readonly DatSymbol _symbol;
         private readonly List<DatSymbolType> _parametersTypes;
         public int ArgIndex;
         public readonly FuncCallContext OuterCall;
         
-        public FuncCallContext(AssemblyBuilderContext parent, FuncCallContext outerCall, List<DatSymbolType> parametersTypes) : base(parent)
+        public FuncCallContext(AssemblyBuilderContext parent, FuncCallContext outerCall, List<DatSymbolType> parametersTypes, DatSymbol symbol) : base(parent)
         {
+            _symbol = symbol;
             _parametersTypes = parametersTypes;
             ArgIndex = -1;
             OuterCall = outerCall;
@@ -377,6 +379,7 @@ namespace DaedalusCompiler.Compilation
         
         public FuncCallContext(FuncCallContext ctx) : base(ctx.Parent)
         {
+            _symbol = ctx._symbol;
             _parametersTypes = ctx._parametersTypes;
             ArgIndex = ctx.ArgIndex;
             OuterCall = ctx.OuterCall;
@@ -408,6 +411,10 @@ namespace DaedalusCompiler.Compilation
         
         public DatSymbolType GetParameterType()
         {
+            if (_symbol == DatSymbolReference.UndeclaredSymbol)
+            {
+                return DatSymbolType.Undefined;
+            }
             return _parametersTypes[ArgIndex];
         }
     }

@@ -90,9 +90,15 @@ namespace DaedalusCompiler
             var compiler = new Compiler("output", verbose);
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
-            compiler.CompileFromSrc(path, compileToAssembly, verbose, generateOutputUnits);
-
-            Console.WriteLine($"Compilation completed successfully. Total time: {stopwatch.Elapsed}");
+            bool compiledSuccessfully = compiler.CompileFromSrc(path, compileToAssembly, verbose, generateOutputUnits);
+            if (compiledSuccessfully)
+            {
+                Console.WriteLine($"Compilation completed successfully. Total time: {stopwatch.Elapsed}");
+            }
+            else
+            {
+                Console.WriteLine($"Compilation FAILED. Total time: {stopwatch.Elapsed}");
+            }
         }
 
         static void Main(string[] args)
