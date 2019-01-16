@@ -9,6 +9,7 @@ Our compiler is available on docker hub, if you have installed docker you should
 docker run -v "$(pwd)":/usr/workspace dziejekhorinis/daedalus-compiler <path-to-gothic-src>
 ```
 Path which is argument of docker run is relative to folder where we made mount.
+
 Example usage:
 ```sh
 docker run -v "$(pwd)":/usr/workspace dziejekhorinis/daedalus-compiler ./Gothic.src
