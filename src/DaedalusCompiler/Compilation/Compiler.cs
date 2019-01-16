@@ -39,10 +39,12 @@ namespace DaedalusCompiler.Compilation
             bool generateOutputUnits = true
         )
         {
+            var absoluteSrcFilePath = Path.GetFullPath(srcFilePath);
+
             try
             {
-                string[] paths = SrcFileHelper.LoadScriptsFilePaths(srcFilePath).ToArray();
-                string srcFileName = Path.GetFileNameWithoutExtension(srcFilePath).ToLower();
+                string[] paths = SrcFileHelper.LoadScriptsFilePaths(absoluteSrcFilePath).ToArray();
+                string srcFileName = Path.GetFileNameWithoutExtension(absoluteSrcFilePath).ToLower();
                 
                 string runtimePath = Path.Combine(GetBuiltinsPath(), srcFileName + ".d");
                 if (File.Exists(runtimePath))
