@@ -3,6 +3,17 @@ This is repo with Daedalus ( Gothic I, II scripting language ) compiler.
 Project is using internally ANTL4 for parsing source code.
 The compiler itself is written in .NET Core C#.
 
+## Usage with docker ( .NET Core runtime not needed )
+Our compiler is available on docker hub, if you have installed docker you should be able to run compiler with:
+```sh
+docker run -v "$(pwd)":/usr/workspace dziejekhorinis/daedalus-compiler <path-to-gothic-src>
+```
+Path which is argument of docker run is relative to folder where we made mount.
+
+Example usage:
+```sh
+docker run -v "$(pwd)":/usr/workspace dziejekhorinis/daedalus-compiler ./Gothic.src
+```
 ## Configure development environment
 Project uses ANTLR4 and .NET Core C#. 
 
