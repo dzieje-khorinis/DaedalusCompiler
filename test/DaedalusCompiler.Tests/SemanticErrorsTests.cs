@@ -83,11 +83,12 @@ namespace DaedalusCompiler.Tests
         }
 
         [Fact]
-        public void TestUndeclaredIdentifier()
+        public void TestUndeclaredIdentifierInsideFunctionDef()
         {
             _code = @"
                 func void testFunc() {
                     x = 5;
+                    x = a + b(c, d);
                 };
             ";
 
@@ -95,6 +96,75 @@ namespace DaedalusCompiler.Tests
                 test.d: In function ‘testFunc’:
                 test.d:2:4: error: ‘x’ undeclared
                     x = 5;
+                    ^
+                test.d:3:4: error: ‘x’ undeclared
+                    x = a + b(c, d);
+                    ^
+                test.d:3:8: error: ‘a’ undeclared
+                    x = a + b(c, d);
+                        ^
+                test.d:3:12: error: ‘b’ undeclared
+                    x = a + b(c, d);
+                            ^
+                test.d:3:14: error: ‘c’ undeclared
+                    x = a + b(c, d);
+                              ^
+                test.d:3:17: error: ‘d’ undeclared
+                    x = a + b(c, d);
+                                 ^
+                ";
+
+            AssertCompilationOutputMatch();
+        }
+
+        [Fact]
+        public void TestUndeclaredIdentifierInheritance()
+        {
+            _code = @"
+                class C_NPC { var int data [200]; };
+                instance self(C_NPC_MISSPELLED) {};
+                prototype OrcElite(Orc);
+                instance UrukHai(OrcElite);
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d: In instance ‘self’:
+                test.d:2:14: error: ‘C_NPC_MISSPELLED’ undeclared
+                instance self(C_NPC_MISSPELLED) {};
+                              ^
+                test.d: In prototype ‘OrcElite’:
+                test.d:3:19: error: ‘Orc’ undeclared
+                prototype OrcElite(Orc);
+                                   ^
+                ";
+
+            AssertCompilationOutputMatch();
+        }
+
+        [Fact]
+        public void TestAttributeNotFound()
+        {
+            _code = @"
+                class C_NPC {
+                    var int y;
+                };
+                
+                instance self(C_NPC) {};
+                
+                func void testFunc() {
+                    self.x = 5;
+                    self.y = 10;
+                    other.y = 15;
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d: In function ‘testFunc’:
+                test.d:8:4: error: ‘object self’ has no member named ‘x’
+                    self.x = 5;
+                         ^
+                test.d:10:4: error: ‘other’ undeclared
+                    other.y = 15;
                     ^
                 ";
 
