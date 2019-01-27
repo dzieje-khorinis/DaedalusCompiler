@@ -105,7 +105,9 @@ namespace DaedalusCompiler.Tests
                 Console.WriteLine("tu a");
                 try
                 {
+                    Console.WriteLine("lets start download");
                     client.DownloadFile(scriptsUrl, scriptsFilePath);
+                    Console.WriteLine("download complete");
                 }
                 catch (Exception e)
                 {
