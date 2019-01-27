@@ -45,8 +45,6 @@ namespace DaedalusCompiler.Compilation
         public string ExecBlockName;
         public string ExecBlockType;
 
-        protected CompilationMessage() {}
-
         public abstract void Print();
 
         public int CompareTo(CompilationMessage message)
@@ -91,19 +89,19 @@ namespace DaedalusCompiler.Compilation
             {
                 switch (context)
                 {
-                case DaedalusParser.FunctionDefContext functionDefContext:
-                    ExecBlockName = functionDefContext.nameNode().GetText();
-                    ExecBlockType = "function";
-                    break;
-                case DaedalusParser.InstanceDefContext instanceDefContext:
-                    ExecBlockName = instanceDefContext.nameNode().GetText();
-                    ExecBlockType = "instance";
-                    break;
-                case DaedalusParser.PrototypeDefContext prototypeDefContext:
-                    ExecBlockName = prototypeDefContext.nameNode().GetText();
-                    ExecBlockType = "prototype";
-                    break;
-                }
+                    case DaedalusParser.FunctionDefContext functionDefContext:
+                        ExecBlockName = functionDefContext.nameNode().GetText();
+                        ExecBlockType = "function";
+                        break;
+                    case DaedalusParser.InstanceDefContext instanceDefContext:
+                        ExecBlockName = instanceDefContext.nameNode().GetText();
+                        ExecBlockType = "instance";
+                        break;
+                    case DaedalusParser.PrototypeDefContext prototypeDefContext:
+                        ExecBlockName = prototypeDefContext.nameNode().GetText();
+                        ExecBlockType = "prototype";
+                        break;
+                    }
 
                 context = context.Parent;
                 if (context is DaedalusParser.DaedalusFileContext)

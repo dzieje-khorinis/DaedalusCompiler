@@ -98,6 +98,7 @@ namespace DaedalusCompiler
             else
             {
                 Console.WriteLine($"Compilation FAILED. Total time: {stopwatch.Elapsed}");
+                Environment.Exit(1);
             }
         }
 
