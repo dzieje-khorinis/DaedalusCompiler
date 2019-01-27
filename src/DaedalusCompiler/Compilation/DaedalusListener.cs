@@ -278,6 +278,8 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterPrototypeDef([NotNull] DaedalusParser.PrototypeDefContext context)
         {
+            _assemblyBuilder.ErrorContext.Context = context.parentReference();
+
             var prototypeName = context.nameNode().GetText();
             var referenceName = context.parentReference().GetText();
             var refSymbol = _assemblyBuilder.GetSymbolByName(referenceName);
@@ -298,6 +300,8 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterInstanceDef(DaedalusParser.InstanceDefContext context)
         {
+            _assemblyBuilder.ErrorContext.Context = context.parentReference();
+
             var instanceName = context.nameNode().GetText();
             var referenceName = context.parentReference().GetText();
             var refSymbol = _assemblyBuilder.GetSymbolByName(referenceName);
@@ -324,6 +328,8 @@ namespace DaedalusCompiler.Compilation
         
         public override void EnterInstanceDecl(DaedalusParser.InstanceDeclContext context)
         {
+            _assemblyBuilder.ErrorContext.Context = context.parentReference();
+
             var referenceName = context.parentReference().GetText();
             var refSymbol = _assemblyBuilder.GetSymbolByName(referenceName);
             var referenceSymbolId = refSymbol.Index;
@@ -437,21 +443,33 @@ namespace DaedalusCompiler.Compilation
             _assemblyBuilder.IsInsideIfCondition = false;
         }
 
-
-
-        
-        public override void ExitReference(DaedalusParser.ReferenceContext context)
+        public override void ExitNullLiteralValue(DaedalusParser.NullLiteralValueContext context)
         {
-            var referenceAtoms = context.referenceAtom();
-            
+            List<AssemblyElement> instructions = _assemblyBuilder.GetKeywordInstructions(context.GetText().ToLower());
+            _assemblyBuilder.AddInstructions(instructions);
+        }
+
+        public override void ExitNoFuncLiteralValue(DaedalusParser.NoFuncLiteralValueContext context)
+        {
+            List<AssemblyElement> instructions = _assemblyBuilder.GetKeywordInstructions(context.GetText().ToLower());
+            _assemblyBuilder.AddInstructions(instructions);
+        }
+
+        public override void ExitReference(DaedalusParser.ReferenceContext referenceContext)
+        {
+            if (referenceContext.Parent is DaedalusParser.AssignmentContext) {
+                // left side of assignment
+                return;
+            }
+
             List<AssemblyElement> instructions = new List<AssemblyElement>();
             if (_assemblyBuilder.IsInsideArgList || _assemblyBuilder.IsInsideAssignment || _assemblyBuilder.IsInsideIfCondition || _assemblyBuilder.IsInsideReturnStatement)
             {
-                instructions.Add(new LazyReferenceAtomInstructions(_assemblyBuilder.MakeSnapshot(), referenceAtoms));
+                instructions.Add(new LazyReferenceAtomInstructions(_assemblyBuilder.MakeSnapshot(), referenceContext));
             }
             else
             {
-                instructions = _assemblyBuilder.GetReferenceAtomInstructions(referenceAtoms);
+                instructions = _assemblyBuilder.GetDatSymbolReferenceInstructions(referenceContext);
             }
             
             if (!_assemblyBuilder.IsInsideConstDef)
@@ -463,11 +481,12 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterAssignment(DaedalusParser.AssignmentContext context)
         {
-            var referenceAtoms = context.referenceLeftSide().referenceAtom();
-            List<AssemblyElement> instructions = _assemblyBuilder.GetReferenceAtomInstructions(referenceAtoms);
+            var referenceContext = context.reference();
+            DatSymbolReference reference = _assemblyBuilder.GetDatSymbolReference(referenceContext);
+            List<AssemblyElement> instructions = _assemblyBuilder.GetDatSymbolReferenceInstructions(reference);
             _assemblyBuilder.AssignmentStart(Array.ConvertAll(instructions.ToArray(), item => (SymbolInstruction) item));
             _assemblyBuilder.IsInsideAssignment = true;
-            _assemblyBuilder.AssignmentType = _assemblyBuilder.GetReferenceType(referenceAtoms);
+            _assemblyBuilder.AssignmentType = reference.GetSymbolType();
         }
 
 
@@ -483,6 +502,8 @@ namespace DaedalusCompiler.Compilation
         
         public override void EnterFuncCall(DaedalusParser.FuncCallContext context)
         {
+            _assemblyBuilder.ErrorContext.Context = context.nameNode();
+
             string funcName = context.nameNode().GetText();
             _assemblyBuilder.FuncCallStart(funcName);
         }

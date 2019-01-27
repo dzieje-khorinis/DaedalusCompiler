@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace DaedalusCompiler.Dat
@@ -17,6 +18,7 @@ namespace DaedalusCompiler.Dat
         Func = 5,
         Prototype = 6,
         Instance = 7,
+        Undefined = 8,
     }
 
     [Flags]
@@ -107,6 +109,10 @@ namespace DaedalusCompiler.Dat
 
         public DatSymbol()
         {
+            Index = -1;
+            Name = "";
+            Type = DatSymbolType.Undefined;
+            
             ArrayLength = 0;
             ParametersCount = 0;
             ClassOffset = 0;
@@ -319,6 +325,50 @@ namespace DaedalusCompiler.Dat
             }
 
             return result;
+        }
+    }
+
+    public class DatSymbolReference
+    {
+        public static readonly DatSymbol UndeclaredSymbol = new DatSymbol();
+
+        /*
+        object[10].attribute[10] - NOT POSSIBLE NOW
+        object.attribute[10]     - OK
+         */
+        public DatSymbol Object;
+        public DatSymbol Attribute;
+        public int Index;
+
+        public DatSymbolReference()
+        {
+            Object = UndeclaredSymbol;
+            Attribute = null;
+            Index = -1;
+        }
+
+        public bool HasAttribute()
+        {
+            return Attribute != null;
+        }
+        public DatSymbol GetSymbol()
+        {
+            if (HasAttribute())
+            {
+                return Attribute;
+            }
+
+            return Object;
+        }
+
+        public DatSymbolType GetSymbolType()
+        {
+            DatSymbol symbol = GetSymbol();
+            if (symbol == null)
+            {
+                return DatSymbolType.Undefined;
+            }
+            return GetSymbol().Type;
         }
     }
 }

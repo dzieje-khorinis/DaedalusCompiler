@@ -26,12 +26,12 @@ namespace DaedalusCompiler.Compilation
             FuncCallCtx = assemblyBuilder.FuncCallCtx == null ? null : new FuncCallContext(assemblyBuilder.FuncCallCtx);
         }
     }
-    
 
     public class AssemblyBuilder
     {
         public readonly List<BaseExecBlockContext> ExecBlocks;
         public BaseExecBlockContext ActiveExecBlock;
+        public readonly ErrorContext ErrorContext;
         
         public readonly List<DatSymbol> Symbols;
         private readonly Dictionary<string, DatSymbol> _symbolsDict;
@@ -52,6 +52,8 @@ namespace DaedalusCompiler.Compilation
         public DatSymbolType AssignmentType;
         private int _nextSymbolIndex;
         private bool _verbose;
+
+        public readonly List<CompilationMessage> Errors;
         
         public AssemblyBuilder(bool verbose = true)
         {
@@ -71,9 +73,12 @@ namespace DaedalusCompiler.Compilation
             IsInsideArgList = false;
             IsInsideAssignment = false;
             IsInsideReturnStatement = false;
-            AssignmentType = DatSymbolType.Void;
+            AssignmentType = DatSymbolType.Undefined;
             _nextSymbolIndex = 0;
             _verbose = verbose;
+
+            Errors = new List<CompilationMessage>();
+            ErrorContext = new ErrorContext(this);
         }
         
         public AssemblyBuilderSnapshot MakeSnapshot()
@@ -108,11 +113,6 @@ namespace DaedalusCompiler.Compilation
             return $"{(char) 255}{_nextStringSymbolNumber++}";
         }
 
-        public bool IsArgListKeyword(string symbolName)
-        {
-            return symbolName == "nofunc" || symbolName == "null";
-        }
-
         public List<AssemblyElement> GetKeywordInstructions(string symbolName)
         {
             if (symbolName == "nofunc")
@@ -129,8 +129,57 @@ namespace DaedalusCompiler.Compilation
             return new List<AssemblyElement>();
         }
         
-        private DatSymbol GetReferenceAtomSymbol(DaedalusParser.ReferenceAtomContext[] referenceAtoms)
+
+        public DatSymbolReference GetDatSymbolReference(DaedalusParser.ReferenceContext referenceContext)
         {
+            ErrorContext.Context = referenceContext;
+
+            DaedalusParser.ReferenceAtomContext[] referenceAtoms = referenceContext.referenceAtom();
+            DaedalusParser.ReferenceAtomContext objectPart = referenceAtoms[0];
+
+            DatSymbolReference reference = new DatSymbolReference();
+
+            DatSymbol symbol;
+
+            try
+            {
+                symbol = GetReferenceAtomSymbol(referenceContext);
+            }
+            catch (UndeclaredIdentifierException)
+            {
+                Errors.Add(new UndeclaredIdentifierError(ErrorContext));
+                return reference;
+            }
+
+            if (IsDottedReference(referenceContext))
+            {
+                DaedalusParser.ReferenceAtomContext attributePart = referenceAtoms[1];
+                string attributeName = attributePart.Identifier().GetText();
+                try
+                {
+                    reference.Attribute = ResolveAttribute(symbol, attributeName);
+                }
+                catch (AttributeNotFoundException)
+                {
+                    Errors.Add(new AttributeNotFoundError(ErrorContext));
+                    return reference;
+                }
+
+                reference.Index = GetArrayIndex(attributePart);
+            }
+            else
+            {
+                reference.Index = GetArrayIndex(objectPart);
+            }
+
+            reference.Object = symbol;
+
+            return reference;
+        }
+
+        public DatSymbol GetReferenceAtomSymbol(DaedalusParser.ReferenceContext referenceContext)
+        {
+            var referenceAtoms = referenceContext.referenceAtom();
             var referenceAtom = referenceAtoms[0];
             string symbolNameLower = referenceAtom.Identifier().GetText().ToLower();
             bool isSymbolNameSelfKeyword = symbolNameLower == "slf" || symbolNameLower == "self";
@@ -139,7 +188,7 @@ namespace DaedalusCompiler.Compilation
             if (ActiveExecBlock != null && isSymbolNameSelfKeyword)
             {
 
-                bool isDottedReference = IsDottedReference(referenceAtoms);
+                bool isDottedReference = IsDottedReference(referenceContext);
                 DatSymbolType activeSymbolType = ActiveExecBlock.GetSymbol().Type;
 
                 if (
@@ -154,25 +203,13 @@ namespace DaedalusCompiler.Compilation
             return ResolveSymbol(referenceAtom.Identifier().GetText());
         }
         
-        public DatSymbolType GetReferenceType(DaedalusParser.ReferenceAtomContext[] referenceAtoms)
-        {
-            DatSymbol symbol = GetReferenceAtomSymbol(referenceAtoms);
-   
-            if (IsDottedReference(referenceAtoms))
-            {
-                string rightPart = referenceAtoms[1].Identifier().GetText();
-                DatSymbol attribute = ResolveAttribute(symbol, rightPart);
-                return attribute.Type;
-            }
-            return symbol.Type;
-        }
         
         public int GetArrayIndex(DaedalusParser.ReferenceAtomContext context)
         {
             var indexContext = context.arrayIndex();
             
             
-            int arrIndex = 0;
+            int arrIndex = -1;
             if (indexContext != null)
             {
                 if (!int.TryParse(indexContext.GetText(), out arrIndex))
@@ -236,62 +273,52 @@ namespace DaedalusCompiler.Compilation
             return PushSymbol(symbol);
         }
 
-        public bool IsDottedReference(DaedalusParser.ReferenceAtomContext[] nodes)
+        public bool IsDottedReference(DaedalusParser.ReferenceContext referenceContext)
         {
+            DaedalusParser.ReferenceAtomContext[] nodes = referenceContext.referenceAtom();
+
             if (nodes.Length > 2)
             {
                 throw new Exception("Too many nodes in reference.");
             }
             return nodes.Length == 2;
         }
-        
-        public List<AssemblyElement> GetReferenceAtomInstructions(
-            DaedalusParser.ReferenceAtomContext[] referenceAtoms)
+
+
+        public List<AssemblyElement> GetDatSymbolReferenceInstructions(DaedalusParser.ReferenceContext referenceContext)
         {
-            var symbolPart = referenceAtoms[0];
-            string symbolName = symbolPart.Identifier().GetText().ToLower();
+            DatSymbolReference reference = GetDatSymbolReference(referenceContext);
+            return GetDatSymbolReferenceInstructions(reference);
+        }
 
-
-            if (IsInsideArgList && IsArgListKeyword(symbolName))
-            {
-                return GetKeywordInstructions(symbolName);
-            }
-
-            DatSymbol symbol = GetReferenceAtomSymbol(referenceAtoms);
+        public List<AssemblyElement> GetDatSymbolReferenceInstructions(DatSymbolReference reference)
+        {
             List<AssemblyElement> instructions = new List<AssemblyElement>();
-            
-            
-            if (IsDottedReference(referenceAtoms))
-            {
-                var attributePart = referenceAtoms[1];
-                string attributeName = attributePart.Identifier().GetText();
-                DatSymbol attribute = ResolveAttribute(symbol, attributeName);
 
+            if (reference.HasAttribute())
+            {
                 bool isInsideExecBlock = ActiveExecBlock != null;
-                bool isSymbolSelf = symbol == ActiveExecBlock?.GetSymbol(); // self.attribute, slf.attribute cases
+                bool isSymbolSelf = reference.Object == ActiveExecBlock?.GetSymbol(); // self.attribute, slf.attribute cases
                 bool isSymbolPassedToInstanceParameter = IsInsideArgList && FuncCallCtx.GetParameterType() == DatSymbolType.Instance;
                 bool isSymbolPassedToFuncParameter = IsInsideArgList && FuncCallCtx.GetParameterType() == DatSymbolType.Func;
                 bool isInsideFuncAssignment = IsInsideAssignment && AssignmentType == DatSymbolType.Func;
-                
+
                 if (isInsideExecBlock
                     && !isSymbolSelf
                     && !isInsideFuncAssignment
                     && !(isSymbolPassedToInstanceParameter || isSymbolPassedToFuncParameter)
                 )
                 {
-                    instructions.Add(new SetInstance(symbol));
+                    instructions.Add(new SetInstance(reference.Object));
                 }
-                
-                int arrIndex = GetArrayIndex(attributePart);
-                instructions.Add(GetProperPushInstruction(attribute, arrIndex));
-                return instructions;
+
+                instructions.Add(GetProperPushInstruction(reference.Attribute, reference.Index));
             }
             else
             {
-                int arrIndex = GetArrayIndex(symbolPart);
-                instructions.Add(GetProperPushInstruction(symbol, arrIndex));
-                return instructions;
+                instructions.Add(GetProperPushInstruction(reference.Object, reference.Index));
             }
+            return instructions;
 
         }
 
@@ -394,7 +421,7 @@ namespace DaedalusCompiler.Compilation
                 instruction = new Call(symbol);
             }
 
-            FuncCallCtx = new FuncCallContext(_activeContext, FuncCallCtx, parametersTypes);
+            FuncCallCtx = new FuncCallContext(_activeContext, FuncCallCtx, parametersTypes, symbol);
             _activeContext = FuncCallCtx;
             _activeContext.SetEndInstruction(instruction);
             
@@ -553,7 +580,7 @@ namespace DaedalusCompiler.Compilation
             
             if (attributeSymbol == null)
             {
-                throw new Exception($"attributeSymbol {symbol.Name}.{attributeName} is not added");
+                throw new AttributeNotFoundException();
             }
 
             return attributeSymbol;
@@ -594,7 +621,7 @@ namespace DaedalusCompiler.Compilation
             
             if (symbol == null)
             {
-                throw new Exception("Symbol " + symbolName + " is not added");
+                throw new UndeclaredIdentifierException();
             }
 
             return symbol;
@@ -602,7 +629,15 @@ namespace DaedalusCompiler.Compilation
 
         public DatSymbol GetSymbolByName(string symbolName)
         {
-            return _symbolsDict[symbolName.ToUpper()];
+            try
+            {
+                return _symbolsDict[symbolName.ToUpper()];
+            }
+            catch (KeyNotFoundException)
+            {
+                Errors.Add(new UndeclaredIdentifierError(ErrorContext));
+                return DatSymbolReference.UndeclaredSymbol;
+            }
         }
 
         public bool IsInsideOneArgOperatorsEvaluationMode()
@@ -637,12 +672,12 @@ namespace DaedalusCompiler.Compilation
                     if (element is LazyReferenceAtomInstructions nodeInstructions)
                     {
                         LoadStateFromSnapshot(nodeInstructions.AssemblyBuilderSnapshot);
-                        List<AssemblyElement> instructions = GetReferenceAtomInstructions(nodeInstructions.ReferenceAtoms);
+                        List<AssemblyElement> instructions = GetDatSymbolReferenceInstructions(nodeInstructions.ReferenceContext);
                         execBlock.Body.RemoveAt(i);
                         execBlock.Body.InsertRange(i, instructions);
                     }
                     
-                    if (element is PushVar pushVar&& pushVar.Symbol.IsStringLiteralSymbol())
+                    if (element is PushVar pushVar && pushVar.Symbol.IsStringLiteralSymbol())
                     {
                         pushVar.Symbol.Name = NewStringSymbolName();
                         AddSymbol(pushVar.Symbol);

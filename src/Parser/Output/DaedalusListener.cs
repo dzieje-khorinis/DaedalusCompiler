@@ -543,6 +543,18 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitNullLiteralValue([NotNull] DaedalusParser.NullLiteralValueContext context);
 	/// <summary>
+	/// Enter a parse tree produced by the <c>noFuncLiteralValue</c>
+	/// labeled alternative in <see cref="DaedalusParser.value"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterNoFuncLiteralValue([NotNull] DaedalusParser.NoFuncLiteralValueContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>noFuncLiteralValue</c>
+	/// labeled alternative in <see cref="DaedalusParser.value"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitNoFuncLiteralValue([NotNull] DaedalusParser.NoFuncLiteralValueContext context);
+	/// <summary>
 	/// Enter a parse tree produced by the <c>funcCallValue</c>
 	/// labeled alternative in <see cref="DaedalusParser.value"/>.
 	/// </summary>
@@ -586,16 +598,6 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitReference([NotNull] DaedalusParser.ReferenceContext context);
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.referenceLeftSide"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterReferenceLeftSide([NotNull] DaedalusParser.ReferenceLeftSideContext context);
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.referenceLeftSide"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitReferenceLeftSide([NotNull] DaedalusParser.ReferenceLeftSideContext context);
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.typeReference"/>.
 	/// </summary>

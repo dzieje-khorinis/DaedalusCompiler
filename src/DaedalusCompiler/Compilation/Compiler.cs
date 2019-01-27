@@ -32,7 +32,7 @@ namespace DaedalusCompiler.Compilation
             return Path.Combine(Path.GetDirectoryName(programStartPath), "DaedalusBuiltins");
         }
 
-        public void CompileFromSrc(
+        public bool CompileFromSrc(
             string srcFilePath, 
             bool compileToAssembly,
             bool verbose = true,
@@ -62,7 +62,10 @@ namespace DaedalusCompiler.Compilation
 
                     string fileContent = GetFileContent(paths[i]);
                     DaedalusParser parser = GetParserForText(fileContent);
-                    
+
+                    _assemblyBuilder.ErrorContext.FileContentLines = fileContent.Split(Environment.NewLine);
+                    _assemblyBuilder.ErrorContext.FilePath = paths[i];
+                    _assemblyBuilder.ErrorContext.FileIndex = i;
                     ParseTreeWalker.Default.Walk(new DaedalusListener(_assemblyBuilder, i), parser.daedalusFile());
                     if (generateOutputUnits)
                     {
@@ -76,6 +79,30 @@ namespace DaedalusCompiler.Compilation
                 }
                 
                 _assemblyBuilder.Finish();
+                if (_assemblyBuilder.Errors.Any())
+                {
+                    _assemblyBuilder.Errors.Sort((x, y) => x.CompareTo(y));
+
+                    string lastErrorFilePath = "";
+                    string lastErrorBlockName = "";
+                    foreach (CompilationMessage error in _assemblyBuilder.Errors)
+                    {
+                        if (lastErrorFilePath != error.FilePath)
+                        {
+                            lastErrorFilePath = error.FilePath;
+                            Console.WriteLine(error.FilePath);
+                        }
+
+                        if (lastErrorBlockName != error.ExecBlockName)
+                        {
+                            lastErrorBlockName = error.ExecBlockName;
+                            Console.WriteLine($"{error.FileName}: In {error.ExecBlockType} ‘{error.ExecBlockName}’:");
+                        }
+
+                        error.Print();
+                    }
+                    return false;
+                }
 
                 if (compileToAssembly)
                 {
@@ -87,11 +114,14 @@ namespace DaedalusCompiler.Compilation
                     string datPath = Path.Combine(_outputDirPath, srcFileName + ".dat");
                     _assemblyBuilder.SaveToDat(datPath);
                 }
+
+                return true;
             }
             catch (Exception exc)
             {
                 Console.WriteLine("SRC compilation failed");
                 Console.WriteLine($"{exc}");
+                return false;
             }
         }
 
