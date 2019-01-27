@@ -103,7 +103,16 @@ namespace DaedalusCompiler.Tests
             using (WebClient client = new WebClient())
             {
                 Console.WriteLine("tu a");
-                client.DownloadFile(scriptsUrl, scriptsFilePath);
+                try
+                {
+                    client.DownloadFile(scriptsUrl, scriptsFilePath);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Problem with file download");
+                    Console.WriteLine(e);
+                    throw;
+                }
                 Console.WriteLine("tu b");
                 _output.WriteLine($"Downloaded {Constants.ScriptsFileName}.");
             }
