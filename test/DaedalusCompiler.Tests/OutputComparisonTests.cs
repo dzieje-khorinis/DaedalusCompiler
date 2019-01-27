@@ -102,7 +102,9 @@ namespace DaedalusCompiler.Tests
             
             using (WebClient client = new WebClient())
             {
+                Console.WriteLine("tu a");
                 client.DownloadFile(scriptsUrl, scriptsFilePath);
+                Console.WriteLine("tu b");
                 _output.WriteLine($"Downloaded {Constants.ScriptsFileName}.");
             }
         }
@@ -198,6 +200,7 @@ namespace DaedalusCompiler.Tests
 
         private void CompareDats(string expectedDatPath, string datPath)
         {
+            Console.WriteLine($"expected {expectedDatPath} datpath {datPath}");
             DatFile expectedDatFile = new DatFile(expectedDatPath);
             DatFile datFile = new DatFile(datPath);
             
