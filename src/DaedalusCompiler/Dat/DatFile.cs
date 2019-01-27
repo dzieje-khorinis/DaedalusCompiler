@@ -60,6 +60,7 @@ namespace DaedalusCompiler.Dat
                 var writer = new DatBinaryWriter(stream);
 
                 writeToStreamProgram(writer);
+                stream.Close();
             }
         }
 
