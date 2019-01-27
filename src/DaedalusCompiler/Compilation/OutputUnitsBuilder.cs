@@ -142,7 +142,6 @@ namespace DaedalusCompiler.Compilation
                 if (_verbose) Console.WriteLine("");
 
                 streamWriter.Write("[]\n");
-                fileStream.Close();
             }
         }
 
@@ -331,7 +330,6 @@ namespace DaedalusCompiler.Compilation
                 // update addressOfLastSignificantByteAddress
                 binaryWriter.Seek(addressOfLastSignificantByteAddress, SeekOrigin.Begin);
                 binaryWriter.Write(address);
-                fileStream.Close();
             }
         }
     }
