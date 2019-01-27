@@ -73,6 +73,11 @@ namespace DaedalusCompiler.Compilation
                     }
                 }
 
+                if (!compileToAssembly)
+                {
+                    Directory.CreateDirectory(_outputDirPath);
+                }
+
                 if (generateOutputUnits)
                 {
                     _ouBuilder.SaveOutputUnits(_outputDirPath);
