@@ -73,6 +73,11 @@ namespace DaedalusCompiler.Compilation
                     }
                 }
 
+                if (!compileToAssembly)
+                {
+                    Directory.CreateDirectory(_outputDirPath);
+                }
+
                 if (generateOutputUnits)
                 {
                     _ouBuilder.SaveOutputUnits(_outputDirPath);
@@ -110,7 +115,6 @@ namespace DaedalusCompiler.Compilation
                 }
                 else
                 {
-                    Directory.CreateDirectory(_outputDirPath);
                     string datPath = Path.Combine(_outputDirPath, srcFileName + ".dat");
                     _assemblyBuilder.SaveToDat(datPath);
                 }
