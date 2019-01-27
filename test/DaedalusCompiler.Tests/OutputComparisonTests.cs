@@ -69,10 +69,15 @@ namespace DaedalusCompiler.Tests
         {
             _output = output;
 
+            Console.WriteLine("DatComparisonTests 1");
             LoadJsonConfig();
+            Console.WriteLine("DatComparisonTests 2");
             DownloadScripts();
+            Console.WriteLine("DatComparisonTests 3");
             ExtractScripts();
+            Console.WriteLine("DatComparisonTests 4");
             InitializeSrcPathToDatPath();
+            Console.WriteLine("DatComparisonTests 5");
         }
 
         private void LoadJsonConfig()
@@ -303,6 +308,7 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIfCompiledScriptsMatchOriginalDatAndOuFiles()
         {
+            Console.WriteLine("im in TestIfCompiledScriptsMatchOriginalDatAndOuFiles");
             string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
             DirectoryInfo baseDirectoryInfo = new DirectoryInfo(baseDirectory);
             string solutionPath = baseDirectoryInfo.Parent?.Parent?.Parent?.Parent?.Parent?.ToString();
