@@ -57,6 +57,7 @@ namespace DaedalusCompiler.Tests
 
             MemoryStream stream = new MemoryStream();
             StreamWriter writer = new StreamWriter(stream);
+            Console.Out.Flush();
             Console.SetOut(writer);
 
             if (_assemblyBuilder.Errors.Any())
