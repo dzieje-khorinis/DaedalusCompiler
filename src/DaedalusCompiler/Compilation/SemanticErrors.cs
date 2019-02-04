@@ -8,6 +8,40 @@ using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
 {
+    public abstract class ErrorLogger
+    {
+        public abstract void Log(string message);
+    }
+
+    public class StdErrorLogger : ErrorLogger
+    {
+        public override void Log(string message)
+        {
+            Console.WriteLine(message);
+        }
+    }
+
+    public class StringBufforErrorLogger : ErrorLogger
+    {
+        private string buffor;
+
+        public override void Log(string message)
+        {
+            if (buffor == null)
+            {
+                buffor = message;
+            }
+            else
+            {
+                buffor = $"{buffor}\n{message}";
+            }
+        }
+
+        public string GetBuffor()
+        {
+            return buffor;
+        }
+    }
 
     public class UndeclaredIdentifierException : Exception
     {
@@ -45,7 +79,7 @@ namespace DaedalusCompiler.Compilation
         public string ExecBlockName;
         public string ExecBlockType;
 
-        public abstract void Print();
+        public abstract void Print(ErrorLogger logger);
 
         public int CompareTo(CompilationMessage message)
         {
@@ -118,16 +152,16 @@ namespace DaedalusCompiler.Compilation
             _line = errorContext.FileContentLines[_lineNo - 1];
         }
 
-        public override void Print()
+        public override void Print(ErrorLogger logger)
         {
-            PrintMessage();
-            Console.WriteLine($"{_line}");
-            PrintErrorPointer();
+            PrintMessage(logger);
+            logger.Log($"{_line}");
+            PrintErrorPointer(logger);
         }
 
-        protected virtual void PrintMessage()
+        protected virtual void PrintMessage(ErrorLogger logger)
         {
-            Console.WriteLine($"{FileName}:{_lineNo}:{_columnNo}: error: ‘{_identifier.Split(".").First()}’ undeclared");
+            logger.Log($"{FileName}:{_lineNo}:{_columnNo}: error: ‘{_identifier.Split(".").First()}’ undeclared");
         }
 
         protected string GetErrorPointerLine(int whitespaceCount)
@@ -148,9 +182,9 @@ namespace DaedalusCompiler.Compilation
             return errorPointerLine;
         }
         
-        protected virtual void PrintErrorPointer()
+        protected virtual void PrintErrorPointer(ErrorLogger logger)
         {
-            Console.WriteLine($"{GetErrorPointerLine(_columnNo)}");
+            logger.Log($"{GetErrorPointerLine(_columnNo)}");
         }
     }
 
@@ -183,24 +217,24 @@ namespace DaedalusCompiler.Compilation
         }
         
         
-        protected override void PrintMessage()
+        protected override void PrintMessage(ErrorLogger logger)
         {
             if (_className == null)
             {
                 string[] identifier = _identifierPrefix.Split(".");
                 string objectName = identifier[0];
-                Console.WriteLine($"{FileName}:{_lineNo}:{_columnNo}: error: ‘object {objectName}’ has no member named ‘{_identifier}’");
+                logger.Log($"{FileName}:{_lineNo}:{_columnNo}: error: ‘object {objectName}’ has no member named ‘{_identifier}’");
             }
             else
             {
-                Console.WriteLine($"{FileName}:{_lineNo}:{_columnNo}: error: ‘class {_className}’ has no member named ‘{_identifier}’");
+                logger.Log($"{FileName}:{_lineNo}:{_columnNo}: error: ‘class {_className}’ has no member named ‘{_identifier}’");
             }
             
         }
 
-        protected override void PrintErrorPointer()
+        protected override void PrintErrorPointer(ErrorLogger logger)
         {
-            Console.WriteLine($"{GetErrorPointerLine(_columnNo + _identifierPrefix.Length)}");
+            logger.Log($"{GetErrorPointerLine(_columnNo + _identifierPrefix.Length)}");
         }
         
     }
