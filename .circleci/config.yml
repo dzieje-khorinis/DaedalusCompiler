@@ -34,7 +34,7 @@ jobs:
           at: ./compiler-build
       - run: export PROGRAM_V=$(dotnet compiler-build/publish/DaedalusCompiler.dll --version)
       - run: echo "Program version $PROGRAM_V, Tag name $CIRCLE_TAG"
-      - run: if [ $PROGRAM_V == $CIRCLE_TAG ]; then "Version of program is ok!"; else echo "Please adjust version of program!" && exit 0; fi
+      - run: if [ $PROGRAM_V == $CIRCLE_TAG ]; then "Version of program is ok!"; else echo "Please adjust version of program!" && exit 1; fi
   publish-github-release:
     docker:
       - image: circleci/golang:1.8
