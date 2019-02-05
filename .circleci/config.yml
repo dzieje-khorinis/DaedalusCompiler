@@ -20,7 +20,8 @@ jobs:
       - checkout
       - run: ls
       - run: pwd
-      - run: echo $SRC_PATHS
+      - run: echo $CIRCLE_PROJECT_USERNAME
+      - run: echo $CIRCLE_PROJECT_REPONAME
 workflows:
   version: 2
   main:
