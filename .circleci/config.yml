@@ -64,7 +64,7 @@ jobs:
           name: "Publish Release on GitHub"
           command: |
             go get github.com/tcnksm/ghr
-            VERSION=$(cat packed-program/version.txt)
+            VERSION=$(cat program-version/version.txt)
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./shared-workspace/packed-program
 workflows:
   version: 2
