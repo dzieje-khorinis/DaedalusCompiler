@@ -58,6 +58,16 @@ workflows:
     - verify-program-version:
         requires:
           - build-release
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v\d+\.\d+\.\d+$/
     - publish-github-release:
         requires:
           - verify-program-version
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v\d+\.\d+\.\d+$/
