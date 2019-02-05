@@ -1,17 +1,31 @@
 version: 2
-jobs:
-  build:
+
+executors:
+  build-executor:
     working_directory: /temp
     docker:
       - image: microsoft/dotnet:sdk
     environment:
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
+jobs:
+  test:
+    executor: build-executor
     steps:
       - checkout
       - run: dotnet restore
       - run: dotnet build
       - run: dotnet test /temp/test/DaedalusCompiler.Tests/DaedalusCompiler.Tests.csproj
+  build-release:
+    executor: build-executor
+    steps:
+      - checkout
+      - run: dotnet restore
+      - run: dotnet publish -c Release
+      - persist_to_workspace:
+          root: /temp
+          paths:
+            - docs
   publish-github-release:
     docker:
     - image: circleci/golang:1.8
@@ -31,7 +45,7 @@ workflows:
   version: 2
   main:
     jobs:
-    - build
+    - build-release:
     - publish-github-release:
         requires:
-          - build
+          - build-release
