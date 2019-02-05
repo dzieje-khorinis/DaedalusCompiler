@@ -31,6 +31,4 @@ workflows:
   version: 2
   main:
     jobs:
-    - publish-github-release:
-        requires:
-          - build
+    - publish-github-release
