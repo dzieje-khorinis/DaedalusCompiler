@@ -14,7 +14,7 @@ jobs:
       - run: dotnet test /temp/test/DaedalusCompiler.Tests/DaedalusCompiler.Tests.csproj
   publish-github-release:
     docker:
-    - image: cibuilds/github:0.10
+    - image: circleci/golang:1.8
     steps:
     - attach_workspace:
         at: ./artifacts
@@ -24,6 +24,7 @@ jobs:
     - run:
         name: "Publish Release on GitHub"
         command: |
+          go get github.com/tcnksm/ghr
           VERSION=v0.0.1
           ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -recreate ${VERSION} ./artifacts/
 workflows:
