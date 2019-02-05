@@ -38,33 +38,34 @@ jobs:
     working_directory: /workspace
     steps:
       - attach_workspace:
-          at: ./compiler-build
+          at: ./shared-workspace
       - run:
           name: "Verify Program Version"
-          command: export PROGRAM_V=$(dotnet compiler-build/publish/DaedalusCompiler.dll --version) && echo "Program version $PROGRAM_V, Tag name $CIRCLE_TAG" && if [ $CIRCLE_TAG == $CIRCLE_TAG ]; then echo "Version of program is ok!"; else echo "Please adjust version of program!" && exit 1; fi
+          command: export PROGRAM_V=$(dotnet shared-workspace/publish/DaedalusCompiler.dll --version) && echo "Program version $PROGRAM_V, Tag name $CIRCLE_TAG" && if [ $CIRCLE_TAG == $CIRCLE_TAG ]; then echo "Version of program is ok!"; else echo "Please adjust version of program!" && exit 1; fi
+      - run: mkdir program-version && dotnet shared-workspace/publish/DaedalusCompiler.dll --version > program-version/version.txt
       - run:
           name: "Install ZIP program"
           command: apt-get update && apt-get -y install zip
       - run:
           name: "Pack Program with ZIP"
-          command: mkdir packed-program && zip packed-program/DaedalusCompiler.zip compiler-build
+          command: mkdir packed-program && zip packed-program/DaedalusCompiler.zip shared-workspace
       - persist_to_workspace:
           root: /workspace
           paths:
-          - packed-program
+            - packed-program
+            - program-version
   publish-github-release:
     docker:
       - image: circleci/golang:1.8
     steps:
       - attach_workspace:
-          at: ./compiler-build
-      - run: ls compiler-build
+          at: ./shared-workspace
       - run:
           name: "Publish Release on GitHub"
           command: |
             go get github.com/tcnksm/ghr
-            VERSION=v0.0.1
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./compiler-build/packed-program
+            VERSION=$(cat packed-program/version.txt)
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./shared-workspace/packed-program
 workflows:
   version: 2
   main:
