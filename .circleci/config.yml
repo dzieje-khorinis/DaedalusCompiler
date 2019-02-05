@@ -1,4 +1,4 @@
-version: 1
+version: 2
 jobs:
   build:
     working_directory: /temp
@@ -12,7 +12,7 @@ jobs:
       - run: dotnet restore
       - run: dotnet build
       - run: dotnet test /temp/test/DaedalusCompiler.Tests/DaedalusCompiler.Tests.csproj
-  publishGithubRelease:
+  publish-github-release:
     working_directory: /temp
     docker:
       -image: microsoft/dotnet:sdk
@@ -20,3 +20,8 @@ jobs:
       - checkout
       - run: ls
       - run: pwd
+workflows:
+  version: 2
+  main:
+    jobs:
+    - build
