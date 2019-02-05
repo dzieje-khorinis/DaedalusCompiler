@@ -39,7 +39,7 @@ jobs:
     steps:
       - attach_workspace:
           at: ./compiler-build
-      - run: export PROGRAM_V=$(dotnet compiler-build/publish/DaedalusCompiler.dll --version) && echo "Program version $PROGRAM_V, Tag name $CIRCLE_TAG" && if [ $CIRCLE_TAG == $CIRCLE_TAG ]; then "Version of program is ok!"; else echo "Please adjust version of program!" && exit 1; fi
+      - run: export PROGRAM_V=$(dotnet compiler-build/publish/DaedalusCompiler.dll --version) && echo "Program version $PROGRAM_V, Tag name $CIRCLE_TAG" && if [ $CIRCLE_TAG == $CIRCLE_TAG ]; then echo "Version of program is ok!"; else echo "Please adjust version of program!" && exit 1; fi
   pack-to-zip-build:
     docker:
       - image: alpine
