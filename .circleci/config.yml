@@ -58,6 +58,7 @@ jobs:
     steps:
       - attach_workspace:
           at: ./compiler-build
+      - run: ls compiler-build
       - run:
           name: "Publish Release on GitHub"
           command: |
