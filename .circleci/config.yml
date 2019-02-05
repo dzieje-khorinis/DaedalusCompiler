@@ -32,7 +32,6 @@ jobs:
     steps:
       - attach_workspace:
           at: ./compiler-build
-      - run: ls compiler-build
       - run: dotnet compiler-build/publish/DaedalusCompiler.dll --version
   publish-github-release:
     docker:
@@ -50,7 +49,12 @@ workflows:
   version: 2
   main:
     jobs:
-    - build-release
+    - build-release:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v\d+\.\d+\.\d+$/
     - verify-program-version:
         requires:
           - build-release
