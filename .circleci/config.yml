@@ -22,6 +22,7 @@ jobs:
       - run: pwd
       - run: echo $CIRCLE_PROJECT_USERNAME
       - run: echo $CIRCLE_PROJECT_REPONAME
+      - run: echo $CIRCLE_SHA1
 workflows:
   version: 2
   main:
