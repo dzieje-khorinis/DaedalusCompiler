@@ -46,7 +46,7 @@ jobs:
     working_directory: /workspace
     steps:
       - attach_workspace:
-        at: ./compiler-build
+          at: ./compiler-build
       - run: ls compiler-build
   publish-github-release:
     docker:
