@@ -43,6 +43,7 @@ jobs:
   pack-to-zip-build:
     docker:
       - image: alpine
+    working_directory: /workspace
     steps:
       - attach_workspace:
         at: ./compiler-build
