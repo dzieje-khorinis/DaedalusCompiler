@@ -19,7 +19,7 @@ jobs:
     - attach_workspace:
         at: ./artifacts
     - run: pwd
-    - run: ls
+    - run: ls artifacts
     - run: touch artifacts/program.exe && echo "hello" >> artifacts/program.exe && chmod 777 artifacts/program.exe
     - run:
         name: "Publish Release on GitHub"
@@ -31,4 +31,6 @@ workflows:
   version: 2
   main:
     jobs:
-    - publish-github-release
+    - publish-github-release:
+        requires:
+          - build
