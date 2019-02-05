@@ -43,12 +43,15 @@ jobs:
           name: "Verify Program Version"
           command: export PROGRAM_V=$(dotnet compiler-build/publish/DaedalusCompiler.dll --version) && echo "Program version $PROGRAM_V, Tag name $CIRCLE_TAG" && if [ $CIRCLE_TAG == $CIRCLE_TAG ]; then echo "Version of program is ok!"; else echo "Please adjust version of program!" && exit 1; fi
       - run:
-          name: "Zip Program"
-          command: zip
+          name: "Install ZIP program"
+          command: apt-get update && apt-get -y install zip
+      - run:
+          name: "Pack Program with ZIP"
+          command: mkdir packed-program && zip packed-program/DaedalusCompiler.zip compiler-build
       - persist_to_workspace:
           root: /workspace
           paths:
-          - compiler-build/publish
+          - packed-program
   publish-github-release:
     docker:
       - image: circleci/golang:1.8
