@@ -60,7 +60,7 @@ namespace DaedalusCompiler
 
             if (getVersion)
             {
-                Console.WriteLine(version);
+                Console.WriteLine($"v{version}");
                 return;
             }
 
