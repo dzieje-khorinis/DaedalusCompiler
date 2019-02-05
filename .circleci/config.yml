@@ -1,5 +1,4 @@
 version: 2.1
-
 executors:
   build-executor:
     working_directory: /temp
