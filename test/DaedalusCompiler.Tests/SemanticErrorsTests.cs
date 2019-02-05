@@ -54,10 +54,7 @@ namespace DaedalusCompiler.Tests
         private void AssertCompilationOutputMatch()
         {
             ParseData();
-
-            MemoryStream stream = new MemoryStream();
-            StreamWriter writer = new StreamWriter(stream);
-            Console.SetOut(writer);
+            var logger = new StringBufforErrorLogger();
 
             if (_assemblyBuilder.Errors.Any())
             {
@@ -69,17 +66,13 @@ namespace DaedalusCompiler.Tests
                     if (lastErrorBlockName != error.ExecBlockName)
                     {
                         lastErrorBlockName = error.ExecBlockName;
-                        Console.WriteLine($"{error.FileName}: In {error.ExecBlockType} ‘{error.ExecBlockName}’:");
+                        logger.Log($"{error.FileName}: In {error.ExecBlockType} ‘{error.ExecBlockName}’:");
                     }
 
-                    error.Print();
+                    error.Print(logger);
                 }
             }
-
-            writer.Flush();
-            stream.Position = 0;
-            StreamReader reader = new StreamReader(stream);
-            Assert.Equal(_expectedCompilationOutput, reader.ReadToEnd().Trim());
+            Assert.Equal(_expectedCompilationOutput, logger.GetBuffor().Trim());
         }
 
         [Fact]

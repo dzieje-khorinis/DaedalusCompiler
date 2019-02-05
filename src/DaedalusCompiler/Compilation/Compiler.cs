@@ -90,6 +90,7 @@ namespace DaedalusCompiler.Compilation
 
                     string lastErrorFilePath = "";
                     string lastErrorBlockName = "";
+                    var logger = new StdErrorLogger();
                     foreach (CompilationMessage error in _assemblyBuilder.Errors)
                     {
                         if (lastErrorFilePath != error.FilePath)
@@ -104,7 +105,7 @@ namespace DaedalusCompiler.Compilation
                             Console.WriteLine($"{error.FileName}: In {error.ExecBlockType} ‘{error.ExecBlockName}’:");
                         }
 
-                        error.Print();
+                        error.Print(logger);
                     }
                     return false;
                 }
