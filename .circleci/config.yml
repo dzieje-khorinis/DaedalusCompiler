@@ -47,7 +47,7 @@ jobs:
           command: apt-get update && apt-get -y install zip
       - run:
           name: "Pack Program with ZIP"
-          command: mkdir packed-program && zip -r packed-program/DaedalusCompiler.zip shared-workspace/publish
+          command: mkdir packed-program && zip -r -j packed-program/DaedalusCompiler.zip shared-workspace/publish
       - persist_to_workspace:
           root: /workspace
           paths:
