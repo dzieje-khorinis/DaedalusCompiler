@@ -33,6 +33,7 @@ jobs:
       - attach_workspace:
           at: ./compiler-build
       - run: export PROGRAM_V=$(dotnet compiler-build/publish/DaedalusCompiler.dll --version)
+      - run: dotnet compiler-build/publish/DaedalusCompiler.dll --version
       - run: echo "Program version $PROGRAM_V, Tag name $CIRCLE_TAG"
       - run: if [ $PROGRAM_V == $CIRCLE_TAG ]; then "Version of program is ok!"; else echo "Please adjust version of program!" && exit 1; fi
   publish-github-release:
