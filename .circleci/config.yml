@@ -1,9 +1,9 @@
 version: 2.1
 executors:
   build-executor:
-    working_directory: /temp
+    working_directory: /workspace
     docker:
-      - image: microsoft/dotnet:sdk
+      - image: microsoft/dotnet:2.1-sdk
     environment:
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
@@ -14,7 +14,7 @@ jobs:
       - checkout
       - run: dotnet restore
       - run: dotnet build
-      - run: dotnet test /temp/test/DaedalusCompiler.Tests/DaedalusCompiler.Tests.csproj
+      - run: dotnet test /workspace/test/DaedalusCompiler.Tests/DaedalusCompiler.Tests.csproj
   build-release:
     executor: build-executor
     steps:
@@ -22,17 +22,18 @@ jobs:
       - run: dotnet restore
       - run: dotnet publish -c Release
       - persist_to_workspace:
-          root: /temp
+          root: /workspace
           paths:
-            - docs
+            - DaedalusCompiler/src/DaedalusCompiler/bin/Release/netcoreapp2.1/publish
   publish-github-release:
     docker:
     - image: circleci/golang:1.8
     steps:
     - attach_workspace:
-        at: ./artifacts
+        at: ./compiler-build
     - run: pwd
-    - run: ls artifacts
+    - run: ls compiler-build
+    - run: mkdir artifacts
     - run: touch artifacts/program.exe && echo "hello" >> artifacts/program.exe && chmod 777 artifacts/program.exe
     - run:
         name: "Publish Release on GitHub"
