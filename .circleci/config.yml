@@ -12,7 +12,7 @@ jobs:
       - run: dotnet restore
       - run: dotnet build
       - run: dotnet test /temp/test/DaedalusCompiler.Tests/DaedalusCompiler.Tests.csproj
-  publish-github-release:
+  publishGithubRelease:
     working_directory: /temp
     docker:
       -image: microsoft/dotnet:sdk
