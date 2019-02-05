@@ -20,6 +20,7 @@ jobs:
         at: ./artifacts
     - run: pwd
     - run: ls
+    - run: touch artifacts/program.exe 
     - run:
         name: "Publish Release on GitHub"
         command: |
