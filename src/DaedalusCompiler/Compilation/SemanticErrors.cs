@@ -79,46 +79,21 @@ namespace DaedalusCompiler.Compilation
         public string ExecBlockName;
         public string ExecBlockType;
 
-        public abstract void Print(ErrorLogger logger);
-
-        public int CompareTo(CompilationMessage message)
-        {
-            int result = _fileNo.CompareTo(message._fileNo);
-            
-            if (result == 0)
-            {
-                result = _lineNo.CompareTo(message._lineNo);
-            }
-
-            if (result == 0)
-            {
-                result = _columnNo.CompareTo(message._columnNo);
-            }
-
-            return result;
-        }
-    }
-
-    public abstract class CompilationError : CompilationMessage
-    {
-    }
-
-    public abstract class CompilationWarning : CompilationMessage
-    {
-    }
-    
-    public class UndeclaredIdentifierError : CompilationError {
+        protected abstract void PrintMessage(ErrorLogger logger);
         
-        protected string _identifier;
+        public void Print(ErrorLogger logger)
+        {
+            PrintMessage(logger);
+            logger.Log($"{_line}");
+            PrintErrorPointer(logger);
+        }
 
-        public UndeclaredIdentifierError(ErrorContext errorContext) {
-            ParserRuleContext referenceContext = errorContext.Context;
-            
-            _identifier = referenceContext.GetText();
+        protected CompilationMessage(ErrorContext errorContext)
+        {
+            ParserRuleContext parserContext = errorContext.Context;
             
             ExecBlockName = null;
-
-            RuleContext context = referenceContext.Parent;
+            RuleContext context = parserContext.Parent;
             while (ExecBlockName == null)
             {
                 switch (context)
@@ -135,7 +110,7 @@ namespace DaedalusCompiler.Compilation
                         ExecBlockName = prototypeDefContext.nameNode().GetText();
                         ExecBlockType = "prototype";
                         break;
-                    }
+                }
 
                 context = context.Parent;
                 if (context is DaedalusParser.DaedalusFileContext)
@@ -147,23 +122,27 @@ namespace DaedalusCompiler.Compilation
             FilePath = errorContext.FilePath;
             FileName = Path.GetFileName(FilePath);
             _fileNo = errorContext.FileIndex;
-            _lineNo = referenceContext.Start.Line;
-            _columnNo = referenceContext.Start.Column;
+            _lineNo = parserContext.Start.Line;
+            _columnNo = parserContext.Start.Column;
             _line = errorContext.FileContentLines[_lineNo - 1];
         }
-
-        public override void Print(ErrorLogger logger)
+        public int CompareTo(CompilationMessage message)
         {
-            PrintMessage(logger);
-            logger.Log($"{_line}");
-            PrintErrorPointer(logger);
-        }
+            int result = _fileNo.CompareTo(message._fileNo);
+            
+            if (result == 0)
+            {
+                result = _lineNo.CompareTo(message._lineNo);
+            }
 
-        protected virtual void PrintMessage(ErrorLogger logger)
-        {
-            logger.Log($"{FileName}:{_lineNo}:{_columnNo}: error: ‘{_identifier.Split(".").First()}’ undeclared");
-        }
+            if (result == 0)
+            {
+                result = _columnNo.CompareTo(message._columnNo);
+            }
 
+            return result;
+        }
+        
         protected string GetErrorPointerLine(int whitespaceCount)
         {
             string errorPointerLine = "";
@@ -185,6 +164,36 @@ namespace DaedalusCompiler.Compilation
         protected virtual void PrintErrorPointer(ErrorLogger logger)
         {
             logger.Log($"{GetErrorPointerLine(_columnNo)}");
+        }
+    }
+
+    public abstract class CompilationError : CompilationMessage
+    {
+        protected CompilationError(ErrorContext errorContext) : base(errorContext)
+        {
+        }
+    }
+
+    public abstract class CompilationWarning : CompilationMessage
+    {
+        protected CompilationWarning(ErrorContext errorContext) : base(errorContext)
+        {
+        }
+    }
+    
+    public class UndeclaredIdentifierError : CompilationError {
+        
+        protected string _identifier;
+
+        public UndeclaredIdentifierError(ErrorContext errorContext) : base(errorContext) {
+            ParserRuleContext referenceContext = errorContext.Context;
+            _identifier = referenceContext.GetText();
+        }
+
+
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.Log($"{FileName}:{_lineNo}:{_columnNo}: error: ‘{_identifier.Split(".").First()}’ undeclared");
         }
     }
 
@@ -236,7 +245,41 @@ namespace DaedalusCompiler.Compilation
         {
             logger.Log($"{GetErrorPointerLine(_columnNo + _identifierPrefix.Length)}");
         }
-        
     }
     
+    public class InconsistentArraySizeError : CompilationError {
+        private readonly string _identifier;
+        private readonly int _declaredSize;
+        private readonly int _elementsCount;
+ 
+        public InconsistentArraySizeError(ErrorContext errorContext, string identifier, int declaredSize, int elementsCount) : base(errorContext)
+        {
+            _identifier = identifier;
+            _declaredSize = declaredSize;
+            _elementsCount = elementsCount;
+        }
+
+
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.Log($"{FileName}:{_lineNo}:{_columnNo}: error: array ‘{_identifier}’ has inconsistent size (declared size: {_declaredSize}, elements count: {_elementsCount})");
+        }
+    }
+    
+    public class InvalidArraySizeError : CompilationError {
+        private readonly string _identifier;
+        private readonly int _declaredSize;
+ 
+        public InvalidArraySizeError(ErrorContext errorContext, string identifier, int declaredSize) : base(errorContext)
+        {
+            _identifier = identifier;
+            _declaredSize = declaredSize;
+        }
+
+
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.Log($"{FileName}:{_lineNo}:{_columnNo}: error: array ‘{_identifier}’ has invalid size ‘{_declaredSize}’");
+        }
+    }
 }
