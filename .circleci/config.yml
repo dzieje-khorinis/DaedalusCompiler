@@ -64,7 +64,7 @@ jobs:
           command: |
             go get github.com/tcnksm/ghr
             VERSION=v0.0.1
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./compiler-build/publish
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./compiler-build/packed-program
 workflows:
   version: 2
   main:
