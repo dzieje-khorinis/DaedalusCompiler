@@ -41,7 +41,7 @@ jobs:
           at: ./shared-workspace
       - run:
           name: "Verify Program Version"
-          command: export PROGRAM_V=$(dotnet shared-workspace/publish/DaedalusCompiler.dll --version) && echo "Program version $PROGRAM_V, Tag name $CIRCLE_TAG" && if [ $CIRCLE_TAG == $CIRCLE_TAG ]; then echo "Version of program is ok!"; else echo "Please adjust version of program!" && exit 1; fi
+          command: export PROGRAM_V=$(dotnet shared-workspace/publish/DaedalusCompiler.dll --version) && echo "Program version $PROGRAM_V, Tag name $CIRCLE_TAG" && if [ $PROGRAM_V == $CIRCLE_TAG ]; then echo "Version of program is ok!"; else echo "Please adjust version of program!" && exit 1; fi
       - run: mkdir program-version && dotnet shared-workspace/publish/DaedalusCompiler.dll --version > program-version/version.txt
       - run:
           name: "Install ZIP program"
