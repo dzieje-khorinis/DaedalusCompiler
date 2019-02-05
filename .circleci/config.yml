@@ -22,9 +22,9 @@ jobs:
       - run: dotnet restore
       - run: dotnet publish -c Release
       - persist_to_workspace:
-          root: /workspace
+          root: /workspace/src/DaedalusCompiler/bin/Release/netcoreapp2.1
           paths:
-            - src/DaedalusCompiler/bin/Release/netcoreapp2.1/publish
+            - publish
   publish-github-release:
     docker:
     - image: circleci/golang:1.8
