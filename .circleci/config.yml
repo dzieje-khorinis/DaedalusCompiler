@@ -32,22 +32,23 @@ jobs:
           root: /workspace/src/DaedalusCompiler/bin/Release/netcoreapp2.1
           paths:
             - publish
-  verify-program-version:
+  verify-program-version-and-pack-to-zip:
     docker:
       - image: microsoft/dotnet:2-runtime
     working_directory: /workspace
     steps:
       - attach_workspace:
           at: ./compiler-build
-      - run: export PROGRAM_V=$(dotnet compiler-build/publish/DaedalusCompiler.dll --version) && echo "Program version $PROGRAM_V, Tag name $CIRCLE_TAG" && if [ $CIRCLE_TAG == $CIRCLE_TAG ]; then echo "Version of program is ok!"; else echo "Please adjust version of program!" && exit 1; fi
-  pack-to-zip-build:
-    docker:
-      - image: alpine
-    working_directory: /workspace
-    steps:
-      - attach_workspace:
-          at: ./compiler-build
-      - run: ls compiler-build
+      - run:
+          name: "Verify Program Version"
+          command: export PROGRAM_V=$(dotnet compiler-build/publish/DaedalusCompiler.dll --version) && echo "Program version $PROGRAM_V, Tag name $CIRCLE_TAG" && if [ $CIRCLE_TAG == $CIRCLE_TAG ]; then echo "Version of program is ok!"; else echo "Please adjust version of program!" && exit 1; fi
+      - run:
+          name: "Zip Program"
+          command: zip
+      - persist_to_workspace:
+          root: /workspace
+          paths:
+          - compiler-build/publish
   publish-github-release:
     docker:
       - image: circleci/golang:1.8
@@ -66,15 +67,11 @@ workflows:
     jobs:
     - build-release:
         <<: *releaseBuildFilter
-    - verify-program-version:
+    - verify-program-version-and-pack-to-zip:
         requires:
           - build-release
         <<: *releaseBuildFilter
-    - pack-to-zip-build:
-        requires:
-          - verify-program-version
-        <<: *releaseBuildFilter
     - publish-github-release:
         requires:
-          - pack-to-zip-build
+          - verify-program-version-and-pack-to-zip
         <<: *releaseBuildFilter
