@@ -89,7 +89,7 @@ namespace DaedalusCompiler.Compilation
                     _assemblyBuilder.Errors.Sort((x, y) => x.CompareTo(y));
 
                     string lastErrorFilePath = "";
-                    string lastErrorBlockName = "";
+                    string lastErrorBlockName = null;
                     var logger = new StdErrorLogger();
                     foreach (CompilationMessage error in _assemblyBuilder.Errors)
                     {
@@ -102,7 +102,15 @@ namespace DaedalusCompiler.Compilation
                         if (lastErrorBlockName != error.ExecBlockName)
                         {
                             lastErrorBlockName = error.ExecBlockName;
-                            Console.WriteLine($"{error.FileName}: In {error.ExecBlockType} ‘{error.ExecBlockName}’:");
+                            if (error.ExecBlockName == null)
+                            {
+                                Console.WriteLine($"{error.FileName}: In global scope:");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"{error.FileName}: In {error.ExecBlockType} ‘{error.ExecBlockName}’:");
+                            }
+                            
                         }
 
                         error.Print(logger);

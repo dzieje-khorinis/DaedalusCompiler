@@ -138,19 +138,56 @@ namespace DaedalusCompiler.Compilation
 
                 if (constContext is DaedalusParser.ConstArrayDefContext constArrayContext)
                 {
+                    _assemblyBuilder.ErrorContext.Context = constArrayContext;
+                    
                     var name = constArrayContext.nameNode().GetText();
                     var location = GetLocation(context);
-                    var size = EvaluatorHelper.EvaluteArraySize(constArrayContext.arraySize(), _assemblyBuilder);
-                    var content = constArrayContext.constArrayAssignment().expressionBlock()
+
+                    int declaredSize = 0;
+                    bool compareDeclaredSizeAndElementsCount = true;
+                    
+                    try
+                    {
+                        _assemblyBuilder.ErrorContext.Context = constArrayContext.arraySize();
+                        declaredSize = EvaluatorHelper.EvaluteArraySize(constArrayContext.arraySize(), _assemblyBuilder);
+                    }
+                    catch (System.ArgumentNullException)
+                    {
+                        compareDeclaredSizeAndElementsCount = false;
+                    }
+
+                    if (declaredSize == 0 && compareDeclaredSizeAndElementsCount)
+                    {
+                        compareDeclaredSizeAndElementsCount = false;
+                        _assemblyBuilder.Errors.Add(
+                            new InvalidArraySizeError(
+                                _assemblyBuilder.ErrorContext,
+                                name,
+                                declaredSize
+                            )
+                        );
+                    }
+                    
+                    
+                    var elements = constArrayContext.constArrayAssignment().expressionBlock()
                         .Select(expr => EvaluatorHelper.EvaluateConst(expr.expression(), _assemblyBuilder, type))
                         .ToArray();
 
-                    if (size != content.Length)
-                        throw new Exception(
-                            $"Invalid const array definition '{constArrayContext.GetText()}'. Invalid items count: expected = {size}, readed = {content.Length}");
-
+                    
+                    if (compareDeclaredSizeAndElementsCount && declaredSize != elements.Length)
+                    {   
+                        _assemblyBuilder.Errors.Add(
+                            new InconsistentArraySizeError(
+                                _assemblyBuilder.ErrorContext,
+                                name,
+                                declaredSize,
+                                elements.Length
+                            )
+                        );
+                    }
+                    
                     var symbol =
-                        SymbolBuilder.BuildArrOfConst(name, type, content, location); // TODO : Validate params
+                        SymbolBuilder.BuildArrOfConst(name, type, elements, location); // TODO : Validate params
                     _assemblyBuilder.AddSymbol(symbol);
                 }
             }
