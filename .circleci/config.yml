@@ -13,16 +13,18 @@ jobs:
       - run: dotnet build
       - run: dotnet test /temp/test/DaedalusCompiler.Tests/DaedalusCompiler.Tests.csproj
   publish-github-release:
-    working_directory: /temp
     docker:
-      - image: microsoft/dotnet:sdk
+    - image: cibuilds/github:0.10
     steps:
-      - checkout
-      - run: ls
-      - run: pwd
-      - run: echo $CIRCLE_PROJECT_USERNAME
-      - run: echo $CIRCLE_PROJECT_REPONAME
-      - run: echo $CIRCLE_SHA1
+    - attach_workspace:
+        at: ./artifacts
+    - run: pwd
+    - run: ls
+    - run:
+        name: "Publish Release on GitHub"
+        command: |
+          VERSION=0.0.1
+          ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/
 workflows:
   version: 2
   main:
