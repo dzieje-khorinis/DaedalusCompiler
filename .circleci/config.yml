@@ -21,6 +21,8 @@ jobs:
       - checkout
       - run: dotnet restore
       - run: dotnet publish -c Release
+      - run: ls
+      - run: pwd
       - persist_to_workspace:
           root: /workspace
           paths:
