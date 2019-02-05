@@ -33,7 +33,7 @@ namespace DaedalusCompiler.Compilation
             }
             else
             {
-                buffor = $"{buffor}\n{message}";
+                buffor = $"{buffor}{Environment.NewLine}{message}";
             }
         }
 
