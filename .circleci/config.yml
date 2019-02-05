@@ -1,4 +1,11 @@
 version: 2.1
+references:
+  restoreCache: &releaseBuildFilter
+    filters:
+      branches:
+        ignore: /.*/
+      tags:
+        only: /^v\d+\.\d+\.\d+$/
 executors:
   build-executor:
     working_directory: /workspace
@@ -50,24 +57,12 @@ workflows:
   main:
     jobs:
     - build-release:
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^v\d+\.\d+\.\d+$/
+        <<: *releaseBuildFilter
     - verify-program-version:
         requires:
           - build-release
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^v\d+\.\d+\.\d+$/
+        <<: *releaseBuildFilter
     - publish-github-release:
         requires:
           - verify-program-version
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^v\d+\.\d+\.\d+$/
+        <<: *releaseBuildFilter
