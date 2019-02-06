@@ -1,0 +1,3 @@
+FROM microsoft/dotnet:2.1-sdk
+RUN mkdir -p /usr/workspace
+WORKDIR /usr/workspace

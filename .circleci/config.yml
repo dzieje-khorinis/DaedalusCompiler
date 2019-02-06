@@ -65,8 +65,14 @@ jobs:
     machine: true
     steps:
       - checkout
-      - run: ls
       - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+      - run: docker build -t dotnet-dev -f Dotnet-Dockerfile .
+      - run: docker run -v "$(pwd)":/usr/workspace dotnet-dev dotnet publish -c Release
+      - run: docker build -t daedalus-compiler .
+      - run: docker tag daedalus-compiler dziejekhorinis/daedalus-compiler:$VERSION
+      - run: docker tag daedalus-compiler dziejekhorinis/daedalus-compiler:latest
+      - run: docker push dziejekhorinis/daedalus-compiler:$VERSION
+      - run: docker push dziejekhorinis/daedalus-compiler:latest
   publish-github-release:
     docker:
       - image: circleci/golang:1.8
