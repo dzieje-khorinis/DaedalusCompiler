@@ -74,7 +74,10 @@ workflows:
   version: 2
   main:
     jobs:
+    - test
     - build-release:
+        requires:
+        - test
         <<: *releaseBuildFilter
     - verify-program-version-and-pack-to-zip:
         requires:
@@ -84,3 +87,4 @@ workflows:
         requires:
           - verify-program-version-and-pack-to-zip
         <<: *releaseBuildFilter
+        
