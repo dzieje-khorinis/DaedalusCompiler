@@ -64,11 +64,8 @@ jobs:
   build-image-and-dockerhub-publish:
     machine: true
     steps:
-      - attach_workspace:
-          at: ./shared-workspace
-      - run: pwd
+      - checkout
       - run: ls
-      - run: ls shared-workspace
       - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
   publish-github-release:
     docker:
