@@ -12,7 +12,7 @@ namespace DaedalusCompiler
 {
     class Program
     {
-        private const string version = "0.1";
+        private const string version = "0.1.0";
         private const string compiler_name = "daedalus-compiler";
 
         static void ShowHelp()
@@ -26,6 +26,7 @@ namespace DaedalusCompiler
                 "--load-dat      loads Gothic DAT file and make analyze of that, in that case file_path should be DAT file\n" +
                 "--get-assembly  compile code to readable assembly\n" +
                 "--gen-ou        generate output units files (ou.cls and ou.bin)\n" +
+                "--version       displays version of compiler\n" +
                 "--verbose"
             );
         }
@@ -37,6 +38,7 @@ namespace DaedalusCompiler
             var compileToAssembly = false;
             var generateOutputUnits = false;
             var verbose = false;
+            var getVersion = false;
 
             var p = new NDesk.Options.OptionSet () {
                 { "h|?|help",   v => loadHelp = true },
@@ -44,6 +46,7 @@ namespace DaedalusCompiler
                 { "get-assembly", v => compileToAssembly = true },
                 { "gen-ou", v => generateOutputUnits = true },
                 { "verbose", v => verbose = true },
+                { "version|v", v => getVersion = true  },
             };
 
             List<string> extra;
@@ -52,6 +55,12 @@ namespace DaedalusCompiler
             }
             catch (NDesk.Options.OptionException e) {
                 Console.WriteLine (e.Message);
+                return;
+            }
+
+            if (getVersion)
+            {
+                Console.WriteLine($"v{version}");
                 return;
             }
 
