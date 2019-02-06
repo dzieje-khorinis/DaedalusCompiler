@@ -63,8 +63,7 @@ jobs:
           command: |
             go get github.com/tcnksm/ghr
             VERSION=$CIRCLE_TAG
-            echo "# test" > shared-workspace/packed-program/README.md
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./shared-workspace/packed-program
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -b "Some title here <br/> ha" -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./shared-workspace/packed-program
 workflows:
   version: 2
   main:
