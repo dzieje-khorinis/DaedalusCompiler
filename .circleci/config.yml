@@ -47,7 +47,7 @@ jobs:
           command: apt-get update && apt-get -y install zip
       - run:
           name: "Pack Program with ZIP"
-          command: mkdir packed-program && cd shared-workspace/publish && zip -r ../../packed-program/DaedalusCompiler.zip ./*
+          command: mkdir packed-program && cd shared-workspace/publish && zip -r ../../packed-program/DaedalusCompiler"$CIRCLE_TAG".zip ./*
       - persist_to_workspace:
           root: /workspace
           paths:
