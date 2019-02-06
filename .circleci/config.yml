@@ -74,8 +74,11 @@ jobs:
 workflows:
   version: 2
   main:
-    jobs:
     - test
+  make-release:
+    jobs:
+    - test:
+        <<: *releaseBuildFilter
     - build-release:
         requires:
         - test
