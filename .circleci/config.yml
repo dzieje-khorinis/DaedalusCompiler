@@ -74,7 +74,8 @@ jobs:
 workflows:
   version: 2
   main:
-    - test
+    jobs:
+      - test
   make-release:
     jobs:
     - test:
