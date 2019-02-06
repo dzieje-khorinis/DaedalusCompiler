@@ -33,6 +33,10 @@ jobs:
           paths:
             - publish
       - persist_to_workspace:
+          root: /workspace
+          paths:
+          - src/DaedalusCompiler/bin/Release/netcoreapp2.1/publish
+      - persist_to_workspace:
           root: /workspace/docs
           paths:
           - changelog
