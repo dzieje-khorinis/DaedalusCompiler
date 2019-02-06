@@ -69,9 +69,9 @@ jobs:
       - run: docker build -t dotnet-dev -f Dotnet-Dockerfile .
       - run: docker run -v "$(pwd)":/usr/workspace dotnet-dev dotnet publish -c Release
       - run: docker build -t daedalus-compiler .
-      - run: docker tag daedalus-compiler dziejekhorinis/daedalus-compiler:$CIRCLE_TAG
+      - run: docker tag daedalus-compiler dziejekhorinis/daedalus-compiler:${CIRCLE_TAG#"v"}
       - run: docker tag daedalus-compiler dziejekhorinis/daedalus-compiler:latest
-      - run: docker push dziejekhorinis/daedalus-compiler:$CIRCLE_TAG
+      - run: docker push dziejekhorinis/daedalus-compiler:${CIRCLE_TAG#"v"}
       - run: docker push dziejekhorinis/daedalus-compiler:latest
   publish-github-release:
     docker:
