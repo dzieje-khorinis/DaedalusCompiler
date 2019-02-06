@@ -32,6 +32,10 @@ jobs:
           root: /workspace/src/DaedalusCompiler/bin/Release/netcoreapp2.1
           paths:
             - publish
+      - persist_to_workspace:
+          root: /workspace/docs
+          paths:
+          - changelog
   verify-program-version-and-pack-to-zip:
     docker:
       - image: microsoft/dotnet:2-runtime
@@ -58,6 +62,8 @@ jobs:
     steps:
       - attach_workspace:
           at: ./shared-workspace
+      - run: ls shared-workspace
+      - run: ls shared-workspace/changelog
       - run:
           name: "Publish Release on GitHub"
           command: |
