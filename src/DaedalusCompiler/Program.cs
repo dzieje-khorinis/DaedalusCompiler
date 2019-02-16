@@ -23,7 +23,7 @@ namespace DaedalusCompiler
             );
             Console.WriteLine(
                 "Args description:\n" +
-                "--load-dat      loads Gothic DAT file and make analyze of that, in that case file_path should be DAT file\n" +
+                "--load-dat      loads Gothic DAT file and analyzes it, in that case file_path should be DAT file\n" +
                 "--get-assembly  compile code to readable assembly\n" +
                 "--gen-ou        generate output units files (ou.cls and ou.bin)\n" +
                 "--version       displays version of compiler\n" +
