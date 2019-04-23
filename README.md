@@ -9,7 +9,7 @@ The compiler itself is written in .NET Core C#.
 ## Standard Usage
 * Unpack ZIP in place where you store programs ( ex. `C:/users/John/Documents` )
 * Use compiler with dotnet runtime in bash/CMD ( ex. `dotnet C:/users/John/Documents/DaedalusCompiler/DaedalusCompiler.dll Gothic.src` )
-* ( optional ) Make alias for compiler for easy usage, recommended name of alias will be `daedalus-compiler`
+* ( optional ) Make alias for compiler for easy usage, recommended name of alias will be `daedalus-compiler` (ex. in unix `alias daedalus-compiler="dotnet /Users/John/tools/DaedalusCompiler/DaedalusCompiler.dll"`)
 ## Usage with docker ( .NET Core runtime not needed )
 Our compiler is available on docker hub, if you have installed docker you should be able to run compiler with:
 ```sh
