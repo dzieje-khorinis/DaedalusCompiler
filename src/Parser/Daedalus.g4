@@ -1,5 +1,4 @@
 grammar Daedalus;
-
 // lexer
 Const : 'const' | 'CONST';
 Var: 'var' | 'VAR';
@@ -29,7 +28,8 @@ LineComment :   '//' ~[\r\n]* -> skip ;
 
 // fragments
 fragment IdStart : GermanCharacter | [a-zA-Z_];
-fragment IdContinue : IdStart | Digit;
+fragment IdContinue : IdStart | IdSpecial | Digit;
+fragment IdSpecial : [@^];
 fragment GermanCharacter : [\u00DF\u00E4\u00F6\u00FC];
 fragment Digit : [0-9];
 fragment PointFloat : Digit* '.' Digit+ | Digit+ '.';
@@ -49,7 +49,7 @@ classDef: Class nameNode '{' ( varDecl ';' )*? '}';
 prototypeDef: Prototype nameNode '(' parentReference ')' statementBlock;
 instanceDef: Instance nameNode '(' parentReference ')' statementBlock;
 instanceDecl: Instance nameNode ( ',' nameNode )*? '(' parentReference ')';
-varDecl: Var typeReference (varValueDecl | varArrayDecl) (',' (varValueDecl | varArrayDecl) )* ;
+varDecl: Var typeReference (varValueDecl | varArrayDecl) (',' (varDecl | varValueDecl | varArrayDecl) )* ;
 
 constArrayDef: nameNode '[' arraySize ']' constArrayAssignment;
 constArrayAssignment: '=' '{' ( expressionBlock (',' expressionBlock)*? ) '}';
@@ -63,7 +63,7 @@ varValueDecl: nameNode;
 parameterList: '(' (parameterDecl (',' parameterDecl)*? )? ')';
 parameterDecl: Var typeReference nameNode ('[' arraySize ']')?;
 statementBlock: '{' ( ( (statement ';')  | ( ifBlockStatement ( ';' )? ) ) )*? '}';
-statement: assignment | returnStatement | constDef | varDecl | funcCall;
+statement: assignment | returnStatement | constDef | varDecl | funcCall | reference | Identifier;
 funcCall: nameNode '(' ( funcArgExpression ( ',' funcArgExpression )*? )? ')';
 assignment: reference assignmentOperator expressionBlock;
 ifCondition: expressionBlock;
@@ -102,18 +102,20 @@ value
     | NoFunc #noFuncLiteralValue
     | funcCall #funcCallValue
     | reference #referenceValue
+    | nameNode #anyIdentifierValue
     ;
     
-referenceAtom: Identifier ( '[' arrayIndex ']')?;
+referenceAtom: nameNode ( '[' arrayIndex ']')?;
 reference: referenceAtom ( '.' referenceAtom )?;
 
 typeReference:  ( Identifier | Void | Int | Float | String | Func | Instance);
+anyIdentifier:  ( Void | Int | Float | String | Func | Instance | Class | Prototype | Null | Identifier);
 
-nameNode: Identifier;
+nameNode: anyIdentifier;
 
 parentReference: Identifier;
 
-assignmentOperator:  '=' | '+=' | '-=' | '*=' | '/=';
+assignmentOperator:  '=' | '+=' | '-=' | '*=' | '/=' | '==';
 addOperator: '+' | '-';
 bitMoveOperator: '<<' | '>>';
 compOperator: '<' | '>' | '<=' | '>=';
