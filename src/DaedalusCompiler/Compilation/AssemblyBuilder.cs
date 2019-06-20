@@ -154,7 +154,7 @@ namespace DaedalusCompiler.Compilation
             if (IsDottedReference(referenceContext))
             {
                 DaedalusParser.ReferenceAtomContext attributePart = referenceAtoms[1];
-                string attributeName = attributePart.Identifier().GetText();
+                string attributeName = attributePart.nameNode().GetText();
                 try
                 {
                     reference.Attribute = ResolveAttribute(symbol, attributeName);
@@ -181,7 +181,7 @@ namespace DaedalusCompiler.Compilation
         {
             var referenceAtoms = referenceContext.referenceAtom();
             var referenceAtom = referenceAtoms[0];
-            string symbolNameLower = referenceAtom.Identifier().GetText().ToLower();
+            string symbolNameLower = referenceAtom.nameNode().GetText().ToLower();
             bool isSymbolNameSelfKeyword = symbolNameLower == "slf" || symbolNameLower == "self";
 
 
@@ -200,7 +200,7 @@ namespace DaedalusCompiler.Compilation
                 }
             }
 
-            return ResolveSymbol(referenceAtom.Identifier().GetText());
+            return ResolveSymbol(referenceAtom.nameNode().GetText());
         }
         
         
