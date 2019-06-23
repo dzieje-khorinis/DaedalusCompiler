@@ -299,6 +299,18 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitAssignment([NotNull] DaedalusParser.AssignmentContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.equalityCheck"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterEqualityCheck([NotNull] DaedalusParser.EqualityCheckContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.equalityCheck"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitEqualityCheck([NotNull] DaedalusParser.EqualityCheckContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.ifCondition"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>

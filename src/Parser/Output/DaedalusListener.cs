@@ -251,6 +251,16 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitAssignment([NotNull] DaedalusParser.AssignmentContext context);
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.equalityCheck"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterEqualityCheck([NotNull] DaedalusParser.EqualityCheckContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.equalityCheck"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitEqualityCheck([NotNull] DaedalusParser.EqualityCheckContext context);
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.ifCondition"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
