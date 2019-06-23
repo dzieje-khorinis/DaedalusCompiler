@@ -63,9 +63,10 @@ varValueDecl: nameNode;
 parameterList: '(' (parameterDecl (',' parameterDecl)*? )? ')';
 parameterDecl: Var typeReference nameNode ('[' arraySize ']')?;
 statementBlock: '{' ( ( (statement ';')  | ( ifBlockStatement ( ';' )? ) ) )*? '}';
-statement: assignment | returnStatement | constDef | varDecl | funcCall | reference | Identifier;
+statement: assignment | equalityCheck | returnStatement | constDef | varDecl | funcCall | reference | Identifier;
 funcCall: nameNode '(' ( funcArgExpression ( ',' funcArgExpression )*? )? ')';
 assignment: reference assignmentOperator expressionBlock;
+equalityCheck: reference eqOperator expressionBlock;
 ifCondition: expressionBlock;
 elseBlock: Else statementBlock;
 elseIfBlock: Else If ifCondition statementBlock;
@@ -115,7 +116,7 @@ nameNode: anyIdentifier;
 
 parentReference: Identifier;
 
-assignmentOperator:  '=' | '+=' | '-=' | '*=' | '/=' | '==';
+assignmentOperator:  '=' | '+=' | '-=' | '*=' | '/=';
 addOperator: '+' | '-';
 bitMoveOperator: '<<' | '>>';
 compOperator: '<' | '>' | '<=' | '>=';
