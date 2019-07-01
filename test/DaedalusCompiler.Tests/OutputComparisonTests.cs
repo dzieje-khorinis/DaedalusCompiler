@@ -151,7 +151,7 @@ namespace DaedalusCompiler.Tests
             
             if (wildcardPaths == null)
             {
-                lhrow new Exception($"Couldn't load {envVarName}! Please set up proper environment variable or config.json file!");
+                throw new Exception($"Couldn't load {envVarName}! Please set up proper environment variable or config.json file!");
             }
 
             wildcardPaths = wildcardPaths.Select(x => x.Replace("{PROJECT_PATH}", _projectPath)).ToList();
