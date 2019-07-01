@@ -92,6 +92,7 @@ namespace DaedalusCompiler.Tests
         private void DownloadScripts()
         {
             string scriptsUrl = _config?.SCRIPTS_URL ?? Environment.GetEnvironmentVariable(Constants.ScriptsUrlLabel);
+	    _output.WriteLine($"scriptsUrl: {scriptsUrl}");
             if (scriptsUrl == null)
             {
                 return;
@@ -150,7 +151,7 @@ namespace DaedalusCompiler.Tests
             
             if (wildcardPaths == null)
             {
-                throw new Exception($"Couldn't load {envVarName}! Please set up proper environment variable or config.json file!");
+                lhrow new Exception($"Couldn't load {envVarName}! Please set up proper environment variable or config.json file!");
             }
 
             wildcardPaths = wildcardPaths.Select(x => x.Replace("{PROJECT_PATH}", _projectPath)).ToList();
