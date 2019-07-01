@@ -1,4 +1,4 @@
-To generate parser please type:
+To generate Lexer and Parser type:
 ```sh
-antlr4 -Dlanguage=CSharp -o Output -package DaedalusParser DaedalusParser.g4
+antlr4 -Dlanguage=CSharp -o Output Daedalus.g4
 ```
