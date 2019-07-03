@@ -36,6 +36,7 @@ namespace DaedalusCompiler.Tests
         
         private DatSymbol Ref(string symbolName)
         {
+            _assemblyBuilder.ActiveExecBlock = null;
             return _assemblyBuilder.ResolveSymbol(symbolName);
         }
 
@@ -5707,6 +5708,123 @@ namespace DaedalusCompiler.Tests
             _expectedSymbols = new List<DatSymbol>
             {
                 Ref("testFunc"),
+            };
+            AssertSymbolsMatch();
+        }
+
+        [Fact]
+        public void TestLocalInstanceAttributeAssignment()
+        {
+            _code = @"
+                class Person {
+                    var int age; 
+                    var int weight;
+                    var int height;
+                };
+
+                func int secondFunc(var int x) {
+                    return x + 2;
+                };
+
+                func int testFunc() {
+                    var int a;
+                    var Person person;
+                    person.age = 5;
+                    a = person.age;
+                    person.age = secondfunc(person.age);
+                    return +person.age;
+                };
+           ";
+
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // person.age = 5;
+                new PushInt(5),
+                new SetInstance(Ref("testFunc.person")),
+                new PushVar(Ref("Person.age")),
+                new Assign(),
+
+                // a = person.age;
+                new SetInstance(Ref("testFunc.person")),
+                new PushVar(Ref("Person.age")),
+                new PushVar(Ref("testFunc.a")),
+                new Assign(),
+
+                // person.age = secondfunc(person.age);
+                new SetInstance(Ref("testFunc.person")),
+                new PushVar(Ref("Person.age")),
+                new Call(Ref("secondFunc")),
+                new SetInstance(Ref("testFunc.person")),
+                new PushVar(Ref("Person.age")),
+                new Assign(),
+
+                // return +person.age;
+                new SetInstance(Ref("testFunc.person")),
+                new PushVar(Ref("Person.age")),
+                new Plus(),
+                new Ret(),
+
+                new Ret()
+            };
+            AssertInstructionsMatch();
+
+            _expectedSymbols = new List<DatSymbol>
+            {
+                Ref("Person"),
+                Ref("Person.age"),
+                Ref("Person.weight"),
+                Ref("Person.height"),
+
+                Ref("secondFunc"),
+                Ref("secondFunc.x"),
+
+                Ref("testFunc"),
+                Ref("testFunc.a"),
+                Ref("testFunc.person")
+            };
+            AssertSymbolsMatch();
+        }
+
+        [Fact]
+        public void TestLocalVariableTypeSameAsOtherLocalVariableNameIgnorecase()
+        {
+            _code = @"
+                class Person {
+                    var int age; 
+                };
+
+
+                func void testFunc(var int person) {
+                    var Person p;
+                    p.age = 5;
+                };
+           ";
+
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                new PushVar(Ref("testFunc.person")),
+                new Assign(),
+
+                // p.age = 5;
+                new PushInt(5),
+                new SetInstance(Ref("testFunc.p")),
+                new PushVar(Ref("Person.age")),
+                new Assign(),
+
+                new Ret()
+            };
+            AssertInstructionsMatch();
+
+            _expectedSymbols = new List<DatSymbol>
+            {
+                Ref("Person"),
+                Ref("Person.age"),
+
+                Ref("testFunc"),
+                Ref("testFunc.person"),
+                Ref("testFunc.p"),
             };
             AssertSymbolsMatch();
         }

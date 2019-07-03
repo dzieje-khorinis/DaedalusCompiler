@@ -15,6 +15,8 @@ namespace DaedalusCompiler.Compilation
         public readonly DatSymbolType AssignmentType;
         public readonly FuncCallContext FuncCallCtx;
 
+        public readonly ErrorContext ErrorContext;
+
         public AssemblyBuilderSnapshot(AssemblyBuilder assemblyBuilder)
         {
             ActiveExecBlock = assemblyBuilder.ActiveExecBlock;
@@ -24,6 +26,8 @@ namespace DaedalusCompiler.Compilation
             IsInsideReturnStatement = assemblyBuilder.IsInsideReturnStatement;
             AssignmentType = assemblyBuilder.AssignmentType;
             FuncCallCtx = assemblyBuilder.FuncCallCtx == null ? null : new FuncCallContext(assemblyBuilder.FuncCallCtx);
+
+            ErrorContext = new ErrorContext(assemblyBuilder.ErrorContext);;
         }
     }
 
@@ -31,7 +35,7 @@ namespace DaedalusCompiler.Compilation
     {
         public readonly List<BaseExecBlockContext> ExecBlocks;
         public BaseExecBlockContext ActiveExecBlock;
-        public readonly ErrorContext ErrorContext;
+        public ErrorContext ErrorContext;
         
         public readonly List<DatSymbol> Symbols;
         private readonly Dictionary<string, DatSymbol> _symbolsDict;
@@ -96,6 +100,8 @@ namespace DaedalusCompiler.Compilation
             IsInsideReturnStatement = snapshot.IsInsideReturnStatement;
             AssignmentType = snapshot.AssignmentType;
             FuncCallCtx = snapshot.FuncCallCtx;
+
+            ErrorContext = snapshot.ErrorContext;
         }
 
         public List<DatSymbol> GetSymbols()
@@ -587,11 +593,11 @@ namespace DaedalusCompiler.Compilation
             
         }
         
-        public DatSymbol ResolveSymbol(string symbolName)
+        public DatSymbol ResolveSymbol(string symbolName, bool isClass=false)
         {
             DatSymbol symbol;
 
-            if (ActiveExecBlock != null && !symbolName.Contains("."))
+            if (ActiveExecBlock != null && !symbolName.Contains(".") && !isClass)
             {
                 DatSymbol currentExecBlockSymbol = ActiveExecBlock.GetSymbol();
 

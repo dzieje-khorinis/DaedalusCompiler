@@ -234,7 +234,7 @@ namespace DaedalusCompiler.Compilation
                         DatSymbolType? parameterType = DatSymbolTypeFromString(parameterTypeName);
                         if (parameterType is DatSymbolType.Class)
                         {
-                            var parentSymbol = _assemblyBuilder.ResolveSymbol(parameterTypeName);
+                            var parentSymbol = _assemblyBuilder.ResolveSymbol(parameterTypeName, isClass:true);
                             parentIndex = parentSymbol.Index;
                         }
 
@@ -788,7 +788,7 @@ namespace DaedalusCompiler.Compilation
             }
             else
             {
-                var symbol = _assemblyBuilder.ResolveSymbol(typeName);
+                var symbol = _assemblyBuilder.ResolveSymbol(typeName, isClass:true);
                 return symbol.Type;
             }
         }
