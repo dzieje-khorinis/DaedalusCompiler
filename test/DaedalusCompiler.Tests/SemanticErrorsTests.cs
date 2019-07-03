@@ -290,8 +290,59 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIntValueOutOfMinAndMaxRange()
         {
+            _code = @"
+                const int MAX_INT = 2147483647;
+                const int MIN_INT = -2147483648;
+                const int TOO_BIG_INT_POSITIVE = 2147483648;
+                const int TOO_BIG_INT_NEGATIVE = -2147483649;
+                
+                func void testFunc() {
+                    var int max_int;
+                    max_int = 2147483647;
+                    var int min_int;
+                    min_int = -2147483647;  // not -2147483648, because minus and number value are in separate assembly instructions
+                    var int too_big_int_positive;
+                    too_big_int_positive = 2147483648;
+                    var int too_big_int_negative;
+                    too_big_int_negative = -2147483648;
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:3:33: error: integer literal is too large to be represented in an integer type
+                const int TOO_BIG_INT_POSITIVE = 2147483648;
+                                                 ^
+                test.d:4:33: error: integer literal is too large to be represented in an integer type
+                const int TOO_BIG_INT_NEGATIVE = -2147483649;
+                                                 ^
+                test.d: In function ‘testFunc’:
+                test.d:12:27: error: integer literal is too large to be represented in an integer type
+                    too_big_int_positive = 2147483648;
+                                           ^
+                test.d:14:27: error: integer literal is too large to be represented in an integer type
+                    too_big_int_negative = -2147483648;
+                                           ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
+        public void TestSingleExpressionHack()
+        {
             // TODO
         }
         
+        [Fact]
+        public void TestSingleExpressionHackWarningSuppress()
+        {
+            // TODO
+        }
+        
+        [Fact]
+        public void TestSingleExpressionHackStrictMode()
+        {
+            // TODO
+        }
     }
 }

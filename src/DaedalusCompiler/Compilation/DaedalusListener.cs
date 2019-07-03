@@ -127,7 +127,9 @@ namespace DaedalusCompiler.Compilation
                     }
 
                     var location = GetLocation(context);
-                    var assignmentExpression = constValueContext.constValueAssignment().expressionBlock().expression();
+                    DaedalusParser.ExpressionContext assignmentExpression = constValueContext.constValueAssignment().expressionBlock().expression();
+                    
+                    _assemblyBuilder.ErrorContext.Context = assignmentExpression;
                     var value = EvaluatorHelper.EvaluateConst(assignmentExpression, _assemblyBuilder, type);
 
                     var symbol = SymbolBuilder.BuildConst(name, type, value, location); // TODO : Validate params
@@ -564,6 +566,16 @@ namespace DaedalusCompiler.Compilation
         {
             if (!_assemblyBuilder.IsInsideConstDef)
             {
+                RuleContext grandparentContext = context.Parent.Parent;
+                if (grandparentContext is DaedalusParser.OneArgExpressionContext oneArgExpressionContext)
+                {
+                    _assemblyBuilder.ErrorContext.Context = oneArgExpressionContext;
+                }
+                else
+                {
+                    _assemblyBuilder.ErrorContext.Context = context;
+                }
+                
                 bool isInsideFloatAssignment = _assemblyBuilder.IsInsideAssignment
                                                && _assemblyBuilder.AssignmentType == DatSymbolType.Float;
                 bool isInsideFloatArgument = _assemblyBuilder.IsInsideArgList
@@ -576,7 +588,8 @@ namespace DaedalusCompiler.Compilation
                 }
                 else
                 {
-                    _assemblyBuilder.AddInstruction(new PushInt(int.Parse(context.GetText())));   
+                    int parsedInt = EvaluatorHelper.IntParse(context.GetText(), _assemblyBuilder);
+                    _assemblyBuilder.AddInstruction(new PushInt(parsedInt));   
                 }
             }
         }

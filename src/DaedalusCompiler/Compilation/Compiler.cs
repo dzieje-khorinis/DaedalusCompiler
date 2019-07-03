@@ -17,10 +17,10 @@ namespace DaedalusCompiler.Compilation
         private readonly string _outputDirPath;
         
 
-        public Compiler(string outputDirPath="output", bool verbose=true)
+        public Compiler(string outputDirPath="output", bool verbose=true, bool strictSyntax=false)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            _assemblyBuilder = new AssemblyBuilder(verbose);
+            _assemblyBuilder = new AssemblyBuilder(verbose, strictSyntax);
             _ouBuilder = new OutputUnitsBuilder(verbose);
             _outputDirPath = outputDirPath;
         }

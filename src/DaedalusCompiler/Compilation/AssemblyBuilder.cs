@@ -27,7 +27,7 @@ namespace DaedalusCompiler.Compilation
             AssignmentType = assemblyBuilder.AssignmentType;
             FuncCallCtx = assemblyBuilder.FuncCallCtx == null ? null : new FuncCallContext(assemblyBuilder.FuncCallCtx);
 
-            ErrorContext = new ErrorContext(assemblyBuilder.ErrorContext);;
+            ErrorContext = new ErrorContext(assemblyBuilder.ErrorContext);
         }
     }
 
@@ -56,10 +56,11 @@ namespace DaedalusCompiler.Compilation
         public DatSymbolType AssignmentType;
         private int _nextSymbolIndex;
         private bool _verbose;
+        private bool _strictSyntax;
 
         public readonly List<CompilationMessage> Errors;
         
-        public AssemblyBuilder(bool verbose = true)
+        public AssemblyBuilder(bool verbose = true, bool strictSyntax=false)
         {
             ExecBlocks = new List<BaseExecBlockContext>();
             Symbols = new List<DatSymbol>();
@@ -80,7 +81,8 @@ namespace DaedalusCompiler.Compilation
             AssignmentType = DatSymbolType.Undefined;
             _nextSymbolIndex = 0;
             _verbose = verbose;
-
+            _strictSyntax = strictSyntax;
+            
             Errors = new List<CompilationMessage>();
             ErrorContext = new ErrorContext(this);
         }

@@ -26,6 +26,7 @@ namespace DaedalusCompiler
                 "--load-dat      loads Gothic DAT file and analyzes it, in that case file_path should be DAT file\n" +
                 "--get-assembly  compile code to readable assembly\n" +
                 "--gen-ou        generate output units files (ou.cls and ou.bin)\n" +
+                "--strict        use more strict syntax version\n" +
                 "--version       displays version of compiler\n" +
                 "--verbose"
             );
@@ -38,6 +39,7 @@ namespace DaedalusCompiler
             var compileToAssembly = false;
             var generateOutputUnits = false;
             var verbose = false;
+            var strict = false;
             var getVersion = false;
 
             var p = new NDesk.Options.OptionSet () {
@@ -46,6 +48,7 @@ namespace DaedalusCompiler
                 { "get-assembly", v => compileToAssembly = true },
                 { "gen-ou", v => generateOutputUnits = true },
                 { "verbose", v => verbose = true },
+                { "strict", v => strict = true },
                 { "version|v", v => getVersion = true  },
             };
 
@@ -78,7 +81,7 @@ namespace DaedalusCompiler
                 }
                 else
                 {
-                    CompileDaedalus(filePath, compileToAssembly, verbose, generateOutputUnits);
+                    CompileDaedalus(filePath, compileToAssembly, verbose, generateOutputUnits, strict);
                 }
             }
         }
@@ -94,9 +97,9 @@ namespace DaedalusCompiler
             dat.Save(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), fileName));
         }
 
-        static void CompileDaedalus(string path, bool compileToAssembly, bool verbose, bool generateOutputUnits)
+        static void CompileDaedalus(string path, bool compileToAssembly, bool verbose, bool generateOutputUnits, bool strictSyntax)
         {
-            var compiler = new Compiler("output", verbose);
+            var compiler = new Compiler("output", verbose, strictSyntax);
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
             bool compiledSuccessfully = compiler.CompileFromSrc(path, compileToAssembly, verbose, generateOutputUnits);

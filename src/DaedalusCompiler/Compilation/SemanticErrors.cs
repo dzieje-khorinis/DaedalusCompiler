@@ -291,4 +291,18 @@ namespace DaedalusCompiler.Compilation
             logger.Log($"{FileName}:{_lineNo}:{_columnNo}: error: array ‘{_identifier}’ has invalid size ‘{_declaredSize}’");
         }
     }
+    
+    
+    public class IntegerLiteralTooLargeError : CompilationError {
+ 
+        public IntegerLiteralTooLargeError(ErrorContext errorContext) : base(errorContext)
+        {
+        }
+
+
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.Log($"{FileName}:{_lineNo}:{_columnNo}: error: integer literal is too large to be represented in an integer type");
+        }
+    }
 }
