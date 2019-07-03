@@ -12,7 +12,7 @@ namespace DaedalusCompiler
 {
     class Program
     {
-        private const string version = "0.5.1";
+        private const string version = "0.6.0";
         private const string compiler_name = "daedalus-compiler";
 
         static void ShowHelp()
