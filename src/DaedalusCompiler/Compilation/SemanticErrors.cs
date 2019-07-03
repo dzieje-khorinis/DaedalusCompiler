@@ -66,6 +66,15 @@ namespace DaedalusCompiler.Compilation
         {
             AssemblyBuilder = assemblyBuilder;
         }
+
+        public ErrorContext(ErrorContext errorContext)
+        {
+            Context = errorContext.Context;
+            FilePath = errorContext.FilePath;
+            FileContentLines = errorContext.FileContentLines;
+            FileIndex = errorContext.FileIndex;
+            AssemblyBuilder = errorContext.AssemblyBuilder;
+        }
     }
     
     public abstract class CompilationMessage {

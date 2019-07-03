@@ -286,6 +286,12 @@ namespace DaedalusCompiler.Tests
 
             AssertCompilationOutputMatch();
         }
+
+        [Fact]
+        public void TestIntValueOutOfMinAndMaxRange()
+        {
+            // TODO
+        }
         
     }
 }

@@ -29,7 +29,8 @@ LineComment :   '//' ~[\r\n]* -> skip ;
 
 // fragments
 fragment IdStart : GermanCharacter | [a-zA-Z_];
-fragment IdContinue : IdStart | Digit;
+fragment IdContinue : IdStart | Digit | SpecialCharacter;
+fragment SpecialCharacter : [@^];
 fragment GermanCharacter : [\u00DF\u00E4\u00F6\u00FC];
 fragment Digit : [0-9];
 fragment PointFloat : Digit* '.' Digit+ | Digit+ '.';
@@ -63,7 +64,7 @@ varValueDecl: nameNode;
 parameterList: '(' (parameterDecl (',' parameterDecl)*? )? ')';
 parameterDecl: Var typeReference nameNode ('[' arraySize ']')?;
 statementBlock: '{' ( ( (statement ';')  | ( ifBlockStatement ( ';' )? ) ) )*? '}';
-statement: assignment | returnStatement | constDef | varDecl | funcCall;
+statement: assignment | returnStatement | constDef | varDecl | funcCall | expression;
 funcCall: nameNode '(' ( funcArgExpression ( ',' funcArgExpression )*? )? ')';
 assignment: reference assignmentOperator expressionBlock;
 ifCondition: expressionBlock;

@@ -73,13 +73,13 @@ namespace DaedalusCompiler.Compilation
         }
 
         private static int EvaluateConstIntExpression(DaedalusParser.ExpressionContext expression,
-            AssemblyBuilder assemblyBuilder)
+            AssemblyBuilder assemblyBuilder, string oper="")
         {
             if (expression is DaedalusParser.BracketExpressionContext expressionContext)
-                return EvaluateConstIntExpression(expressionContext.expression(), assemblyBuilder);
+                return EvaluateConstIntExpression(expressionContext.expression(), assemblyBuilder, oper);
 
             if (expression is DaedalusParser.ValExpressionContext context)
-                return EvaluateIntValueExpression(context.value(), assemblyBuilder);
+                return EvaluateIntValueExpression(context.value(), assemblyBuilder, oper);
 
             if (expression is DaedalusParser.OneArgExpressionContext)
                 return EvaluateIntUnaryExpression(expression, assemblyBuilder);
@@ -107,13 +107,29 @@ namespace DaedalusCompiler.Compilation
         }
 
         private static int EvaluateIntValueExpression(DaedalusParser.ValueContext value,
-            AssemblyBuilder assemblyBuilder)
+            AssemblyBuilder assemblyBuilder, string oper)
         {
             var valueChild = value.GetChild(0);
 
+            string valueText = valueChild.GetText();
+            if (oper == "-")
+            {
+                valueText = "-" + valueText;
+            }
+
             // value is simple literal
             if (valueChild is TerminalNodeImpl)
-                return int.Parse(valueChild.GetText());
+            {
+                try
+                {
+                    return int.Parse(valueText);
+                }
+                catch (OverflowException)
+                {
+                    // TODO should throw error for too small/ big int
+                    throw new OverflowException();
+                }
+            }
 
             // value is reference to other constant
             if (valueChild is DaedalusParser.ReferenceContext reference)
@@ -155,12 +171,14 @@ namespace DaedalusCompiler.Compilation
             AssemblyBuilder assemblyBuilder)
         {
             var oper = expression.GetChild(0).GetText();
-            var param = EvaluateConstIntExpression((DaedalusParser.ExpressionContext) expression.GetChild(1),
-                assemblyBuilder);
+            DaedalusParser.ExpressionContext expressionContext = (DaedalusParser.ExpressionContext) expression.GetChild(1);
+            var param = EvaluateConstIntExpression(expressionContext, assemblyBuilder, oper);
 
             switch (oper)
             {
                 case "-":
+                    if (expressionContext is DaedalusParser.BracketExpressionContext || expressionContext is DaedalusParser.ValExpressionContext)
+                        return param;
                     return -param;
                 case "+":
                     return +param;
