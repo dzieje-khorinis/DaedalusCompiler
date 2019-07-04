@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Antlr4.Runtime.Tree;
 using DaedalusCompiler.Dat;
 
@@ -23,6 +24,20 @@ namespace DaedalusCompiler.Compilation
             _assemblyBuilder = new AssemblyBuilder(verbose, strictSyntax);
             _ouBuilder = new OutputUnitsBuilder(verbose);
             _outputDirPath = outputDirPath;
+        }
+
+        public static string[] GetWarningCodesToSuppress(string line)
+        {
+            string ws = @"(?:[ \t])*";
+            string newline = @"(?:\r\n?|\n)";
+            RegexOptions options = RegexOptions.IgnoreCase | RegexOptions.Multiline;
+            string suppressWarningsPattern = $@"//{ws}suppress{ws}:((?:{ws}[a-zA-Z0-9]+)+){ws}{newline}?$";
+            MatchCollection matches = Regex.Matches(line, suppressWarningsPattern, options);
+            foreach (Match match in matches)
+            {
+                return match.Groups[1].Value.Split(" ").Where(s => !s.Equals(String.Empty)).ToArray();
+            }
+            return new string[]{};
         }
         
         public string GetBuiltinsPath()
@@ -66,6 +81,9 @@ namespace DaedalusCompiler.Compilation
                     _assemblyBuilder.ErrorContext.FileContentLines = fileContent.Split(Environment.NewLine);
                     _assemblyBuilder.ErrorContext.FilePath = paths[i];
                     _assemblyBuilder.ErrorContext.FileIndex = i;
+                    _assemblyBuilder.ErrorContext.SuppressedWarningCodes = Compiler.GetWarningCodesToSuppress(
+                        _assemblyBuilder.ErrorContext.FileContentLines[0]
+                    );
                     ParseTreeWalker.Default.Walk(new DaedalusListener(_assemblyBuilder, i), parser.daedalusFile());
                     if (generateOutputUnits)
                     {
@@ -84,15 +102,39 @@ namespace DaedalusCompiler.Compilation
                 }
                 
                 _assemblyBuilder.Finish();
-                if (_assemblyBuilder.Errors.Any())
+
+                List<CompilationMessage> errors = new List<CompilationMessage>();
+                foreach (CompilationMessage error in _assemblyBuilder.Errors)
                 {
-                    _assemblyBuilder.Errors.Sort((x, y) => x.CompareTo(y));
+                    if (error is CompilationError)
+                    {
+                        errors.Add(error);
+                    }
+                    else if (error is CompilationWarning compilationWarning)
+                    {
+                        if (compilationWarning.IsSuppressed == false)
+                        {
+                            errors.Add((compilationWarning));
+                        }
+                    }
+                }
+
+                if (errors.Any())
+                {
+                    errors.Sort((x, y) => x.CompareTo(y));
+
+                    bool stopCompilation = _assemblyBuilder.StrictSyntax;
 
                     string lastErrorFilePath = "";
                     string lastErrorBlockName = null;
                     var logger = new StdErrorLogger();
                     foreach (CompilationMessage error in _assemblyBuilder.Errors)
                     {
+                        if (error is CompilationError)
+                        {
+                            stopCompilation = true;
+                        }
+
                         if (lastErrorFilePath != error.FilePath)
                         {
                             lastErrorFilePath = error.FilePath;
@@ -115,7 +157,11 @@ namespace DaedalusCompiler.Compilation
 
                         error.Print(logger);
                     }
-                    return false;
+
+                    if (stopCompilation)
+                    {
+                        return false;
+                    }
                 }
 
                 if (compileToAssembly)

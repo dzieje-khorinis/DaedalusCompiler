@@ -618,6 +618,17 @@ namespace DaedalusCompiler.Compilation
         /*
          *  ENTER EXPRESSION
          */
+        public override void EnterExpressionBlock(DaedalusParser.ExpressionBlockContext context)
+        {
+            _assemblyBuilder.ErrorContext.Context = context;
+            if (context.Parent is DaedalusParser.StatementContext)
+            {
+                _assemblyBuilder.Errors.Add(
+                    new SingleExpressionWarning(_assemblyBuilder.ErrorContext, _assemblyBuilder.StrictSyntax)
+                );
+            }
+        }
+
         public override void EnterBracketExpression(DaedalusParser.BracketExpressionContext context)
         {
             _assemblyBuilder.ExpressionStart();

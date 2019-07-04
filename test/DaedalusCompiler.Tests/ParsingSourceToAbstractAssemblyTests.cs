@@ -66,6 +66,10 @@ namespace DaedalusCompiler.Tests
                 _assemblyBuilder.IsCurrentlyParsingExternals = false;
             }
 
+            _assemblyBuilder.ErrorContext.FileContentLines = _code.Split(Environment.NewLine);
+            _assemblyBuilder.ErrorContext.SuppressedWarningCodes = Compiler.GetWarningCodesToSuppress(
+                _assemblyBuilder.ErrorContext.FileContentLines[0]
+            );
             Utils.WalkSourceCode(_code, _assemblyBuilder);
             _assemblyBuilder.Finish();
         }
@@ -5825,6 +5829,44 @@ namespace DaedalusCompiler.Tests
                 Ref("testFunc"),
                 Ref("testFunc.person"),
                 Ref("testFunc.p"),
+            };
+            AssertSymbolsMatch();
+        }
+
+        [Fact]
+        public void TestSingleExpressionReturnHack()
+        {
+            _code = @"
+                func void testFunc() {
+                var int x;
+                    x = 5;
+                    x;
+                    return;
+                };
+           ";
+
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                // x = 5;
+                new PushInt(5),
+                new PushVar(Ref("testFunc.x")),
+                new Assign(),
+
+                // x;
+                new PushVar(Ref("testFunc.x")),
+
+                // return;
+                new Ret(),
+
+                new Ret()
+            };
+            AssertInstructionsMatch();
+
+            _expectedSymbols = new List<DatSymbol>
+            {
+                Ref("testFunc"),
+                Ref("testFunc.x"),
             };
             AssertSymbolsMatch();
         }

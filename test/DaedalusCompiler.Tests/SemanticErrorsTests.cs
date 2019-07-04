@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using DaedalusCompiler.Compilation;
@@ -40,6 +41,9 @@ namespace DaedalusCompiler.Tests
             _expectedCompilationOutput = string.Join(Environment.NewLine, compilationOutputLines);
 
             _assemblyBuilder.ErrorContext.FileContentLines = _code.Split(Environment.NewLine);
+            _assemblyBuilder.ErrorContext.SuppressedWarningCodes = Compiler.GetWarningCodesToSuppress(
+                _assemblyBuilder.ErrorContext.FileContentLines[0]
+            );
             if (_externalCode != string.Empty)
             {
                 _assemblyBuilder.IsCurrentlyParsingExternals = true;
@@ -55,13 +59,30 @@ namespace DaedalusCompiler.Tests
         {
             ParseData();
             var logger = new StringBufforErrorLogger();
+            logger.Log("");
 
-            if (_assemblyBuilder.Errors.Any())
+            List<CompilationMessage> errors = new List<CompilationMessage>();
+            foreach (CompilationMessage error in _assemblyBuilder.Errors)
             {
-                _assemblyBuilder.Errors.Sort((x, y) => x.CompareTo(y));
+                if (error is CompilationError)
+                {
+                    errors.Add(error);
+                }
+                else if (error is CompilationWarning compilationWarning)
+                {
+                    if (compilationWarning.IsSuppressed == false)
+                    {
+                        errors.Add(compilationWarning);
+                    }
+                }
+            }
+
+            if (errors.Any())
+            {
+                errors.Sort((x, y) => x.CompareTo(y));
 
                 string lastErrorBlockName = null;
-                foreach (CompilationMessage error in _assemblyBuilder.Errors)
+                foreach (CompilationMessage error in errors)
                 {
                     if (lastErrorBlockName != error.ExecBlockName)
                     {
@@ -330,19 +351,83 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestSingleExpressionHack()
         {
-            // TODO
-        }
-        
-        [Fact]
-        public void TestSingleExpressionHackWarningSuppress()
-        {
-            // TODO
+            _code = @"
+                func void testFunc() {
+                    var int x;
+                    x = 5;
+                    x;
+                    return;
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d: In function ‘testFunc’:
+                test.d:4:4: warning W1: usage of single-expression statement hack
+                    x;
+                    ^
+            ";
+
+            AssertCompilationOutputMatch();
         }
         
         [Fact]
         public void TestSingleExpressionHackStrictMode()
         {
-            // TODO
+            _assemblyBuilder.StrictSyntax = true;
+
+            _code = @"
+                func void testFunc() {
+                    var int x;
+                    x = 5;
+                    x;
+                    return;
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d: In function ‘testFunc’:
+                test.d:4:4: error W1: usage of single-expression statement hack
+                    x;
+                    ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
+        public void TestSingleExpressionHackWarningLineSuppress()
+        {
+            _code = @"
+                func void testFunc() {
+                    var int x;
+                    x = 5;
+                    x; //suppress: W1
+                    return;
+                };
+            ";
+
+            _expectedCompilationOutput = @"";
+
+            AssertCompilationOutputMatch();
+        }
+
+        [Fact]
+        public void TestSingleExpressionHackWarningFileSuppress()
+        {
+            _code = @"
+                //suppress: W1
+                
+                func void testFunc() {
+                    var int x;
+                    x = 5;
+                    x;
+                    return;
+                };
+            ";
+
+            _expectedCompilationOutput = @"";
+
+            AssertCompilationOutputMatch();
         }
     }
 }

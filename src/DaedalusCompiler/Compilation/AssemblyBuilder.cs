@@ -56,7 +56,7 @@ namespace DaedalusCompiler.Compilation
         public DatSymbolType AssignmentType;
         private int _nextSymbolIndex;
         private bool _verbose;
-        private bool _strictSyntax;
+        public bool StrictSyntax;
 
         public readonly List<CompilationMessage> Errors;
         
@@ -81,7 +81,7 @@ namespace DaedalusCompiler.Compilation
             AssignmentType = DatSymbolType.Undefined;
             _nextSymbolIndex = 0;
             _verbose = verbose;
-            _strictSyntax = strictSyntax;
+            StrictSyntax = strictSyntax;
             
             Errors = new List<CompilationMessage>();
             ErrorContext = new ErrorContext(this);

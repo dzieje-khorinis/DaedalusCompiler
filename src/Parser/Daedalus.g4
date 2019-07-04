@@ -64,7 +64,7 @@ varValueDecl: nameNode;
 parameterList: '(' (parameterDecl (',' parameterDecl)*? )? ')';
 parameterDecl: Var typeReference nameNode ('[' arraySize ']')?;
 statementBlock: '{' ( ( (statement ';')  | ( ifBlockStatement ( ';' )? ) ) )*? '}';
-statement: assignment | returnStatement | constDef | varDecl | funcCall | expression;
+statement: assignment | returnStatement | constDef | varDecl | funcCall | expressionBlock;
 funcCall: nameNode '(' ( funcArgExpression ( ',' funcArgExpression )*? )? ')';
 assignment: reference assignmentOperator expressionBlock;
 ifCondition: expressionBlock;
