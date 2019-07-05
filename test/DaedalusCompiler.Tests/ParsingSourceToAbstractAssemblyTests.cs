@@ -6015,5 +6015,55 @@ namespace DaedalusCompiler.Tests
             };
             AssertSymbolsMatch();
         }
+        
+        
+        [Fact]
+        public void TestIntArrayLocalVariableReturn()
+        {
+            _code = @"
+                func int testFunc() {
+                    var int a[2048];
+                    return a;
+                };
+
+                func int secondFunc() {
+                    const int b[3] = {1, 2, 3};
+                    return b;
+                };
+           ";
+
+            
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                new PushVar(Ref("testFunc.a")),
+                new Ret(),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            
+            _instructions = GetExecBlockInstructions("secondFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                new PushVar(Ref("secondFunc.b")),
+                new Ret(),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+
+
+            _expectedSymbols = new List<DatSymbol>
+            {
+                Ref("testFunc"),
+                Ref("testFunc.a"),
+
+                Ref("secondFunc"),
+                Ref("secondFunc.b")
+            };
+            AssertSymbolsMatch();
+        }
     }
 }
