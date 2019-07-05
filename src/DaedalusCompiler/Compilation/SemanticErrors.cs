@@ -89,6 +89,16 @@ namespace DaedalusCompiler.Compilation
         public string ExecBlockName;
         public string ExecBlockType;
 
+        
+        public static string GetIdentifierRelativeName(string identifier) {
+            if (identifier.Contains("."))
+            {
+                identifier = identifier.Split(".")[1];
+            }
+
+            return identifier;
+        }
+        
         protected abstract void PrintMessage(ErrorLogger logger);
         
         public void Print(ErrorLogger logger)
@@ -230,7 +240,6 @@ namespace DaedalusCompiler.Compilation
             _identifier = referenceContext.GetText();
         }
 
-
         protected override void PrintMessage(ErrorLogger logger)
         {
             logger.Log($"{FileName}:{_lineNo}:{_columnNo}: error: ‘{_identifier.Split(".").First()}’ undeclared");
@@ -294,7 +303,7 @@ namespace DaedalusCompiler.Compilation
  
         public InconsistentArraySizeError(ErrorContext errorContext, string identifier, int declaredSize, int elementsCount) : base(errorContext)
         {
-            _identifier = identifier;
+            _identifier = GetIdentifierRelativeName(identifier);
             _declaredSize = declaredSize;
             _elementsCount = elementsCount;
         }
@@ -312,7 +321,7 @@ namespace DaedalusCompiler.Compilation
  
         public InvalidArraySizeError(ErrorContext errorContext, string identifier, int declaredSize) : base(errorContext)
         {
-            _identifier = identifier;
+            _identifier = GetIdentifierRelativeName(identifier);
             _declaredSize = declaredSize;
         }
 

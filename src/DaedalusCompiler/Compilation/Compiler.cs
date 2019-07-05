@@ -114,7 +114,7 @@ namespace DaedalusCompiler.Compilation
                     {
                         if (compilationWarning.IsSuppressed == false)
                         {
-                            errors.Add((compilationWarning));
+                            errors.Add(compilationWarning);
                         }
                     }
                 }
@@ -128,7 +128,7 @@ namespace DaedalusCompiler.Compilation
                     string lastErrorFilePath = "";
                     string lastErrorBlockName = null;
                     var logger = new StdErrorLogger();
-                    foreach (CompilationMessage error in _assemblyBuilder.Errors)
+                    foreach (CompilationMessage error in errors)
                     {
                         if (error is CompilationError)
                         {

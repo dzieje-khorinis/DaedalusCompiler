@@ -143,6 +143,13 @@ namespace DaedalusCompiler.Compilation
                     _assemblyBuilder.ErrorContext.Context = constArrayContext;
                     
                     var name = constArrayContext.nameNode().GetText();
+                    if (_assemblyBuilder.IsContextInsideExecBlock())
+                    {
+                        BaseExecBlockContext baseExecBlock = _assemblyBuilder.ExecBlocks.Last();
+                        string execBlockName = baseExecBlock.GetSymbol().Name;
+                        name = $"{execBlockName}.{name}";
+                    }
+                    
                     var location = GetLocation(context);
 
                     int declaredSize = 0;
@@ -247,6 +254,13 @@ namespace DaedalusCompiler.Compilation
                     if (varContext is DaedalusParser.VarArrayDeclContext varArrayContext)
                     {
                         var name = varArrayContext.nameNode().GetText();
+                        if (_assemblyBuilder.IsContextInsideExecBlock())
+                        {
+                            BaseExecBlockContext baseExecBlock = _assemblyBuilder.ExecBlocks.Last();
+                            string execBlockName = baseExecBlock.GetSymbol().Name;
+                            name = $"{execBlockName}.{name}";
+                        }
+                        
                         var location = GetLocation(context);
                         var size = EvaluatorHelper.EvaluteArraySize(varArrayContext.arraySize(), _assemblyBuilder);
 
@@ -382,6 +396,13 @@ namespace DaedalusCompiler.Compilation
                 DatSymbol instanceSymbol = SymbolBuilder.BuildInstance(instanceName, referenceSymbolId, location);
                 _assemblyBuilder.AddSymbol(instanceSymbol);
                 symbols.Add(instanceSymbol);
+                
+                if (refSymbol.Type == DatSymbolType.Prototype)
+                {
+                    _assemblyBuilder.ExecBlockStart(instanceSymbol, ExecBlockType.Instance);
+                    _assemblyBuilder.AddInstruction(new Call(refSymbol));
+                    _assemblyBuilder.ExecBlockEnd();
+                }
             }
             
             _assemblyBuilder.SharedBlockStart(symbols);

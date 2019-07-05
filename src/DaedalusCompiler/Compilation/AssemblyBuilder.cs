@@ -402,11 +402,12 @@ namespace DaedalusCompiler.Compilation
 
         public void ExitOperator(string operatorText, bool twoArg=true)
         {
-            var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(operatorText, twoArg);
-            _activeContext.SetEndInstruction(instruction);
+            if (!IsInsideConstDef)
+            {
+                var instruction = AssemblyBuilderHelpers.GetInstructionForOperator(operatorText, twoArg);
+                _activeContext.SetEndInstruction(instruction);
+            }
         }
-
-       
 
         public void FuncCallStart(string funcName)
         {

@@ -135,12 +135,20 @@ namespace DaedalusCompiler.Compilation
                 {
                     foreach (var symbol in sharedBlock.Symbols)
                     {
-                        symbol.FirstTokenAddress = _currentAddress;
+                        if (symbol.FirstTokenAddress == -1)
+                        {
+                            symbol.FirstTokenAddress = _currentAddress;
+                        }
                     }
                 }
                 else
                 {
-                    execBlock.GetSymbol().FirstTokenAddress = _currentAddress;
+                    DatSymbol symbol = execBlock.GetSymbol();
+                    if (symbol.FirstTokenAddress == -1)
+                    {
+                        symbol.FirstTokenAddress = _currentAddress;
+                    }
+                    symbol.ExecBlock = execBlock;
                 }
                 tokens.AddRange(GetTokens(execBlock));
             }

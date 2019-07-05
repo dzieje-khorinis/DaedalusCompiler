@@ -47,12 +47,42 @@ namespace DaedalusCompiler.Tests
                 ParseData();
             }
 
-            
-            BaseExecBlockContext block = _assemblyBuilder.ExecBlocks.Find(execBlock =>
-                execBlock.GetSymbol().Name.ToUpper() == execBlockName.ToUpper());
+            List<AssemblyElement> instructions = new List<AssemblyElement>();
 
-            _assemblyBuilder.ActiveExecBlock = block;
-            return block.Body;
+            bool alreadyFound = false;
+            foreach (BaseExecBlockContext execBlock in _assemblyBuilder.ExecBlocks)
+            {
+                DatSymbol testedSymbol = execBlock.GetSymbol();
+                if (execBlock is SharedExecBlockContext sharedExecBlockContext)
+                {
+                    foreach (DatSymbol symbol in sharedExecBlockContext.Symbols)
+                    {
+                        if (symbol.Name.ToUpper() == execBlockName.ToUpper())
+                        {
+                            testedSymbol = symbol;
+                            break;
+                        }
+                    }
+                }
+                
+                if (testedSymbol.Name.ToUpper() == execBlockName.ToUpper())
+                {
+                    instructions.AddRange(execBlock.Body);
+                    _assemblyBuilder.ActiveExecBlock = execBlock;
+                    alreadyFound = true;
+                }
+                else if (alreadyFound)
+                {
+                    break;
+                }
+            }
+
+            if (alreadyFound == false )
+            {
+                throw new KeyNotFoundException();
+            }
+
+            return instructions;
         }
 
         private void ParseData()
@@ -1905,7 +1935,7 @@ namespace DaedalusCompiler.Tests
                 func void testFunc() {
                     const int INDEX_ZERO = 0;
                     const int INDEX_ONE = 1;
-                    const int INDEX_TWO = 2;
+                    const int INDEX_TWO = 1 + 1;
                     x = 1;
                     tab[INDEX_ZERO] = 2;
                     tab[INDEX_ONE] = 3;
@@ -3093,6 +3123,7 @@ namespace DaedalusCompiler.Tests
                 prototype varprototype(C_NPC) {};
                 instance varinstance(C_NPC) {};
                 instance varinstance2(varprototype) {};
+                instance varinstance3(varprototype);
                 func int retint() {};
                 
                 
@@ -3167,6 +3198,31 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
+            _instructions = GetExecBlockInstructions("varinstance");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                new Ret()
+            };
+            AssertInstructionsMatch();
+            
+            _instructions = GetExecBlockInstructions("varinstance2");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                new Call(Ref("varprototype")),
+
+                new Ret()
+            };
+            AssertInstructionsMatch();
+
+            _instructions = GetExecBlockInstructions("varinstance3");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                new Call(Ref("varprototype")),
+
+                new Ret()
+            };
+            AssertInstructionsMatch();
+            
             _expectedSymbols = new List<DatSymbol>
             {
                 Ref("C_NPC"),
@@ -3183,6 +3239,7 @@ namespace DaedalusCompiler.Tests
                 Ref("varprototype"),
                 Ref("varinstance"),
                 Ref("varinstance2"),
+                Ref("varinstance3"),
                 Ref("retint"),
                 Ref("testFunc"),
             };
@@ -5867,6 +5924,94 @@ namespace DaedalusCompiler.Tests
             {
                 Ref("testFunc"),
                 Ref("testFunc.x"),
+            };
+            AssertSymbolsMatch();
+        }
+        
+        
+        [Fact]
+        public void TestInlineInstanceDeclarations()
+        {
+            _code = @"
+                class C_NPC { var int data [200]; };
+                instance Mage, Archer, Barbarian(C_NPC);
+
+                prototype Orc(C_NPC) {};
+                instance Warrior, Elite, Shaman(Orc);
+           ";
+
+            
+            _instructions = GetExecBlockInstructions("Mage");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            
+            _instructions = GetExecBlockInstructions("Archer");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            
+            _instructions = GetExecBlockInstructions("Barbarian");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            
+            _instructions = GetExecBlockInstructions("Orc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            
+            _instructions = GetExecBlockInstructions("Warrior");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                new Call(Ref("Orc")),
+            };
+            AssertInstructionsMatch();
+            
+            
+            _instructions = GetExecBlockInstructions("Elite");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                new Call(Ref("Orc")),
+            };
+            AssertInstructionsMatch();
+            
+            
+            _instructions = GetExecBlockInstructions("Shaman");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                new Call(Ref("Orc")),
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+
+            
+            _expectedSymbols = new List<DatSymbol>
+            {
+                Ref("C_NPC"),
+                Ref("C_NPC.data"),
+                
+                Ref("Mage"),
+                Ref("Archer"),
+                Ref("Barbarian"),
+                
+                Ref("Orc"),
+                
+                Ref("Warrior"),
+                Ref("Elite"),
+                Ref("Shaman")
             };
             AssertSymbolsMatch();
         }

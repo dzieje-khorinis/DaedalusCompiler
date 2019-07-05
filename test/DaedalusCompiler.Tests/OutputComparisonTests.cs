@@ -14,167 +14,110 @@ using ZipFile = Ionic.Zip.ZipFile;
 
 namespace DaedalusCompiler.Tests
 {
-    public static class Constants
-    {
-        public const string SrcPathsLabel = "SRC_PATHS";
-        public const string DatPathsLabel = "DAT_PATHS";
-        public const string OuPathsLabel = "OU_PATHS";
-        public const string ScriptsUrlLabel = "SCRIPTS_URL";
-        public const string ScriptsPasswordLabel = "SCRIPTS_PASSWORD";
-        
-        public const string ScriptsFileName = "Scripts.zip";
-        public const string ProjectName = "DaedalusCompiler.Tests";
-    }
-    
-    
-    public class Config
-    {
-        public List<string> SRC_PATHS;
-        public List<string> DAT_PATHS;
-        public List<string> OU_PATHS;
-        public string SCRIPTS_URL;
-        public string SCRIPTS_PASSWORD;
-
-        public List<string> GetPaths(string envVarName)
-        {
-            switch (envVarName)
-            {
-                case Constants.SrcPathsLabel:
-                    return SRC_PATHS;
-                case Constants.DatPathsLabel:
-                    return DAT_PATHS;
-                case Constants.OuPathsLabel:
-                    return OU_PATHS;
-                default:
-                    return null;
-            }
-        }
-    }
-    
     public class DatComparisonTests
     {
+        private const string ProjectName = "DaedalusCompiler.Tests";
         private readonly ITestOutputHelper _output;
+        private readonly string _downloadTo;
+        private string _scriptsPath;
+
+        private List<string> _srcPaths = new List<string>()
+        {
+            "Scripts/Content/*.src",
+            "Scripts/System/*.src"
+        };
+        private string _datPath = "Scripts/_compiled/*.dat";
+        private string _ouPath = "Scripts/Content/Cutscene/ou.*";
+        private string _outputPath = "output";
         
-        private string _projectPath;
         private Dictionary<string, string> _srcPathToDatPath;
-        private Config _config;
 
         private static readonly HashSet<string> NameExceptions = new HashSet<string>()
         {
             "FACE_N_TOUGH_LEE_ÄHNLICH"
         };
         
-
         public DatComparisonTests(ITestOutputHelper output)
         {
+            // string projectPath = Path.Combine(Environment.CurrentDirectory.Split(ProjectName).First(), ProjectName);
+            string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            DirectoryInfo baseDirectoryInfo = new DirectoryInfo(baseDirectory);
+            string solutionPath = baseDirectoryInfo.Parent?.Parent?.Parent?.Parent?.Parent?.ToString();
+            string projectPath = Path.Combine(solutionPath, "test", "DaedalusCompiler.Tests");
+
+            _downloadTo = "{PROJECT_PATH}/TestFiles/".Replace("{PROJECT_PATH}", projectPath);
             _output = output;
-
-            LoadJsonConfig();
-            DownloadScripts();
-            ExtractScripts();
-            InitializeSrcPathToDatPath();
         }
 
-        private void LoadJsonConfig()
+        private void PrepareScripts(string name, string url, string zipPassword)
         {
-            _projectPath = Path.Combine(Environment.CurrentDirectory.Split(Constants.ProjectName).First(), Constants.ProjectName);
-            string configPath = Path.Combine(_projectPath, "config.json");
-            if (File.Exists(configPath))
-            {
-                using (StreamReader reader = new StreamReader(configPath))
-                {
-                    string content = reader.ReadToEnd();
-                    _config = JsonConvert.DeserializeObject<Config>(content);
-                }
-            }
-        }
+            _scriptsPath = Path.Combine(_downloadTo, name);
 
-        private void DownloadScripts()
-        {
-            string scriptsUrl = _config?.SCRIPTS_URL ?? Environment.GetEnvironmentVariable(Constants.ScriptsUrlLabel);
-            if (scriptsUrl == null)
-            {
-                return;
-            }
-            
-            string scriptsFilePath = Path.Combine(_projectPath, Constants.ScriptsFileName);
+            string scriptsFileName = Path.ChangeExtension(name, "zip");
+            string scriptsFilePath = Path.Combine(_downloadTo, scriptsFileName);
+
+            (new FileInfo(scriptsFilePath)).Directory?.Create();
             File.Delete(scriptsFilePath);
-            
+
             using (WebClient client = new WebClient())
             {
-                client.DownloadFile(scriptsUrl, scriptsFilePath);
-                _output.WriteLine($"Downloaded {Constants.ScriptsFileName}.");
+                client.DownloadFile(url, scriptsFilePath);
+                _output.WriteLine($"Downloaded {scriptsFileName}.");
             }
-        }
-
-        private void ExtractScripts()
-        {
-            string scriptsFilePath = Path.Combine(_projectPath, Constants.ScriptsFileName);
-            if (!File.Exists(scriptsFilePath))
-            {
-                return;
-            }
-            
-            string scriptsPassword = _config?.SCRIPTS_PASSWORD ?? Environment.GetEnvironmentVariable(Constants.ScriptsPasswordLabel);
             
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             using (ZipFile archive = new ZipFile(scriptsFilePath))
             {
-                archive.Password = scriptsPassword ;
-                archive.ExtractAll(_projectPath, ExtractExistingFileAction.OverwriteSilently);
-                _output.WriteLine($"Extracted {Constants.ScriptsFileName} into {_projectPath}.");
+                archive.Password = zipPassword ;
+                archive.ExtractAll(_scriptsPath, ExtractExistingFileAction.OverwriteSilently);
+                _output.WriteLine($"Extracted {scriptsFileName} into {_scriptsPath}.");
             }
         }
 
-        private void InitializeSrcPathToDatPath()
+        private void CompileScripts(string compileTime="", string compileUsername="")
         {
             _srcPathToDatPath = new Dictionary<string, string>();
-            
-            List<string> srcPaths = GetPaths(Constants.SrcPathsLabel);
-            List<string> datPaths = GetPaths(Constants.DatPathsLabel);
-
+            List<string> srcPaths = WildcardExpansion(_srcPaths);
+            List<string> datPaths = WildcardExpansion(_datPath);
             Dictionary<string, string> filenameToSrcPath = GetFilenameWithoutExtensionToPathMapping(srcPaths);
             Dictionary<string, string> filenameToDatPath = GetFilenameWithoutExtensionToPathMapping(datPaths);
-
             foreach (string filename in filenameToSrcPath.Keys)
             {
                 string srcPath = filenameToSrcPath[filename];
                 string datPath = filenameToDatPath[filename];
                 _srcPathToDatPath[srcPath] = datPath;
             }
+            
+            string outputDirPath = Path.Combine(_scriptsPath, _outputPath);
+            foreach(KeyValuePair<string, string> entry in _srcPathToDatPath)
+            {
+                string srcPath = entry.Key;
+                string datPath = entry.Value;
+                string datFileName = Path.GetFileName(datPath).ToLower();
+                bool generateOutputUnits = (datFileName == "gothic.dat");
+                
+                Compiler compiler = new Compiler(outputDirPath);
+                if (generateOutputUnits)
+                {
+                    compiler.SetCompilationDateTimeText(compileTime);
+                    compiler.SetCompilationUserName(compileUsername);
+                }
+                compiler.CompileFromSrc(srcPath, compileToAssembly:false, verbose:false, generateOutputUnits: generateOutputUnits);
+            }
         }
 
-        private List<string> GetPaths(string envVarName)
+        private List<string> WildcardExpansion(string wildcardPath)
         {
-            List<string> wildcardPaths = _config?.GetPaths(envVarName) ?? GetListFromEnvironmentVariable(envVarName);
-            
-            if (wildcardPaths == null)
-            {
-                throw new Exception($"Couldn't load {envVarName}! Please set up proper environment variable or config.json file!");
-            }
-
-            wildcardPaths = wildcardPaths.Select(x => x.Replace("{PROJECT_PATH}", _projectPath)).ToList();
-            return WildcardExpansion(wildcardPaths);
-
+            return WildcardExpansion(new List<string>() {wildcardPath});
         }
         
-        private List<string> GetListFromEnvironmentVariable(string variableName)
-        {
-            string variableContent = Environment.GetEnvironmentVariable(variableName);
-            _output.WriteLine($"{variableName} = {Environment.GetEnvironmentVariable(variableName)}");
-            return variableContent
-                ?.Split(";")
-                .Where(x => !string.IsNullOrEmpty(x))
-                .ToList();
-        }
-
-        private static List<string> WildcardExpansion(List<string> wildcardPaths)
+        private List<string> WildcardExpansion(List<string> wildcardPaths)
         {
             List<string> paths = new List<string>();
 
             foreach (var wildcardPath in wildcardPaths)
             {  
-                string dirPath = Path.GetDirectoryName(wildcardPath);
+                string dirPath = Path.Combine(_scriptsPath, Path.GetDirectoryName(wildcardPath));
                 string filenamePattern = Path.GetFileName(wildcardPath);
                 EnumerationOptions options = new EnumerationOptions { MatchCasing = MatchCasing.CaseInsensitive };
                 paths.AddRange(Directory.GetFiles(dirPath, filenamePattern, options).ToList());
@@ -182,8 +125,7 @@ namespace DaedalusCompiler.Tests
 
             return paths;
         }
-
-
+        
         private static Dictionary<string, string> GetFilenameWithoutExtensionToPathMapping(List<string> paths)
         {
             return paths.ToDictionary(x => Path.GetFileNameWithoutExtension(x).ToLower(), x => x);
@@ -194,16 +136,41 @@ namespace DaedalusCompiler.Tests
         {
             return paths.ToDictionary(x => Path.GetFileName(x).ToLower(), x => x);
         }
+        
 
-
-        private void CompareDats(string expectedDatPath, string datPath)
+        private void CompareDats()
         {
-            DatFile expectedDatFile = new DatFile(expectedDatPath);
-            DatFile datFile = new DatFile(datPath);
+            string outputDirPath = Path.Combine(_scriptsPath, _outputPath);
+            foreach (KeyValuePair<string, string> entry in _srcPathToDatPath)
+            {
+                string datPath = entry.Value;
+                string datFileName = Path.GetFileName(datPath).ToLower();
+                string outputDatPath = Path.Combine(outputDirPath, datFileName);
+                
+                DatFile expectedDatFile = new DatFile(datPath);
+                DatFile datFile = new DatFile(outputDatPath);
             
-            Assert.Equal(expectedDatFile.Version, datFile.Version);
-            CompareSymbols(expectedDatFile.Symbols.ToList(), datFile.Symbols.ToList());
-            CompareTokens(expectedDatFile.Tokens.ToList(), datFile.Tokens.ToList());
+                Assert.Equal(expectedDatFile.Version, datFile.Version);
+                CompareSymbols(expectedDatFile.Symbols.ToList(), datFile.Symbols.ToList());
+                CompareTokens(expectedDatFile.Tokens.ToList(), datFile.Tokens.ToList());
+            }
+        }
+
+        private void CompareOuFiles()
+        {
+            string outputDirPath = Path.Combine(_scriptsPath, _outputPath);
+            
+            string ouCslFileName = "ou.csl";
+            string ouBinFileName = "ou.bin";
+
+            string outputOuCslPath = Path.Combine(outputDirPath, ouCslFileName);
+            string outputOuBinPath = Path.Combine(outputDirPath, ouBinFileName);
+
+            List<string> ouPaths = WildcardExpansion(_ouPath);
+            Dictionary<string, string> filenameToOuPath = GetFilenameToPathMapping(ouPaths);
+
+            CompareFilesByteByByte(filenameToOuPath[ouCslFileName], outputOuCslPath);
+            CompareFilesByteByByte(filenameToOuPath[ouBinFileName], outputOuBinPath);
         }
 
         private void CompareSymbols(List<DatSymbol> expectedSymbols, List<DatSymbol> symbols)
@@ -212,7 +179,8 @@ namespace DaedalusCompiler.Tests
             {
                 DatSymbolType.Int,
                 DatSymbolType.Float,
-                DatSymbolType.String
+                DatSymbolType.String,
+                DatSymbolType.Func
             };
             int lastParentIndex = DatSymbol.NULL_INDEX;
             
@@ -286,44 +254,33 @@ namespace DaedalusCompiler.Tests
             }
         }
 
+
         [Fact]
-        public void TestIfCompiledScriptsMatchOriginalDatAndOuFiles()
+        public void TestIfCompiledScriptsMatchOriginalDatAndOuFilesG2NotR()
         {
-            string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            DirectoryInfo baseDirectoryInfo = new DirectoryInfo(baseDirectory);
-            string solutionPath = baseDirectoryInfo.Parent?.Parent?.Parent?.Parent?.Parent?.ToString();
-            
-            string outputDirPath = Path.Combine(solutionPath, "test", "DaedalusCompiler.Tests", "output");
-            
-            foreach(KeyValuePair<string, string> entry in _srcPathToDatPath)
-            {
-                string srcPath = entry.Key;
-                string datPath = entry.Value;
-                string datFileName = Path.GetFileName(datPath).ToLower();
-                string outputDatPath = Path.Combine(outputDirPath, datFileName);
-                bool generateOutputUnits = (datFileName == "gothic.dat");
+            PrepareScripts(
+                "G2NotR",
+                "https://drive.google.com/uc?authuser=0&id=1TZFfADoOPrmdNHbrbxMAad7Mk63HKloT&export=download",
+                "dziejekhorinis"
+                );
+
+            CompileScripts("13.11.2018 15:30:55", "kisio");
                 
-                Compiler compiler = new Compiler(outputDirPath);
-                if (generateOutputUnits)
-                {
-                    compiler.SetCompilationDateTimeText("13.11.2018 15:30:55");
-                    compiler.SetCompilationUserName("kisio");
-                }
-                compiler.CompileFromSrc(srcPath, compileToAssembly:false, verbose:false, generateOutputUnits: generateOutputUnits);              
-                CompareDats(datPath, outputDatPath);
-            }
+            CompareDats();
+            CompareOuFiles();
+        }
+        
+        [Fact]
+        public void TestIfCompiledScriptsMatchOriginalDatAndOuFilesIkarusAndLeGo()
+        {
+            PrepareScripts(
+                "IkarusAndLego",
+                "https://drive.google.com/uc?authuser=0&id=1OkTUUHYt7tXTg_ewmyFQaqYMFv_6gOxW&export=download",
+                "dziejekhorinis"
+            );
 
-            string ouCslFileName = "ou.csl";
-            string ouBinFileName = "ou.bin";
-            
-            string outputOuCslPath = Path.Combine(outputDirPath, ouCslFileName);
-            string outputOuBinPath = Path.Combine(outputDirPath, ouBinFileName);
-            
-            List<string> ouPaths = GetPaths(Constants.OuPathsLabel);
-            Dictionary<string, string> filenameToOuPath = GetFilenameToPathMapping(ouPaths);
-
-            CompareFilesByteByByte(filenameToOuPath[ouCslFileName], outputOuCslPath);
-            CompareFilesByteByByte(filenameToOuPath[ouBinFileName], outputOuBinPath);
+            CompileScripts();
+            CompareDats();
         }        
     }
 }
