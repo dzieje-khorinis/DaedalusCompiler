@@ -148,7 +148,6 @@ namespace DaedalusCompiler.Compilation
                     {
                         symbol.FirstTokenAddress = _currentAddress;
                     }
-                    symbol.ExecBlock = execBlock;
                 }
                 tokens.AddRange(GetTokens(execBlock));
             }

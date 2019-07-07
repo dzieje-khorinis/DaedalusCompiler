@@ -108,9 +108,6 @@ namespace DaedalusCompiler.Dat
         /// </summary>
         public int ParentIndex { get; set; }
 
-
-        public BaseExecBlockContext ExecBlock;
-
         public DatSymbol()
         {
             Index = -1;
@@ -125,8 +122,6 @@ namespace DaedalusCompiler.Dat
             ClassSize = 0;
             ClassVarOffset = 0;
             ReturnType = DatSymbolType.Void;
-
-            ExecBlock = null;
         }
 
         public bool IsStringLiteralSymbol()
