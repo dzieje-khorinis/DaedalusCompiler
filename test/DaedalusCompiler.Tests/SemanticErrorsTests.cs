@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using DaedalusCompiler.Compilation;
@@ -40,6 +41,9 @@ namespace DaedalusCompiler.Tests
             _expectedCompilationOutput = string.Join(Environment.NewLine, compilationOutputLines);
 
             _assemblyBuilder.ErrorContext.FileContentLines = _code.Split(Environment.NewLine);
+            _assemblyBuilder.ErrorContext.SuppressedWarningCodes = Compiler.GetWarningCodesToSuppress(
+                _assemblyBuilder.ErrorContext.FileContentLines[0]
+            );
             if (_externalCode != string.Empty)
             {
                 _assemblyBuilder.IsCurrentlyParsingExternals = true;
@@ -55,13 +59,30 @@ namespace DaedalusCompiler.Tests
         {
             ParseData();
             var logger = new StringBufforErrorLogger();
+            logger.Log("");
 
-            if (_assemblyBuilder.Errors.Any())
+            List<CompilationMessage> errors = new List<CompilationMessage>();
+            foreach (CompilationMessage error in _assemblyBuilder.Errors)
             {
-                _assemblyBuilder.Errors.Sort((x, y) => x.CompareTo(y));
+                if (error is CompilationError)
+                {
+                    errors.Add(error);
+                }
+                else if (error is CompilationWarning compilationWarning)
+                {
+                    if (compilationWarning.IsSuppressed == false)
+                    {
+                        errors.Add(compilationWarning);
+                    }
+                }
+            }
+
+            if (errors.Any())
+            {
+                errors.Sort((x, y) => x.CompareTo(y));
 
                 string lastErrorBlockName = null;
-                foreach (CompilationMessage error in _assemblyBuilder.Errors)
+                foreach (CompilationMessage error in errors)
                 {
                     if (lastErrorBlockName != error.ExecBlockName)
                     {
@@ -290,8 +311,123 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIntValueOutOfMinAndMaxRange()
         {
-            // TODO
+            _code = @"
+                const int MAX_INT = 2147483647;
+                const int MIN_INT = -2147483648;
+                const int TOO_BIG_INT_POSITIVE = 2147483648;
+                const int TOO_BIG_INT_NEGATIVE = -2147483649;
+                
+                func void testFunc() {
+                    var int max_int;
+                    max_int = 2147483647;
+                    var int min_int;
+                    min_int = -2147483647;  // not -2147483648, because minus and number value are in separate assembly instructions
+                    var int too_big_int_positive;
+                    too_big_int_positive = 2147483648;
+                    var int too_big_int_negative;
+                    too_big_int_negative = -2147483648;
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:3:33: error: integer literal is too large to be represented in an integer type
+                const int TOO_BIG_INT_POSITIVE = 2147483648;
+                                                 ^
+                test.d:4:33: error: integer literal is too large to be represented in an integer type
+                const int TOO_BIG_INT_NEGATIVE = -2147483649;
+                                                 ^
+                test.d: In function ‘testFunc’:
+                test.d:12:27: error: integer literal is too large to be represented in an integer type
+                    too_big_int_positive = 2147483648;
+                                           ^
+                test.d:14:27: error: integer literal is too large to be represented in an integer type
+                    too_big_int_negative = -2147483648;
+                                           ^
+            ";
+
+            AssertCompilationOutputMatch();
         }
         
+        [Fact]
+        public void TestSingleExpressionHack()
+        {
+            _code = @"
+                func void testFunc() {
+                    var int x;
+                    x = 5;
+                    x;
+                    return;
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d: In function ‘testFunc’:
+                test.d:4:4: warning W1: usage of single-expression statement hack
+                    x;
+                    ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
+        public void TestSingleExpressionHackStrictMode()
+        {
+            _assemblyBuilder.StrictSyntax = true;
+
+            _code = @"
+                func void testFunc() {
+                    var int x;
+                    x = 5;
+                    x;
+                    return;
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d: In function ‘testFunc’:
+                test.d:4:4: error W1: usage of single-expression statement hack
+                    x;
+                    ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
+        public void TestSingleExpressionHackWarningLineSuppress()
+        {
+            _code = @"
+                func void testFunc() {
+                    var int x;
+                    x = 5;
+                    x; //suppress: W1
+                    return;
+                };
+            ";
+
+            _expectedCompilationOutput = @"";
+
+            AssertCompilationOutputMatch();
+        }
+
+        [Fact]
+        public void TestSingleExpressionHackWarningFileSuppress()
+        {
+            _code = @"
+                //suppress: W1
+                
+                func void testFunc() {
+                    var int x;
+                    x = 5;
+                    x;
+                    return;
+                };
+            ";
+
+            _expectedCompilationOutput = @"";
+
+            AssertCompilationOutputMatch();
+        }
     }
 }

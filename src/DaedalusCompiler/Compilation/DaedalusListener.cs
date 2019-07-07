@@ -127,7 +127,9 @@ namespace DaedalusCompiler.Compilation
                     }
 
                     var location = GetLocation(context);
-                    var assignmentExpression = constValueContext.constValueAssignment().expressionBlock().expression();
+                    DaedalusParser.ExpressionContext assignmentExpression = constValueContext.constValueAssignment().expressionBlock().expression();
+                    
+                    _assemblyBuilder.ErrorContext.Context = assignmentExpression;
                     var value = EvaluatorHelper.EvaluateConst(assignmentExpression, _assemblyBuilder, type);
 
                     var symbol = SymbolBuilder.BuildConst(name, type, value, location); // TODO : Validate params
@@ -141,6 +143,13 @@ namespace DaedalusCompiler.Compilation
                     _assemblyBuilder.ErrorContext.Context = constArrayContext;
                     
                     var name = constArrayContext.nameNode().GetText();
+                    if (_assemblyBuilder.IsContextInsideExecBlock())
+                    {
+                        BaseExecBlockContext baseExecBlock = _assemblyBuilder.ExecBlocks.Last();
+                        string execBlockName = baseExecBlock.GetSymbol().Name;
+                        name = $"{execBlockName}.{name}";
+                    }
+                    
                     var location = GetLocation(context);
 
                     int declaredSize = 0;
@@ -245,6 +254,13 @@ namespace DaedalusCompiler.Compilation
                     if (varContext is DaedalusParser.VarArrayDeclContext varArrayContext)
                     {
                         var name = varArrayContext.nameNode().GetText();
+                        if (_assemblyBuilder.IsContextInsideExecBlock())
+                        {
+                            BaseExecBlockContext baseExecBlock = _assemblyBuilder.ExecBlocks.Last();
+                            string execBlockName = baseExecBlock.GetSymbol().Name;
+                            name = $"{execBlockName}.{name}";
+                        }
+                        
                         var location = GetLocation(context);
                         var size = EvaluatorHelper.EvaluteArraySize(varArrayContext.arraySize(), _assemblyBuilder);
 
@@ -380,6 +396,13 @@ namespace DaedalusCompiler.Compilation
                 DatSymbol instanceSymbol = SymbolBuilder.BuildInstance(instanceName, referenceSymbolId, location);
                 _assemblyBuilder.AddSymbol(instanceSymbol);
                 symbols.Add(instanceSymbol);
+                
+                if (refSymbol.Type == DatSymbolType.Prototype)
+                {
+                    _assemblyBuilder.ExecBlockStart(instanceSymbol, ExecBlockType.Instance);
+                    _assemblyBuilder.AddInstruction(new Call(refSymbol));
+                    _assemblyBuilder.ExecBlockEnd();
+                }
             }
             
             _assemblyBuilder.SharedBlockStart(symbols);
@@ -564,6 +587,16 @@ namespace DaedalusCompiler.Compilation
         {
             if (!_assemblyBuilder.IsInsideConstDef)
             {
+                RuleContext grandparentContext = context.Parent.Parent;
+                if (grandparentContext is DaedalusParser.OneArgExpressionContext oneArgExpressionContext)
+                {
+                    _assemblyBuilder.ErrorContext.Context = oneArgExpressionContext;
+                }
+                else
+                {
+                    _assemblyBuilder.ErrorContext.Context = context;
+                }
+                
                 bool isInsideFloatAssignment = _assemblyBuilder.IsInsideAssignment
                                                && _assemblyBuilder.AssignmentType == DatSymbolType.Float;
                 bool isInsideFloatArgument = _assemblyBuilder.IsInsideArgList
@@ -576,7 +609,8 @@ namespace DaedalusCompiler.Compilation
                 }
                 else
                 {
-                    _assemblyBuilder.AddInstruction(new PushInt(int.Parse(context.GetText())));   
+                    int parsedInt = EvaluatorHelper.IntParse(context.GetText(), _assemblyBuilder);
+                    _assemblyBuilder.AddInstruction(new PushInt(parsedInt));   
                 }
             }
         }
@@ -605,6 +639,17 @@ namespace DaedalusCompiler.Compilation
         /*
          *  ENTER EXPRESSION
          */
+        public override void EnterExpressionBlock(DaedalusParser.ExpressionBlockContext context)
+        {
+            _assemblyBuilder.ErrorContext.Context = context;
+            if (context.Parent is DaedalusParser.StatementContext)
+            {
+                _assemblyBuilder.Errors.Add(
+                    new SingleExpressionWarning(_assemblyBuilder.ErrorContext, _assemblyBuilder.StrictSyntax)
+                );
+            }
+        }
+
         public override void EnterBracketExpression(DaedalusParser.BracketExpressionContext context)
         {
             _assemblyBuilder.ExpressionStart();

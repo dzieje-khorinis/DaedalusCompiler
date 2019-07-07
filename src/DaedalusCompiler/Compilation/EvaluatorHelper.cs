@@ -71,6 +71,19 @@ namespace DaedalusCompiler.Compilation
                     $"Unable to evaluate constant. Expression '{value}' contains unsupported operations.");
             }
         }
+        
+        public static int IntParse(string text, AssemblyBuilder assemblyBuilder)
+        {
+            try
+            {
+                return int.Parse(text);
+            }
+            catch (OverflowException)
+            {
+                assemblyBuilder.Errors.Add(new IntegerLiteralTooLargeError(assemblyBuilder.ErrorContext));
+                return 0;
+            }
+        }
 
         private static int EvaluateConstIntExpression(DaedalusParser.ExpressionContext expression,
             AssemblyBuilder assemblyBuilder, string oper="")
@@ -120,15 +133,7 @@ namespace DaedalusCompiler.Compilation
             // value is simple literal
             if (valueChild is TerminalNodeImpl)
             {
-                try
-                {
-                    return int.Parse(valueText);
-                }
-                catch (OverflowException)
-                {
-                    // TODO should throw error for too small/ big int
-                    throw new OverflowException();
-                }
+                return IntParse(valueText, assemblyBuilder);
             }
 
             // value is reference to other constant

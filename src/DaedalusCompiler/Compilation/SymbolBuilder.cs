@@ -22,15 +22,21 @@ namespace DaedalusCompiler.Compilation
         }
         
         public static DatSymbol BuildParameter(string name, DatSymbolType type, DatSymbolLocation location = null,
-            int parentIndex = -1)
+            int parentIndex = -1, bool external=false)
         {
-            return BuildVariable(name, type, location, parentIndex);
+            DatSymbol symbol = BuildVariable(name, type, location, parentIndex);
+            if (type == DatSymbolType.Func && external == false)
+            {
+                symbol.ParametersCount = 1;
+            }
+
+            return symbol;
         }
         
         public static DatSymbol BuildExternalParameter(string name, DatSymbolType type, DatSymbolLocation location = null,
             int parentIndex = -1)
         {
-            var symbol = BuildParameter(name, type, location, parentIndex);
+            var symbol = BuildParameter(name, type, location, parentIndex, true);
             symbol.ArrayLength = 0;
             symbol.Content = null;
             return symbol;
@@ -114,6 +120,10 @@ namespace DaedalusCompiler.Compilation
 
         public static DatSymbol BuildFunc(string name, uint parametersCount, [NotNull] DatSymbolType returnType)
         {
+            if (returnType == DatSymbolType.Class)
+            {
+                returnType = DatSymbolType.Instance;
+            }
             DatSymbolFlag Flags = DatSymbolFlag.Const;
             if (returnType != DatSymbolType.Void)
             {

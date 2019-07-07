@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using Antlr4.Runtime;
 using DaedalusCompiler.Dat;
 
@@ -59,6 +58,7 @@ namespace DaedalusCompiler.Compilation
         public string[] FileContentLines;
         public int FileIndex;
         public readonly AssemblyBuilder AssemblyBuilder;
+        public string[] SuppressedWarningCodes;
         
         public static readonly DatSymbol UndeclaredSymbol = new DatSymbol();
 
@@ -74,6 +74,7 @@ namespace DaedalusCompiler.Compilation
             FileContentLines = errorContext.FileContentLines;
             FileIndex = errorContext.FileIndex;
             AssemblyBuilder = errorContext.AssemblyBuilder;
+            SuppressedWarningCodes = errorContext.SuppressedWarningCodes;
         }
     }
     
@@ -88,6 +89,16 @@ namespace DaedalusCompiler.Compilation
         public string ExecBlockName;
         public string ExecBlockType;
 
+        
+        public static string GetIdentifierRelativeName(string identifier) {
+            if (identifier.Contains("."))
+            {
+                identifier = identifier.Split(".")[1];
+            }
+
+            return identifier;
+        }
+        
         protected abstract void PrintMessage(ErrorLogger logger);
         
         public void Print(ErrorLogger logger)
@@ -185,8 +196,38 @@ namespace DaedalusCompiler.Compilation
 
     public abstract class CompilationWarning : CompilationMessage
     {
-        protected CompilationWarning(ErrorContext errorContext) : base(errorContext)
+        protected readonly string MessageType;
+        public bool IsSuppressed;
+        public const string Code = "UNKNOWN";
+
+        protected CompilationWarning(ErrorContext errorContext, bool strictSyntax) : base(errorContext)
         {
+            IsSuppressed = false;
+            MessageType = strictSyntax ? "error" : "warning";
+
+            string[] suppressedLineWarningCodes = Compiler.GetWarningCodesToSuppress(_line);
+            string[] suppressedFileWarningCodes = errorContext.SuppressedWarningCodes;
+            string[] suppressedWarningCodes = suppressedLineWarningCodes.Concat(suppressedFileWarningCodes).ToArray();
+            string code = GetType().GetField("Code").GetValue(null).ToString();
+
+            foreach (var warningCode in suppressedWarningCodes)
+            {
+                if (warningCode.Equals(code))
+                {
+                    IsSuppressed = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    public class SingleExpressionWarning : CompilationWarning
+    {
+        public new const string Code = "W1";
+        public SingleExpressionWarning(ErrorContext errorContext, bool strictSyntax) : base(errorContext, strictSyntax) { }
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.Log($"{FileName}:{_lineNo}:{_columnNo}: {MessageType} {Code}: usage of single-expression statement hack");
         }
     }
     
@@ -198,7 +239,6 @@ namespace DaedalusCompiler.Compilation
             ParserRuleContext referenceContext = errorContext.Context;
             _identifier = referenceContext.GetText();
         }
-
 
         protected override void PrintMessage(ErrorLogger logger)
         {
@@ -263,7 +303,7 @@ namespace DaedalusCompiler.Compilation
  
         public InconsistentArraySizeError(ErrorContext errorContext, string identifier, int declaredSize, int elementsCount) : base(errorContext)
         {
-            _identifier = identifier;
+            _identifier = GetIdentifierRelativeName(identifier);
             _declaredSize = declaredSize;
             _elementsCount = elementsCount;
         }
@@ -281,7 +321,7 @@ namespace DaedalusCompiler.Compilation
  
         public InvalidArraySizeError(ErrorContext errorContext, string identifier, int declaredSize) : base(errorContext)
         {
-            _identifier = identifier;
+            _identifier = GetIdentifierRelativeName(identifier);
             _declaredSize = declaredSize;
         }
 
@@ -289,6 +329,20 @@ namespace DaedalusCompiler.Compilation
         protected override void PrintMessage(ErrorLogger logger)
         {
             logger.Log($"{FileName}:{_lineNo}:{_columnNo}: error: array ‘{_identifier}’ has invalid size ‘{_declaredSize}’");
+        }
+    }
+    
+    
+    public class IntegerLiteralTooLargeError : CompilationError {
+ 
+        public IntegerLiteralTooLargeError(ErrorContext errorContext) : base(errorContext)
+        {
+        }
+
+
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.Log($"{FileName}:{_lineNo}:{_columnNo}: error: integer literal is too large to be represented in an integer type");
         }
     }
 }
