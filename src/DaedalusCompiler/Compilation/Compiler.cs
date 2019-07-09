@@ -78,11 +78,11 @@ namespace DaedalusCompiler.Compilation
                     string fileContent = GetFileContent(paths[i]);
                     DaedalusParser parser = GetParserForText(fileContent);
 
-                    _assemblyBuilder.ErrorContext.FileContentLines = fileContent.Split(Environment.NewLine);
-                    _assemblyBuilder.ErrorContext.FilePath = paths[i];
-                    _assemblyBuilder.ErrorContext.FileIndex = i;
-                    _assemblyBuilder.ErrorContext.SuppressedWarningCodes = Compiler.GetWarningCodesToSuppress(
-                        _assemblyBuilder.ErrorContext.FileContentLines[0]
+                    _assemblyBuilder.ErrorFileContext.FileContentLines = fileContent.Split(Environment.NewLine);
+                    _assemblyBuilder.ErrorFileContext.FilePath = paths[i];
+                    _assemblyBuilder.ErrorFileContext.FileIndex = i;
+                    _assemblyBuilder.ErrorFileContext.SuppressedWarningCodes = Compiler.GetWarningCodesToSuppress(
+                        _assemblyBuilder.ErrorFileContext.FileContentLines[0]
                     );
                     ParseTreeWalker.Default.Walk(new DaedalusListener(_assemblyBuilder, i), parser.daedalusFile());
                     if (generateOutputUnits)
@@ -119,6 +119,15 @@ namespace DaedalusCompiler.Compilation
                     }
                 }
 
+
+                int errorsCount = errors.Count(x => x is CompilationError);
+                int warningsCount = errors.Count(x => x is CompilationWarning);
+                if (_assemblyBuilder.StrictSyntax)
+                {
+                    errorsCount += warningsCount;
+                    warningsCount = 0;
+                }
+
                 if (errors.Any())
                 {
                     errors.Sort((x, y) => x.CompareTo(y));
@@ -128,6 +137,7 @@ namespace DaedalusCompiler.Compilation
                     string lastErrorFilePath = "";
                     string lastErrorBlockName = null;
                     var logger = new StdErrorLogger();
+
                     foreach (CompilationMessage error in errors)
                     {
                         if (error is CompilationError)
@@ -160,6 +170,24 @@ namespace DaedalusCompiler.Compilation
 
                     if (stopCompilation)
                     {
+
+                        if (errorsCount > 0 || warningsCount > 0)
+                        {
+                            if (errorsCount > 0)
+                            {
+                                logger.Log($"{errorsCount} {(errorsCount == 1 ? "error" : "errors")}");
+                            }
+
+                            if (warningsCount > 0)
+                            {
+                                if (errorsCount > 0)
+                                {
+                                    logger.Log(", ");
+                                }
+                                logger.Log($"{warningsCount} {(warningsCount == 1 ? "warning" : "warnings")}");
+                            }
+                            logger.LogLine(" generated.");
+                        }
                         return false;
                     }
                 }

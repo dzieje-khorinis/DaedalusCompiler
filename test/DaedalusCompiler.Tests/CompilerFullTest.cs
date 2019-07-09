@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Text;
 using DaedalusCompiler.Compilation;
 using DaedalusCompiler.Dat;
@@ -17,8 +18,10 @@ namespace DaedalusCompiler.Tests
             _assemblyBuilder = new AssemblyBuilder();
         }
 
-        private DatFile compileCodeAndGetDATFileOfThat()
+        private DatFile CompileCodeAndGetDatFileOfThat()
         {
+            _assemblyBuilder.ErrorFileContext.FileContentLines = _code.Split(Environment.NewLine);
+            
             Utils.WalkSourceCode(_code, _assemblyBuilder);
             var datBuilder = new DatBuilder(_assemblyBuilder);
             var datFile = datBuilder.GetDatFile();
@@ -41,9 +44,8 @@ namespace DaedalusCompiler.Tests
                 };
             ";
 
-            var datFile = compileCodeAndGetDATFileOfThat();
-            
-            Assert.Equal(datFile.Symbols.Count(), 4);
+            var datFile = CompileCodeAndGetDatFileOfThat();
+            Assert.Equal(4, datFile.Symbols.Count());
         }
     }
 }

@@ -9,14 +9,19 @@ namespace DaedalusCompiler.Compilation
 {
     public abstract class ErrorLogger
     {
-        public abstract void Log(string message);
+        public abstract void LogLine(string message);
     }
 
     public class StdErrorLogger : ErrorLogger
     {
-        public override void Log(string message)
+        public override void LogLine(string message)
         {
             Console.WriteLine(message);
+        }
+        
+        public void Log(string message)
+        {
+            Console.Write(message);
         }
     }
 
@@ -24,7 +29,7 @@ namespace DaedalusCompiler.Compilation
     {
         private string buffor;
 
-        public override void Log(string message)
+        public override void LogLine(string message)
         {
             if (buffor == null)
             {
@@ -51,30 +56,48 @@ namespace DaedalusCompiler.Compilation
         
     }
 
-    public class ErrorContext
+    public abstract class BaseErrorContext
     {
-        public ParserRuleContext Context;
+        public ParserRuleContext ParserContext;
         public string FilePath;
-        public string[] FileContentLines;
+    }
+
+    public class ErrorLineContext : BaseErrorContext
+    {
+        public readonly string FileContentLine;
+
+        public ErrorLineContext(ErrorFileContext errorFileContext)
+        {
+            ParserContext = errorFileContext.ParserContext;
+            FilePath = errorFileContext.FilePath;
+
+            FileContentLine = errorFileContext.FileContentLines[errorFileContext.ParserContext.Start.Line - 1];
+        }
+    }
+    
+    public class ErrorFileContext : BaseErrorContext
+    {
         public int FileIndex;
         public readonly AssemblyBuilder AssemblyBuilder;
+        public string[] FileContentLines;
         public string[] SuppressedWarningCodes;
         
         public static readonly DatSymbol UndeclaredSymbol = new DatSymbol();
 
-        public ErrorContext(AssemblyBuilder assemblyBuilder)
+        public ErrorFileContext(AssemblyBuilder assemblyBuilder)
         {
             AssemblyBuilder = assemblyBuilder;
         }
 
-        public ErrorContext(ErrorContext errorContext)
+        public ErrorFileContext(ErrorFileContext errorFileContext)
         {
-            Context = errorContext.Context;
-            FilePath = errorContext.FilePath;
-            FileContentLines = errorContext.FileContentLines;
-            FileIndex = errorContext.FileIndex;
-            AssemblyBuilder = errorContext.AssemblyBuilder;
-            SuppressedWarningCodes = errorContext.SuppressedWarningCodes;
+            ParserContext = errorFileContext.ParserContext;
+            FilePath = errorFileContext.FilePath;
+            
+            FileIndex = errorFileContext.FileIndex;
+            AssemblyBuilder = errorFileContext.AssemblyBuilder;
+            FileContentLines = errorFileContext.FileContentLines;
+            SuppressedWarningCodes = errorFileContext.SuppressedWarningCodes;
         }
     }
     
@@ -100,17 +123,23 @@ namespace DaedalusCompiler.Compilation
         }
         
         protected abstract void PrintMessage(ErrorLogger logger);
+
+        protected virtual void PrintNote(ErrorLogger logger)
+        {
+            
+        }
         
         public void Print(ErrorLogger logger)
         {
             PrintMessage(logger);
-            logger.Log($"{_line}");
+            logger.LogLine($"{_line}");
             PrintErrorPointer(logger);
+            PrintNote(logger);
         }
 
-        protected CompilationMessage(ErrorContext errorContext)
+        protected CompilationMessage(ErrorFileContext errorFileContext)
         {
-            ParserRuleContext parserContext = errorContext.Context;
+            ParserRuleContext parserContext = errorFileContext.ParserContext;
             
             ExecBlockName = null;
             RuleContext context = parserContext.Parent;
@@ -139,12 +168,12 @@ namespace DaedalusCompiler.Compilation
                 }
             }
             
-            FilePath = errorContext.FilePath;
+            FilePath = errorFileContext.FilePath;
             FileName = Path.GetFileName(FilePath);
-            _fileNo = errorContext.FileIndex;
+            _fileNo = errorFileContext.FileIndex;
             _lineNo = parserContext.Start.Line;
             _columnNo = parserContext.Start.Column;
-            _line = errorContext.FileContentLines[_lineNo - 1];
+            _line = errorFileContext.FileContentLines[_lineNo - 1];
         }
         public int CompareTo(CompilationMessage message)
         {
@@ -163,12 +192,12 @@ namespace DaedalusCompiler.Compilation
             return result;
         }
         
-        protected string GetErrorPointerLine(int whitespaceCount)
+        protected string GetErrorPointerLine(string line, int whitespaceCount)
         {
             string errorPointerLine = "";
             for (int i = 0; i < whitespaceCount; i++)
             {
-                if (_line[i] == '\t')
+                if (line[i] == '\t')
                 {
                     errorPointerLine += "\t";
                 }
@@ -181,15 +210,26 @@ namespace DaedalusCompiler.Compilation
             return errorPointerLine;
         }
         
+        protected virtual void PrintErrorPointer(ErrorLogger logger, int columnNo, string line)
+        {
+            logger.LogLine($"{GetErrorPointerLine(line, columnNo)}");
+        }
+        
+        protected virtual void PrintErrorPointer(ErrorLogger logger, int columnNo)
+        {
+            PrintErrorPointer(logger, columnNo, _line);
+        }
+        
         protected virtual void PrintErrorPointer(ErrorLogger logger)
         {
-            logger.Log($"{GetErrorPointerLine(_columnNo)}");
+            PrintErrorPointer(logger, _columnNo, _line);
         }
+        
     }
 
     public abstract class CompilationError : CompilationMessage
     {
-        protected CompilationError(ErrorContext errorContext) : base(errorContext)
+        protected CompilationError(ErrorFileContext errorFileContext) : base(errorFileContext)
         {
         }
     }
@@ -200,13 +240,13 @@ namespace DaedalusCompiler.Compilation
         public bool IsSuppressed;
         public const string Code = "UNKNOWN";
 
-        protected CompilationWarning(ErrorContext errorContext, bool strictSyntax) : base(errorContext)
+        protected CompilationWarning(ErrorFileContext errorFileContext, bool strictSyntax) : base(errorFileContext)
         {
             IsSuppressed = false;
             MessageType = strictSyntax ? "error" : "warning";
 
             string[] suppressedLineWarningCodes = Compiler.GetWarningCodesToSuppress(_line);
-            string[] suppressedFileWarningCodes = errorContext.SuppressedWarningCodes;
+            string[] suppressedFileWarningCodes = errorFileContext.SuppressedWarningCodes;
             string[] suppressedWarningCodes = suppressedLineWarningCodes.Concat(suppressedFileWarningCodes).ToArray();
             string code = GetType().GetField("Code").GetValue(null).ToString();
 
@@ -224,10 +264,10 @@ namespace DaedalusCompiler.Compilation
     public class SingleExpressionWarning : CompilationWarning
     {
         public new const string Code = "W1";
-        public SingleExpressionWarning(ErrorContext errorContext, bool strictSyntax) : base(errorContext, strictSyntax) { }
+        public SingleExpressionWarning(ErrorFileContext errorFileContext, bool strictSyntax) : base(errorFileContext, strictSyntax) { }
         protected override void PrintMessage(ErrorLogger logger)
         {
-            logger.Log($"{FileName}:{_lineNo}:{_columnNo}: {MessageType} {Code}: usage of single-expression statement hack");
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: {MessageType} {Code}: usage of single-expression statement hack");
         }
     }
     
@@ -235,14 +275,14 @@ namespace DaedalusCompiler.Compilation
         
         protected string _identifier;
 
-        public UndeclaredIdentifierError(ErrorContext errorContext) : base(errorContext) {
-            ParserRuleContext referenceContext = errorContext.Context;
+        public UndeclaredIdentifierError(ErrorFileContext errorFileContext) : base(errorFileContext) {
+            ParserRuleContext referenceContext = errorFileContext.ParserContext;
             _identifier = referenceContext.GetText();
         }
 
         protected override void PrintMessage(ErrorLogger logger)
         {
-            logger.Log($"{FileName}:{_lineNo}:{_columnNo}: error: ‘{_identifier.Split(".").First()}’ undeclared");
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: ‘{_identifier.Split(".").First()}’ undeclared");
         }
     }
 
@@ -254,7 +294,7 @@ namespace DaedalusCompiler.Compilation
         private readonly string _className;
         
         
-        public AttributeNotFoundError(ErrorContext errorContext) : base(errorContext)
+        public AttributeNotFoundError(ErrorFileContext errorFileContext) : base(errorFileContext)
         {           
             string[] identifier = _identifier.Split(".");
             string objectName = identifier[0];
@@ -262,7 +302,7 @@ namespace DaedalusCompiler.Compilation
             _identifier = identifier[1];
 
             
-            DatSymbol symbol = errorContext.AssemblyBuilder.GetSymbolByName(objectName);
+            DatSymbol symbol = errorFileContext.AssemblyBuilder.GetSymbolByName(objectName);
             while (symbol.ParentIndex != -1)
             {
                 if (symbol.Type == DatSymbolType.Class)
@@ -270,7 +310,7 @@ namespace DaedalusCompiler.Compilation
                     _className = symbol.Name;
                     break;
                 }
-                symbol = errorContext.AssemblyBuilder.Symbols[symbol.ParentIndex];
+                symbol = errorFileContext.AssemblyBuilder.Symbols[symbol.ParentIndex];
             }          
         }
         
@@ -281,18 +321,18 @@ namespace DaedalusCompiler.Compilation
             {
                 string[] identifier = _identifierPrefix.Split(".");
                 string objectName = identifier[0];
-                logger.Log($"{FileName}:{_lineNo}:{_columnNo}: error: ‘object {objectName}’ has no member named ‘{_identifier}’");
+                logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: ‘object {objectName}’ has no member named ‘{_identifier}’");
             }
             else
             {
-                logger.Log($"{FileName}:{_lineNo}:{_columnNo}: error: ‘class {_className}’ has no member named ‘{_identifier}’");
+                logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: ‘class {_className}’ has no member named ‘{_identifier}’");
             }
             
         }
 
         protected override void PrintErrorPointer(ErrorLogger logger)
         {
-            logger.Log($"{GetErrorPointerLine(_columnNo + _identifierPrefix.Length)}");
+            PrintErrorPointer(logger, _columnNo + _identifierPrefix.Length);
         }
     }
     
@@ -301,7 +341,7 @@ namespace DaedalusCompiler.Compilation
         private readonly int _declaredSize;
         private readonly int _elementsCount;
  
-        public InconsistentArraySizeError(ErrorContext errorContext, string identifier, int declaredSize, int elementsCount) : base(errorContext)
+        public InconsistentArraySizeError(ErrorFileContext errorFileContext, string identifier, int declaredSize, int elementsCount) : base(errorFileContext)
         {
             _identifier = GetIdentifierRelativeName(identifier);
             _declaredSize = declaredSize;
@@ -311,7 +351,7 @@ namespace DaedalusCompiler.Compilation
 
         protected override void PrintMessage(ErrorLogger logger)
         {
-            logger.Log($"{FileName}:{_lineNo}:{_columnNo}: error: array ‘{_identifier}’ has inconsistent size (declared size: {_declaredSize}, elements count: {_elementsCount})");
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: array ‘{_identifier}’ has inconsistent size (declared size: {_declaredSize}, elements count: {_elementsCount})");
         }
     }
     
@@ -319,7 +359,7 @@ namespace DaedalusCompiler.Compilation
         private readonly string _identifier;
         private readonly int _declaredSize;
  
-        public InvalidArraySizeError(ErrorContext errorContext, string identifier, int declaredSize) : base(errorContext)
+        public InvalidArraySizeError(ErrorFileContext errorFileContext, string identifier, int declaredSize) : base(errorFileContext)
         {
             _identifier = GetIdentifierRelativeName(identifier);
             _declaredSize = declaredSize;
@@ -328,21 +368,58 @@ namespace DaedalusCompiler.Compilation
 
         protected override void PrintMessage(ErrorLogger logger)
         {
-            logger.Log($"{FileName}:{_lineNo}:{_columnNo}: error: array ‘{_identifier}’ has invalid size ‘{_declaredSize}’");
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: array ‘{_identifier}’ has invalid size ‘{_declaredSize}’");
         }
     }
     
     
     public class IntegerLiteralTooLargeError : CompilationError {
  
-        public IntegerLiteralTooLargeError(ErrorContext errorContext) : base(errorContext)
+        public IntegerLiteralTooLargeError(ErrorFileContext errorFileContext) : base(errorFileContext)
         {
         }
 
 
         protected override void PrintMessage(ErrorLogger logger)
         {
-            logger.Log($"{FileName}:{_lineNo}:{_columnNo}: error: integer literal is too large to be represented in an integer type");
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: integer literal is too large to be represented in an integer type");
+        }
+    }
+    
+    
+    public class ArgumentsCountDoesNotMatchError : CompilationError {
+        private readonly uint _parametersCount;
+        private readonly uint _argumentsCount;
+        private readonly ErrorLineContext _errorLineContext;
+
+        public ArgumentsCountDoesNotMatchError(
+            ErrorFileContext errorFileContext,
+            ErrorLineContext errorLineContext,
+            uint parametersCount,
+            uint argumentsCount) : base(errorFileContext)
+        {
+            _errorLineContext = errorLineContext;
+            _parametersCount = parametersCount;
+            _argumentsCount = argumentsCount;
+        }
+
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: too {(_parametersCount > _argumentsCount ?  "few" : "many")} arguments to function call, expected {_parametersCount}, have {_argumentsCount}");
+        }
+
+        protected override void PrintNote(ErrorLogger logger)
+        {
+            ParserRuleContext parserContext = _errorLineContext.ParserContext;
+            
+            string fileName = Path.GetFileName(_errorLineContext.FilePath);
+            int lineNo = parserContext.Start.Line;
+            int columnNo = parserContext.Start.Column;
+            string identifier = GetIdentifierRelativeName(parserContext.GetText());
+            string line = _errorLineContext.FileContentLine;
+            logger.LogLine($"{fileName}:{lineNo}:{columnNo}: note: '{identifier}' declared here");
+            logger.LogLine(line);
+            PrintErrorPointer(logger, columnNo, line);
         }
     }
 }

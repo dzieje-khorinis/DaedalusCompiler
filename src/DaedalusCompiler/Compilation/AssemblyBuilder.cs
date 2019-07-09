@@ -15,7 +15,7 @@ namespace DaedalusCompiler.Compilation
         public readonly DatSymbolType AssignmentType;
         public readonly FuncCallContext FuncCallCtx;
 
-        public readonly ErrorContext ErrorContext;
+        public readonly ErrorFileContext ErrorFileContext;
 
         public AssemblyBuilderSnapshot(AssemblyBuilder assemblyBuilder)
         {
@@ -27,7 +27,7 @@ namespace DaedalusCompiler.Compilation
             AssignmentType = assemblyBuilder.AssignmentType;
             FuncCallCtx = assemblyBuilder.FuncCallCtx == null ? null : new FuncCallContext(assemblyBuilder.FuncCallCtx);
 
-            ErrorContext = new ErrorContext(assemblyBuilder.ErrorContext);
+            ErrorFileContext = new ErrorFileContext(assemblyBuilder.ErrorFileContext);
         }
     }
 
@@ -35,7 +35,7 @@ namespace DaedalusCompiler.Compilation
     {
         public readonly List<BaseExecBlockContext> ExecBlocks;
         public BaseExecBlockContext ActiveExecBlock;
-        public ErrorContext ErrorContext;
+        public ErrorFileContext ErrorFileContext;
         
         public readonly List<DatSymbol> Symbols;
         private readonly Dictionary<string, DatSymbol> _symbolsDict;
@@ -84,7 +84,7 @@ namespace DaedalusCompiler.Compilation
             StrictSyntax = strictSyntax;
             
             Errors = new List<CompilationMessage>();
-            ErrorContext = new ErrorContext(this);
+            ErrorFileContext = new ErrorFileContext(this);
         }
         
         public AssemblyBuilderSnapshot MakeSnapshot()
@@ -103,7 +103,7 @@ namespace DaedalusCompiler.Compilation
             AssignmentType = snapshot.AssignmentType;
             FuncCallCtx = snapshot.FuncCallCtx;
 
-            ErrorContext = snapshot.ErrorContext;
+            ErrorFileContext = snapshot.ErrorFileContext;
         }
 
         public List<DatSymbol> GetSymbols()
@@ -140,7 +140,7 @@ namespace DaedalusCompiler.Compilation
 
         public DatSymbolReference GetDatSymbolReference(DaedalusParser.ReferenceContext referenceContext)
         {
-            ErrorContext.Context = referenceContext;
+            ErrorFileContext.ParserContext = referenceContext;
 
             DaedalusParser.ReferenceAtomContext[] referenceAtoms = referenceContext.referenceAtom();
             DaedalusParser.ReferenceAtomContext objectPart = referenceAtoms[0];
@@ -155,7 +155,7 @@ namespace DaedalusCompiler.Compilation
             }
             catch (UndeclaredIdentifierException)
             {
-                Errors.Add(new UndeclaredIdentifierError(ErrorContext));
+                Errors.Add(new UndeclaredIdentifierError(ErrorFileContext));
                 return reference;
             }
 
@@ -169,7 +169,7 @@ namespace DaedalusCompiler.Compilation
                 }
                 catch (AttributeNotFoundException)
                 {
-                    Errors.Add(new AttributeNotFoundError(ErrorContext));
+                    Errors.Add(new AttributeNotFoundError(ErrorFileContext));
                     return reference;
                 }
 
@@ -409,9 +409,19 @@ namespace DaedalusCompiler.Compilation
             }
         }
 
-        public void FuncCallStart(string funcName)
+        public void FuncCallStart(string funcName, uint argumentsCount)
         {
             DatSymbol symbol = GetSymbolByName(funcName);
+
+            if (symbol != DatSymbolReference.UndeclaredSymbol && symbol.ParametersCount != argumentsCount)
+            {
+                Errors.Add(new ArgumentsCountDoesNotMatchError(
+                    ErrorFileContext,
+                    symbol.ErrorLineContext,
+                    symbol.ParametersCount,
+                    argumentsCount)
+                );
+            }
             
             List<DatSymbolType> parametersTypes = new List<DatSymbolType>();
             for (int i = 1; i <= symbol.ParametersCount; ++i)
@@ -644,7 +654,7 @@ namespace DaedalusCompiler.Compilation
             }
             catch (KeyNotFoundException)
             {
-                Errors.Add(new UndeclaredIdentifierError(ErrorContext));
+                Errors.Add(new UndeclaredIdentifierError(ErrorFileContext));
                 return DatSymbolReference.UndeclaredSymbol;
             }
         }

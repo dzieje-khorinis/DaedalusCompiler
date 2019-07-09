@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 using DaedalusCompiler.Compilation;
 
 namespace DaedalusCompiler.Dat
@@ -107,7 +103,9 @@ namespace DaedalusCompiler.Dat
         /// Reference to parent symbol for nested symbols like class variables
         /// </summary>
         public int ParentIndex { get; set; }
-
+        
+        public ErrorLineContext ErrorLineContext;
+        
         public DatSymbol()
         {
             Index = -1;
@@ -122,6 +120,7 @@ namespace DaedalusCompiler.Dat
             ClassSize = 0;
             ClassVarOffset = 0;
             ReturnType = DatSymbolType.Void;
+            ErrorLineContext = null;
         }
 
         public bool IsStringLiteralSymbol()

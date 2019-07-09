@@ -129,7 +129,7 @@ namespace DaedalusCompiler.Compilation
                     var location = GetLocation(context);
                     DaedalusParser.ExpressionContext assignmentExpression = constValueContext.constValueAssignment().expressionBlock().expression();
                     
-                    _assemblyBuilder.ErrorContext.Context = assignmentExpression;
+                    _assemblyBuilder.ErrorFileContext.ParserContext = assignmentExpression;
                     var value = EvaluatorHelper.EvaluateConst(assignmentExpression, _assemblyBuilder, type);
 
                     var symbol = SymbolBuilder.BuildConst(name, type, value, location); // TODO : Validate params
@@ -140,7 +140,7 @@ namespace DaedalusCompiler.Compilation
 
                 if (constContext is DaedalusParser.ConstArrayDefContext constArrayContext)
                 {
-                    _assemblyBuilder.ErrorContext.Context = constArrayContext;
+                    _assemblyBuilder.ErrorFileContext.ParserContext = constArrayContext;
                     
                     var name = constArrayContext.nameNode().GetText();
                     if (_assemblyBuilder.IsContextInsideExecBlock())
@@ -157,7 +157,7 @@ namespace DaedalusCompiler.Compilation
                     
                     try
                     {
-                        _assemblyBuilder.ErrorContext.Context = constArrayContext.arraySize();
+                        _assemblyBuilder.ErrorFileContext.ParserContext = constArrayContext.arraySize();
                         declaredSize = EvaluatorHelper.EvaluteArraySize(constArrayContext.arraySize(), _assemblyBuilder);
                     }
                     catch (System.ArgumentNullException)
@@ -170,7 +170,7 @@ namespace DaedalusCompiler.Compilation
                         compareDeclaredSizeAndElementsCount = false;
                         _assemblyBuilder.Errors.Add(
                             new InvalidArraySizeError(
-                                _assemblyBuilder.ErrorContext,
+                                _assemblyBuilder.ErrorFileContext,
                                 name,
                                 declaredSize
                             )
@@ -187,7 +187,7 @@ namespace DaedalusCompiler.Compilation
                     {   
                         _assemblyBuilder.Errors.Add(
                             new InconsistentArraySizeError(
-                                _assemblyBuilder.ErrorContext,
+                                _assemblyBuilder.ErrorFileContext,
                                 name,
                                 declaredSize,
                                 elements.Length
@@ -331,7 +331,7 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterPrototypeDef([NotNull] DaedalusParser.PrototypeDefContext context)
         {
-            _assemblyBuilder.ErrorContext.Context = context.parentReference();
+            _assemblyBuilder.ErrorFileContext.ParserContext = context.parentReference();
 
             var prototypeName = context.nameNode().GetText();
             var referenceName = context.parentReference().GetText();
@@ -353,7 +353,7 @@ namespace DaedalusCompiler.Compilation
 
         public override void EnterInstanceDef(DaedalusParser.InstanceDefContext context)
         {
-            _assemblyBuilder.ErrorContext.Context = context.parentReference();
+            _assemblyBuilder.ErrorFileContext.ParserContext = context.parentReference();
 
             var instanceName = context.nameNode().GetText();
             var referenceName = context.parentReference().GetText();
@@ -381,7 +381,7 @@ namespace DaedalusCompiler.Compilation
         
         public override void EnterInstanceDecl(DaedalusParser.InstanceDeclContext context)
         {
-            _assemblyBuilder.ErrorContext.Context = context.parentReference();
+            _assemblyBuilder.ErrorFileContext.ParserContext = context.parentReference();
 
             var referenceName = context.parentReference().GetText();
             var refSymbol = _assemblyBuilder.GetSymbolByName(referenceName);
@@ -420,6 +420,13 @@ namespace DaedalusCompiler.Compilation
             uint parametersCount = (uint)context.parameterList().parameterDecl().Length;
 
             var symbol = SymbolBuilder.BuildFunc(funcName, parametersCount, returnType);
+
+            if (!_assemblyBuilder.IsCurrentlyParsingExternals)
+            {
+                _assemblyBuilder.ErrorFileContext.ParserContext = context.nameNode();
+                symbol.ErrorLineContext = new ErrorLineContext(_assemblyBuilder.ErrorFileContext);
+            }
+            
             _assemblyBuilder.AddSymbol(symbol);
             _assemblyBuilder.ExecBlockStart(symbol, ExecBlockType.Function);
         }
@@ -562,10 +569,11 @@ namespace DaedalusCompiler.Compilation
         
         public override void EnterFuncCall(DaedalusParser.FuncCallContext context)
         {
-            _assemblyBuilder.ErrorContext.Context = context.nameNode();
+            _assemblyBuilder.ErrorFileContext.ParserContext = context.nameNode();
 
             string funcName = context.nameNode().GetText();
-            _assemblyBuilder.FuncCallStart(funcName);
+            uint argumentsCount = (uint) context.funcArgExpression().Length;
+            _assemblyBuilder.FuncCallStart(funcName, argumentsCount);
         }
 
         public override void ExitFuncCall(DaedalusParser.FuncCallContext context)
@@ -590,11 +598,11 @@ namespace DaedalusCompiler.Compilation
                 RuleContext grandparentContext = context.Parent.Parent;
                 if (grandparentContext is DaedalusParser.OneArgExpressionContext oneArgExpressionContext)
                 {
-                    _assemblyBuilder.ErrorContext.Context = oneArgExpressionContext;
+                    _assemblyBuilder.ErrorFileContext.ParserContext = oneArgExpressionContext;
                 }
                 else
                 {
-                    _assemblyBuilder.ErrorContext.Context = context;
+                    _assemblyBuilder.ErrorFileContext.ParserContext = context;
                 }
                 
                 bool isInsideFloatAssignment = _assemblyBuilder.IsInsideAssignment
@@ -641,11 +649,11 @@ namespace DaedalusCompiler.Compilation
          */
         public override void EnterExpressionBlock(DaedalusParser.ExpressionBlockContext context)
         {
-            _assemblyBuilder.ErrorContext.Context = context;
+            _assemblyBuilder.ErrorFileContext.ParserContext = context;
             if (context.Parent is DaedalusParser.StatementContext)
             {
                 _assemblyBuilder.Errors.Add(
-                    new SingleExpressionWarning(_assemblyBuilder.ErrorContext, _assemblyBuilder.StrictSyntax)
+                    new SingleExpressionWarning(_assemblyBuilder.ErrorFileContext, _assemblyBuilder.StrictSyntax)
                 );
             }
         }
