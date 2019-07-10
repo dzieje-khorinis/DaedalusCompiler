@@ -411,7 +411,7 @@ namespace DaedalusCompiler.Compilation
         
         public DatSymbolType GetParameterType()
         {
-            if (_symbol == DatSymbolReference.UndeclaredSymbol)
+            if (_symbol == DatSymbolReference.UndeclaredSymbol || (ArgIndex >= _parametersTypes.Count))
             {
                 return DatSymbolType.Undefined;
             }

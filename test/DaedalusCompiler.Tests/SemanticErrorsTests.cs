@@ -21,7 +21,7 @@ namespace DaedalusCompiler.Tests
             _externalCode = String.Empty;
             IfBlockStatementContext.NextLabelIndex = 0;
 
-            _assemblyBuilder.ErrorContext.FilePath = "test.d";
+            _assemblyBuilder.ErrorFileContext.FilePath = "test.d";
         }
 
         private void ParseData()
@@ -40,9 +40,9 @@ namespace DaedalusCompiler.Tests
             }
             _expectedCompilationOutput = string.Join(Environment.NewLine, compilationOutputLines);
 
-            _assemblyBuilder.ErrorContext.FileContentLines = _code.Split(Environment.NewLine);
-            _assemblyBuilder.ErrorContext.SuppressedWarningCodes = Compiler.GetWarningCodesToSuppress(
-                _assemblyBuilder.ErrorContext.FileContentLines[0]
+            _assemblyBuilder.ErrorFileContext.FileContentLines = _code.Split(Environment.NewLine);
+            _assemblyBuilder.ErrorFileContext.SuppressedWarningCodes = Compiler.GetWarningCodesToSuppress(
+                _assemblyBuilder.ErrorFileContext.FileContentLines[0]
             );
             if (_externalCode != string.Empty)
             {
@@ -59,7 +59,7 @@ namespace DaedalusCompiler.Tests
         {
             ParseData();
             var logger = new StringBufforErrorLogger();
-            logger.Log("");
+            logger.LogLine("");
 
             List<CompilationMessage> errors = new List<CompilationMessage>();
             foreach (CompilationMessage error in _assemblyBuilder.Errors)
@@ -89,11 +89,11 @@ namespace DaedalusCompiler.Tests
                         lastErrorBlockName = error.ExecBlockName;
                         if (error.ExecBlockName == null)
                         {
-                            logger.Log($"{error.FileName}: In global scope:");
+                            logger.LogLine($"{error.FileName}: In global scope:");
                         }
                         else
                         {
-                            logger.Log($"{error.FileName}: In {error.ExecBlockType} ‘{error.ExecBlockName}’:");
+                            logger.LogLine($"{error.FileName}: In {error.ExecBlockType} ‘{error.ExecBlockName}’:");
                         }
                         
                     }
@@ -426,6 +426,39 @@ namespace DaedalusCompiler.Tests
             ";
 
             _expectedCompilationOutput = @"";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        
+        [Fact]
+        public void TestArgumentsCountDoesNotMatch()
+        {
+            _code = @"
+                func int testFunc(var int a) {};
+                
+                func int secondFunc() {
+                    testFunc();
+                    testFunc(1);
+                    testFunc(2, 3);
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d: In function ‘secondFunc’:
+                test.d:4:4: error: too few arguments to function call, expected 1, have 0
+                    testFunc();
+                    ^
+                test.d:1:9: note: 'testFunc' declared here
+                func int testFunc(var int a) {};
+                         ^
+                test.d:6:4: error: too many arguments to function call, expected 1, have 2
+                    testFunc(2, 3);
+                    ^
+                test.d:1:9: note: 'testFunc' declared here
+                func int testFunc(var int a) {};
+                         ^
+            ";
 
             AssertCompilationOutputMatch();
         }

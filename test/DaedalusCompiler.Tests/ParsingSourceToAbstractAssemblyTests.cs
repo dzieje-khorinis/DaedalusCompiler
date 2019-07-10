@@ -96,9 +96,9 @@ namespace DaedalusCompiler.Tests
                 _assemblyBuilder.IsCurrentlyParsingExternals = false;
             }
 
-            _assemblyBuilder.ErrorContext.FileContentLines = _code.Split(Environment.NewLine);
-            _assemblyBuilder.ErrorContext.SuppressedWarningCodes = Compiler.GetWarningCodesToSuppress(
-                _assemblyBuilder.ErrorContext.FileContentLines[0]
+            _assemblyBuilder.ErrorFileContext.FileContentLines = _code.Split(Environment.NewLine);
+            _assemblyBuilder.ErrorFileContext.SuppressedWarningCodes = Compiler.GetWarningCodesToSuppress(
+                _assemblyBuilder.ErrorFileContext.FileContentLines[0]
             );
             Utils.WalkSourceCode(_code, _assemblyBuilder);
             _assemblyBuilder.Finish();

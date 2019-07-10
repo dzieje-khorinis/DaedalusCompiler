@@ -80,7 +80,7 @@ namespace DaedalusCompiler.Compilation
             }
             catch (OverflowException)
             {
-                assemblyBuilder.Errors.Add(new IntegerLiteralTooLargeError(assemblyBuilder.ErrorContext));
+                assemblyBuilder.Errors.Add(new IntegerLiteralTooLargeError(assemblyBuilder.ErrorFileContext));
                 return 0;
             }
         }
