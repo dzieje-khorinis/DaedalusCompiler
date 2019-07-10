@@ -385,7 +385,19 @@ namespace DaedalusCompiler.Compilation
             logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: integer literal is too large to be represented in an integer type");
         }
     }
-    
+
+    public class UnableToEvaluateConstError : CompilationError {
+ 
+        public UnableToEvaluateConstError(ErrorFileContext errorFileContext) : base(errorFileContext)
+        {
+        }
+
+
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: unable to evaluate const value");
+        }
+    }
     
     public class ArgumentsCountDoesNotMatchError : CompilationError {
         private readonly uint _parametersCount;
@@ -420,6 +432,22 @@ namespace DaedalusCompiler.Compilation
             logger.LogLine($"{fileName}:{lineNo}:{columnNo}: note: '{identifier}' declared here");
             logger.LogLine(line);
             PrintErrorPointer(logger, columnNo, line);
+        }
+    }
+
+    public class IncompatibleTypesError : CompilationError
+    {
+
+        private readonly string _usedType;
+        private readonly string _requiredType;
+
+        public IncompatibleTypesError(ErrorFileContext errorFileContext) : base(errorFileContext)
+        {
+        }
+
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: incompatible types: '{_usedType}' cannot be converted to '{_requiredType}'");
         }
     }
 }

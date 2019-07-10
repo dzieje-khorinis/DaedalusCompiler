@@ -462,5 +462,60 @@ namespace DaedalusCompiler.Tests
 
             AssertCompilationOutputMatch();
         }
+
+        [Fact]
+        public void TestConstAssignment()
+        {
+            _code = @"
+                const int a = 1;
+                const int b = 1.5; //error
+                const int c = 2 + 2;
+                const int d = 2.5 + 3; //error
+                const int e = 4 + 4.5; //error
+                const int f = 5.5 + 5.5; //error
+                
+                const float g = 1;
+                const float h = 1.5;
+                const float i = 2 + 2; //error
+                const float j = 2.5 + 3; //error
+                const float k = 4 + 4.5; //error
+                const float l = 5.5 + 5.5; //error
+                
+                const string m = ""ha"";
+                const string n = ""ha"" + ""ha""; //error
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:2:14: error: unable to evaluate const value
+                const int b = 1.5; //error
+                              ^
+                test.d:4:14: error: unable to evaluate const value
+                const int d = 2.5 + 3; //error
+                              ^
+                test.d:5:14: error: unable to evaluate const value
+                const int e = 4 + 4.5; //error
+                              ^
+                test.d:6:14: error: unable to evaluate const value
+                const int f = 5.5 + 5.5; //error
+                              ^
+                test.d:10:16: error: unable to evaluate const value
+                const float i = 2 + 2; //error
+                                ^
+                test.d:11:16: error: unable to evaluate const value
+                const float j = 2.5 + 3; //error
+                                ^
+                test.d:12:16: error: unable to evaluate const value
+                const float k = 4 + 4.5; //error
+                                ^
+                test.d:13:16: error: unable to evaluate const value
+                const float l = 5.5 + 5.5; //error
+                                ^
+                test.d:16:17: error: unable to evaluate const value
+                const string n = ""ha"" + ""ha""; //error
+                                 ^
+                ";
+
+            AssertCompilationOutputMatch();
+        }
     }
 }

@@ -130,7 +130,17 @@ namespace DaedalusCompiler.Compilation
                     DaedalusParser.ExpressionContext assignmentExpression = constValueContext.constValueAssignment().expressionBlock().expression();
                     
                     _assemblyBuilder.ErrorFileContext.ParserContext = assignmentExpression;
-                    var value = EvaluatorHelper.EvaluateConst(assignmentExpression, _assemblyBuilder, type);
+
+                    object value = null;
+                    try
+                    {
+                        value = EvaluatorHelper.EvaluateConst(assignmentExpression, _assemblyBuilder, type);
+                    }
+                    catch (UnableToEvaluateException)
+                    {
+                        _assemblyBuilder.Errors.Add(
+                            new UnableToEvaluateConstError(_assemblyBuilder.ErrorFileContext));
+                    }
 
                     var symbol = SymbolBuilder.BuildConst(name, type, value, location); // TODO : Validate params
                     _assemblyBuilder.AddSymbol(symbol);
@@ -612,7 +622,13 @@ namespace DaedalusCompiler.Compilation
                 
                 if (isInsideFloatAssignment || isInsideFloatArgument)
                 {
-                    int parsedFloat = EvaluatorHelper.EvaluateFloatExpression(context.Parent.Parent.GetText());
+                    string valueToParse = context.GetText();
+                    if (context.Parent.Parent is DaedalusParser.OneArgExpressionContext)
+                    {
+                        valueToParse = context.Parent.Parent.GetText();
+                    }
+                    int parsedFloat = EvaluatorHelper.EvaluateFloatExpression(valueToParse);
+
                     _assemblyBuilder.AddInstruction(new PushInt(parsedFloat));
                 }
                 else
@@ -627,7 +643,13 @@ namespace DaedalusCompiler.Compilation
         {
             if (!_assemblyBuilder.IsInsideConstDef)
             {
-                int parsedFloat = EvaluatorHelper.EvaluateFloatExpression(context.Parent.Parent.GetText());
+                string valueToParse = context.GetText();
+                if (context.Parent.Parent is DaedalusParser.OneArgExpressionContext)
+                {
+                    valueToParse = context.Parent.Parent.GetText();
+                }
+                int parsedFloat = EvaluatorHelper.EvaluateFloatExpression(valueToParse);
+
                 _assemblyBuilder.AddInstruction(new PushInt(parsedFloat));
             }
         }
