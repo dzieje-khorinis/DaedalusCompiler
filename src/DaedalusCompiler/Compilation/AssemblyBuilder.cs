@@ -182,6 +182,11 @@ namespace DaedalusCompiler.Compilation
                 reference.Index = GetArrayIndex(objectPart);
             }
 
+            if (reference.Index >= symbol.ArrayLength)
+            {
+                Errors.Add(new ArrayIndexOutOfRangeError(ErrorFileContext, symbol.ArrayLength));
+            }
+
             reference.Object = symbol;
 
             return reference;

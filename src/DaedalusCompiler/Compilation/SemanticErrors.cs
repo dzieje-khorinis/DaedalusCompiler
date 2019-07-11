@@ -377,6 +377,20 @@ namespace DaedalusCompiler.Compilation
         }
     }
     
+    public class ArrayIndexOutOfRangeError : CompilationError {
+        private readonly uint _arraySize;
+
+        public ArrayIndexOutOfRangeError(ErrorFileContext errorFileContext, uint arraySize) : base(errorFileContext)
+        {
+            _arraySize = arraySize;
+        }
+        
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: array index out of range (max index for this array is {_arraySize-1})");
+        }
+    }
+    
     public class TooBigArraySizeError : CompilationError {
         
         public TooBigArraySizeError(ErrorFileContext errorFileContext) : base(errorFileContext)

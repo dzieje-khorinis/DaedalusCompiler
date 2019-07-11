@@ -855,5 +855,39 @@ namespace DaedalusCompiler.Tests
 
             AssertCompilationOutputMatch();
         }
+        
+        [Fact]
+        public void TestArrayIndexOutOfRange()
+        {
+            _code = @"
+                const int a[2] = {2 , 3};
+                
+                func void myFunc(var int b[3]) {
+                    var int c[4];
+                    var int x;
+                    x = a[1];
+                    x = a[2];
+                    x = b[2];
+                    x = b[3];
+                    x = c[3];
+                    x = c[4];
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d: In function ‘myFunc’:
+                test.d:7:8: error: array index out of range (max index for this array is 1)
+                    x = a[2];
+                        ^
+                test.d:9:8: error: array index out of range (max index for this array is 2)
+                    x = b[3];
+                        ^
+                test.d:11:8: error: array index out of range (max index for this array is 3)
+                    x = c[4];
+                        ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
     }
 }
