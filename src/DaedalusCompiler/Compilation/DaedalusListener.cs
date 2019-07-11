@@ -71,7 +71,7 @@ namespace DaedalusCompiler.Compilation
 
             if (arraySizeContext != null)
             {
-                if (!uint.TryParse(arraySizeContext.GetText(), out var arrIndex))
+                if (!uint.TryParse(arraySizeContext.GetText(), out var arrSize))
                 {
                     var constSymbol = _assemblyBuilder.ResolveSymbol(arraySizeContext.GetText());
                     if (constSymbol.Flags != DatSymbolFlag.Const || constSymbol.Type != DatSymbolType.Int)
@@ -79,10 +79,16 @@ namespace DaedalusCompiler.Compilation
                         throw new Exception($"Expected integer constant: {arraySizeContext.GetText()}");
                     }
 
-                    arrIndex = (uint) (int) constSymbol.Content[0];
+                    arrSize = (uint) (int) constSymbol.Content[0];
+                }
+                
+                if(arrSize > AssemblyBuilder.MAX_ARRAY_SIZE)
+                {
+                    _assemblyBuilder.ErrorFileContext.ParserContext = context.arraySize();
+                    _assemblyBuilder.Errors.Add(new TooBigArraySizeError(_assemblyBuilder.ErrorFileContext));
                 }
 
-                symbol = SymbolBuilder.BuildArrOfVariables(parameterName, parameterType.Value, arrIndex, location);
+                symbol = SymbolBuilder.BuildArrOfVariables(parameterName, parameterType.Value, arrSize, location);
             }
             else
             {
@@ -186,6 +192,12 @@ namespace DaedalusCompiler.Compilation
                             )
                         );
                     }
+                    else if(declaredSize > AssemblyBuilder.MAX_ARRAY_SIZE)
+                    {
+                        compareDeclaredSizeAndElementsCount = false;
+                        _assemblyBuilder.ErrorFileContext.ParserContext = constArrayContext.arraySize();
+                        _assemblyBuilder.Errors.Add(new TooBigArraySizeError(_assemblyBuilder.ErrorFileContext));
+                    }
                     
                     
                     var elements = constArrayContext.constArrayAssignment().expressionBlock()
@@ -271,6 +283,12 @@ namespace DaedalusCompiler.Compilation
                         
                         var location = GetLocation(context);
                         var size = EvaluatorHelper.EvaluteArraySize(varArrayContext.arraySize(), _assemblyBuilder);
+                        
+                        if(size > AssemblyBuilder.MAX_ARRAY_SIZE)
+                        {
+                            _assemblyBuilder.ErrorFileContext.ParserContext = varArrayContext.arraySize();
+                            _assemblyBuilder.Errors.Add(new TooBigArraySizeError(_assemblyBuilder.ErrorFileContext));
+                        }
 
                         var symbol = SymbolBuilder.BuildArrOfVariables(name, type, (uint) size, location);
                         _assemblyBuilder.AddSymbol(symbol, varArrayContext.nameNode());

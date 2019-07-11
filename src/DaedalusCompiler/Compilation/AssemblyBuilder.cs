@@ -33,6 +33,8 @@ namespace DaedalusCompiler.Compilation
 
     public class AssemblyBuilder
     {
+        public static uint MAX_ARRAY_SIZE = 4095;
+
         public readonly List<BaseExecBlockContext> ExecBlocks;
         public BaseExecBlockContext ActiveExecBlock;
         public ErrorFileContext ErrorFileContext;

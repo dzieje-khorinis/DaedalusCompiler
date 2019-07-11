@@ -377,6 +377,19 @@ namespace DaedalusCompiler.Compilation
         }
     }
     
+    public class TooBigArraySizeError : CompilationError {
+        
+        public TooBigArraySizeError(ErrorFileContext errorFileContext) : base(errorFileContext)
+        {
+
+        }
+
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: too big array size (max: {AssemblyBuilder.MAX_ARRAY_SIZE})");
+        }
+    }
+    
     public class InvalidArraySizeError : CompilationError {
         private readonly string _identifier;
         private readonly int _declaredSize;

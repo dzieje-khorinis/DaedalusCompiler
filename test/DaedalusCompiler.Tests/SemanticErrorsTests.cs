@@ -826,5 +826,34 @@ namespace DaedalusCompiler.Tests
                 ";
             AssertCompilationOutputMatch();
         }
+        
+        [Fact]
+        public void TestTooBigArraySize()
+        {
+            _code = @"
+                var int a[4095];
+                var int b[4096];
+                
+                func void myFunc(var int c[4095], var int d[4096]) {
+                    var int e[4095];
+                    var int f[4096];
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:2:10: error: too big array size (max: 4095)
+                var int b[4096];
+                          ^
+                test.d: In function ‘myFunc’:
+                test.d:4:44: error: too big array size (max: 4095)
+                func void myFunc(var int c[4095], var int d[4096]) {
+                                                            ^
+                test.d:6:14: error: too big array size (max: 4095)
+                    var int f[4096];
+                              ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
     }
 }
