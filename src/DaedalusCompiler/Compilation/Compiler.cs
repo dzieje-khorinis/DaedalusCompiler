@@ -78,12 +78,16 @@ namespace DaedalusCompiler.Compilation
                     _assemblyBuilder.IsCurrentlyParsingExternals = false;
                 }
 
+                int syntaxErrorsCount = 0;
                 for (int i = 0; i < paths.Length; i++)
                 {
                     if (verbose) Console.WriteLine($"[{i + 1}/{paths.Length}]Compiling: {paths[i]}");
 
                     string fileContent = GetFileContent(paths[i]);
                     DaedalusParser parser = GetParserForText(fileContent);
+                    //parser.RemoveErrorListeners(); // TODO uncomment this line once SyntaxErrorListener is fully implemented
+                    SyntaxErrorListener syntaxErrorListener = new SyntaxErrorListener();
+                    parser.AddErrorListener(syntaxErrorListener);
 
                     _assemblyBuilder.ErrorFileContext.FileContentLines = fileContent.Split(Environment.NewLine);
                     _assemblyBuilder.ErrorFileContext.FilePath = paths[i];
@@ -92,10 +96,19 @@ namespace DaedalusCompiler.Compilation
                         _assemblyBuilder.ErrorFileContext.FileContentLines[0]
                     );
                     ParseTreeWalker.Default.Walk(new DaedalusListener(_assemblyBuilder, i), parser.daedalusFile());
-                    if (generateOutputUnits)
+                    syntaxErrorsCount += syntaxErrorListener.ErrorsCount;
+                    
+                    if (generateOutputUnits && syntaxErrorListener.ErrorsCount == 0)
                     {
                         _ouBuilder.ParseText(fileContent);
                     }
+                }
+
+                if (syntaxErrorsCount > 0)
+                {
+                    StdErrorLogger logger = new StdErrorLogger();
+                    logger.LogLine($"{syntaxErrorsCount} syntax {(syntaxErrorsCount == 1 ? "error" : "errors")} generated.");
+                    return false;
                 }
 
                 if (!compileToAssembly)
@@ -143,7 +156,7 @@ namespace DaedalusCompiler.Compilation
 
                     string lastErrorFilePath = "";
                     string lastErrorBlockName = null;
-                    var logger = new StdErrorLogger();
+                    StdErrorLogger logger = new StdErrorLogger();
 
                     foreach (CompilationMessage error in errors)
                     {
