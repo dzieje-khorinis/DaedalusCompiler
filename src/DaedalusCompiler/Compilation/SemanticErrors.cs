@@ -421,6 +421,19 @@ namespace DaedalusCompiler.Compilation
         }
     }
     
+    public class NotValidClassOrPrototype : CompilationError {
+ 
+        public NotValidClassOrPrototype(ErrorFileContext errorFileContext) : base(errorFileContext)
+        {
+        }
+
+
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: not a valid class or prototype");
+        }
+    }
+    
     public class ArgumentsCountDoesNotMatchError : CompilationError {
         private readonly uint _parametersCount;
         private readonly uint _argumentsCount;

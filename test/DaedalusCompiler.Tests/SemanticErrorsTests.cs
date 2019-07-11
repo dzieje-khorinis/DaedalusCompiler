@@ -789,5 +789,42 @@ namespace DaedalusCompiler.Tests
                 ";
             AssertCompilationOutputMatch();
         }
+        
+        
+        [Fact]
+        public void TestNotValidClassOrPrototype()
+        {
+            _code = @"
+                class myClass {};
+                func void myFunc() {};
+                
+                instance WRONG1(myFunc);
+                instance WRONG2(myFunc) {};
+                prototype WRONG3(myFunc) {};
+                
+                instance CORRECT1(myClass);
+                instance CORRECT2(myClass) {};
+                prototype CORRECT3(myClass) {};
+                
+                instance CORRECT4(WRONG3);
+                instance CORRECT5(WRONG3) {};
+                prototype CORRECT6(WRONG3) {};
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:4:16: error: not a valid class or prototype
+                instance WRONG1(myFunc);
+                                ^
+                test.d: In instance ‘WRONG2’:
+                test.d:5:16: error: not a valid class or prototype
+                instance WRONG2(myFunc) {};
+                                ^
+                test.d: In prototype ‘WRONG3’:
+                test.d:6:17: error: not a valid class or prototype
+                prototype WRONG3(myFunc) {};
+                                 ^
+                ";
+            AssertCompilationOutputMatch();
+        }
     }
 }

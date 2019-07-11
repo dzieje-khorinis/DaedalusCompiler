@@ -666,6 +666,19 @@ namespace DaedalusCompiler.Compilation
             return symbol;
         }
 
+
+        public DatSymbol GetParentReferenceSymbol(DaedalusParser.ParentReferenceContext parentReferenceContext)
+        {
+            ErrorFileContext.ParserContext = parentReferenceContext;
+            DatSymbol refSymbol = GetSymbolByName(parentReferenceContext.GetText());
+            if (refSymbol.Type != DatSymbolType.Class && refSymbol.Type != DatSymbolType.Prototype && refSymbol.Type != DatSymbolType.Undefined)
+            {
+                Errors.Add(new NotValidClassOrPrototype(ErrorFileContext));
+            }
+
+            return refSymbol;
+        }
+
         public DatSymbol GetSymbolByName(string symbolName)
         {
             try
