@@ -96,7 +96,7 @@ namespace DaedalusCompiler.Compilation
                 }
             }
 
-            _assemblyBuilder.AddSymbol(symbol);
+            _assemblyBuilder.AddSymbol(symbol, context.nameNode());
         }
 
         public override void EnterConstDef([NotNull] DaedalusParser.ConstDefContext context)
@@ -142,8 +142,8 @@ namespace DaedalusCompiler.Compilation
                             new UnableToEvaluateConstError(_assemblyBuilder.ErrorFileContext));
                     }
 
-                    var symbol = SymbolBuilder.BuildConst(name, type, value, location); // TODO : Validate params
-                    _assemblyBuilder.AddSymbol(symbol);
+                    var symbol = SymbolBuilder.BuildConst(name, type, value, location);
+                    _assemblyBuilder.AddSymbol(symbol, constValueContext.nameNode());
 
                     continue;
                 }
@@ -205,9 +205,8 @@ namespace DaedalusCompiler.Compilation
                         );
                     }
                     
-                    var symbol =
-                        SymbolBuilder.BuildArrOfConst(name, type, elements, location); // TODO : Validate params
-                    _assemblyBuilder.AddSymbol(symbol);
+                    var symbol = SymbolBuilder.BuildArrOfConst(name, type, elements, location);
+                    _assemblyBuilder.AddSymbol(symbol, constArrayContext.nameNode());
                 }
             }
         }
@@ -240,7 +239,6 @@ namespace DaedalusCompiler.Compilation
                         var name = varValueContext.nameNode().GetText();
                         if (_assemblyBuilder.IsContextInsideExecBlock())
                         {
-                            // TODO consider making assemblyBuilder.active public and using it here
                             BaseExecBlockContext baseExecBlock = _assemblyBuilder.ExecBlocks.Last();
                             string execBlockName = baseExecBlock.GetSymbol().Name;
                             name = $"{execBlockName}.{name}";
@@ -257,8 +255,8 @@ namespace DaedalusCompiler.Compilation
                             parentIndex = parentSymbol.Index;
                         }
 
-                        var symbol = SymbolBuilder.BuildVariable(name, type, location, parentIndex); // TODO : Validate params
-                        _assemblyBuilder.AddSymbol(symbol);
+                        DatSymbol symbol = SymbolBuilder.BuildVariable(name, type, location, parentIndex);
+                        _assemblyBuilder.AddSymbol(symbol, varValueContext.nameNode());
                     }
 
                     if (varContext is DaedalusParser.VarArrayDeclContext varArrayContext)
@@ -274,10 +272,8 @@ namespace DaedalusCompiler.Compilation
                         var location = GetLocation(context);
                         var size = EvaluatorHelper.EvaluteArraySize(varArrayContext.arraySize(), _assemblyBuilder);
 
-                        var symbol =
-                            SymbolBuilder.BuildArrOfVariables(name, type, (uint) size,
-                                location); // TODO : Validate params
-                        _assemblyBuilder.AddSymbol(symbol);
+                        var symbol = SymbolBuilder.BuildArrOfVariables(name, type, (uint) size, location);
+                        _assemblyBuilder.AddSymbol(symbol, varArrayContext.nameNode());
                     }
                 }
             }
@@ -287,7 +283,7 @@ namespace DaedalusCompiler.Compilation
         {
             var className = context.nameNode().GetText();
             var classSymbol = SymbolBuilder.BuildClass(className, 0, 0, GetLocation(context));
-            _assemblyBuilder.AddSymbol(classSymbol);
+            _assemblyBuilder.AddSymbol(classSymbol, context.nameNode());
 
             var classId = classSymbol.Index;
             int classVarOffset = classSymbol.ClassOffset;
@@ -312,8 +308,8 @@ namespace DaedalusCompiler.Compilation
                         var location = GetLocation(context);
 
                         var symbol = SymbolBuilder.BuildClassVar(name, type, 1, className, classId,
-                            classVarOffset, location); // TODO : Validate params
-                        _assemblyBuilder.AddSymbol(symbol);
+                            classVarOffset, location);
+                        _assemblyBuilder.AddSymbol(symbol, varValueContext.nameNode());
 
                         classVarOffset += (type == DatSymbolType.String ? 20 : 4);
                         classLength++;
@@ -326,8 +322,8 @@ namespace DaedalusCompiler.Compilation
                         var size = EvaluatorHelper.EvaluteArraySize(varArrayContext.arraySize(), _assemblyBuilder);
 
                         var symbol = SymbolBuilder.BuildClassVar(name, type, (uint) size, className, classId,
-                            classVarOffset, location); // TODO : Validate params
-                        _assemblyBuilder.AddSymbol(symbol);
+                            classVarOffset, location);
+                        _assemblyBuilder.AddSymbol(symbol, varArrayContext.nameNode());
 
                         classVarOffset += (type == DatSymbolType.String ? 20 : 4) * size;
                         classLength++;
@@ -350,7 +346,7 @@ namespace DaedalusCompiler.Compilation
             var location = GetLocation(context);
 
             var prototypeSymbol = SymbolBuilder.BuildPrototype(prototypeName, referenceSymbolId, location);
-            _assemblyBuilder.AddSymbol(prototypeSymbol);
+            _assemblyBuilder.AddSymbol(prototypeSymbol, context.nameNode());
 
             _assemblyBuilder.ExecBlockStart(prototypeSymbol, ExecBlockType.Prototype);
         }
@@ -373,8 +369,7 @@ namespace DaedalusCompiler.Compilation
 
             var instanceSymbol = SymbolBuilder.BuildInstance(instanceName, referenceSymbolId, location);
             instanceSymbol.Flags |= DatSymbolFlag.Const;
-            _assemblyBuilder.AddSymbol(instanceSymbol);
-
+            _assemblyBuilder.AddSymbol(instanceSymbol, context.nameNode());
             _assemblyBuilder.ExecBlockStart(instanceSymbol, ExecBlockType.Instance);
 
             if (refSymbol.Type == DatSymbolType.Prototype)
@@ -404,7 +399,7 @@ namespace DaedalusCompiler.Compilation
             {
                 string instanceName = context.nameNode()[i].GetText();
                 DatSymbol instanceSymbol = SymbolBuilder.BuildInstance(instanceName, referenceSymbolId, location);
-                _assemblyBuilder.AddSymbol(instanceSymbol);
+                _assemblyBuilder.AddSymbol(instanceSymbol, context.nameNode()[i]);
                 symbols.Add(instanceSymbol);
                 
                 if (refSymbol.Type == DatSymbolType.Prototype)
@@ -420,8 +415,6 @@ namespace DaedalusCompiler.Compilation
             _assemblyBuilder.ExecBlockEnd();
         }
         
-        
-
         public override void EnterFunctionDef([NotNull] DaedalusParser.FunctionDefContext context)
         {
             string funcName = context.nameNode().GetText();
@@ -429,15 +422,8 @@ namespace DaedalusCompiler.Compilation
             DatSymbolType returnType = DatSymbolTypeFromString(returnTypeName);
             uint parametersCount = (uint)context.parameterList().parameterDecl().Length;
 
-            var symbol = SymbolBuilder.BuildFunc(funcName, parametersCount, returnType);
-
-            if (!_assemblyBuilder.IsCurrentlyParsingExternals)
-            {
-                _assemblyBuilder.ErrorFileContext.ParserContext = context.nameNode();
-                symbol.ErrorLineContext = new ErrorLineContext(_assemblyBuilder.ErrorFileContext);
-            }
-            
-            _assemblyBuilder.AddSymbol(symbol);
+            DatSymbol symbol = SymbolBuilder.BuildFunc(funcName, parametersCount, returnType);
+            _assemblyBuilder.AddSymbol(symbol, context.nameNode());
             _assemblyBuilder.ExecBlockStart(symbol, ExecBlockType.Function);
         }
 

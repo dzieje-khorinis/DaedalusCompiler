@@ -92,6 +92,7 @@ namespace DaedalusCompiler.Tests
             if (_externalCode != string.Empty)
             {
                 _assemblyBuilder.IsCurrentlyParsingExternals = true;
+                _assemblyBuilder.ErrorFileContext.FileContentLines = _externalCode.Split(Environment.NewLine);
                 Utils.WalkSourceCode(_externalCode, _assemblyBuilder);
                 _assemblyBuilder.IsCurrentlyParsingExternals = false;
             }

@@ -536,7 +536,27 @@ namespace DaedalusCompiler.Compilation
             _activeContext.Parent?.FetchInstructions(_activeContext);
             _activeContext = _activeContext.Parent;
         }
-        
+
+        public void AddSymbol(DatSymbol symbol, DaedalusParser.NameNodeContext context)
+        {
+            ErrorFileContext.ParserContext = context;
+            
+            try
+            {
+                DatSymbol sameNameSymbol = _symbolsDict[symbol.Name.ToUpper()];
+                Errors.Add(new RedefinitionError(ErrorFileContext, sameNameSymbol.ErrorLineContext, symbol.Name));
+                symbol.Name += "%";
+            }
+            catch (KeyNotFoundException)
+            {
+
+            }
+            
+            symbol.ErrorLineContext = new ErrorLineContext(ErrorFileContext);
+            
+            AddSymbol(symbol);
+        }
+
         public void AddSymbol(DatSymbol symbol)
         {
             if (IsCurrentlyParsingExternals)

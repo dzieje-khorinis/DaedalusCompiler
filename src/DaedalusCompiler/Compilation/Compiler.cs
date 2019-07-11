@@ -64,9 +64,16 @@ namespace DaedalusCompiler.Compilation
                 string runtimePath = Path.Combine(GetBuiltinsPath(), srcFileName + ".d");
                 if (File.Exists(runtimePath))
                 {
-                    _assemblyBuilder.IsCurrentlyParsingExternals = true;
                     if (verbose) Console.WriteLine($"[0/{paths.Length}]Compiling runtime: {runtimePath}");
-                    DaedalusParser parser = GetParserForScriptsFile(runtimePath);
+                    _assemblyBuilder.IsCurrentlyParsingExternals = true;
+                    
+                    string fileContent = GetFileContent(runtimePath);
+                    DaedalusParser parser = GetParserForText(fileContent);
+
+                    _assemblyBuilder.ErrorFileContext.FileContentLines = fileContent.Split(Environment.NewLine);
+                    _assemblyBuilder.ErrorFileContext.FilePath = runtimePath;
+                    _assemblyBuilder.ErrorFileContext.FileIndex = -1;
+                    
                     ParseTreeWalker.Default.Walk(new DaedalusListener(_assemblyBuilder, 0), parser.daedalusFile());
                     _assemblyBuilder.IsCurrentlyParsingExternals = false;
                 }

@@ -142,32 +142,54 @@ namespace DaedalusCompiler.Compilation
             ParserRuleContext parserContext = errorFileContext.ParserContext;
             
             ExecBlockName = null;
-            RuleContext context = parserContext.Parent;
-            while (ExecBlockName == null)
-            {
-                switch (context)
-                {
-                    case DaedalusParser.FunctionDefContext functionDefContext:
-                        ExecBlockName = functionDefContext.nameNode().GetText();
-                        ExecBlockType = "function";
-                        break;
-                    case DaedalusParser.InstanceDefContext instanceDefContext:
-                        ExecBlockName = instanceDefContext.nameNode().GetText();
-                        ExecBlockType = "instance";
-                        break;
-                    case DaedalusParser.PrototypeDefContext prototypeDefContext:
-                        ExecBlockName = prototypeDefContext.nameNode().GetText();
-                        ExecBlockType = "prototype";
-                        break;
-                }
 
-                context = context.Parent;
-                if (context is DaedalusParser.DaedalusFileContext)
+
+            bool displayExecBlock = true;
+            
+            if (parserContext is DaedalusParser.NameNodeContext)
+            {
+                if (parserContext.Parent is DaedalusParser.FunctionDefContext
+                    || parserContext.Parent is DaedalusParser.InstanceDefContext
+                    || parserContext.Parent is DaedalusParser.PrototypeDefContext
+                    || parserContext.Parent is DaedalusParser.ClassDefContext)
                 {
-                    break;
+                    displayExecBlock = false;
                 }
             }
-            
+
+            if (displayExecBlock)
+            {
+                RuleContext context = parserContext.Parent;
+                while (ExecBlockName == null)
+                {
+                    switch (context)
+                    {
+                        case DaedalusParser.FunctionDefContext functionDefContext:
+                            ExecBlockName = functionDefContext.nameNode().GetText();
+                            ExecBlockType = "function";
+                            break;
+                        case DaedalusParser.InstanceDefContext instanceDefContext:
+                            ExecBlockName = instanceDefContext.nameNode().GetText();
+                            ExecBlockType = "instance";
+                            break;
+                        case DaedalusParser.PrototypeDefContext prototypeDefContext:
+                            ExecBlockName = prototypeDefContext.nameNode().GetText();
+                            ExecBlockType = "prototype";
+                            break;
+                        case DaedalusParser.ClassDefContext classDefContext:
+                            ExecBlockName = classDefContext.nameNode().GetText();
+                            ExecBlockType = "class";
+                            break;
+                    }
+
+                    context = context.Parent;
+                    if (context is DaedalusParser.DaedalusFileContext)
+                    {
+                        break;
+                    }
+                }
+            }
+
             FilePath = errorFileContext.FilePath;
             FileName = Path.GetFileName(FilePath);
             _fileNo = errorFileContext.FileIndex;
@@ -434,20 +456,37 @@ namespace DaedalusCompiler.Compilation
             PrintErrorPointer(logger, columnNo, line);
         }
     }
-
-    public class IncompatibleTypesError : CompilationError
+    
+    public class RedefinitionError : CompilationError
     {
+        private readonly string _identifier;
+        private readonly ErrorLineContext _errorLineContext;
 
-        private readonly string _usedType;
-        private readonly string _requiredType;
-
-        public IncompatibleTypesError(ErrorFileContext errorFileContext) : base(errorFileContext)
+        public RedefinitionError(
+            ErrorFileContext errorFileContext,
+            ErrorLineContext errorLineContext,
+            string identifier) : base(errorFileContext)
         {
+            _identifier = GetIdentifierRelativeName(identifier);
+            _errorLineContext = errorLineContext;
         }
 
         protected override void PrintMessage(ErrorLogger logger)
         {
-            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: incompatible types: '{_usedType}' cannot be converted to '{_requiredType}'");
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: redefinition of '{_identifier}'");
+        }
+
+        protected override void PrintNote(ErrorLogger logger)
+        {
+            ParserRuleContext parserContext = _errorLineContext.ParserContext;
+            
+            string fileName = Path.GetFileName(_errorLineContext.FilePath);
+            int lineNo = parserContext.Start.Line;
+            int columnNo = parserContext.Start.Column;
+            string line = _errorLineContext.FileContentLine;
+            logger.LogLine($"{fileName}:{lineNo}:{columnNo}: note: previous definition is here");
+            logger.LogLine(line);
+            PrintErrorPointer(logger, columnNo, line);
         }
     }
 }
