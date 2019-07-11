@@ -876,15 +876,47 @@ namespace DaedalusCompiler.Tests
 
             _expectedCompilationOutput = @"
                 test.d: In function ‘myFunc’:
-                test.d:7:8: error: array index out of range (max index for this array is 1)
+                test.d:7:10: error: array index out of range (max index for this array is 1)
                     x = a[2];
-                        ^
-                test.d:9:8: error: array index out of range (max index for this array is 2)
+                          ^
+                test.d:9:10: error: array index out of range (max index for this array is 2)
                     x = b[3];
-                        ^
-                test.d:11:8: error: array index out of range (max index for this array is 3)
+                          ^
+                test.d:11:10: error: array index out of range (max index for this array is 3)
                     x = c[4];
-                        ^
+                          ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
+        public void TestTooBigArrayIndex()
+        {
+            _code = @"
+                const int a[2] = {2 , 3};
+                var int b[4095];
+                
+                func void myFunc() {
+                    var int x;
+                    x = a[255];
+                    x = a[256];
+                    x = b[255];
+                    x = b[256];
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d: In function ‘myFunc’:
+                test.d:6:10: error: array index out of range (max index for this array is 1)
+                    x = a[255];
+                          ^
+                test.d:7:10: error: array index out of range (max index for this array is 1)
+                    x = a[256];
+                          ^
+                test.d:9:10: error: too big array index (max: 255)
+                    x = b[256];
+                          ^
             ";
 
             AssertCompilationOutputMatch();

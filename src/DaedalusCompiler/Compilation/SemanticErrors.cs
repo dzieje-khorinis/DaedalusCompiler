@@ -391,6 +391,18 @@ namespace DaedalusCompiler.Compilation
         }
     }
     
+    public class TooBigArrayIndexError : CompilationError {
+
+        public TooBigArrayIndexError(ErrorFileContext errorFileContext) : base(errorFileContext)
+        {
+        }
+        
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: too big array index (max: {AssemblyBuilder.MAX_ARRAY_INDEX})");
+        }
+    }
+    
     public class TooBigArraySizeError : CompilationError {
         
         public TooBigArraySizeError(ErrorFileContext errorFileContext) : base(errorFileContext)

@@ -34,6 +34,7 @@ namespace DaedalusCompiler.Compilation
     public class AssemblyBuilder
     {
         public static uint MAX_ARRAY_SIZE = 4095;
+        public static uint MAX_ARRAY_INDEX = 255;
 
         public readonly List<BaseExecBlockContext> ExecBlocks;
         public BaseExecBlockContext ActiveExecBlock;
@@ -186,6 +187,10 @@ namespace DaedalusCompiler.Compilation
             {
                 Errors.Add(new ArrayIndexOutOfRangeError(ErrorFileContext, symbol.ArrayLength));
             }
+            else if (reference.Index > MAX_ARRAY_INDEX)
+            {
+                Errors.Add(new TooBigArrayIndexError(ErrorFileContext));
+            }
 
             reference.Object = symbol;
 
@@ -221,6 +226,8 @@ namespace DaedalusCompiler.Compilation
         
         public int GetArrayIndex(DaedalusParser.ReferenceAtomContext context)
         {
+            ErrorFileContext.ParserContext = context.arrayIndex();
+            
             var indexContext = context.arrayIndex();
             
             
