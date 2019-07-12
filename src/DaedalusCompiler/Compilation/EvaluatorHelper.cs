@@ -161,6 +161,10 @@ namespace DaedalusCompiler.Compilation
                     {
                         referenceValue = referenceSymbol.Index;
                     }
+                    else if (referenceSymbol.Type == DatSymbolType.Undefined)
+                    {
+                        referenceValue = 0;
+                    }
                     else
                     {
                         referenceValue = referenceSymbol.Content.First();

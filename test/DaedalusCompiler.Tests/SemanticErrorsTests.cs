@@ -165,6 +165,22 @@ namespace DaedalusCompiler.Tests
 
             AssertCompilationOutputMatch();
         }
+        
+        [Fact]
+        public void TestUndeclaredIdentifierConstAssignment()
+        {
+            _code = @"
+                const int a = b;
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:1:14: error: ‘b’ undeclared
+                const int a = b;
+                              ^
+                ";
+
+            AssertCompilationOutputMatch();
+        }
 
         [Fact]
         public void TestAttributeNotFound()
@@ -916,6 +932,37 @@ namespace DaedalusCompiler.Tests
                 test.d:11:10: error: array index out of range (max index for this array is 3)
                     x = c[4];
                           ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
+        public void TestAttributeArrayIndexOutOfRange()
+        {
+            _code = @"
+                const int GOOD_INDEX = 7;
+                const int BAD_INDEX = 8;
+                
+                class C_NPC
+                {
+                    var int attribute[8];
+                };
+                
+                instance self(C_NPC) {};
+                
+                func void myFunc()
+                {
+                    self.attribute[GOOD_INDEX] = 100;
+                    self.attribute[BAD_INDEX] = 200;
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d: In function ‘myFunc’:
+                test.d:14:19: error: array index out of range (max index for this array is 7)
+                    self.attribute[BAD_INDEX] = 200;
+                                   ^
             ";
 
             AssertCompilationOutputMatch();

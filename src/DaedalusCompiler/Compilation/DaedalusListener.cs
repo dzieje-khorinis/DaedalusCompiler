@@ -569,6 +569,11 @@ namespace DaedalusCompiler.Compilation
                 // left side of assignment
                 return;
             }
+            
+            if (_assemblyBuilder.IsInsideConstDef)
+            {
+                return;
+            }
 
             List<AssemblyElement> instructions = new List<AssemblyElement>();
             if (_assemblyBuilder.IsInsideArgList || _assemblyBuilder.IsInsideAssignment || _assemblyBuilder.IsInsideIfCondition || _assemblyBuilder.IsInsideReturnStatement)
@@ -579,11 +584,7 @@ namespace DaedalusCompiler.Compilation
             {
                 instructions = _assemblyBuilder.GetDatSymbolReferenceInstructions(referenceContext);
             }
-            
-            if (!_assemblyBuilder.IsInsideConstDef)
-            {
-                _assemblyBuilder.AddInstructions(instructions);   
-            }
+            _assemblyBuilder.AddInstructions(instructions);
         }
         
 
