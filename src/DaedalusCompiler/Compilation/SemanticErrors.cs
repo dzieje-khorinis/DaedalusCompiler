@@ -259,7 +259,7 @@ namespace DaedalusCompiler.Compilation
     public abstract class CompilationWarning : CompilationMessage
     {
         protected readonly string MessageType;
-        public bool IsSuppressed;
+        public readonly bool IsSuppressed;
         public const string Code = "UNKNOWN";
 
         protected CompilationWarning(ErrorFileContext errorFileContext, bool strictSyntax) : base(errorFileContext)
@@ -293,6 +293,34 @@ namespace DaedalusCompiler.Compilation
         }
     }
     
+    public class KeywordUsedAsNameError : CompilationError
+    {
+        private readonly string _identifier;
+
+        public KeywordUsedAsNameError(ErrorFileContext errorFileContext, string identifier) : base(errorFileContext)
+        {
+            _identifier = identifier.ToLower();
+        }
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: '{_identifier}' is keyword and shouldn't be used as an identifier");
+        }
+    }
+    
+    public class IterationStatementNotInLoopError : CompilationError
+    {
+        private readonly string _identifier;
+
+        public IterationStatementNotInLoopError(ErrorFileContext errorFileContext, string identifier) : base(errorFileContext)
+        {
+            _identifier = identifier.ToLower();
+        }
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: '{_identifier}' statement not in loop statement");
+        }
+    }
+
     public class UndeclaredIdentifierError : CompilationError {
         
         protected string _identifier;

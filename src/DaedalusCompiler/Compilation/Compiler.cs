@@ -31,7 +31,7 @@ namespace DaedalusCompiler.Compilation
             string ws = @"(?:[ \t])*";
             string newline = @"(?:\r\n?|\n)";
             RegexOptions options = RegexOptions.IgnoreCase | RegexOptions.Multiline;
-            string suppressWarningsPattern = $@"//{ws}suppress{ws}:((?:{ws}[a-zA-Z0-9]+)+){ws}{newline}?$";
+            string suppressWarningsPattern = $@"//!{ws}suppress{ws}:((?:{ws}[a-zA-Z0-9]+)+){ws}{newline}?$";
             MatchCollection matches = Regex.Matches(line, suppressWarningsPattern, options);
             foreach (Match match in matches)
             {

@@ -16,6 +16,9 @@ Prototype: 'prototype' | 'PROTOTYPE';
 Instance: 'instance' | 'INSTANCE';
 Null: 'null' | 'Null' | 'NULL' ;
 NoFunc: 'nofunc' | 'NoFunc' | 'NOFUNC';
+While: 'while';
+Break: 'break';
+Continue: 'continue';
 
 Identifier : IdStart IdContinue*;
 IntegerLiteral : Digit+;
@@ -63,8 +66,8 @@ varValueDecl: nameNode;
 
 parameterList: '(' (parameterDecl (',' parameterDecl)*? )? ')';
 parameterDecl: Var typeReference nameNode ('[' arraySize ']')?;
-statementBlock: '{' ( ( (statement ';')  | ( ifBlockStatement ( ';' )? ) ) )*? '}';
-statement: assignment | returnStatement | constDef | varDecl | funcCall | expressionBlock;
+statementBlock: '{' ( ( (statement ';')  | ( (ifBlockStatement | whileStatement) ';'? ) ) )*? '}';
+statement: assignment | returnStatement | constDef | varDecl | funcCall | breakStatement | continueStatement | expressionBlock;
 funcCall: nameNode '(' ( funcArgExpression ( ',' funcArgExpression )*? )? ')';
 assignment: reference assignmentOperator expressionBlock;
 ifCondition: expressionBlock;
@@ -73,6 +76,10 @@ elseIfBlock: Else If ifCondition statementBlock;
 ifBlock: If ifCondition statementBlock;
 ifBlockStatement: ifBlock ( elseIfBlock )*? ( elseBlock )?;
 returnStatement: Return ( expressionBlock )?;
+whileStatement: While '(' whileCondition ')' statementBlock;
+whileCondition: expressionBlock;
+breakStatement: Break;
+continueStatement: Continue;
 
 funcArgExpression: expressionBlock; // we use that to detect func call args
 expressionBlock: expression; // we use that expression to force parser threat expression as a block
@@ -105,12 +112,12 @@ value
     | reference #referenceValue
     ;
     
-referenceAtom: Identifier ( '[' arrayIndex ']')?;
+referenceAtom: nameNode ( '[' arrayIndex ']')?;
 reference: referenceAtom ( '.' referenceAtom )?;
 
 typeReference:  ( Identifier | Void | Int | Float | String | Func | Instance);
 
-nameNode: Identifier;
+nameNode: Identifier | While | Break | Continue;
 
 parentReference: Identifier;
 

@@ -165,7 +165,7 @@ namespace DaedalusCompiler.Compilation
             if (IsDottedReference(referenceContext))
             {
                 DaedalusParser.ReferenceAtomContext attributePart = referenceAtoms[1];
-                string attributeName = attributePart.Identifier().GetText();
+                string attributeName = attributePart.nameNode().GetText();
                 try
                 {
                     reference.Attribute = ResolveAttribute(symbol, attributeName);
@@ -182,17 +182,23 @@ namespace DaedalusCompiler.Compilation
             {
                 reference.Index = GetArrayIndex(objectPart);
             }
+            
+            reference.Object = symbol;
 
-            if (reference.Index >= symbol.ArrayLength)
+            uint arrayLength = symbol.ArrayLength;
+            if (reference.HasAttribute())
             {
-                Errors.Add(new ArrayIndexOutOfRangeError(ErrorFileContext, symbol.ArrayLength));
+                arrayLength = reference.Attribute.ArrayLength;
+            }
+
+            if (reference.Index >= arrayLength)
+            {
+                Errors.Add(new ArrayIndexOutOfRangeError(ErrorFileContext, arrayLength));
             }
             else if (reference.Index > MAX_ARRAY_INDEX)
             {
                 Errors.Add(new TooBigArrayIndexError(ErrorFileContext));
             }
-
-            reference.Object = symbol;
 
             return reference;
         }
@@ -201,7 +207,16 @@ namespace DaedalusCompiler.Compilation
         {
             var referenceAtoms = referenceContext.referenceAtom();
             var referenceAtom = referenceAtoms[0];
-            string symbolNameLower = referenceAtom.Identifier().GetText().ToLower();
+            string symbolNameLower = "";
+            try
+            {
+                symbolNameLower = referenceAtom.nameNode().GetText().ToLower();
+            }
+            catch (NullReferenceException)
+            {
+                Console.WriteLine("haha");
+            }
+
             bool isSymbolNameSelfKeyword = symbolNameLower == "slf" || symbolNameLower == "self";
 
 
@@ -220,7 +235,7 @@ namespace DaedalusCompiler.Compilation
                 }
             }
 
-            return ResolveSymbol(referenceAtom.Identifier().GetText());
+            return ResolveSymbol(referenceAtom.nameNode().GetText());
         }
         
         
@@ -499,7 +514,16 @@ namespace DaedalusCompiler.Compilation
         {
             ActiveContextEnd();
         }
+        
+        public void WhileStatementStart()
+        {
+            _activeContext = new WhileStatementContext(_activeContext);
+        }
 
+        public void WhileStatementEnd()
+        {
+            ActiveContextEnd();
+        }
         
         public void IfBlockStatementStart()
         {
@@ -566,6 +590,19 @@ namespace DaedalusCompiler.Compilation
 
             }
             
+            string rightPart = symbol.Name.ToUpper();
+            if (rightPart.Contains("."))
+            {
+                rightPart = rightPart.Split(".")[1];
+            }
+            
+            List<string> keywords = new List<string> {"WHILE", "BREAK", "CONTINUE"};
+
+            if (keywords.Contains(rightPart))
+            {
+                Errors.Add(new KeywordUsedAsNameError(ErrorFileContext, rightPart));
+            }
+
             symbol.ErrorLineContext = new ErrorLineContext(ErrorFileContext);
             
             AddSymbol(symbol);

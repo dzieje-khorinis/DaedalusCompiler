@@ -145,7 +145,7 @@ namespace DaedalusCompiler.Compilation
             // value is reference to other constant
             if (valueChild is DaedalusParser.ReferenceContext reference)
             {
-                var referenceName = reference.referenceAtom()?.FirstOrDefault()?.Identifier()?.GetText();
+                var referenceName = reference.referenceAtom()?.FirstOrDefault()?.nameNode()?.GetText();
 
                 //TODO : Allow to reference arrays. Currently it is not possible. 
 

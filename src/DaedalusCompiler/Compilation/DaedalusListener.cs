@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
@@ -456,11 +457,44 @@ namespace DaedalusCompiler.Compilation
             _assemblyBuilder.AddInstruction(new Ret());
             _assemblyBuilder.IsInsideReturnStatement = false;
         }
+        
+        public override void EnterWhileStatement(DaedalusParser.WhileStatementContext context)
+        {
+            _assemblyBuilder.WhileStatementStart();
+        }
+        
+        public override void ExitWhileStatement(DaedalusParser.WhileStatementContext context)
+        {
+            _assemblyBuilder.WhileStatementEnd();
+        }
 
-        
-        
-        
-        
+        public override void EnterBreakStatement(DaedalusParser.BreakStatementContext context)
+        {
+            if (IsInsideWhileLoop(context))
+            {
+                _assemblyBuilder.AddInstruction(new JumpToLoopEnd());
+            }
+            else
+            {
+                _assemblyBuilder.ErrorFileContext.ParserContext = context;
+                _assemblyBuilder.Errors.Add(new IterationStatementNotInLoopError(
+                    _assemblyBuilder.ErrorFileContext, context.GetText()));
+            }
+        }
+
+        public override void EnterContinueStatement(DaedalusParser.ContinueStatementContext context)
+        {
+            if (IsInsideWhileLoop(context))
+            {
+                _assemblyBuilder.AddInstruction(new JumpToLoopStart());
+            }
+            else
+            {
+                _assemblyBuilder.ErrorFileContext.ParserContext = context;
+                _assemblyBuilder.Errors.Add(new IterationStatementNotInLoopError(
+                    _assemblyBuilder.ErrorFileContext, context.GetText()));
+            }
+        }
         
         public override void EnterIfBlockStatement(DaedalusParser.IfBlockStatementContext context)
         {
@@ -473,7 +507,6 @@ namespace DaedalusCompiler.Compilation
         }
 
 
-        
         public override void EnterIfBlock(DaedalusParser.IfBlockContext context)
         {
             _assemblyBuilder.IfBlockStart();
@@ -864,6 +897,21 @@ namespace DaedalusCompiler.Compilation
                 var symbol = _assemblyBuilder.ResolveSymbol(typeName, isClass:true);
                 return symbol.Type;
             }
+        }
+
+        private bool IsInsideWhileLoop(RuleContext context)
+        {
+            context = context.Parent;
+            while (!(context is DaedalusParser.DaedalusFileContext))
+            {
+                if (context is DaedalusParser.WhileStatementContext)
+                {
+                    return true;
+                }
+                context = context.Parent;
+            }
+
+            return false;
         }
 
         private DatSymbolLocation GetLocation(ParserRuleContext context)

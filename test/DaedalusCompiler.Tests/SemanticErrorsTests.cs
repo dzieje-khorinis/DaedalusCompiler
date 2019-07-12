@@ -26,6 +26,7 @@ namespace DaedalusCompiler.Tests
             _assemblyBuilder.ErrorFileContext.FilePath = "test.d";
             _externalCode = String.Empty;
             IfBlockStatementContext.NextLabelIndex = 0;
+            WhileStatementContext.NextLabelIndex = 0;
         }
         
         private void ParseData()
@@ -405,7 +406,7 @@ namespace DaedalusCompiler.Tests
                 func void testFunc() {
                     var int x;
                     x = 5;
-                    x; //suppress: W1
+                    x; //! suppress: W1
                     return;
                 };
             ";
@@ -419,7 +420,7 @@ namespace DaedalusCompiler.Tests
         public void TestSingleExpressionHackWarningFileSuppress()
         {
             _code = @"
-                //suppress: W1
+                //! suppress: W1
                 
                 func void testFunc() {
                     var int x;
@@ -857,6 +858,38 @@ namespace DaedalusCompiler.Tests
         }
         
         [Fact]
+        public void TestTooBigArraySizeConstInt()
+        {
+            _code = @"
+                const int OK_SIZE = 4095;
+                const int WRONG_SIZE = 4096;
+                
+                var int a[OK_SIZE];
+                var int b[WRONG_SIZE];
+                
+                func void myFunc(var int c[OK_SIZE], var int d[WRONG_SIZE]) {
+                    var int e[OK_SIZE];
+                    var int f[WRONG_SIZE];
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:5:10: error: too big array size (max: 4095)
+                var int b[WRONG_SIZE];
+                          ^
+                test.d: In function ‘myFunc’:
+                test.d:7:47: error: too big array size (max: 4095)
+                func void myFunc(var int c[OK_SIZE], var int d[WRONG_SIZE]) {
+                                                               ^
+                test.d:9:14: error: too big array size (max: 4095)
+                    var int f[WRONG_SIZE];
+                              ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
         public void TestArrayIndexOutOfRange()
         {
             _code = @"
@@ -891,6 +924,45 @@ namespace DaedalusCompiler.Tests
         }
         
         [Fact]
+        public void TestArrayIndexOutOfRangeConstInt()
+        {
+            _code = @"
+                const int ONE = 1;
+                const int TWO = 2;
+                const int THREE = 3;
+                const int FOUR = 4;
+                
+                const int a[2] = {2 , 3};
+                
+                func void myFunc(var int b[3]) {
+                    var int c[4];
+                    var int x;
+                    x = a[ONE];
+                    x = a[TWO];
+                    x = b[TWO];
+                    x = b[THREE];
+                    x = c[THREE];
+                    x = c[FOUR];
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d: In function ‘myFunc’:
+                test.d:12:10: error: array index out of range (max index for this array is 1)
+                    x = a[TWO];
+                          ^
+                test.d:14:10: error: array index out of range (max index for this array is 2)
+                    x = b[THREE];
+                          ^
+                test.d:16:10: error: array index out of range (max index for this array is 3)
+                    x = c[FOUR];
+                          ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
         public void TestTooBigArrayIndex()
         {
             _code = @"
@@ -916,6 +988,74 @@ namespace DaedalusCompiler.Tests
                           ^
                 test.d:9:10: error: too big array index (max: 255)
                     x = b[256];
+                          ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        
+        [Fact]
+        public void TestTooBigArrayIndexConstIndex()
+        {
+            _code = @"
+                const int INDEX1 = 255;
+                const int INDEX2 = 256;
+                
+                const int a[2] = {2 , 3};
+                var int b[4095];
+                
+                func void myFunc() {
+                    var int x;
+                    x = a[INDEX1];
+                    x = a[INDEX2];
+                    x = b[INDEX1];
+                    x = b[INDEX2];
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d: In function ‘myFunc’:
+                test.d:9:10: error: array index out of range (max index for this array is 1)
+                    x = a[INDEX1];
+                          ^
+                test.d:10:10: error: array index out of range (max index for this array is 1)
+                    x = a[INDEX2];
+                          ^
+                test.d:12:10: error: too big array index (max: 255)
+                    x = b[INDEX2];
+                          ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
+        public void TestWhileKeywordAsIdentifier()
+        {
+            _code = @"
+                const int break = 1;
+                const int continue = 2;
+                
+                func void while() {};
+                
+                func void myFunc(var func x) {};
+                
+                func void testFunc() {
+                    while();
+                    myFunc(while);
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:1:10: error: 'break' is keyword and shouldn't be used as an identifier
+                const int break = 1;
+                          ^
+                test.d:2:10: error: 'continue' is keyword and shouldn't be used as an identifier
+                const int continue = 2;
+                          ^
+                test.d:4:10: error: 'while' is keyword and shouldn't be used as an identifier
+                func void while() {};
                           ^
             ";
 

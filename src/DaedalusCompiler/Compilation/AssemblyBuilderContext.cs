@@ -139,6 +139,59 @@ namespace DaedalusCompiler.Compilation
         }
     }
 
+    public class WhileStatementContext : ConditionalBlockContext
+    {
+        
+        public static int NextLabelIndex = 0;
+        
+        public WhileStatementContext(AssemblyBuilderContext parent) : base(parent)
+        {
+        }
+        
+        private string GetNextLabel()
+        {
+            Console.WriteLine("WTF");
+            return $"label_while_{NextLabelIndex++}";
+        }
+        
+        public override List<AssemblyElement> GetInstructions()
+        {
+            string startLabel = GetNextLabel();
+            string endLabel = GetNextLabel();
+                
+            List<AssemblyElement> instructions = new List<AssemblyElement>();
+            
+            instructions.Add(new AssemblyLabel(startLabel));
+            
+            instructions.AddRange(Condition);
+            instructions.Add(new JumpIfToLabel(endLabel));
+
+
+            foreach (AssemblyElement instruction in Body)
+            {
+                if (instruction is JumpToLoopStart)
+                {
+                    instructions.Add(new JumpToLabel(startLabel));
+                }
+                else if (instruction is JumpToLoopEnd)
+                {
+                    instructions.Add(new JumpToLabel(endLabel));
+                }
+                else
+                {
+                    instructions.Add(instruction);
+                }
+            }
+            //instructions.AddRange(Body);
+            
+            
+            instructions.Add(new JumpToLabel(startLabel));
+            
+            instructions.Add(new AssemblyLabel(endLabel));
+
+            return instructions;
+        }
+    }
     
     public class IfBlockStatementContext : AssemblyBuilderContext
     {
@@ -262,9 +315,7 @@ namespace DaedalusCompiler.Compilation
             
         }
     }
-    
 
-    
     public class IfBlockContext : ConditionalBlockContext
     {
         public IfBlockContext(AssemblyBuilderContext parent) : base(parent)
