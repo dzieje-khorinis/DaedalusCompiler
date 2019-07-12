@@ -20,19 +20,6 @@ namespace DaedalusCompiler.Tests
                         x += 1;
                     }
                 };
-                
-                func void secondFunc() {
-                    var int x;
-                    x = 0;
-                    while(x < 5) {
-                        x += 1;
-                        if (x == 3) {
-                            break;
-                        } else if (x == 4) {
-                            continue;
-                        }
-                    }
-                };
            ";
             
             _instructions = GetExecBlockInstructions("firstFunc");
@@ -62,8 +49,35 @@ namespace DaedalusCompiler.Tests
                 new Ret(),
             };
             AssertInstructionsMatch();
+
+            _expectedSymbols = new List<DatSymbol>
+            {
+                Ref("firstFunc"),
+                Ref("firstFunc.x"),
+            };
+            AssertSymbolsMatch();
             
-            
+        }
+        
+        
+        [Fact]
+        public void TestWhileLoopBreakContinue()
+        {
+            _code = @"                
+                func void secondFunc() {
+                    var int x;
+                    x = 0;
+                    while(x < 5) {
+                        x += 1;
+                        if (x == 3) {
+                            break;
+                        } else if (x == 4) {
+                            continue;
+                        }
+                    }
+                };
+           ";
+
             _instructions = GetExecBlockInstructions("secondFunc");
             _expectedInstructions = new List<AssemblyElement>
             {
@@ -73,11 +87,11 @@ namespace DaedalusCompiler.Tests
                 new Assign(),
                 
                 // while(x < 5) {
-                new AssemblyLabel("label_while_2"),
+                new AssemblyLabel("label_while_0"),
                 new PushInt(5),
                 new PushVar(Ref("secondFunc.x")),
                 new Less(),
-                new JumpIfToLabel("label_while_3"),
+                new JumpIfToLabel("label_while_1"),
                 
                 //     x += 1;
                 new PushInt(1),
@@ -91,7 +105,7 @@ namespace DaedalusCompiler.Tests
                 new JumpIfToLabel("label_1"),
                 
                 //         break;
-                new JumpToLabel("label_while_3"),
+                new JumpToLabel("label_while_1"),
                 
                 //     } else if (x == 4) {
                 new JumpToLabel("label_0"),
@@ -102,14 +116,14 @@ namespace DaedalusCompiler.Tests
                 new JumpIfToLabel("label_0"),
                 
                 //         continue;
-                new JumpToLabel("label_while_2"),
+                new JumpToLabel("label_while_0"),
                 
                 //     }
                 new AssemblyLabel("label_0"),
                 
                 // }
-                new JumpToLabel("label_while_2"),
-                new AssemblyLabel("label_while_3"),
+                new JumpToLabel("label_while_0"),
+                new AssemblyLabel("label_while_1"),
 
 
                 new Ret(),
@@ -119,8 +133,6 @@ namespace DaedalusCompiler.Tests
             
             _expectedSymbols = new List<DatSymbol>
             {
-                Ref("firstFunc"),
-                Ref("firstFunc.x"),
                 Ref("secondFunc"),
                 Ref("secondFunc.x"),
             };

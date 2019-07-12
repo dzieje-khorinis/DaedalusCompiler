@@ -141,17 +141,17 @@ namespace DaedalusCompiler.Compilation
 
     public class WhileStatementContext : ConditionalBlockContext
     {
+
+        private readonly LabelManager _labelManager;
         
-        public static int NextLabelIndex = 0;
-        
-        public WhileStatementContext(AssemblyBuilderContext parent) : base(parent)
+        public WhileStatementContext(AssemblyBuilderContext parent, LabelManager labelManager) : base(parent)
         {
+            _labelManager = labelManager;
         }
         
         private string GetNextLabel()
         {
-            Console.WriteLine("WTF");
-            return $"label_while_{NextLabelIndex++}";
+            return _labelManager.GetWhileLabel();
         }
         
         public override List<AssemblyElement> GetInstructions()
@@ -199,14 +199,15 @@ namespace DaedalusCompiler.Compilation
         public readonly List<ElseIfBlockContext> ElseIfBlocks;
         public ElseBlockContext ElseBlock;
 
-        public static int NextLabelIndex = 0;
+        private readonly LabelManager _labelManager;
         
 
-        public IfBlockStatementContext(AssemblyBuilderContext parent) : base(parent)
+        public IfBlockStatementContext(AssemblyBuilderContext parent, LabelManager labelManager) : base(parent)
         {
             IfBlock = null;
             ElseIfBlocks = new List<ElseIfBlockContext>();
             ElseBlock = null;
+            _labelManager = labelManager;
         }
 
         public override void FetchInstructions(AssemblyBuilderContext context)
@@ -229,7 +230,7 @@ namespace DaedalusCompiler.Compilation
 
         private string GetNextLabel()
         {
-            return $"label_{NextLabelIndex++}";
+            return _labelManager.GetIfLabel();
         }
         
         public override List<AssemblyElement> GetInstructions()

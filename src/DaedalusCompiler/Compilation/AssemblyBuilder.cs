@@ -5,6 +5,27 @@ using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
 {
+    public class LabelManager
+    {
+        private int _nextIfLabelIndex;
+        private int _nextWhileLabelIndex;
+
+        public LabelManager()
+        {
+            _nextIfLabelIndex = 0;
+            _nextWhileLabelIndex = 0;
+        }
+        
+        public string GetIfLabel()
+        {
+            return $"label_{_nextIfLabelIndex++}";
+        }
+        
+        public string GetWhileLabel()
+        {
+            return $"label_while_{_nextWhileLabelIndex++}";
+        }
+    }
     public class AssemblyBuilderSnapshot
     {
         public readonly BaseExecBlockContext ActiveExecBlock;
@@ -36,6 +57,8 @@ namespace DaedalusCompiler.Compilation
         public static uint MAX_ARRAY_SIZE = 4095;
         public static uint MAX_ARRAY_INDEX = 255;
 
+        private readonly LabelManager _labelManager;
+
         public readonly List<BaseExecBlockContext> ExecBlocks;
         public BaseExecBlockContext ActiveExecBlock;
         public ErrorFileContext ErrorFileContext;
@@ -65,6 +88,8 @@ namespace DaedalusCompiler.Compilation
         
         public AssemblyBuilder(bool verbose = true, bool strictSyntax=false)
         {
+            _labelManager = new LabelManager();
+            
             ExecBlocks = new List<BaseExecBlockContext>();
             Symbols = new List<DatSymbol>();
             _symbolsDict = new Dictionary<string, DatSymbol>();
@@ -517,7 +542,7 @@ namespace DaedalusCompiler.Compilation
         
         public void WhileStatementStart()
         {
-            _activeContext = new WhileStatementContext(_activeContext);
+            _activeContext = new WhileStatementContext(_activeContext, _labelManager);
         }
 
         public void WhileStatementEnd()
@@ -527,7 +552,7 @@ namespace DaedalusCompiler.Compilation
         
         public void IfBlockStatementStart()
         {
-            _activeContext = new IfBlockStatementContext(_activeContext);
+            _activeContext = new IfBlockStatementContext(_activeContext, _labelManager);
         }
 
         public void IfBlockStatementEnd()

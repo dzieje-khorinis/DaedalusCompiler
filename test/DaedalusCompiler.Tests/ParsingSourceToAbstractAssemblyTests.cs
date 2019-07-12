@@ -26,8 +26,6 @@ namespace DaedalusCompiler.Tests
             _expectedSymbols = new List<DatSymbol>();
             _parsed = false;
             _externalCode = String.Empty;
-            IfBlockStatementContext.NextLabelIndex = 0;
-            WhileStatementContext.NextLabelIndex = 0;
         }
 
         protected int RefIndex(string symbolName)

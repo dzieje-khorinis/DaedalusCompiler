@@ -25,8 +25,6 @@ namespace DaedalusCompiler.Tests
             _assemblyBuilder = new AssemblyBuilder();
             _assemblyBuilder.ErrorFileContext.FilePath = "test.d";
             _externalCode = String.Empty;
-            IfBlockStatementContext.NextLabelIndex = 0;
-            WhileStatementContext.NextLabelIndex = 0;
         }
         
         private void ParseData()
@@ -1057,6 +1055,35 @@ namespace DaedalusCompiler.Tests
                 test.d:4:10: error: 'while' is keyword and shouldn't be used as an identifier
                 func void while() {};
                           ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        
+        [Fact]
+        public void TestIterationStatementNotInLoop()
+        {
+            _code = @"
+                const int break = 1;
+                
+                func void testFunc() {
+                    break;
+                    continue;
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:1:10: error: 'break' is keyword and shouldn't be used as an identifier
+                const int break = 1;
+                          ^
+                test.d: In function ‘testFunc’:
+                test.d:4:4: error: 'break' statement not in loop statement
+                    break;
+                    ^
+                test.d:5:4: error: 'continue' statement not in loop statement
+                    continue;
+                    ^
             ";
 
             AssertCompilationOutputMatch();
