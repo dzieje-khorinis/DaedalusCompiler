@@ -139,6 +139,59 @@ namespace DaedalusCompiler.Compilation
         }
     }
 
+    public class WhileStatementContext : ConditionalBlockContext
+    {
+
+        private readonly LabelManager _labelManager;
+        
+        public WhileStatementContext(AssemblyBuilderContext parent, LabelManager labelManager) : base(parent)
+        {
+            _labelManager = labelManager;
+        }
+        
+        private string GetNextLabel()
+        {
+            return _labelManager.GetWhileLabel();
+        }
+        
+        public override List<AssemblyElement> GetInstructions()
+        {
+            string startLabel = GetNextLabel();
+            string endLabel = GetNextLabel();
+                
+            List<AssemblyElement> instructions = new List<AssemblyElement>();
+            
+            instructions.Add(new AssemblyLabel(startLabel));
+            
+            instructions.AddRange(Condition);
+            instructions.Add(new JumpIfToLabel(endLabel));
+
+
+            foreach (AssemblyElement instruction in Body)
+            {
+                if (instruction is JumpToLoopStart)
+                {
+                    instructions.Add(new JumpToLabel(startLabel));
+                }
+                else if (instruction is JumpToLoopEnd)
+                {
+                    instructions.Add(new JumpToLabel(endLabel));
+                }
+                else
+                {
+                    instructions.Add(instruction);
+                }
+            }
+            //instructions.AddRange(Body);
+            
+            
+            instructions.Add(new JumpToLabel(startLabel));
+            
+            instructions.Add(new AssemblyLabel(endLabel));
+
+            return instructions;
+        }
+    }
     
     public class IfBlockStatementContext : AssemblyBuilderContext
     {
@@ -146,14 +199,15 @@ namespace DaedalusCompiler.Compilation
         public readonly List<ElseIfBlockContext> ElseIfBlocks;
         public ElseBlockContext ElseBlock;
 
-        public static int NextLabelIndex = 0;
+        private readonly LabelManager _labelManager;
         
 
-        public IfBlockStatementContext(AssemblyBuilderContext parent) : base(parent)
+        public IfBlockStatementContext(AssemblyBuilderContext parent, LabelManager labelManager) : base(parent)
         {
             IfBlock = null;
             ElseIfBlocks = new List<ElseIfBlockContext>();
             ElseBlock = null;
+            _labelManager = labelManager;
         }
 
         public override void FetchInstructions(AssemblyBuilderContext context)
@@ -176,7 +230,7 @@ namespace DaedalusCompiler.Compilation
 
         private string GetNextLabel()
         {
-            return $"label_{NextLabelIndex++}";
+            return _labelManager.GetIfLabel();
         }
         
         public override List<AssemblyElement> GetInstructions()
@@ -262,9 +316,7 @@ namespace DaedalusCompiler.Compilation
             
         }
     }
-    
 
-    
     public class IfBlockContext : ConditionalBlockContext
     {
         public IfBlockContext(AssemblyBuilderContext parent) : base(parent)

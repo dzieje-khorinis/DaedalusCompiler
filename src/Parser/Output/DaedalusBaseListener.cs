@@ -371,6 +371,54 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitReturnStatement([NotNull] DaedalusParser.ReturnStatementContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.whileStatement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterWhileStatement([NotNull] DaedalusParser.WhileStatementContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.whileStatement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitWhileStatement([NotNull] DaedalusParser.WhileStatementContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.whileCondition"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterWhileCondition([NotNull] DaedalusParser.WhileConditionContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.whileCondition"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitWhileCondition([NotNull] DaedalusParser.WhileConditionContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.breakStatement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterBreakStatement([NotNull] DaedalusParser.BreakStatementContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.breakStatement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitBreakStatement([NotNull] DaedalusParser.BreakStatementContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="DaedalusParser.continueStatement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterContinueStatement([NotNull] DaedalusParser.ContinueStatementContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="DaedalusParser.continueStatement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitContinueStatement([NotNull] DaedalusParser.ContinueStatementContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.funcArgExpression"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>

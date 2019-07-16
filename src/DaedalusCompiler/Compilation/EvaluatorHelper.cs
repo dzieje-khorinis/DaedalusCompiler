@@ -7,6 +7,11 @@ using Antlr4.Runtime;
 
 namespace DaedalusCompiler.Compilation
 {
+    public class UnableToEvaluateException : Exception
+    {
+        public UnableToEvaluateException(string message) : base(message) {}
+    };
+    
     public static class EvaluatorHelper
     {
         public static int EvaluteArraySize(DaedalusParser.ArraySizeContext context, AssemblyBuilder assemblyBuilder)
@@ -41,7 +46,7 @@ namespace DaedalusCompiler.Compilation
             if (expression is DaedalusParser.ValExpressionContext context)
                 return context.value().GetChild(0).GetText().Replace("\"", "");
 
-            throw new Exception(
+            throw new UnableToEvaluateException(
                 $"Unable to evaluate constant. Expression '{expression.GetText()}' contains unsupported operations.");
         }
 
@@ -65,11 +70,8 @@ namespace DaedalusCompiler.Compilation
             {
                 return parsedFloat;
             }
-            else
-            {   
-                throw new Exception(
-                    $"Unable to evaluate constant. Expression '{value}' contains unsupported operations.");
-            }
+            throw new UnableToEvaluateException(
+                $"Unable to evaluate constant. Expression '{value}' contains unsupported operations.");
         }
         
         public static int IntParse(string text, AssemblyBuilder assemblyBuilder)
@@ -82,6 +84,10 @@ namespace DaedalusCompiler.Compilation
             {
                 assemblyBuilder.Errors.Add(new IntegerLiteralTooLargeError(assemblyBuilder.ErrorFileContext));
                 return 0;
+            }
+            catch (FormatException)
+            {
+                throw new UnableToEvaluateException("");
             }
         }
 
@@ -139,7 +145,7 @@ namespace DaedalusCompiler.Compilation
             // value is reference to other constant
             if (valueChild is DaedalusParser.ReferenceContext reference)
             {
-                var referenceName = reference.referenceAtom()?.FirstOrDefault()?.Identifier()?.GetText();
+                var referenceName = reference.referenceAtom()?.FirstOrDefault()?.nameNode()?.GetText();
 
                 //TODO : Allow to reference arrays. Currently it is not possible. 
 
@@ -154,6 +160,10 @@ namespace DaedalusCompiler.Compilation
                     if (referenceSymbol.Type == DatSymbolType.Func)
                     {
                         referenceValue = referenceSymbol.Index;
+                    }
+                    else if (referenceSymbol.Type == DatSymbolType.Undefined)
+                    {
+                        referenceValue = 0;
                     }
                     else
                     {

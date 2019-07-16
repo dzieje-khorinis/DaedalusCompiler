@@ -31,7 +31,7 @@ namespace DaedalusCompiler.Compilation
             string ws = @"(?:[ \t])*";
             string newline = @"(?:\r\n?|\n)";
             RegexOptions options = RegexOptions.IgnoreCase | RegexOptions.Multiline;
-            string suppressWarningsPattern = $@"//{ws}suppress{ws}:((?:{ws}[a-zA-Z0-9]+)+){ws}{newline}?$";
+            string suppressWarningsPattern = $@"//!{ws}suppress{ws}:((?:{ws}[a-zA-Z0-9]+)+){ws}{newline}?$";
             MatchCollection matches = Regex.Matches(line, suppressWarningsPattern, options);
             foreach (Match match in matches)
             {
@@ -64,19 +64,30 @@ namespace DaedalusCompiler.Compilation
                 string runtimePath = Path.Combine(GetBuiltinsPath(), srcFileName + ".d");
                 if (File.Exists(runtimePath))
                 {
-                    _assemblyBuilder.IsCurrentlyParsingExternals = true;
                     if (verbose) Console.WriteLine($"[0/{paths.Length}]Compiling runtime: {runtimePath}");
-                    DaedalusParser parser = GetParserForScriptsFile(runtimePath);
+                    _assemblyBuilder.IsCurrentlyParsingExternals = true;
+                    
+                    string fileContent = GetFileContent(runtimePath);
+                    DaedalusParser parser = GetParserForText(fileContent);
+
+                    _assemblyBuilder.ErrorFileContext.FileContentLines = fileContent.Split(Environment.NewLine);
+                    _assemblyBuilder.ErrorFileContext.FilePath = runtimePath;
+                    _assemblyBuilder.ErrorFileContext.FileIndex = -1;
+                    
                     ParseTreeWalker.Default.Walk(new DaedalusListener(_assemblyBuilder, 0), parser.daedalusFile());
                     _assemblyBuilder.IsCurrentlyParsingExternals = false;
                 }
 
+                int syntaxErrorsCount = 0;
                 for (int i = 0; i < paths.Length; i++)
                 {
                     if (verbose) Console.WriteLine($"[{i + 1}/{paths.Length}]Compiling: {paths[i]}");
 
                     string fileContent = GetFileContent(paths[i]);
                     DaedalusParser parser = GetParserForText(fileContent);
+                    //parser.RemoveErrorListeners(); // TODO uncomment this line once SyntaxErrorListener is fully implemented
+                    SyntaxErrorListener syntaxErrorListener = new SyntaxErrorListener();
+                    parser.AddErrorListener(syntaxErrorListener);
 
                     _assemblyBuilder.ErrorFileContext.FileContentLines = fileContent.Split(Environment.NewLine);
                     _assemblyBuilder.ErrorFileContext.FilePath = paths[i];
@@ -85,10 +96,19 @@ namespace DaedalusCompiler.Compilation
                         _assemblyBuilder.ErrorFileContext.FileContentLines[0]
                     );
                     ParseTreeWalker.Default.Walk(new DaedalusListener(_assemblyBuilder, i), parser.daedalusFile());
-                    if (generateOutputUnits)
+                    syntaxErrorsCount += syntaxErrorListener.ErrorsCount;
+                    
+                    if (generateOutputUnits && syntaxErrorListener.ErrorsCount == 0)
                     {
                         _ouBuilder.ParseText(fileContent);
                     }
+                }
+
+                if (syntaxErrorsCount > 0)
+                {
+                    StdErrorLogger logger = new StdErrorLogger();
+                    logger.LogLine($"{syntaxErrorsCount} syntax {(syntaxErrorsCount == 1 ? "error" : "errors")} generated.");
+                    return false;
                 }
 
                 if (!compileToAssembly)
@@ -136,7 +156,7 @@ namespace DaedalusCompiler.Compilation
 
                     string lastErrorFilePath = "";
                     string lastErrorBlockName = null;
-                    var logger = new StdErrorLogger();
+                    StdErrorLogger logger = new StdErrorLogger();
 
                     foreach (CompilationMessage error in errors)
                     {

@@ -10,20 +10,23 @@ namespace DaedalusCompiler.Tests
 {
     public class SemanticErrorsTests
     {
-        private readonly AssemblyBuilder _assemblyBuilder;
+        private AssemblyBuilder _assemblyBuilder;
         private string _code;
         private string _externalCode;
         private string _expectedCompilationOutput;
 
         public SemanticErrorsTests()
         {
-            _assemblyBuilder = new AssemblyBuilder();
-            _externalCode = String.Empty;
-            IfBlockStatementContext.NextLabelIndex = 0;
-
-            _assemblyBuilder.ErrorFileContext.FilePath = "test.d";
+            ResetTestsConfiguration();
         }
 
+        private void ResetTestsConfiguration()
+        {
+            _assemblyBuilder = new AssemblyBuilder();
+            _assemblyBuilder.ErrorFileContext.FilePath = "test.d";
+            _externalCode = String.Empty;
+        }
+        
         private void ParseData()
         {
             string[] codeLines = _code.Trim().Split(Environment.NewLine);
@@ -158,6 +161,22 @@ namespace DaedalusCompiler.Tests
                 test.d:3:19: error: ‘Orc’ undeclared
                 prototype OrcElite(Orc);
                                    ^
+                ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
+        public void TestUndeclaredIdentifierConstAssignment()
+        {
+            _code = @"
+                const int a = b;
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:1:14: error: ‘b’ undeclared
+                const int a = b;
+                              ^
                 ";
 
             AssertCompilationOutputMatch();
@@ -401,7 +420,7 @@ namespace DaedalusCompiler.Tests
                 func void testFunc() {
                     var int x;
                     x = 5;
-                    x; //suppress: W1
+                    x; //! suppress: W1
                     return;
                 };
             ";
@@ -415,7 +434,7 @@ namespace DaedalusCompiler.Tests
         public void TestSingleExpressionHackWarningFileSuppress()
         {
             _code = @"
-                //suppress: W1
+                //! suppress: W1
                 
                 func void testFunc() {
                     var int x;
@@ -458,6 +477,660 @@ namespace DaedalusCompiler.Tests
                 test.d:1:9: note: 'testFunc' declared here
                 func int testFunc(var int a) {};
                          ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+
+        [Fact]
+        public void TestConstAssignment()
+        {
+            _code = @"
+                const int a = 1;
+                const int b = 1.5; //error
+                const int c = 2 + 2;
+                const int d = 2.5 + 3; //error
+                const int e = 4 + 4.5; //error
+                const int f = 5.5 + 5.5; //error
+                
+                const float g = 1;
+                const float h = 1.5;
+                const float i = 2 + 2; //error
+                const float j = 2.5 + 3; //error
+                const float k = 4 + 4.5; //error
+                const float l = 5.5 + 5.5; //error
+                
+                const string m = ""ha"";
+                const string n = ""ha"" + ""ha""; //error
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:2:14: error: unable to evaluate const value
+                const int b = 1.5; //error
+                              ^
+                test.d:4:14: error: unable to evaluate const value
+                const int d = 2.5 + 3; //error
+                              ^
+                test.d:5:14: error: unable to evaluate const value
+                const int e = 4 + 4.5; //error
+                              ^
+                test.d:6:14: error: unable to evaluate const value
+                const int f = 5.5 + 5.5; //error
+                              ^
+                test.d:10:16: error: unable to evaluate const value
+                const float i = 2 + 2; //error
+                                ^
+                test.d:11:16: error: unable to evaluate const value
+                const float j = 2.5 + 3; //error
+                                ^
+                test.d:12:16: error: unable to evaluate const value
+                const float k = 4 + 4.5; //error
+                                ^
+                test.d:13:16: error: unable to evaluate const value
+                const float l = 5.5 + 5.5; //error
+                                ^
+                test.d:16:17: error: unable to evaluate const value
+                const string n = ""ha"" + ""ha""; //error
+                                 ^
+                ";
+
+            AssertCompilationOutputMatch();
+        }
+
+        [Fact]
+        public void TestGlobalRedefinition()
+        {
+            _code = @"
+                class __class {};
+                func void __class() {};
+                func void __class() {};
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:2:10: error: redefinition of '__class'
+                func void __class() {};
+                          ^
+                test.d:1:6: note: previous definition is here
+                class __class {};
+                      ^
+                test.d:3:10: error: redefinition of '__class'
+                func void __class() {};
+                          ^
+                test.d:1:6: note: previous definition is here
+                class __class {};
+                      ^
+                ";
+            AssertCompilationOutputMatch();
+            ResetTestsConfiguration();
+
+            _code = @"
+                func void __func() {};
+                class __func {};
+                class __func {};
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:2:6: error: redefinition of '__func'
+                class __func {};
+                      ^
+                test.d:1:10: note: previous definition is here
+                func void __func() {};
+                          ^
+                test.d:3:6: error: redefinition of '__func'
+                class __func {};
+                      ^
+                test.d:1:10: note: previous definition is here
+                func void __func() {};
+                          ^
+                ";
+
+            AssertCompilationOutputMatch();
+            ResetTestsConfiguration();
+            
+            _code = @"
+                class C_NPC { var int data [200]; };
+                instance __instanceDecl(C_NPC);
+                prototype __instanceDecl(C_NPC) {};
+                prototype __instanceDecl(C_NPC) {};
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:3:10: error: redefinition of '__instanceDecl'
+                prototype __instanceDecl(C_NPC) {};
+                          ^
+                test.d:2:9: note: previous definition is here
+                instance __instanceDecl(C_NPC);
+                         ^
+                test.d:4:10: error: redefinition of '__instanceDecl'
+                prototype __instanceDecl(C_NPC) {};
+                          ^
+                test.d:2:9: note: previous definition is here
+                instance __instanceDecl(C_NPC);
+                         ^
+                ";
+
+            AssertCompilationOutputMatch();
+            ResetTestsConfiguration();
+            
+            _code = @"
+                class C_NPC { var int data [200]; };
+                prototype __prototype(C_NPC) {};
+                instance __prototype(C_NPC);
+                instance __prototype(C_NPC);
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:3:9: error: redefinition of '__prototype'
+                instance __prototype(C_NPC);
+                         ^
+                test.d:2:10: note: previous definition is here
+                prototype __prototype(C_NPC) {};
+                          ^
+                test.d:4:9: error: redefinition of '__prototype'
+                instance __prototype(C_NPC);
+                         ^
+                test.d:2:10: note: previous definition is here
+                prototype __prototype(C_NPC) {};
+                          ^
+                ";
+
+            AssertCompilationOutputMatch();
+            ResetTestsConfiguration();
+            
+            _code = @"
+                class C_NPC { var int data [200]; };
+                instance instanceDef(C_NPC) {};
+                const int instanceDef = 0;
+                const int instanceDef = 0;
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:3:10: error: redefinition of 'instanceDef'
+                const int instanceDef = 0;
+                          ^
+                test.d:2:9: note: previous definition is here
+                instance instanceDef(C_NPC) {};
+                         ^
+                test.d:4:10: error: redefinition of 'instanceDef'
+                const int instanceDef = 0;
+                          ^
+                test.d:2:9: note: previous definition is here
+                instance instanceDef(C_NPC) {};
+                         ^
+                ";
+
+            AssertCompilationOutputMatch();
+            ResetTestsConfiguration();
+            
+            _code = @"
+                class C_NPC { var int data [200]; };
+                const int constInt = 0;
+                instance constInt(C_NPC) {};
+                instance constInt(C_NPC) {};
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:3:9: error: redefinition of 'constInt'
+                instance constInt(C_NPC) {};
+                         ^
+                test.d:2:10: note: previous definition is here
+                const int constInt = 0;
+                          ^
+                test.d:4:9: error: redefinition of 'constInt'
+                instance constInt(C_NPC) {};
+                         ^
+                test.d:2:10: note: previous definition is here
+                const int constInt = 0;
+                          ^
+                ";
+
+            AssertCompilationOutputMatch();
+            ResetTestsConfiguration();
+            
+            _code = @"
+                const int constIntArr[2] = {0, 1};
+                var float constIntArr;
+                var float constIntArr;
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:2:10: error: redefinition of 'constIntArr'
+                var float constIntArr;
+                          ^
+                test.d:1:10: note: previous definition is here
+                const int constIntArr[2] = {0, 1};
+                          ^
+                test.d:3:10: error: redefinition of 'constIntArr'
+                var float constIntArr;
+                          ^
+                test.d:1:10: note: previous definition is here
+                const int constIntArr[2] = {0, 1};
+                          ^
+                ";
+
+            AssertCompilationOutputMatch();
+            ResetTestsConfiguration();
+            
+            _code = @"
+                var float varFloat;
+                const int varFloat[2] = {0, 1};
+                const int varFloat[2] = {0, 1};
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:2:10: error: redefinition of 'varFloat'
+                const int varFloat[2] = {0, 1};
+                          ^
+                test.d:1:10: note: previous definition is here
+                var float varFloat;
+                          ^
+                test.d:3:10: error: redefinition of 'varFloat'
+                const int varFloat[2] = {0, 1};
+                          ^
+                test.d:1:10: note: previous definition is here
+                var float varFloat;
+                          ^
+                ";
+
+            AssertCompilationOutputMatch();
+        }
+
+        [Fact]
+        public void TestLocalRedefinition()
+        {
+            _code = @"
+                class C_NPC { var int data [200]; };
+                var int a;
+                var float b;
+                var string c;
+                var C_NPC d;
+                var func e;
+                
+                func void firstFunc() {
+                    var int a;
+                    var float b;
+                    var string c;
+                    var C_NPC d;
+                    var func e;
+                    
+                    var int a;
+                    var float b;
+                    var string c;
+                    var C_NPC d;
+                    var func e;
+                }
+                
+                func void secondFunc() {
+                    var int a;
+                    var float b;
+                    var string c;
+                    var C_NPC d;
+                    var func e;
+                }
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d: In function ‘firstFunc’:
+                test.d:15:12: error: redefinition of 'a'
+                    var int a;
+                            ^
+                test.d:9:12: note: previous definition is here
+                    var int a;
+                            ^
+                test.d:16:14: error: redefinition of 'b'
+                    var float b;
+                              ^
+                test.d:10:14: note: previous definition is here
+                    var float b;
+                              ^
+                test.d:17:15: error: redefinition of 'c'
+                    var string c;
+                               ^
+                test.d:11:15: note: previous definition is here
+                    var string c;
+                               ^
+                test.d:18:14: error: redefinition of 'd'
+                    var C_NPC d;
+                              ^
+                test.d:12:14: note: previous definition is here
+                    var C_NPC d;
+                              ^
+                test.d:19:13: error: redefinition of 'e'
+                    var func e;
+                             ^
+                test.d:13:13: note: previous definition is here
+                    var func e;
+                             ^
+                ";
+            AssertCompilationOutputMatch();
+        }
+        
+        
+        [Fact]
+        public void TestNotValidClassOrPrototype()
+        {
+            _code = @"
+                class myClass {};
+                func void myFunc() {};
+                
+                instance WRONG1(myFunc);
+                instance WRONG2(myFunc) {};
+                prototype WRONG3(myFunc) {};
+                
+                instance CORRECT1(myClass);
+                instance CORRECT2(myClass) {};
+                prototype CORRECT3(myClass) {};
+                
+                instance CORRECT4(WRONG3);
+                instance CORRECT5(WRONG3) {};
+                prototype CORRECT6(WRONG3) {};
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:4:16: error: not a valid class or prototype
+                instance WRONG1(myFunc);
+                                ^
+                test.d: In instance ‘WRONG2’:
+                test.d:5:16: error: not a valid class or prototype
+                instance WRONG2(myFunc) {};
+                                ^
+                test.d: In prototype ‘WRONG3’:
+                test.d:6:17: error: not a valid class or prototype
+                prototype WRONG3(myFunc) {};
+                                 ^
+                ";
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
+        public void TestTooBigArraySize()
+        {
+            _code = @"
+                var int a[4095];
+                var int b[4096];
+                
+                func void myFunc(var int c[4095], var int d[4096]) {
+                    var int e[4095];
+                    var int f[4096];
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:2:10: error: too big array size (max: 4095)
+                var int b[4096];
+                          ^
+                test.d: In function ‘myFunc’:
+                test.d:4:44: error: too big array size (max: 4095)
+                func void myFunc(var int c[4095], var int d[4096]) {
+                                                            ^
+                test.d:6:14: error: too big array size (max: 4095)
+                    var int f[4096];
+                              ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
+        public void TestTooBigArraySizeConstInt()
+        {
+            _code = @"
+                const int OK_SIZE = 4095;
+                const int WRONG_SIZE = 4096;
+                
+                var int a[OK_SIZE];
+                var int b[WRONG_SIZE];
+                
+                func void myFunc(var int c[OK_SIZE], var int d[WRONG_SIZE]) {
+                    var int e[OK_SIZE];
+                    var int f[WRONG_SIZE];
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:5:10: error: too big array size (max: 4095)
+                var int b[WRONG_SIZE];
+                          ^
+                test.d: In function ‘myFunc’:
+                test.d:7:47: error: too big array size (max: 4095)
+                func void myFunc(var int c[OK_SIZE], var int d[WRONG_SIZE]) {
+                                                               ^
+                test.d:9:14: error: too big array size (max: 4095)
+                    var int f[WRONG_SIZE];
+                              ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
+        public void TestArrayIndexOutOfRange()
+        {
+            _code = @"
+                const int a[2] = {2 , 3};
+                
+                func void myFunc(var int b[3]) {
+                    var int c[4];
+                    var int x;
+                    x = a[1];
+                    x = a[2];
+                    x = b[2];
+                    x = b[3];
+                    x = c[3];
+                    x = c[4];
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d: In function ‘myFunc’:
+                test.d:7:10: error: array index out of range (max index for this array is 1)
+                    x = a[2];
+                          ^
+                test.d:9:10: error: array index out of range (max index for this array is 2)
+                    x = b[3];
+                          ^
+                test.d:11:10: error: array index out of range (max index for this array is 3)
+                    x = c[4];
+                          ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
+        public void TestAttributeArrayIndexOutOfRange()
+        {
+            _code = @"
+                const int GOOD_INDEX = 7;
+                const int BAD_INDEX = 8;
+                
+                class C_NPC
+                {
+                    var int attribute[8];
+                };
+                
+                instance self(C_NPC) {};
+                
+                func void myFunc()
+                {
+                    self.attribute[GOOD_INDEX] = 100;
+                    self.attribute[BAD_INDEX] = 200;
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d: In function ‘myFunc’:
+                test.d:14:19: error: array index out of range (max index for this array is 7)
+                    self.attribute[BAD_INDEX] = 200;
+                                   ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
+        public void TestArrayIndexOutOfRangeConstInt()
+        {
+            _code = @"
+                const int ONE = 1;
+                const int TWO = 2;
+                const int THREE = 3;
+                const int FOUR = 4;
+                
+                const int a[2] = {2 , 3};
+                
+                func void myFunc(var int b[3]) {
+                    var int c[4];
+                    var int x;
+                    x = a[ONE];
+                    x = a[TWO];
+                    x = b[TWO];
+                    x = b[THREE];
+                    x = c[THREE];
+                    x = c[FOUR];
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d: In function ‘myFunc’:
+                test.d:12:10: error: array index out of range (max index for this array is 1)
+                    x = a[TWO];
+                          ^
+                test.d:14:10: error: array index out of range (max index for this array is 2)
+                    x = b[THREE];
+                          ^
+                test.d:16:10: error: array index out of range (max index for this array is 3)
+                    x = c[FOUR];
+                          ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
+        public void TestTooBigArrayIndex()
+        {
+            _code = @"
+                const int a[2] = {2 , 3};
+                var int b[4095];
+                
+                func void myFunc() {
+                    var int x;
+                    x = a[255];
+                    x = a[256];
+                    x = b[255];
+                    x = b[256];
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d: In function ‘myFunc’:
+                test.d:6:10: error: array index out of range (max index for this array is 1)
+                    x = a[255];
+                          ^
+                test.d:7:10: error: array index out of range (max index for this array is 1)
+                    x = a[256];
+                          ^
+                test.d:9:10: error: too big array index (max: 255)
+                    x = b[256];
+                          ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        
+        [Fact]
+        public void TestTooBigArrayIndexConstIndex()
+        {
+            _code = @"
+                const int INDEX1 = 255;
+                const int INDEX2 = 256;
+                
+                const int a[2] = {2 , 3};
+                var int b[4095];
+                
+                func void myFunc() {
+                    var int x;
+                    x = a[INDEX1];
+                    x = a[INDEX2];
+                    x = b[INDEX1];
+                    x = b[INDEX2];
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d: In function ‘myFunc’:
+                test.d:9:10: error: array index out of range (max index for this array is 1)
+                    x = a[INDEX1];
+                          ^
+                test.d:10:10: error: array index out of range (max index for this array is 1)
+                    x = a[INDEX2];
+                          ^
+                test.d:12:10: error: too big array index (max: 255)
+                    x = b[INDEX2];
+                          ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
+        public void TestWhileKeywordAsIdentifier()
+        {
+            _code = @"
+                const int break = 1;
+                const int continue = 2;
+                
+                func void while() {};
+                
+                func void myFunc(var func x) {};
+                
+                func void testFunc() {
+                    while();
+                    myFunc(while);
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:1:10: error: 'break' is keyword and shouldn't be used as an identifier
+                const int break = 1;
+                          ^
+                test.d:2:10: error: 'continue' is keyword and shouldn't be used as an identifier
+                const int continue = 2;
+                          ^
+                test.d:4:10: error: 'while' is keyword and shouldn't be used as an identifier
+                func void while() {};
+                          ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        
+        [Fact]
+        public void TestIterationStatementNotInLoop()
+        {
+            _code = @"
+                const int break = 1;
+                
+                func void testFunc() {
+                    break;
+                    continue;
+                };
+            ";
+
+            _expectedCompilationOutput = @"
+                test.d:1:10: error: 'break' is keyword and shouldn't be used as an identifier
+                const int break = 1;
+                          ^
+                test.d: In function ‘testFunc’:
+                test.d:4:4: error: 'break' statement not in loop statement
+                    break;
+                    ^
+                test.d:5:4: error: 'continue' statement not in loop statement
+                    continue;
+                    ^
             ";
 
             AssertCompilationOutputMatch();

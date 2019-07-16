@@ -101,7 +101,7 @@ namespace DaedalusCompiler.Compilation
                         intParam = (int) valueInstruction.Value;
                         break;
                     }
-                    case AddressInstruction addressInstruction: // TODO check if there is any possibility for this
+                    case AddressInstruction addressInstruction:
                     {
                         intParam = addressInstruction.Address;
                         break;

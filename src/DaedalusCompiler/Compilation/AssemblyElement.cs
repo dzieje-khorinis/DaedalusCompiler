@@ -61,6 +61,14 @@ namespace DaedalusCompiler.Compilation
             Label = label;
         }
     }
+    
+    public class JumpToLoopStart : AssemblyInstruction
+    {
+    }
+    
+    public class JumpToLoopEnd : AssemblyInstruction
+    {
+    }
 
     public class ParamLessInstruction : AssemblyInstruction
     {

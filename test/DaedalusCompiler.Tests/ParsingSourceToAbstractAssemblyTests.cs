@@ -7,17 +7,18 @@ using Xunit;
 
 namespace DaedalusCompiler.Tests
 {
-    public class ParsingSourceToAbstractAssemblyTests
-    {
-        private readonly AssemblyBuilder _assemblyBuilder;
-        private string _code;
-        private string _externalCode;
-        private List<AssemblyElement> _instructions;
-        private List<AssemblyElement> _expectedInstructions;
-        private List<DatSymbol> _expectedSymbols;
-        private bool _parsed;
 
-        public ParsingSourceToAbstractAssemblyTests()
+    public class ParsingSourceToAbstractAssemblyTestsBase
+    {
+        protected readonly AssemblyBuilder _assemblyBuilder;
+        protected string _code;
+        protected string _externalCode;
+        protected List<AssemblyElement> _instructions;
+        protected List<AssemblyElement> _expectedInstructions;
+        protected List<DatSymbol> _expectedSymbols;
+        protected bool _parsed;
+
+        public ParsingSourceToAbstractAssemblyTestsBase()
         {
             _assemblyBuilder = new AssemblyBuilder();
             _instructions = new List<AssemblyElement>();
@@ -25,22 +26,21 @@ namespace DaedalusCompiler.Tests
             _expectedSymbols = new List<DatSymbol>();
             _parsed = false;
             _externalCode = String.Empty;
-            IfBlockStatementContext.NextLabelIndex = 0;
         }
 
-        private int RefIndex(string symbolName)
+        protected int RefIndex(string symbolName)
         {
             DatSymbol symbol = _assemblyBuilder.ResolveSymbol(symbolName);
             return symbol.Index;
         }
         
-        private DatSymbol Ref(string symbolName)
+        protected DatSymbol Ref(string symbolName)
         {
             _assemblyBuilder.ActiveExecBlock = null;
             return _assemblyBuilder.ResolveSymbol(symbolName);
         }
 
-        private List<AssemblyElement> GetExecBlockInstructions(string execBlockName)
+        protected List<AssemblyElement> GetExecBlockInstructions(string execBlockName)
         {
             if (!_parsed)
             {
@@ -85,13 +85,14 @@ namespace DaedalusCompiler.Tests
             return instructions;
         }
 
-        private void ParseData()
+        protected void ParseData()
         {
             _parsed = true;
             
             if (_externalCode != string.Empty)
             {
                 _assemblyBuilder.IsCurrentlyParsingExternals = true;
+                _assemblyBuilder.ErrorFileContext.FileContentLines = _externalCode.Split(Environment.NewLine);
                 Utils.WalkSourceCode(_externalCode, _assemblyBuilder);
                 _assemblyBuilder.IsCurrentlyParsingExternals = false;
             }
@@ -104,13 +105,13 @@ namespace DaedalusCompiler.Tests
             _assemblyBuilder.Finish();
         }
 
-        private void AssertRefContentEqual(string symbolName, object expectedValue)
+        protected void AssertRefContentEqual(string symbolName, object expectedValue)
         {
             if (expectedValue == null) throw new ArgumentNullException(nameof(expectedValue));
             Assert.Equal(expectedValue, Ref(symbolName).Content[0]);
         }
 
-        private void AssertInstructionsMatch()
+        protected void AssertInstructionsMatch()
         {
             for (var index = 0; index < _expectedInstructions.Count; index++)
             {
@@ -120,7 +121,7 @@ namespace DaedalusCompiler.Tests
             }
         }
 
-        private void AssertSymbolsMatch()
+        protected void AssertSymbolsMatch()
         {
             Assert.Equal(_expectedSymbols.Count, _assemblyBuilder.Symbols.Count);
             for (var index = 0; index < _expectedSymbols.Count; index++)
@@ -133,7 +134,7 @@ namespace DaedalusCompiler.Tests
         }
 
 
-        private void CompareInstructions(AssemblyElement expectedInstruction, AssemblyElement instruction)
+        protected void CompareInstructions(AssemblyElement expectedInstruction, AssemblyElement instruction)
         {
             if (expectedInstruction == null) throw new ArgumentNullException(nameof(expectedInstruction));
             Assert.Equal(expectedInstruction.GetType(), instruction.GetType());
@@ -188,7 +189,10 @@ namespace DaedalusCompiler.Tests
                 }
             }
         }
-
+    }
+    
+    public class ParsingSourceToAbstractAssemblyTests : ParsingSourceToAbstractAssemblyTestsBase
+    {
         [Fact]
         public void TestIntAddOperator()
         {

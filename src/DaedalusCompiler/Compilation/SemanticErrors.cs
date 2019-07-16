@@ -142,32 +142,54 @@ namespace DaedalusCompiler.Compilation
             ParserRuleContext parserContext = errorFileContext.ParserContext;
             
             ExecBlockName = null;
-            RuleContext context = parserContext.Parent;
-            while (ExecBlockName == null)
-            {
-                switch (context)
-                {
-                    case DaedalusParser.FunctionDefContext functionDefContext:
-                        ExecBlockName = functionDefContext.nameNode().GetText();
-                        ExecBlockType = "function";
-                        break;
-                    case DaedalusParser.InstanceDefContext instanceDefContext:
-                        ExecBlockName = instanceDefContext.nameNode().GetText();
-                        ExecBlockType = "instance";
-                        break;
-                    case DaedalusParser.PrototypeDefContext prototypeDefContext:
-                        ExecBlockName = prototypeDefContext.nameNode().GetText();
-                        ExecBlockType = "prototype";
-                        break;
-                }
 
-                context = context.Parent;
-                if (context is DaedalusParser.DaedalusFileContext)
+
+            bool displayExecBlock = true;
+            
+            if (parserContext is DaedalusParser.NameNodeContext)
+            {
+                if (parserContext.Parent is DaedalusParser.FunctionDefContext
+                    || parserContext.Parent is DaedalusParser.InstanceDefContext
+                    || parserContext.Parent is DaedalusParser.PrototypeDefContext
+                    || parserContext.Parent is DaedalusParser.ClassDefContext)
                 {
-                    break;
+                    displayExecBlock = false;
                 }
             }
-            
+
+            if (displayExecBlock)
+            {
+                RuleContext context = parserContext.Parent;
+                while (ExecBlockName == null)
+                {
+                    switch (context)
+                    {
+                        case DaedalusParser.FunctionDefContext functionDefContext:
+                            ExecBlockName = functionDefContext.nameNode().GetText();
+                            ExecBlockType = "function";
+                            break;
+                        case DaedalusParser.InstanceDefContext instanceDefContext:
+                            ExecBlockName = instanceDefContext.nameNode().GetText();
+                            ExecBlockType = "instance";
+                            break;
+                        case DaedalusParser.PrototypeDefContext prototypeDefContext:
+                            ExecBlockName = prototypeDefContext.nameNode().GetText();
+                            ExecBlockType = "prototype";
+                            break;
+                        case DaedalusParser.ClassDefContext classDefContext:
+                            ExecBlockName = classDefContext.nameNode().GetText();
+                            ExecBlockType = "class";
+                            break;
+                    }
+
+                    context = context.Parent;
+                    if (context is DaedalusParser.DaedalusFileContext)
+                    {
+                        break;
+                    }
+                }
+            }
+
             FilePath = errorFileContext.FilePath;
             FileName = Path.GetFileName(FilePath);
             _fileNo = errorFileContext.FileIndex;
@@ -237,7 +259,7 @@ namespace DaedalusCompiler.Compilation
     public abstract class CompilationWarning : CompilationMessage
     {
         protected readonly string MessageType;
-        public bool IsSuppressed;
+        public readonly bool IsSuppressed;
         public const string Code = "UNKNOWN";
 
         protected CompilationWarning(ErrorFileContext errorFileContext, bool strictSyntax) : base(errorFileContext)
@@ -271,6 +293,34 @@ namespace DaedalusCompiler.Compilation
         }
     }
     
+    public class KeywordUsedAsNameError : CompilationError
+    {
+        private readonly string _identifier;
+
+        public KeywordUsedAsNameError(ErrorFileContext errorFileContext, string identifier) : base(errorFileContext)
+        {
+            _identifier = identifier.ToLower();
+        }
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: '{_identifier}' is keyword and shouldn't be used as an identifier");
+        }
+    }
+    
+    public class IterationStatementNotInLoopError : CompilationError
+    {
+        private readonly string _identifier;
+
+        public IterationStatementNotInLoopError(ErrorFileContext errorFileContext, string identifier) : base(errorFileContext)
+        {
+            _identifier = identifier.ToLower();
+        }
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: '{_identifier}' statement not in loop statement");
+        }
+    }
+
     public class UndeclaredIdentifierError : CompilationError {
         
         protected string _identifier;
@@ -355,6 +405,45 @@ namespace DaedalusCompiler.Compilation
         }
     }
     
+    public class ArrayIndexOutOfRangeError : CompilationError {
+        private readonly uint _arraySize;
+
+        public ArrayIndexOutOfRangeError(ErrorFileContext errorFileContext, uint arraySize) : base(errorFileContext)
+        {
+            _arraySize = arraySize;
+        }
+        
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: array index out of range (max index for this array is {_arraySize-1})");
+        }
+    }
+    
+    public class TooBigArrayIndexError : CompilationError {
+
+        public TooBigArrayIndexError(ErrorFileContext errorFileContext) : base(errorFileContext)
+        {
+        }
+        
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: too big array index (max: {AssemblyBuilder.MAX_ARRAY_INDEX})");
+        }
+    }
+    
+    public class TooBigArraySizeError : CompilationError {
+        
+        public TooBigArraySizeError(ErrorFileContext errorFileContext) : base(errorFileContext)
+        {
+
+        }
+
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: too big array size (max: {AssemblyBuilder.MAX_ARRAY_SIZE})");
+        }
+    }
+    
     public class InvalidArraySizeError : CompilationError {
         private readonly string _identifier;
         private readonly int _declaredSize;
@@ -385,7 +474,32 @@ namespace DaedalusCompiler.Compilation
             logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: integer literal is too large to be represented in an integer type");
         }
     }
+
+    public class UnableToEvaluateConstError : CompilationError {
+ 
+        public UnableToEvaluateConstError(ErrorFileContext errorFileContext) : base(errorFileContext)
+        {
+        }
+
+
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: unable to evaluate const value");
+        }
+    }
     
+    public class NotValidClassOrPrototype : CompilationError {
+ 
+        public NotValidClassOrPrototype(ErrorFileContext errorFileContext) : base(errorFileContext)
+        {
+        }
+
+
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: not a valid class or prototype");
+        }
+    }
     
     public class ArgumentsCountDoesNotMatchError : CompilationError {
         private readonly uint _parametersCount;
@@ -418,6 +532,39 @@ namespace DaedalusCompiler.Compilation
             string identifier = GetIdentifierRelativeName(parserContext.GetText());
             string line = _errorLineContext.FileContentLine;
             logger.LogLine($"{fileName}:{lineNo}:{columnNo}: note: '{identifier}' declared here");
+            logger.LogLine(line);
+            PrintErrorPointer(logger, columnNo, line);
+        }
+    }
+    
+    public class RedefinitionError : CompilationError
+    {
+        private readonly string _identifier;
+        private readonly ErrorLineContext _errorLineContext;
+
+        public RedefinitionError(
+            ErrorFileContext errorFileContext,
+            ErrorLineContext errorLineContext,
+            string identifier) : base(errorFileContext)
+        {
+            _identifier = GetIdentifierRelativeName(identifier);
+            _errorLineContext = errorLineContext;
+        }
+
+        protected override void PrintMessage(ErrorLogger logger)
+        {
+            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: redefinition of '{_identifier}'");
+        }
+
+        protected override void PrintNote(ErrorLogger logger)
+        {
+            ParserRuleContext parserContext = _errorLineContext.ParserContext;
+            
+            string fileName = Path.GetFileName(_errorLineContext.FilePath);
+            int lineNo = parserContext.Start.Line;
+            int columnNo = parserContext.Start.Column;
+            string line = _errorLineContext.FileContentLine;
+            logger.LogLine($"{fileName}:{lineNo}:{columnNo}: note: previous definition is here");
             logger.LogLine(line);
             PrintErrorPointer(logger, columnNo, line);
         }

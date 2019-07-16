@@ -5,6 +5,27 @@ using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
 {
+    public class LabelManager
+    {
+        private int _nextIfLabelIndex;
+        private int _nextWhileLabelIndex;
+
+        public LabelManager()
+        {
+            _nextIfLabelIndex = 0;
+            _nextWhileLabelIndex = 0;
+        }
+        
+        public string GetIfLabel()
+        {
+            return $"label_{_nextIfLabelIndex++}";
+        }
+        
+        public string GetWhileLabel()
+        {
+            return $"label_while_{_nextWhileLabelIndex++}";
+        }
+    }
     public class AssemblyBuilderSnapshot
     {
         public readonly BaseExecBlockContext ActiveExecBlock;
@@ -33,6 +54,11 @@ namespace DaedalusCompiler.Compilation
 
     public class AssemblyBuilder
     {
+        public static uint MAX_ARRAY_SIZE = 4095;
+        public static uint MAX_ARRAY_INDEX = 255;
+
+        private readonly LabelManager _labelManager;
+
         public readonly List<BaseExecBlockContext> ExecBlocks;
         public BaseExecBlockContext ActiveExecBlock;
         public ErrorFileContext ErrorFileContext;
@@ -62,6 +88,8 @@ namespace DaedalusCompiler.Compilation
         
         public AssemblyBuilder(bool verbose = true, bool strictSyntax=false)
         {
+            _labelManager = new LabelManager();
+            
             ExecBlocks = new List<BaseExecBlockContext>();
             Symbols = new List<DatSymbol>();
             _symbolsDict = new Dictionary<string, DatSymbol>();
@@ -162,7 +190,7 @@ namespace DaedalusCompiler.Compilation
             if (IsDottedReference(referenceContext))
             {
                 DaedalusParser.ReferenceAtomContext attributePart = referenceAtoms[1];
-                string attributeName = attributePart.Identifier().GetText();
+                string attributeName = attributePart.nameNode().GetText();
                 try
                 {
                     reference.Attribute = ResolveAttribute(symbol, attributeName);
@@ -179,8 +207,23 @@ namespace DaedalusCompiler.Compilation
             {
                 reference.Index = GetArrayIndex(objectPart);
             }
-
+            
             reference.Object = symbol;
+
+            uint arrayLength = symbol.ArrayLength;
+            if (reference.HasAttribute())
+            {
+                arrayLength = reference.Attribute.ArrayLength;
+            }
+
+            if (reference.Index >= arrayLength)
+            {
+                Errors.Add(new ArrayIndexOutOfRangeError(ErrorFileContext, arrayLength));
+            }
+            else if (reference.Index > MAX_ARRAY_INDEX)
+            {
+                Errors.Add(new TooBigArrayIndexError(ErrorFileContext));
+            }
 
             return reference;
         }
@@ -189,7 +232,16 @@ namespace DaedalusCompiler.Compilation
         {
             var referenceAtoms = referenceContext.referenceAtom();
             var referenceAtom = referenceAtoms[0];
-            string symbolNameLower = referenceAtom.Identifier().GetText().ToLower();
+            string symbolNameLower = "";
+            try
+            {
+                symbolNameLower = referenceAtom.nameNode().GetText().ToLower();
+            }
+            catch (NullReferenceException)
+            {
+                Console.WriteLine("haha");
+            }
+
             bool isSymbolNameSelfKeyword = symbolNameLower == "slf" || symbolNameLower == "self";
 
 
@@ -208,12 +260,14 @@ namespace DaedalusCompiler.Compilation
                 }
             }
 
-            return ResolveSymbol(referenceAtom.Identifier().GetText());
+            return ResolveSymbol(referenceAtom.nameNode().GetText());
         }
         
         
         public int GetArrayIndex(DaedalusParser.ReferenceAtomContext context)
         {
+            ErrorFileContext.ParserContext = context.arrayIndex();
+            
             var indexContext = context.arrayIndex();
             
             
@@ -485,11 +539,20 @@ namespace DaedalusCompiler.Compilation
         {
             ActiveContextEnd();
         }
+        
+        public void WhileStatementStart()
+        {
+            _activeContext = new WhileStatementContext(_activeContext, _labelManager);
+        }
 
+        public void WhileStatementEnd()
+        {
+            ActiveContextEnd();
+        }
         
         public void IfBlockStatementStart()
         {
-            _activeContext = new IfBlockStatementContext(_activeContext);
+            _activeContext = new IfBlockStatementContext(_activeContext, _labelManager);
         }
 
         public void IfBlockStatementEnd()
@@ -536,7 +599,40 @@ namespace DaedalusCompiler.Compilation
             _activeContext.Parent?.FetchInstructions(_activeContext);
             _activeContext = _activeContext.Parent;
         }
-        
+
+        public void AddSymbol(DatSymbol symbol, DaedalusParser.NameNodeContext context)
+        {
+            ErrorFileContext.ParserContext = context;
+            
+            try
+            {
+                DatSymbol sameNameSymbol = _symbolsDict[symbol.Name.ToUpper()];
+                Errors.Add(new RedefinitionError(ErrorFileContext, sameNameSymbol.ErrorLineContext, symbol.Name));
+                symbol.Name += "%";
+            }
+            catch (KeyNotFoundException)
+            {
+
+            }
+            
+            string rightPart = symbol.Name.ToUpper();
+            if (rightPart.Contains("."))
+            {
+                rightPart = rightPart.Split(".")[1];
+            }
+            
+            List<string> keywords = new List<string> {"WHILE", "BREAK", "CONTINUE"};
+
+            if (keywords.Contains(rightPart))
+            {
+                Errors.Add(new KeywordUsedAsNameError(ErrorFileContext, rightPart));
+            }
+
+            symbol.ErrorLineContext = new ErrorLineContext(ErrorFileContext);
+            
+            AddSymbol(symbol);
+        }
+
         public void AddSymbol(DatSymbol symbol)
         {
             if (IsCurrentlyParsingExternals)
@@ -644,6 +740,19 @@ namespace DaedalusCompiler.Compilation
             }
 
             return symbol;
+        }
+
+
+        public DatSymbol GetParentReferenceSymbol(DaedalusParser.ParentReferenceContext parentReferenceContext)
+        {
+            ErrorFileContext.ParserContext = parentReferenceContext;
+            DatSymbol refSymbol = GetSymbolByName(parentReferenceContext.GetText());
+            if (refSymbol.Type != DatSymbolType.Class && refSymbol.Type != DatSymbolType.Prototype && refSymbol.Type != DatSymbolType.Undefined)
+            {
+                Errors.Add(new NotValidClassOrPrototype(ErrorFileContext));
+            }
+
+            return refSymbol;
         }
 
         public DatSymbol GetSymbolByName(string symbolName)
