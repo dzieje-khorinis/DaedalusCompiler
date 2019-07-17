@@ -1,6 +1,7 @@
 ﻿using Antlr4.Runtime;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -62,9 +63,20 @@ namespace DaedalusCompiler.Compilation
                 string srcFileName = Path.GetFileNameWithoutExtension(absoluteSrcFilePath).ToLower();
                 
                 string runtimePath = Path.Combine(GetBuiltinsPath(), srcFileName + ".d");
+                List<IParseTree> parseTrees = new List<IParseTree>();
+
+                int externalFilesCount = 0;
+                
                 if (File.Exists(runtimePath))
                 {
-                    if (verbose) Console.WriteLine($"[0/{paths.Length}]Compiling runtime: {runtimePath}");
+                    externalFilesCount++;
+                    
+                    if (verbose) Console.WriteLine($"[0/{paths.Length}]Parsing runtime: {runtimePath}");
+
+                    DaedalusParser parser = GetParserForScriptsFile(runtimePath);
+                    parseTrees.Add(parser.daedalusFile());
+
+                    /*
                     _assemblyBuilder.IsCurrentlyParsingExternals = true;
                     
                     string fileContent = GetFileContent(runtimePath);
@@ -76,13 +88,28 @@ namespace DaedalusCompiler.Compilation
                     
                     ParseTreeWalker.Default.Walk(new DaedalusListener(_assemblyBuilder, 0), parser.daedalusFile());
                     _assemblyBuilder.IsCurrentlyParsingExternals = false;
+                    */
+                }
+                else
+                {
+                    Console.WriteLine($"Runtime {runtimePath} doesn't exist.");
                 }
 
                 int syntaxErrorsCount = 0;
                 for (int i = 0; i < paths.Length; i++)
                 {
-                    if (verbose) Console.WriteLine($"[{i + 1}/{paths.Length}]Compiling: {paths[i]}");
+                    if (verbose) Console.WriteLine($"[{i + 1}/{paths.Length}]Parsing: {paths[i]}");
 
+                    DaedalusParser parser = GetParserForScriptsFile(paths[i]);
+                    SyntaxErrorListener syntaxErrorListener = new SyntaxErrorListener();
+                    parser.AddErrorListener(syntaxErrorListener);
+                    parseTrees.Add(parser.daedalusFile());
+
+                    syntaxErrorsCount += syntaxErrorListener.ErrorsCount;
+
+
+
+                    /*
                     string fileContent = GetFileContent(paths[i]);
                     DaedalusParser parser = GetParserForText(fileContent);
                     //parser.RemoveErrorListeners(); // TODO uncomment this line once SyntaxErrorListener is fully implemented
@@ -102,8 +129,25 @@ namespace DaedalusCompiler.Compilation
                     {
                         _ouBuilder.ParseText(fileContent);
                     }
+                    */
                 }
-
+                
+            
+                /*
+                Console.WriteLine("parseTrees created");
+                SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(parseTrees, externalFilesCount);
+                
+                semanticAnalyzer.CreateSymbolTable();
+                
+                semanticAnalyzer.CalculateNodesTypes();
+                
+                semanticAnalyzer.DetectErrors();
+                
+                Console.WriteLine(parseTrees.Count);
+                */
+                
+                /*
+                
                 if (syntaxErrorsCount > 0)
                 {
                     StdErrorLogger logger = new StdErrorLogger();
@@ -222,6 +266,8 @@ namespace DaedalusCompiler.Compilation
                     string datPath = Path.Combine(_outputDirPath, srcFileName + ".dat");
                     _assemblyBuilder.SaveToDat(datPath);
                 }
+                
+                */
 
                 return true;
             }

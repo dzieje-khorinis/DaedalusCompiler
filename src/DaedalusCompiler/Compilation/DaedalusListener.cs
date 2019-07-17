@@ -1,4 +1,5 @@
-﻿using System;
+﻿/*
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -603,7 +604,7 @@ namespace DaedalusCompiler.Compilation
         {
             _assemblyBuilder.IsInsideAssignment = false;
             
-            string assignmentOperator = context.assignmentOperator().GetText();
+            string assignmentOperator = context.AssignmentOperator().GetText();
 
             _assemblyBuilder.AssignmentEnd(assignmentOperator);
         }
@@ -700,7 +701,7 @@ namespace DaedalusCompiler.Compilation
         
         /*
          *  ENTER EXPRESSION
-         */
+         #1#
         public override void EnterExpressionBlock(DaedalusParser.ExpressionBlockContext context)
         {
             _assemblyBuilder.ErrorFileContext.ParserContext = context;
@@ -770,7 +771,7 @@ namespace DaedalusCompiler.Compilation
 
         /*
          *  EXIT EXPRESSION
-         */
+         #1#
         public override void ExitBracketExpression(DaedalusParser.BracketExpressionContext context)
         {
             _assemblyBuilder.ExpressionEnd();
@@ -829,7 +830,8 @@ namespace DaedalusCompiler.Compilation
 
         /*
          *  ENTER OPERATOR
-         */
+         #1#
+        /*
         public override void ExitOneArgOperator(DaedalusParser.OneArgOperatorContext context)
         {
             if (_assemblyBuilder.IsInsideOneArgOperatorsEvaluationMode())
@@ -883,6 +885,7 @@ namespace DaedalusCompiler.Compilation
         {
             _assemblyBuilder.ExitOperator(context.GetText());
         }
+        #1#
         
 
         private DatSymbolType DatSymbolTypeFromString(string typeName)
@@ -928,3 +931,4 @@ namespace DaedalusCompiler.Compilation
         }
     }
 }
+*/
