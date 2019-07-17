@@ -133,18 +133,18 @@ namespace DaedalusCompiler.Compilation
                 }
                 
             
-                /*
+                
                 Console.WriteLine("parseTrees created");
                 SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(parseTrees, externalFilesCount);
                 
                 semanticAnalyzer.CreateSymbolTable();
                 
-                semanticAnalyzer.CalculateNodesTypes();
+                semanticAnalyzer.EvaluateReferencesAndTypes();
                 
                 semanticAnalyzer.DetectErrors();
                 
                 Console.WriteLine(parseTrees.Count);
-                */
+                
                 
                 /*
                 

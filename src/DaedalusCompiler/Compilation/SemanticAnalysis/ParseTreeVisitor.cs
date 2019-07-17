@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
+using DaedalusCompiler.Compilation.SemanticAnalysis;
 
 namespace DaedalusCompiler.Compilation
 {
@@ -29,61 +31,16 @@ namespace DaedalusCompiler.Compilation
 			    if (childContext is DaedalusParser.InlineDefContext inlineDefContext)
 			    {
 				    definitionNodes.AddRange(((TemporaryNode) Visit(inlineDefContext.GetChild(0))).Nodes);
-				    /*
-				    ParserRuleContext defContext = (ParserRuleContext) inlineDefContext.GetChild(0);
-				    if (defContext is DaedalusParser.ConstDefContext constDefContext)
-				    {
-					    definitionNodes.AddRange(((ConstDefinitionsTemporaryNode) VisitConstDef(constDefContext)).Nodes);
-				    }
-				    else if (defContext is DaedalusParser.VarDeclContext varDeclContext)
-				    {
-					    definitionNodes.AddRange(((VarDeclarationsTemporaryNode) VisitVarDecl(varDeclContext)).Nodes);
-				    }
-				    else if (defContext is DaedalusParser.InstanceDeclContext instanceDeclContext)
-				    {
-					    definitionNodes.AddRange(((InstanceDeclarationsTemporaryNode) VisitInstanceDecl(instanceDeclContext)).Nodes);
-				    }
-				    */
 			    }
 			    
 			    else if (childContext is DaedalusParser.BlockDefContext blockDefContext)
 			    {
 				    definitionNodes.Add((DeclarationNode) Visit(blockDefContext.GetChild(0)));
-				    
-				    /*
-				    ParserRuleContext defContext = (ParserRuleContext) blockDefContext.GetChild(0);
-
-				    if (defContext is DaedalusParser.FunctionDefContext functionDefContext)
-				    {
-					    definitionNodes.Add((DeclarationNode) VisitFunctionDef(functionDefContext));
-				    }
-				    else if (defContext is DaedalusParser.ClassDefContext classDefContext)
-				    {
-					    definitionNodes.Add((DeclarationNode) VisitClassDef(classDefContext));
-				    }
-				    else if (defContext is DaedalusParser.PrototypeDefContext prototypeDefContext)
-				    {
-					    definitionNodes.Add((DeclarationNode) VisitPrototypeDef(prototypeDefContext));
-				    }
-				    else if (defContext is DaedalusParser.InstanceDefContext instanceDefContext)
-				    {
-					    definitionNodes.Add((DeclarationNode) VisitInstanceDef(instanceDefContext));
-				    }
-				    */
 			    }
-			    
 		    }
-			
 		    return new FileNode(GetLocation(context), definitionNodes);
 	    }
 	    
-	    /*
-	    public override ASTNode VisitBlockDef([NotNull] DaedalusParser.BlockDefContext context) { return VisitChildren(context); }
-		*/
-	    
-	    /*
-		public override ASTNode VisitInlineDef([NotNull] DaedalusParser.InlineDefContext context) { return VisitChildren(context); }
-		*/
 
 	    public override ASTNode VisitFunctionDef([NotNull] DaedalusParser.FunctionDefContext context)
 	    {
@@ -91,15 +48,15 @@ namespace DaedalusCompiler.Compilation
 		    NameNode nameNode = new NameNode(GetLocation(context.nameNode()),context.nameNode().GetText());
 		    
 		    
-			List<ParameterDeclarationNode> parameterDeclarationNodes = new List<ParameterDeclarationNode>();
+			List<DeclarationNode> varDeclarationNodes = new List<DeclarationNode>();
 			foreach (DaedalusParser.ParameterDeclContext parameterDeclContext in context.parameterList().parameterDecl())
 			{
-				parameterDeclarationNodes.Add((ParameterDeclarationNode) VisitParameterDecl(parameterDeclContext));
+				varDeclarationNodes.Add((DeclarationNode) VisitParameterDecl(parameterDeclContext));
 			}
 
 			List<StatementNode> statementNodes = GetStatementNodes(context.statementBlock());
 			
-			return new FunctionDefinitionNode(GetLocation(context), type, nameNode, parameterDeclarationNodes, statementNodes);
+			return new FunctionDefinitionNode(GetLocation(context), type, nameNode, varDeclarationNodes, statementNodes);
 	    }
 
 		public override ASTNode VisitConstDef([NotNull] DaedalusParser.ConstDefContext context)
@@ -156,28 +113,6 @@ namespace DaedalusCompiler.Compilation
 			return new InstanceDefinitionNode(GetLocation(instanceDefContext), nameNode, parentReferenceNode, statementNodes);
 		}
 		
-		/*
-		public override ASTNode VisitConstArrayDef([NotNull] DaedalusParser.ConstArrayDefContext context) { return VisitChildren(context); }
-		*/
-		/*
-		public override ASTNode VisitConstArrayAssignment([NotNull] DaedalusParser.ConstArrayAssignmentContext context) { return VisitChildren(context); }
-		*/
-		/*
-		public override ASTNode VisitConstValueDef([NotNull] DaedalusParser.ConstValueDefContext context) { return VisitChildren(context); }
-		*/
-		/*
-		public override ASTNode VisitConstValueAssignment([NotNull] DaedalusParser.ConstValueAssignmentContext context) { return VisitChildren(context); }
-		*/
-		/*
-		public override ASTNode VisitVarArrayDecl([NotNull] DaedalusParser.VarArrayDeclContext context) { return VisitChildren(context); }
-		*/
-		/*
-		public override ASTNode VisitVarValueDecl([NotNull] DaedalusParser.VarValueDeclContext context) {}
-		*/
-		/*
-		public override ASTNode VisitParameterList([NotNull] DaedalusParser.ParameterListContext context) { return VisitChildren(context); }
-		*/
-
 		public override ASTNode VisitParameterDecl([NotNull] DaedalusParser.ParameterDeclContext context)
 		{
 			NodeLocation location = GetLocation(context);
@@ -186,15 +121,11 @@ namespace DaedalusCompiler.Compilation
 			if (context.arraySize() != null)
 			{
 				var arraySize = (ExpressionNode) VisitArraySize(context.arraySize());
-				return new ParameterArrayDeclarationNode(location, type, name, arraySize);
+				return new VarArrayDeclarationNode(location, type, name, arraySize);
 			}
-			return new ParameterDeclarationNode(location, type, name);
+			return new VarDeclarationNode(location, type, name);
 		}
-		
-		/*
-		public override ASTNode VisitStatementBlock([NotNull] DaedalusParser.StatementBlockContext context) { return VisitChildren(context); }
-		*/
-		
+
 		public override ASTNode VisitStatement([NotNull] DaedalusParser.StatementContext context)
 		{
 			return Visit(context.GetChild(0));
@@ -224,46 +155,40 @@ namespace DaedalusCompiler.Compilation
 			{
 				return new AssignmentNode(GetLocation(context), referenceNode, expressionNode);
 			}
-			return new CompoundAssignmentNode(GetLocation(context), oper, referenceNode, expressionNode);
+			return new CompoundAssignmentNode(GetLocation(context), GetCompoundAssignmentOperator(oper), referenceNode, expressionNode);
 		}
-
 		
-		public override ASTNode VisitElseBlock([NotNull] DaedalusParser.ElseBlockContext context)
-		{
-			return new ElseBlockNode(GetLocation(context), GetStatementNodes(context.statementBlock()));
-		}
-
 		public override ASTNode VisitElseIfBlock([NotNull] DaedalusParser.ElseIfBlockContext context)
 		{
 			ExpressionNode conditionNode = (ExpressionNode) Visit(context.expression());
 			List<StatementNode> statementNodes = GetStatementNodes(context.statementBlock());
-			return new ElseIfBlockNode(GetLocation(context), conditionNode, statementNodes);
+			return new ConditionalNode(GetLocation(context), conditionNode, statementNodes);
 		}
 
 		public override ASTNode VisitIfBlock([NotNull] DaedalusParser.IfBlockContext context)
 		{
 			ExpressionNode conditionNode = (ExpressionNode) Visit(context.expression());
 			List<StatementNode> statementNodes = GetStatementNodes(context.statementBlock());
-			return new IfBlockNode(GetLocation(context), conditionNode, statementNodes);
+			return new ConditionalNode(GetLocation(context), conditionNode, statementNodes);
 		}
 
 		public override ASTNode VisitIfBlockStatement([NotNull] DaedalusParser.IfBlockStatementContext context)
 		{
-			IfBlockNode ifBlockNode = (IfBlockNode) VisitIfBlock(context.ifBlock());
-			List<ElseIfBlockNode> elseIfBlockNodes = new List<ElseIfBlockNode>();
-			ElseBlockNode elseBlockNode = null;
+			ConditionalNode ConditionalNode = (ConditionalNode) VisitIfBlock(context.ifBlock());
+			List<ConditionalNode> ConditionalNodes = new List<ConditionalNode>();
+			List<StatementNode> elseNodeBodyNodes = new List<StatementNode>();
 			
 			foreach (DaedalusParser.ElseIfBlockContext elseIfBlockContext in context.elseIfBlock())
 			{
-				elseIfBlockNodes.Add((ElseIfBlockNode) VisitElseIfBlock(elseIfBlockContext));
+				ConditionalNodes.Add((ConditionalNode) VisitElseIfBlock(elseIfBlockContext));
 			}
 			
 			if (context.elseBlock() != null)
 			{
-				elseBlockNode = (ElseBlockNode) VisitElseBlock(context.elseBlock());
+				elseNodeBodyNodes = GetStatementNodes(context.elseBlock().statementBlock());
 			}
 			
-			return new IfStatementNode(GetLocation(context), ifBlockNode, elseIfBlockNodes, elseBlockNode);
+			return new IfStatementNode(GetLocation(context), ConditionalNode, ConditionalNodes, elseNodeBodyNodes);
 		}
 
 		public override ASTNode VisitWhileStatement([NotNull] DaedalusParser.WhileStatementContext context)
@@ -296,7 +221,7 @@ namespace DaedalusCompiler.Compilation
 		public override ASTNode VisitUnaryExpression([NotNull] DaedalusParser.UnaryExpressionContext context)
 		{
 			ExpressionNode expressionNode = (ExpressionNode) Visit(context.expression());
-			return new UnaryExpressionNode(GetLocation(context), context.oper.GetText(), expressionNode);
+			return new UnaryExpressionNode(GetLocation(context), GetUnaryOperator(context.oper.GetText()), expressionNode);
 		}
 
 		public override ASTNode VisitBitMoveExpression([NotNull] DaedalusParser.BitMoveExpressionContext context)
@@ -545,12 +470,96 @@ namespace DaedalusCompiler.Compilation
 			}
 			return statementNodes;
 		}
+
+		private UnaryOperator GetUnaryOperator(string oper)
+		{
+			switch (oper)
+			{
+				case "-":
+					return UnaryOperator.Minus;
+				case "!":
+					return UnaryOperator.Not;
+				case "~":
+					return UnaryOperator.Negate;
+				case "+":
+					return UnaryOperator.Plus;
+				default:
+					throw new Exception();
+			}
+		}
+		
+		private CompoundAssignmentOperator GetCompoundAssignmentOperator(string oper)
+		{
+			switch (oper)
+			{
+				case "+=":
+					return CompoundAssignmentOperator.Add;
+				case "-=":
+					return CompoundAssignmentOperator.Sub;
+				case "*=":
+					return CompoundAssignmentOperator.Mult;
+				case "/=":
+					return CompoundAssignmentOperator.Div;
+				default:
+					throw new Exception();
+			}
+		}
+		
+		private BinaryOperator GetBinaryOperator(string oper)
+		{
+			switch (oper)
+			{
+				case "*":
+					return BinaryOperator.Mult;
+				case "/":
+					return BinaryOperator.Div;
+				case "%":
+					return BinaryOperator.Modulo;
+				
+				case "+":
+					return BinaryOperator.Add;
+				case "-":
+					return BinaryOperator.Sub;
+				
+				case "<<":
+					return BinaryOperator.ShiftLeft;
+				case ">>":
+					return BinaryOperator.ShiftRight;
+				
+				case "<":
+					return BinaryOperator.Less;
+				case ">":
+					return BinaryOperator.Greater;
+				case "<=":
+					return BinaryOperator.LessOrEqual;
+				case ">=":
+					return BinaryOperator.GreaterOrEqual;
+				
+				case "==":
+					return BinaryOperator.Equal;
+				case "!=":
+					return BinaryOperator.NotEqual;
+				
+				case "&":
+					return BinaryOperator.BinAnd;
+				case "|":
+					return BinaryOperator.BinOr;
+				
+				case "&&":
+					return BinaryOperator.LogAnd;
+				case "||":
+					return BinaryOperator.LogOr;
+				
+				default:
+					throw new Exception();
+			}
+		}
 		
 		private BinaryExpressionNode CreateBinaryExpressionNode(NodeLocation location, string oper, DaedalusParser.ExpressionContext[] expressionContexts)
 		{
 			ExpressionNode leftSide = (ExpressionNode) Visit(expressionContexts[0]);
 			ExpressionNode rightSide = (ExpressionNode) Visit(expressionContexts[1]);
-			return new BinaryExpressionNode(location, oper, leftSide, rightSide );
+			return new BinaryExpressionNode(location, GetBinaryOperator(oper), leftSide, rightSide );
 		}
 		
 		private NodeLocation GetLocation(ParserRuleContext context)

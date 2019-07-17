@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using Antlr4.Runtime.Tree;
+using DaedalusCompiler.Compilation.SemanticAnalysis;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
@@ -34,7 +35,7 @@ namespace DaedalusCompiler.Compilation
             
         }
 
-        public void CalculateNodesTypes()
+        public void EvaluateReferencesAndTypes()
         {
             
         }
