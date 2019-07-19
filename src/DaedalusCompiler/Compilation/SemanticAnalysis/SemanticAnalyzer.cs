@@ -8,7 +8,6 @@ using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
 {
-   
     public class SemanticAnalyzer
     {
         public AbstractSyntaxTree AbstractSyntaxTree;     
@@ -32,7 +31,7 @@ namespace DaedalusCompiler.Compilation
 
         public void CreateSymbolTable()
         {
-            
+            SymbolTableCreationVisitor astVisitor;
         }
 
         public void EvaluateReferencesAndTypes()

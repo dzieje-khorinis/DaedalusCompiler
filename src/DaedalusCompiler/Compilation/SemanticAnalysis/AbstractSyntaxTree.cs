@@ -144,6 +144,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public FileNode(NodeLocation location, List<DeclarationNode> definitionNodes, bool isExternal = false) :
             base(location)
         {
+            foreach (var node in definitionNodes)
+            {
+                node.Parent = this;
+            }
+            
             DefinitionNodes = definitionNodes;
             IsExternal = isExternal;
         }
@@ -157,6 +162,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public ConditionalNode(NodeLocation location, ExpressionNode conditionNode, List<StatementNode> bodyNodes) :
             base(location)
         {
+            conditionNode.Parent = this;
+            foreach (var node in bodyNodes)
+            {
+                node.Parent = this;
+            }
+            
             ConditionNode = conditionNode;
             BodyNodes = bodyNodes;
         }
@@ -170,6 +181,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public FunctionDefinitionNode(NodeLocation location, string type, NameNode nameNode,
             List<DeclarationNode> parameterNodes, List<StatementNode> bodyNodes) : base(location, type, nameNode)
         {
+            foreach (var node in parameterNodes)
+            {
+                node.Parent = this;
+            }
+            foreach (var node in bodyNodes)
+            {
+                node.Parent = this;
+            }
+            
             ParameterNodes = parameterNodes;
             BodyNodes = bodyNodes;
         }
@@ -183,6 +203,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public AssignmentNode(NodeLocation location, ReferenceNode leftSideNode, ExpressionNode rightSideNode) :
             base(location)
         {
+            leftSideNode.Parent = this;
+            rightSideNode.Parent = this;
+            
             LeftSideNode = leftSideNode;
             RightSideNode = rightSideNode;
         }
@@ -197,6 +220,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public CompoundAssignmentNode(NodeLocation location, CompoundAssignmentOperator @operator, ReferenceNode leftSideNode,
             ExpressionNode rightSideNode) : base(location)
         {
+            leftSideNode.Parent = this;
+            rightSideNode.Parent = this;
+            
             Operator = @operator;
             LeftSideNode = leftSideNode;
             RightSideNode = rightSideNode;
@@ -211,6 +237,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public UnaryExpressionNode(NodeLocation location, UnaryOperator @operator, ExpressionNode expressionNode) : base(
             location)
         {
+            expressionNode.Parent = this;
+            
             Operator = @operator;
             ExpressionNode = expressionNode;
         }
@@ -225,6 +253,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public BinaryExpressionNode(NodeLocation location, BinaryOperator @operator, ExpressionNode leftSideNode,
             ExpressionNode rightSideNode) : base(location)
         {
+            leftSideNode.Parent = this;
+            rightSideNode.Parent = this;
+            
             Operator = @operator;
             LeftSideNode = leftSideNode;
             RightSideNode = rightSideNode;
@@ -239,6 +270,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public ClassDefinitionNode(NodeLocation location, NameNode nameNode, List<DeclarationNode> attributeNodes) :
             base(location, "class", nameNode)
         {
+            foreach (var node in attributeNodes)
+            {
+                node.Parent = this;
+            }
+            
             AttributeNodes = attributeNodes;
         }
     }
@@ -251,6 +287,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public PrototypeDefinitionNode(NodeLocation location, NameNode nameNode, ReferenceNode parentReferenceNode,
             List<StatementNode> bodyNodes) : base(location, "prototype", nameNode)
         {
+            parentReferenceNode.Parent = this;
+            foreach (var node in bodyNodes)
+            {
+                node.Parent = this;
+            }
+            
             ParentReferenceNode = parentReferenceNode;
             BodyNodes = bodyNodes;
         }
@@ -264,6 +306,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public InstanceDefinitionNode(NodeLocation location, NameNode nameNode, ReferenceNode parentReferenceNode,
             List<StatementNode> bodyNodes) : base(location, "instance", nameNode)
         {
+            parentReferenceNode.Parent = this;
+            foreach (var node in bodyNodes)
+            {
+                node.Parent = this;
+            }
+            
             ParentReferenceNode = parentReferenceNode;
             BodyNodes = bodyNodes;
         }
@@ -276,6 +324,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public ConstDefinitionNode(NodeLocation location, string type, NameNode nameNode,
             ExpressionNode rightSideNode) : base(location, type, nameNode)
         {
+            rightSideNode.Parent = this;
+            
             RightSideNode = rightSideNode;
         }
     }
@@ -288,6 +338,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             ExpressionNode arraySizeNode, List<ExpressionNode> elementNodes) : base(location, type, nameNode,
             arraySizeNode)
         {
+            foreach (var node in elementNodes)
+            {
+                node.Parent = this;
+            }
+            
             ElementNodes = elementNodes;
         }
     }
@@ -337,6 +392,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public FunctionCallNode(NodeLocation location, ReferenceNode functionReferenceNode,
             List<ExpressionNode> argumentNodes) : base(location)
         {
+            functionReferenceNode.Parent = this;
+            foreach (var node in argumentNodes)
+            {
+                node.Parent = this;
+            }
+            
+            
             FunctionReferenceNode = functionReferenceNode;
             ArgumentNodes = argumentNodes;
         }
@@ -349,10 +411,20 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public List<StatementNode> ElseNodeBodyNodes;
 
         public IfStatementNode(NodeLocation location, ConditionalNode ifNode,
-            List<ConditionalNode> elseIfBlockNodes, List<StatementNode> elseNodeBodyNodes) : base(location)
+            List<ConditionalNode> elseIfNodes, List<StatementNode> elseNodeBodyNodes) : base(location)
         {
+            ifNode.Parent = this;
+            foreach (var node in elseIfNodes)
+            {
+                node.Parent = this;
+            }
+            foreach (var node in elseNodeBodyNodes)
+            {
+                node.Parent = this;
+            }
+            
             IfNode = ifNode;
-            ElseIfNodes = elseIfBlockNodes;
+            ElseIfNodes = elseIfNodes;
             ElseNodeBodyNodes = elseNodeBodyNodes;
         }
     }
@@ -420,6 +492,16 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public ReferenceNode(NodeLocation location, string name, ExpressionNode arrayIndexNode = null,
             ReferenceNode attributeNode = null) : base(location)
         {
+            if (arrayIndexNode != null)
+            {
+                arrayIndexNode.Parent = this;
+            }
+
+            if (attributeNode != null)
+            {
+                attributeNode.Parent = this;
+            }
+            
             Name = name;
             ArrayIndexNode = arrayIndexNode;
             AttributeNode = attributeNode;
@@ -465,8 +547,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
         }
     }
-
-
+    
     public class InstanceDeclarationsTemporaryNode : TemporaryNode
     {
         public InstanceDeclarationsTemporaryNode(NodeLocation location, List<DeclarationNode> nodes) : base(
