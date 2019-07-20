@@ -249,7 +249,7 @@ namespace DaedalusCompiler.Compilation
             {
 
                 bool isDottedReference = IsDottedReference(referenceContext);
-                DatSymbolType activeSymbolType = ActiveExecBlock.GetSymbol().Type;
+                DatSymbolType activeSymbolType = ActiveExecBlock.GetSymbol().BuiltinType;
 
                 if (
                     activeSymbolType == DatSymbolType.Instance
@@ -277,7 +277,7 @@ namespace DaedalusCompiler.Compilation
                 if (!int.TryParse(indexContext.GetText(), out arrIndex))
                 {
                     var constSymbol = ResolveSymbol(indexContext.GetText());
-                    if (!constSymbol.Flags.HasFlag(DatSymbolFlag.Const) || constSymbol.Type != DatSymbolType.Int)
+                    if (!constSymbol.Flags.HasFlag(DatSymbolFlag.Const) || constSymbol.BuiltinType != DatSymbolType.Int)
                     {
                         throw new Exception($"Expected integer constant: {indexContext.GetText()}");
                     }
@@ -291,12 +291,12 @@ namespace DaedalusCompiler.Compilation
         
         public AssemblyInstruction PushSymbol(DatSymbol symbol, DatSymbolType? asType=null)
         {
-            if (asType == DatSymbolType.Func || (asType == DatSymbolType.Int && symbol.Type != DatSymbolType.Int))
+            if (asType == DatSymbolType.Func || (asType == DatSymbolType.Int && symbol.BuiltinType != DatSymbolType.Int))
             {
                 return new PushInt(symbol.Index);
             }
 
-            if (symbol.Type == DatSymbolType.Instance || asType == DatSymbolType.Instance)  /* DatSymbolType.Class isn't possible */
+            if (symbol.BuiltinType == DatSymbolType.Instance || asType == DatSymbolType.Instance)  /* DatSymbolType.Class isn't possible */
             {
                 return new PushInstance(symbol);
             }
@@ -442,7 +442,7 @@ namespace DaedalusCompiler.Compilation
         public void AssignmentEnd(string assignmentOperator)
         {
             //TODO check if there are any possibilities of assignmentLeftSide longer than 2 instructions?
-            var operationType = _assignmentLeftSide.Last().Symbol.Type; 
+            var operationType = _assignmentLeftSide.Last().Symbol.BuiltinType; 
             var assignmentInstruction =
                 AssemblyBuilderHelpers.GetInstructionForOperator(assignmentOperator, true, operationType);
 
@@ -481,7 +481,7 @@ namespace DaedalusCompiler.Compilation
             for (int i = 1; i <= symbol.ParametersCount; ++i)
             {
                 DatSymbol parameter = Symbols[symbol.Index + i];
-                parametersTypes.Add(parameter.Type);
+                parametersTypes.Add(parameter.BuiltinType);
             }
             
             AssemblyInstruction instruction;
@@ -637,7 +637,7 @@ namespace DaedalusCompiler.Compilation
         {
             if (IsCurrentlyParsingExternals)
             {
-                if (symbol.Type == DatSymbolType.Func && symbol.Flags.HasFlag(DatSymbolFlag.Const))
+                if (symbol.BuiltinType == DatSymbolType.Func && symbol.Flags.HasFlag(DatSymbolFlag.Const))
                 {
                     symbol.Flags |= DatSymbolFlag.External;
                 }
@@ -680,7 +680,7 @@ namespace DaedalusCompiler.Compilation
                     symbol = Symbols[symbol.ParentIndex];
                     attributePath = $"{symbol.Name}.{attributeName}";
                     
-                    if (symbol.Type == DatSymbolType.Prototype && symbol.ParentIndex != DatSymbol.NULL_INDEX)
+                    if (symbol.BuiltinType == DatSymbolType.Prototype && symbol.ParentIndex != DatSymbol.NULL_INDEX)
                     {
                         symbol = Symbols[symbol.ParentIndex];
                         attributePath = $"{symbol.Name}.{attributeName}";
@@ -747,7 +747,7 @@ namespace DaedalusCompiler.Compilation
         {
             ErrorFileContext.ParserContext = parentReferenceContext;
             DatSymbol refSymbol = GetSymbolByName(parentReferenceContext.GetText());
-            if (refSymbol.Type != DatSymbolType.Class && refSymbol.Type != DatSymbolType.Prototype && refSymbol.Type != DatSymbolType.Undefined)
+            if (refSymbol.BuiltinType != DatSymbolType.Class && refSymbol.BuiltinType != DatSymbolType.Prototype && refSymbol.BuiltinType != DatSymbolType.Undefined)
             {
                 Errors.Add(new NotValidClassOrPrototype(ErrorFileContext));
             }

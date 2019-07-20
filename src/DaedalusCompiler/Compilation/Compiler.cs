@@ -139,7 +139,7 @@ namespace DaedalusCompiler.Compilation
                 
                 semanticAnalyzer.CreateSymbolTable();
                 
-                semanticAnalyzer.EvaluateReferencesAndTypes();
+                semanticAnalyzer.EvaluateReferencesAndTypesAndArraySize();
                 
                 semanticAnalyzer.DetectErrors();
                 

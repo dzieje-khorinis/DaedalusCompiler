@@ -1,5 +1,8 @@
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using Antlr4.Runtime.Tree;
+using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
@@ -49,11 +52,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         LogOr,
     }
     
+    [DebuggerDisplay("FileIndex:{FileIndex} Line:{Line} Column:{Column} Index:{Index} CharsCount:{CharsCount} LinesCount:{LinesCount}")]
     public class NodeLocation
     {
         public int FileIndex;
         public int Line;
         public int Column;
+        public int Index;
         public int CharsCount;
         public int LinesCount;
     }
@@ -84,7 +89,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public abstract class ASTNode
     {
         public NodeLocation Location;
-        public ASTNode Parent;
+        public ASTNode Parent { get; set; }
 
         protected ASTNode(NodeLocation location)
         {
@@ -108,19 +113,27 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public abstract class DeclarationNode : StatementNode
     {
-        public string Type;
+        public string TypeName;
         public NameNode NameNode;
+        public DatSymbol Symbol; //filled in SymbolTableCreationVisitor
 
         protected DeclarationNode(NodeLocation location, string type, NameNode nameNode) : base(location)
         {
-            Type = type;
+            TypeName = type.First().ToString().ToUpper() + type.Substring(1).ToLower(); //capitalized
             NameNode = nameNode;
         }
     }
 
-    public abstract class ArrayDeclarationNode : DeclarationNode
+
+    public interface IArrayDeclarationNode
     {
-        public ExpressionNode ArraySizeNode;
+        ExpressionNode ArraySizeNode { get; set; }
+    }
+    
+    /*
+    public abstract class ArrayDeclarationNode : DeclarationNode, IArrayDeclarationNode
+    {
+        public ExpressionNode ArraySizeNode { get; set; }
 
         protected ArrayDeclarationNode(NodeLocation location, string type, NameNode nameNode,
             ExpressionNode arraySizeNode) : base(location, type, nameNode)
@@ -128,6 +141,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             ArraySizeNode = arraySizeNode;
         }
     }
+    */
     
     public abstract class ValueNode : ExpressionNode
     {
@@ -175,11 +189,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class FunctionDefinitionNode : DeclarationNode
     {
-        public List<DeclarationNode> ParameterNodes;
-        public List<StatementNode> BodyNodes;
+        public readonly List<ParameterDeclarationNode> ParameterNodes;
+        public readonly List<StatementNode> BodyNodes;
 
         public FunctionDefinitionNode(NodeLocation location, string type, NameNode nameNode,
-            List<DeclarationNode> parameterNodes, List<StatementNode> bodyNodes) : base(location, type, nameNode)
+            List<ParameterDeclarationNode> parameterNodes, List<StatementNode> bodyNodes) : base(location, type, nameNode)
         {
             foreach (var node in parameterNodes)
             {
@@ -328,16 +342,22 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             
             RightSideNode = rightSideNode;
         }
+
+        protected ConstDefinitionNode(NodeLocation location, string type, NameNode nameNode) : base(location, type, nameNode)
+        {
+        }
     }
 
-    public class ConstArrayDefinitionNode : ArrayDeclarationNode
+    public class ConstArrayDefinitionNode : ConstDefinitionNode, IArrayDeclarationNode
     {
-        public List<ExpressionNode> ElementNodes;
-
+        public readonly List<ExpressionNode> ElementNodes;
+        public ExpressionNode ArraySizeNode { get; set; }
+        
         public ConstArrayDefinitionNode(NodeLocation location, string type, NameNode nameNode,
-            ExpressionNode arraySizeNode, List<ExpressionNode> elementNodes) : base(location, type, nameNode,
-            arraySizeNode)
+            ExpressionNode arraySizeNode, List<ExpressionNode> elementNodes) : base(location, type, nameNode)
         {
+            ArraySizeNode = arraySizeNode;
+            
             foreach (var node in elementNodes)
             {
                 node.Parent = this;
@@ -355,14 +375,37 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
 
-    public class VarArrayDeclarationNode : ArrayDeclarationNode
+    public class VarArrayDeclarationNode : VarDeclarationNode, IArrayDeclarationNode
     {
+        public ExpressionNode ArraySizeNode { get; set; }
+        
         public VarArrayDeclarationNode(NodeLocation location, string type, NameNode nameNode,
-            ExpressionNode arraySizeNode) : base(location, type, nameNode, arraySizeNode)
+            ExpressionNode arraySizeNode) : base(location, type, nameNode)
+        {
+            ArraySizeNode = arraySizeNode;
+        }
+    }
+    
+    public class ParameterDeclarationNode : VarDeclarationNode
+    {
+        public new FunctionDefinitionNode Parent { get; set; }
+        
+        public ParameterDeclarationNode(NodeLocation location, string type, NameNode nameNode) : base(location, type,
+            nameNode)
         {
         }
     }
 
+    public class ParameterArrayDeclarationNode : ParameterDeclarationNode, IArrayDeclarationNode
+    {
+        public ExpressionNode ArraySizeNode { get; set; }
+        
+        public ParameterArrayDeclarationNode(NodeLocation location, string type, NameNode nameNode,
+            ExpressionNode arraySizeNode) : base(location, type, nameNode)
+        {
+            ArraySizeNode = arraySizeNode;
+        }
+    }
     public class ReturnStatementNode : StatementNode
     {
         public ReturnStatementNode(NodeLocation location) : base(location)
@@ -461,6 +504,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class StringLiteralNode : ValueNode
     {
         public string Value;
+        public DatSymbol Symbol; //filled in SymbolTableCreationVisitor
 
         public StringLiteralNode(NodeLocation location, string value) : base(location)
         {
@@ -519,10 +563,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     }
     
     
+    /// <remarks>Helper nodes used only during AST construction. These nodes don't appear in the result AST.</remarks>
     public abstract class TemporaryNode : ASTNode
-        /*
-         * Helper nodes used only during AST construction. These nodes don't appear in the result AST.
-         */
     {
         public List<DeclarationNode> Nodes;
 

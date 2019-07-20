@@ -46,12 +46,11 @@ namespace DaedalusCompiler.Compilation
 	    {
 		    string type = context.dataType().GetText();
 		    NameNode nameNode = new NameNode(GetLocation(context.nameNode()),context.nameNode().GetText());
-		    
-		    
-			List<DeclarationNode> varDeclarationNodes = new List<DeclarationNode>();
+
+		    List<ParameterDeclarationNode> varDeclarationNodes = new List<ParameterDeclarationNode>();
 			foreach (DaedalusParser.ParameterDeclContext parameterDeclContext in context.parameterList().parameterDecl())
 			{
-				varDeclarationNodes.Add((DeclarationNode) VisitParameterDecl(parameterDeclContext));
+				varDeclarationNodes.Add((ParameterDeclarationNode) VisitParameterDecl(parameterDeclContext));
 			}
 
 			List<StatementNode> statementNodes = GetStatementNodes(context.statementBlock());
@@ -121,9 +120,9 @@ namespace DaedalusCompiler.Compilation
 			if (context.arraySize() != null)
 			{
 				var arraySize = (ExpressionNode) VisitArraySize(context.arraySize());
-				return new VarArrayDeclarationNode(location, type, name, arraySize);
+				return new ParameterArrayDeclarationNode(location, type, name, arraySize);
 			}
-			return new VarDeclarationNode(location, type, name);
+			return new ParameterDeclarationNode(location, type, name);
 		}
 
 		public override ASTNode VisitStatement([NotNull] DaedalusParser.StatementContext context)
@@ -568,7 +567,8 @@ namespace DaedalusCompiler.Compilation
 			{
 				FileIndex = _sourceFileNumber,
 				Line = context.Start.Line,
-				Column = context.Start.StartIndex,
+				Column = context.Start.Column,
+				Index = context.Start.StartIndex,
 				LinesCount = context.Stop.Line - context.Start.Line + 1,
 				CharsCount = context.Stop.StopIndex - context.Start.StartIndex + 1
 			};

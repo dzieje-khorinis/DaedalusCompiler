@@ -1,49 +1,127 @@
 ﻿using Antlr4.Runtime.Misc;
+using DaedalusCompiler.Compilation.SemanticAnalysis;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
 {
     public static class SymbolBuilder
     {
-        public static DatSymbol BuildVariable(string name, DatSymbolType type, DatSymbolLocation location = null,
-            int parentIndex = -1)
+        public static DatSymbol BuildClass(string name, int attributesCount)
         {
-            var symbol = new DatSymbol
+            int classOffset = 0;
+            string nameUpper = name.ToUpper();
+            if (nameUpper == "C_NPC" || nameUpper == "C_ITEM")
+            {
+                classOffset = 288;
+            }
+            
+            return new DatSymbol
             {
                 Name = name,
-                Type = type,
-                ArrayLength = 1,
-                Content = type == DatSymbolType.String ? new object[] {string.Empty} : new object[] {0},
-                Flags = 0,
-                Location = location,
-                ParentIndex = parentIndex,
+                ArrayLength = (uint) attributesCount,
+                BuiltinType = DatSymbolType.Class,
+                ClassOffset = classOffset,
             };
-            return symbol;
         }
         
-        public static DatSymbol BuildParameter(string name, DatSymbolType type, DatSymbolLocation location = null,
-            int parentIndex = -1, bool external=false)
+        public static DatSymbol BuildClassConst(string varName, DatSymbolType builtinType, DatSymbol classSymbol)
         {
-            DatSymbol symbol = BuildVariable(name, type, location, parentIndex);
-            if (type == DatSymbolType.Func && external == false)
+            return new DatSymbol
             {
-                symbol.ParametersCount = 1;
-            }
-
-            return symbol;
+                Name = $"{classSymbol.Name}.{varName}",
+                ArrayLength = 1,
+                BuiltinType = builtinType,
+                Flags = DatSymbolFlag.Classvar | DatSymbolFlag.Const,
+                ParentIndex = classSymbol.Index,
+            };
         }
         
-        public static DatSymbol BuildExternalParameter(string name, DatSymbolType type, DatSymbolLocation location = null,
-            int parentIndex = -1)
+        public static DatSymbol BuildGlobalConst(string name, DatSymbolType builtinType)
         {
-            var symbol = BuildParameter(name, type, location, parentIndex, true);
-            symbol.ArrayLength = 0;
-            symbol.Content = null;
-            return symbol;
+            return new DatSymbol
+            {
+                Name = name,
+                ArrayLength = 1,
+                BuiltinType = builtinType,
+                Flags = DatSymbolFlag.Const,
+            };
         }
-
+        
+        public static DatSymbol BuildLocalConst(string name, DatSymbolType builtinType, DatSymbol functionSymbol)
+        {
+            return new DatSymbol
+            {
+                Name = $"{functionSymbol.Name}.{name}",
+                ArrayLength = 1,
+                BuiltinType = builtinType,
+                Flags = DatSymbolFlag.Const,
+            };
+        }
+        
+        public static DatSymbol BuildClassVar(string varName, DatSymbolType builtinType, DatSymbol classSymbol)
+        {
+            return new DatSymbol
+            {
+                Name = $"{classSymbol.Name}.{varName}",
+                ArrayLength = 1,
+                BuiltinType = builtinType,
+                Flags = DatSymbolFlag.Classvar,
+                ParentIndex = classSymbol.Index,
+            };
+        }
+        
+        public static DatSymbol BuildGlobalVar(string name, DatSymbolType builtinType)
+        {
+            return new DatSymbol
+            {
+                Name = name,
+                ArrayLength = 1,
+                BuiltinType = builtinType,
+                Content = builtinType == DatSymbolType.String ? new object[] {string.Empty} : new object[] {0},
+            };
+        }
+        
+        public static DatSymbol BuildLocalVar(string name, DatSymbolType builtinType, DatSymbol functionSymbol)
+        {
+            return new DatSymbol
+            {
+                Name = $"{functionSymbol.Name}.{name}",
+                ArrayLength = 1,
+                BuiltinType = builtinType,
+                Content = builtinType == DatSymbolType.String ? new object[] {string.Empty} : new object[] {0},
+            };
+        }
+        
+        
+        
+        
+        public static DatSymbol BuildParameter(string name, DatSymbolType builtinType)
+        {
+            return new DatSymbol
+            {
+                Name = name,
+                ArrayLength = 1,
+                BuiltinType = builtinType,
+                ParametersCount = (uint) ((builtinType == DatSymbolType.Func) ? 1 : 0),
+            };
+        }
+        
+        public static DatSymbol BuildExternalParameter(string name, DatSymbolType builtinType)
+        {
+            return new DatSymbol
+            {
+                Name = name,
+                BuiltinType = builtinType,
+            };
+        }
+        
+        
+        
+        
+        
+        /*
         public static DatSymbol BuildArrOfVariables(string name, DatSymbolType type, uint size,
-            DatSymbolLocation location = null)
+            NodeLocation location = null)
         {
             object[] content = new object[size];
             for (int i = 0; i < content.Length; ++i)
@@ -59,7 +137,7 @@ namespace DaedalusCompiler.Compilation
                         break;
                     
                     case DatSymbolType.String:
-                        content[i] = string.Empty;  // TODO shouldn't it be string in some kind of Gothic's format?
+                        content[i] = string.Empty;
                         break;
                 }              
             }
@@ -68,7 +146,7 @@ namespace DaedalusCompiler.Compilation
             var symbol = new DatSymbol
             {
                 Name = name,
-                Type = type,
+                BuiltinType = type,
                 ArrayLength = size,
                 Content = content,
                 Flags = 0,
@@ -78,36 +156,28 @@ namespace DaedalusCompiler.Compilation
 
             return symbol;
         }
+        */
         
-        public static DatSymbol BuildStringConst(object value, DatSymbolLocation location = null)
+        public static DatSymbol BuildStringConst(string name, object value)
         {
-            return BuildConst($"{(char) 255}", DatSymbolType.String, value, location);
-        }
-
-        public static DatSymbol BuildConst(string name, DatSymbolType type, object value,
-            DatSymbolLocation location = null)
-        {
-            var symbol = new DatSymbol
+            return new DatSymbol
             {
                 Name = name,
-                Type = type,
+                BuiltinType = DatSymbolType.String,
                 ArrayLength = 1,
                 Content = new[] {value},
                 Flags = DatSymbolFlag.Const,
-                Location = location,
-                ParentIndex = -1,
             };
-
-            return symbol;
         }
-
+        
+        /*
         public static DatSymbol BuildArrOfConst(string name, DatSymbolType type, object[] values,
-            DatSymbolLocation location = null)
+            NodeLocation location = null)
         {
             var symbol = new DatSymbol
             {
                 Name = name,
-                Type = type,
+                BuiltinType = type,
                 ArrayLength = (uint) values.Length,
                 Content = values,
                 Flags = DatSymbolFlag.Const,
@@ -117,109 +187,50 @@ namespace DaedalusCompiler.Compilation
 
             return symbol;
         }
+        */
 
-        public static DatSymbol BuildFunc(string name, uint parametersCount, [NotNull] DatSymbolType returnType)
+        public static DatSymbol BuildFunction(string name, int parametersCount, DatSymbolType returnType)
         {
             if (returnType == DatSymbolType.Class)
             {
                 returnType = DatSymbolType.Instance;
             }
-            DatSymbolFlag Flags = DatSymbolFlag.Const;
+            
+            DatSymbolFlag flags = DatSymbolFlag.Const;
             if (returnType != DatSymbolType.Void)
             {
-                Flags |= DatSymbolFlag.Return;
+                flags |= DatSymbolFlag.Return;
             }
             
-            var symbol = new DatSymbol
+            return new DatSymbol
             {
                 Name = name,
-                Type = DatSymbolType.Func,
-                Flags = Flags,
-                Content = null,
+                BuiltinType = DatSymbolType.Func,
+                Flags = flags,
                 FirstTokenAddress = -1,
                 ReturnType = returnType,
-                ParentIndex = -1,
-                ParametersCount = parametersCount,
+                ParametersCount = (uint) parametersCount,
             };
-
-            return symbol;
         }
 
-        public static DatSymbol BuildClass(string name, uint classLength, int classSize,
-            DatSymbolLocation location = null)
+        public static DatSymbol BuildPrototype(string name)
         {
-            var symbol = new DatSymbol
+            return new DatSymbol
             {
                 Name = name,
-                Type = DatSymbolType.Class,
-                ArrayLength = classLength,
-                ClassOffset = 0,
-                Content = null,
-                Flags = 0,
-                Location = location,
-                ClassSize = classSize,
-                ParentIndex = -1,
-            };
-            
-            string lowerName = name.ToLower();
-            if (lowerName == "c_npc" || lowerName == "c_item")
-            {
-                symbol.ClassOffset = 288;
-            }
-
-            return symbol;
-        }
-
-        public static DatSymbol BuildClassVar(string varName, DatSymbolType varType, uint arraySize, string className,
-            int classId, int classVarOffset, DatSymbolLocation location = null)
-        {
-            var symbol = new DatSymbol
-            {
-                Name = $"{className}.{varName}",
-                Type = varType,
-                ArrayLength = arraySize,
-                Content = null,
-                Flags = DatSymbolFlag.Classvar,
-                Location = location,
-                ClassVarOffset = classVarOffset,
-                ParentIndex = classId,
-            };
-
-            return symbol;
-        }
-
-        public static DatSymbol BuildPrototype(string name, int referenceId, DatSymbolLocation location = null)
-        {
-            var symbol = new DatSymbol
-            {
-                Name = name,
-                Type = DatSymbolType.Prototype,
-                ArrayLength = 0,
-                Content = null,
+                BuiltinType = DatSymbolType.Prototype,
                 FirstTokenAddress = -1,
-                Flags = 0,
-                Location = location,
-                ParentIndex = referenceId,
             };
-
-            return symbol;
         }
 
-        public static DatSymbol BuildInstance(string name, int referenceId, DatSymbolLocation location = null)
+        public static DatSymbol BuildInstance(string name)
         {
-            var symbol = new DatSymbol
+            return new DatSymbol
             {
                 Name = name,
-                Type = DatSymbolType.Instance,
-                ArrayLength = 0,
-                Content = null,
+                BuiltinType = DatSymbolType.Instance,
                 FirstTokenAddress = -1,
-                Flags = 0,
-                Location = location,
-                ParentIndex = referenceId,
             };
-
-            return symbol;
         }
     }
 }

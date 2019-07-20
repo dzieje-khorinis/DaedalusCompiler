@@ -691,7 +691,7 @@ namespace DaedalusCompiler.Compilation
         {
             if (!_assemblyBuilder.IsInsideConstDef)
             {
-                DatSymbolLocation location = GetLocation(context);
+                NodeLocation location = GetLocation(context);
                 string value = context.GetText().Replace("\"", "");
                 DatSymbol symbol = SymbolBuilder.BuildStringConst(value, location);
                 _assemblyBuilder.AddInstruction(new PushVar(symbol));
@@ -918,9 +918,9 @@ namespace DaedalusCompiler.Compilation
             return false;
         }
 
-        private DatSymbolLocation GetLocation(ParserRuleContext context)
+        private NodeLocation GetLocation(ParserRuleContext context)
         {
-            return new DatSymbolLocation
+            return new NodeLocation
             {
                 FileNumber = _sourceFileNumber,
                 Line = context.Start.Line,

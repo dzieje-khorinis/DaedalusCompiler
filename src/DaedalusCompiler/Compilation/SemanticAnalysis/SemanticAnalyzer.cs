@@ -10,20 +10,16 @@ namespace DaedalusCompiler.Compilation
 {
     public class SemanticAnalyzer
     {
-        public AbstractSyntaxTree AbstractSyntaxTree;     
-
-        
-        public readonly List<DatSymbol> Symbols;                        // SymbolTable part 1
-        private readonly Dictionary<string, DatSymbol> _symbolsDict;    // SymbolTable part 2
+        private AbstractSyntaxTree _abstractSyntaxTree;
+        private Dictionary<string, DatSymbol> _symbolTable;
 
         public SemanticAnalyzer(List<IParseTree> parseTrees, int externalFilesCount)
         {
-            Symbols = new List<DatSymbol>();
-            _symbolsDict = new Dictionary<string, DatSymbol>();
+            _symbolTable = null;
             
             Stopwatch timer = new Stopwatch();
             timer.Start();
-            AbstractSyntaxTree = new AbstractSyntaxTree(parseTrees, externalFilesCount);
+            _abstractSyntaxTree = new AbstractSyntaxTree(parseTrees, externalFilesCount);
             timer.Stop();
             Console.WriteLine($"AbstractSyntaxTree creation time: {timer.Elapsed}");
         }
@@ -31,17 +27,35 @@ namespace DaedalusCompiler.Compilation
 
         public void CreateSymbolTable()
         {
-            SymbolTableCreationVisitor astVisitor;
+            Stopwatch timer = new Stopwatch();
+            timer.Start();
+            SymbolTableCreationVisitor visitor = new SymbolTableCreationVisitor();
+            visitor.VisitTree(_abstractSyntaxTree);
+            timer.Stop();
+            Console.WriteLine($"SymbolTable creation time: {timer.Elapsed}");
         }
-
-        public void EvaluateReferencesAndTypes()
+        
+        public void EvaluateReferencesAndTypesAndArraySize()
         {
-            
+            /*
+             Calculate DatSymbol properties:
+             
+             Array: ArrayLength - must be const
+             Const: Content
+             * For every local and global const (not class attributes) if it has Class as Type,
+             set ParentIndex to that Class. 
+             */
         }
 
         public void DetectErrors()
         {
-            
+            /*
+             New errors:
+                * typechecking
+                * C_NPC size has to be 800 bytes if declared
+             New warnings:
+                * used name isn't exacly the same as declared (match-case)
+             */
         }
         
     }

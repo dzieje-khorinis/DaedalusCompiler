@@ -355,7 +355,7 @@ namespace DaedalusCompiler.Compilation
             DatSymbol symbol = errorFileContext.AssemblyBuilder.GetSymbolByName(objectName);
             while (symbol.ParentIndex != -1)
             {
-                if (symbol.Type == DatSymbolType.Class)
+                if (symbol.BuiltinType == DatSymbolType.Class)
                 {
                     _className = symbol.Name;
                     break;

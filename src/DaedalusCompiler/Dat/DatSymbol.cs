@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using DaedalusCompiler.Compilation;
+using DaedalusCompiler.Compilation.SemanticAnalysis;
 
 namespace DaedalusCompiler.Dat
 {
@@ -29,7 +30,7 @@ namespace DaedalusCompiler.Dat
     }
     
 
-    [DebuggerDisplay("{Type} {ReturnType} {Name} '{Flags}'")]
+    [DebuggerDisplay("{BuiltinType} {ReturnType} {Name} '{Flags}'")]
     public class DatSymbol
     {
         public const int NULL_INDEX = -1;
@@ -55,10 +56,15 @@ namespace DaedalusCompiler.Dat
         public uint ParametersCount { get; set; }
         
         /// <summary>
-        /// Symbol type ex. 'class' or 'func'
+        /// Symbol type ex. DatSymbolType.Class or DatSymbolType.Func
         /// </summary>
-        public DatSymbolType Type { get; set; }
+        public DatSymbolType BuiltinType { get; set; }
 
+        /// <summary>
+        /// Symbol type in string format ex. 'class' or 'func'. Later evaluated with result saved into SymbolType
+        /// </summary>
+        public string ComplexTypeName { get; set; }
+        
         /// <summary>
         /// Symbol flags ex. 'const' or 'return' or 'const, external, return'
         /// </summary>
@@ -82,7 +88,7 @@ namespace DaedalusCompiler.Dat
         /// <summary>
         /// Specifies where symbol is located in source scripts
         /// </summary>
-        public DatSymbolLocation Location { get; set; }
+        public NodeLocation Location { get; set; }
 
         /// <summary>
         /// Content of const variable or array
@@ -110,22 +116,32 @@ namespace DaedalusCompiler.Dat
         {
             Index = -1;
             Name = "";
-            Type = DatSymbolType.Undefined;
-            
             ArrayLength = 0;
+
             ParametersCount = 0;
-            ClassOffset = 0;
-            FirstTokenAddress = 0;
-            ParentIndex = -1;
-            ClassSize = 0;
-            ClassVarOffset = 0;
+            BuiltinType = DatSymbolType.Undefined;
+            ComplexTypeName = "";
+            
+            Flags = 0;
             ReturnType = DatSymbolType.Void;
+
+            ClassVarOffset = 0;
+            ClassSize = 0;
+
+            Location = null;
+            
+            Content = null;
+            FirstTokenAddress = 0;
+            ClassOffset = 0;
+            
+            ParentIndex = -1;
+            
             ErrorLineContext = null;
         }
 
         public bool IsStringLiteralSymbol()
         {
-            return Name.StartsWith($"{(char) 255}") && Type == DatSymbolType.String && Flags == DatSymbolFlag.Const;
+            return Name.StartsWith($"{(char) 255}") && BuiltinType == DatSymbolType.String && Flags == DatSymbolFlag.Const;
         }
         
         /// <summary>
@@ -141,7 +157,7 @@ namespace DaedalusCompiler.Dat
             }
 
             // Save ReturnType / ClassSize / ClassVarOffset
-            if (Type == DatSymbolType.Func && Flags.HasFlag(DatSymbolFlag.Return))
+            if (BuiltinType == DatSymbolType.Func && Flags.HasFlag(DatSymbolFlag.Return))
             {
                 writer.Write((int)ReturnType);
             }
@@ -149,7 +165,7 @@ namespace DaedalusCompiler.Dat
             {
                 writer.Write(ClassVarOffset);
             }
-            else if (Type == DatSymbolType.Class)
+            else if (BuiltinType == DatSymbolType.Class)
             {
                 writer.Write(ClassSize);
             }
@@ -160,7 +176,7 @@ namespace DaedalusCompiler.Dat
 
             // Save ArrayLength & Type & Flags
             var bitField = 0u;
-            if (Type == DatSymbolType.Func && !Flags.HasFlag(DatSymbolFlag.Classvar))
+            if (BuiltinType == DatSymbolType.Func && !Flags.HasFlag(DatSymbolFlag.Classvar))
             {
                 bitField |= ParametersCount;
             }
@@ -168,20 +184,20 @@ namespace DaedalusCompiler.Dat
             {
                 bitField |= ArrayLength;
             }
-            bitField |= ((uint)Type << 12);
+            bitField |= ((uint)BuiltinType << 12);
             bitField |= ((uint)Flags << 16);
             bitField |= 0x400000;
             writer.Write(bitField);
 
-            writer.Write(Location.FileNumber);
+            writer.Write(Location.FileIndex);
             writer.Write(Location.Line);
             writer.Write(Location.LinesCount);
-            writer.Write(Location.Position);
-            writer.Write(Location.PositionsCount);
+            writer.Write(Location.Index);
+            writer.Write(Location.CharsCount);
 
             if (!Flags.Equals(0) && !Flags.HasFlag(DatSymbolFlag.Classvar))
             {
-                switch (Type)
+                switch (BuiltinType)
                 {
                     case DatSymbolType.Class:
                         writer.Write(ClassOffset);
@@ -196,7 +212,7 @@ namespace DaedalusCompiler.Dat
                     default:
                         foreach(var obj in Content ?? Enumerable.Empty<object>())
                         {
-                            switch (Type)
+                            switch (BuiltinType)
                             {
                                 case DatSymbolType.String:
                                     writer.Write((string)obj);
@@ -236,15 +252,15 @@ namespace DaedalusCompiler.Dat
             var bitField = reader.ReadUInt32();
 
             symbol.ArrayLength = bitField & 0xFFF;
-            symbol.Type = (DatSymbolType)((bitField & 0xF000) >> 12);
+            symbol.BuiltinType = (DatSymbolType)((bitField & 0xF000) >> 12);
             symbol.Flags = (DatSymbolFlag)((bitField & 0x3F0000) >> 16);
 
-            if (symbol.Type == DatSymbolType.Func && symbol.Flags.HasFlag(DatSymbolFlag.Return))
+            if (symbol.BuiltinType == DatSymbolType.Func && symbol.Flags.HasFlag(DatSymbolFlag.Return))
             {
                 symbol.ReturnType = (DatSymbolType)valueField;
             }
 
-            if (symbol.Type == DatSymbolType.Class)
+            if (symbol.BuiltinType == DatSymbolType.Class)
             {
                 symbol.ClassSize = valueField;
             }
@@ -254,16 +270,16 @@ namespace DaedalusCompiler.Dat
                 symbol.ClassVarOffset = valueField;
             }
 
-            symbol.Location = new DatSymbolLocation
+            symbol.Location = new NodeLocation
             {
-                FileNumber = reader.ReadInt32(),
+                FileIndex = reader.ReadInt32(),
                 Line = reader.ReadInt32(),
                 LinesCount = reader.ReadInt32(),
-                Position = reader.ReadInt32(),
-                PositionsCount = reader.ReadInt32(),
+                Index = reader.ReadInt32(),
+                CharsCount = reader.ReadInt32(),
             };
 
-            switch (symbol.Type)
+            switch (symbol.BuiltinType)
             {
                 case DatSymbolType.Class:
                     symbol.ClassOffset = reader.ReadInt32();
@@ -293,7 +309,7 @@ namespace DaedalusCompiler.Dat
 
             if (symbol.Flags.HasFlag(DatSymbolFlag.Classvar) == false)
             {
-                if (symbol.Type == DatSymbolType.Func || symbol.Type == DatSymbolType.Class || symbol.Type == DatSymbolType.Prototype)
+                if (symbol.BuiltinType == DatSymbolType.Func || symbol.BuiltinType == DatSymbolType.Class || symbol.BuiltinType == DatSymbolType.Prototype)
                 {
                     result = new object[1];
                 }
@@ -302,14 +318,14 @@ namespace DaedalusCompiler.Dat
                     result = new object[symbol.ArrayLength];
                 }
 
-                if ((result.Length == 0) && (symbol.Type == DatSymbolType.Instance))
+                if ((result.Length == 0) && (symbol.BuiltinType == DatSymbolType.Instance))
                 {
                     result = new object[1];
                 }
 
                 for (int i = 0; i < result.Length; i++)
                 {
-                    switch (symbol.Type)
+                    switch (symbol.BuiltinType)
                     {
                         case DatSymbolType.String:
                             result[i] = reader.ReadString();
@@ -368,7 +384,7 @@ namespace DaedalusCompiler.Dat
             {
                 return DatSymbolType.Undefined;
             }
-            return GetSymbol().Type;
+            return GetSymbol().BuiltinType;
         }
     }
 }

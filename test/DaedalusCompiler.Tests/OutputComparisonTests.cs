@@ -196,7 +196,7 @@ namespace DaedalusCompiler.Tests
                 }
                 Assert.Equal(expectedSymbol.ArrayLength, symbol.ArrayLength);
                 Assert.Equal(expectedSymbol.ParametersCount, symbol.ParametersCount);
-                Assert.Equal(expectedSymbol.Type, symbol.Type);
+                Assert.Equal(expectedSymbol.BuiltinType, symbol.BuiltinType);
                 Assert.Equal(expectedSymbol.Flags, symbol.Flags);
                 Assert.Equal(expectedSymbol.ReturnType, symbol.ReturnType);
                 Assert.Equal(expectedSymbol.ClassVarOffset, symbol.ClassVarOffset);
@@ -211,7 +211,7 @@ namespace DaedalusCompiler.Tests
                 Assert.Equal(expectedSymbol.ClassOffset, symbol.ClassOffset);
 
 
-                bool isParentLessType = parentLessTypes.Contains(symbol.Type);
+                bool isParentLessType = parentLessTypes.Contains(symbol.BuiltinType);
                 bool isBuggedParentIndex = lastParentIndex == expectedSymbol.ParentIndex && isParentLessType;
                                            
                 
