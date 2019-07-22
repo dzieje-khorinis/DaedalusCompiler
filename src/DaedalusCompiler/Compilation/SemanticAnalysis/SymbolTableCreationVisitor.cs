@@ -1,22 +1,31 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
     public class SymbolTableCreationVisitor : AbstractSyntaxTreeBaseVisitor
     {
-        private readonly Dictionary <string, DatSymbol> _symbolTable;
+        public readonly Dictionary <string, SymbolContext> SymbolTable;
         private bool _isInExternal;
         private int _nextSymbolIndex;
         private int _nextStringSymbolNumber;
+        
+        private readonly List<VarDeclarationNode> _varDeclarationNodes;
+        private readonly List<IArrayDeclarationNode> _arrayDeclarationNodes;
+        private readonly List<ReferenceNode> _referenceNodes;
 
         public SymbolTableCreationVisitor()
         {
-            _symbolTable = new Dictionary<string, DatSymbol>();
+            SymbolTable = new Dictionary<string, SymbolContext>();
             _isInExternal = false;
             _nextSymbolIndex = 0;
             _nextStringSymbolNumber = 10000;
+
+            _varDeclarationNodes = new List<VarDeclarationNode>();
+            _arrayDeclarationNodes = new List<IArrayDeclarationNode>();
+            _referenceNodes = new List<ReferenceNode>();
         }
 
         protected override void VisitFile(FileNode node)
@@ -29,7 +38,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             string className = classDefinitionNode.NameNode.Value;
             
-            if (_symbolTable.ContainsKey(className))
+            if (SymbolTable.ContainsKey(className))
             {
                 return;
             }
@@ -68,7 +77,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         protected override void VisitPrototypeDefinition(PrototypeDefinitionNode prototypeDefinitionNode)
         {
             string prototypeName = prototypeDefinitionNode.NameNode.Value;
-            DatSymbol prototypeSymbol = SymbolBuilder.BuildInstance(prototypeName);
+            DatSymbol prototypeSymbol = SymbolBuilder.BuildPrototype(prototypeName);
             AddSymbol(prototypeSymbol, prototypeDefinitionNode);
         }
 
@@ -141,7 +150,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 default:
                     throw new Exception();
             }
-            
+
             AddSymbol(constSymbol, constDefinitionNode);
             
         }
@@ -187,7 +196,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             node.Symbol = symbol;
             symbol.ComplexTypeName = node.TypeName;
             AddSymbol(symbol, (ASTNode)node);
-
         }
         
         private void AddSymbol(DatSymbol symbol, StringLiteralNode node)
@@ -201,7 +209,30 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             symbol.Index = _nextSymbolIndex++;
             symbol.Location = node.Location;
 
-            _symbolTable[symbol.Name.ToUpper()] = symbol;
+            switch (node)
+            {
+                case IArrayDeclarationNode arrayDeclarationNode:
+                    _arrayDeclarationNodes.Add(arrayDeclarationNode);
+                    break;
+                
+                case VarDeclarationNode varDeclarationNode:
+                    _varDeclarationNodes.Add(varDeclarationNode);
+                    break;
+                
+                case ReferenceNode referenceNode:
+                    _referenceNodes.Add(referenceNode);
+                    break;
+            }
+
+            SymbolTable[symbol.Name.ToUpper()] = new SymbolContext {Symbol = symbol, Node = (DeclarationNode) node};
         }
+        
+        /*
+
+        private List<ASTNode> NodesToUpdate()
+        {
+            return _referenceNodes.Concat(_arrayDeclarationNodes.Concat<VarDeclarationNode>(_varDeclarationNodes));
+        }
+        */
     }
 }

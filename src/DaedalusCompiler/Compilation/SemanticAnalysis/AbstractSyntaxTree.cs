@@ -86,13 +86,26 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
 
+    public class NodeAnnotation
+    {
+        public string Message;
+
+        public NodeAnnotation(string message)
+        {
+            Message = message;
+        }
+    }
+
     public abstract class ASTNode
     {
         public NodeLocation Location;
+
+        public List<NodeAnnotation> Annotations;
         public ASTNode Parent { get; set; }
 
         protected ASTNode(NodeLocation location)
         {
+            Annotations = new List<NodeAnnotation>();
             Location = location;
         }
     }
@@ -106,8 +119,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     
     public abstract class ExpressionNode : StatementNode
     {
+        public DatSymbolType BuiltinType;
         protected ExpressionNode(NodeLocation location) : base(location)
         {
+            BuiltinType = DatSymbolType.Undefined;
         }
     }
 
@@ -331,7 +346,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
 
-    public class ConstDefinitionNode : DeclarationNode
+    public class ConstDefinitionNode : VarDeclarationNode
     {
         public ExpressionNode RightSideNode;
 
@@ -533,14 +548,21 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public ExpressionNode ArrayIndexNode; // optional
         public ReferenceNode AttributeNode; // optional
 
+        public string FullName;    //filled in ConstEvalutationVisitor
+        public DatSymbol Symbol; //filled in AnnotationsAdditionVisitor
+
         public ReferenceNode(NodeLocation location, string name, ExpressionNode arrayIndexNode = null,
             ReferenceNode attributeNode = null) : base(location)
         {
+            Symbol = null;
+            FullName = "";
+            
             if (arrayIndexNode != null)
             {
                 arrayIndexNode.Parent = this;
             }
 
+            if (attributeNode != null)
             if (attributeNode != null)
             {
                 attributeNode.Parent = this;

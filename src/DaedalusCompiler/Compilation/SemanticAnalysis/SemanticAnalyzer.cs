@@ -8,10 +8,16 @@ using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
 {
+    public class SymbolContext
+    {
+        public DatSymbol Symbol;
+        public DeclarationNode Node;
+    }
+
     public class SemanticAnalyzer
     {
         private AbstractSyntaxTree _abstractSyntaxTree;
-        private Dictionary<string, DatSymbol> _symbolTable;
+        private Dictionary<string, SymbolContext> _symbolTable;
 
         public SemanticAnalyzer(List<IParseTree> parseTrees, int externalFilesCount)
         {
@@ -33,17 +39,36 @@ namespace DaedalusCompiler.Compilation
             visitor.VisitTree(_abstractSyntaxTree);
             timer.Stop();
             Console.WriteLine($"SymbolTable creation time: {timer.Elapsed}");
+            _symbolTable = visitor.SymbolTable;
         }
         
         public void EvaluateReferencesAndTypesAndArraySize()
         {
+            ConstEvaluationVisitor constEvaluationVisitor = new ConstEvaluationVisitor(_symbolTable);   
+            constEvaluationVisitor.VisitTree(_abstractSyntaxTree);
+            
+            
             /*
+             Steps:
+             1. Add types?
+             2. Resolve references?
+             
+             3. Evaluate constants content
+             4. Evaluate array Sizes
+             5. Evaluate const arrays elements
+             
+             6. For every variable and parameter that is not classVar and has complex type, set ParentInde
+             
+             
+             
              Calculate DatSymbol properties:
              
              Array: ArrayLength - must be const
              Const: Content
-             * For every local and global const (not class attributes) if it has Class as Type,
+             * For every local and global const and var (not class attributes) if it has Class as Type,
              set ParentIndex to that Class. 
+             
+             Evaluate references.
              */
         }
 

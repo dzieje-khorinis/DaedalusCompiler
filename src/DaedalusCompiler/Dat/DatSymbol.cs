@@ -34,6 +34,10 @@ namespace DaedalusCompiler.Dat
     public class DatSymbol
     {
         public const int NULL_INDEX = -1;
+
+        public NodeValue arrayLengthValue;
+        public NodeValue[] contentValue;
+        
         
         /// <summary>
         /// Symbol's index, id. It shows how many symbols were loaded before this one.

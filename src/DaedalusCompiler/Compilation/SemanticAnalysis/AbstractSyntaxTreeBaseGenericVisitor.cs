@@ -2,188 +2,218 @@ using System.Collections.Generic;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
-    public abstract class AbstractSyntaxTreeBaseVisitor
+    public abstract class AbstractSyntaxTreeBaseGenericVisitor<T>
     {
-        public void VisitTree(AbstractSyntaxTree tree)
+        protected internal virtual T DefaultResult => default (T);
+        
+        public T VisitTree(AbstractSyntaxTree tree)
         {
             foreach (var fileNode in tree.FileNodes)
             {
                 VisitFile(fileNode);
             }
+
+            return DefaultResult;
         }
         
-        protected virtual void VisitFile(FileNode node) {
+
+        protected virtual T VisitFile(FileNode node) {
             Visit(node.DefinitionNodes);
+            return DefaultResult;
         }
 
-        protected virtual void VisitConditional(ConditionalNode node)
+        protected virtual T VisitConditional(ConditionalNode node)
         {
             Visit(node.ConditionNode);
             Visit(node.BodyNodes);
+            return DefaultResult;
         }
 
-        protected virtual void VisitFunctionDefinition(FunctionDefinitionNode node)
+        protected virtual T VisitFunctionDefinition(FunctionDefinitionNode node)
         {
             Visit(node.NameNode);
             Visit(node.ParameterNodes);
             Visit(node.BodyNodes);
+            return DefaultResult;
         }
 
-        protected virtual void VisitAssignment(AssignmentNode node)
+        protected virtual T VisitAssignment(AssignmentNode node)
         {
             Visit(node.LeftSideNode);
             Visit(node.RightSideNode);
+            return DefaultResult;
         }
 
-        protected virtual void VisitCompoundAssignment(CompoundAssignmentNode node)
+        protected virtual T VisitCompoundAssignment(CompoundAssignmentNode node)
         {
             Visit(node.LeftSideNode);
             Visit(node.RightSideNode);
+            return DefaultResult;
         }
         
-        protected virtual void VisitUnaryExpression(UnaryExpressionNode node)
+        protected virtual T VisitUnaryExpression(UnaryExpressionNode node)
         {
             Visit(node.ExpressionNode);
+            return DefaultResult;
         }
 
-        protected virtual void VisitBinaryExpression(BinaryExpressionNode node)
+        protected virtual T VisitBinaryExpression(BinaryExpressionNode node)
         {
             Visit(node.LeftSideNode);
             Visit(node.RightSideNode);
+            return DefaultResult;
         }
 
-        protected virtual void VisitClassDefinition(ClassDefinitionNode node)
+        protected virtual T VisitClassDefinition(ClassDefinitionNode node)
         {
             Visit(node.AttributeNodes);
+            return DefaultResult;
         }
 
-        protected virtual void VisitPrototypeDefinition(PrototypeDefinitionNode node)
+        protected virtual T VisitPrototypeDefinition(PrototypeDefinitionNode node)
         {
             Visit(node.NameNode);
             Visit(node.ParentReferenceNode);
             Visit(node.BodyNodes);
+            return DefaultResult;
         }
 
-        protected virtual void VisitInstanceDefinition(InstanceDefinitionNode node)
+        protected virtual T VisitInstanceDefinition(InstanceDefinitionNode node)
         {
             Visit(node.NameNode);
             Visit(node.ParentReferenceNode);
             Visit(node.BodyNodes);
+            return DefaultResult;
         }
 
-        protected virtual void VisitConstDefinition(ConstDefinitionNode node)
+        protected virtual T VisitConstDefinition(ConstDefinitionNode node)
         {
             Visit(node.NameNode);
             Visit(node.RightSideNode);
+            return DefaultResult;
         }
 
-        protected virtual void VisitConstArrayDefinition(ConstArrayDefinitionNode node)
+        protected virtual T VisitConstArrayDefinition(ConstArrayDefinitionNode node)
         {
             Visit(node.NameNode);
             Visit(node.ArraySizeNode);
             Visit(node.ElementNodes);
+            return DefaultResult;
         }
 
-        protected virtual void VisitVarDeclaration(VarDeclarationNode node)
+        protected virtual T VisitVarDeclaration(VarDeclarationNode node)
         {
             Visit(node.NameNode);
+            return DefaultResult;
         }
 
-        protected virtual void VisitVarArrayDeclaration(VarArrayDeclarationNode node)
+        protected virtual T VisitVarArrayDeclaration(VarArrayDeclarationNode node)
         {
             Visit(node.NameNode);
             Visit(node.ArraySizeNode);
+            return DefaultResult;
         }
         
-        protected virtual void VisitParameterDeclaration(ParameterDeclarationNode node)
+        protected virtual T VisitParameterDeclaration(ParameterDeclarationNode node)
         {
             Visit(node.NameNode);
+            return DefaultResult;
         }
 
-        protected virtual void VisitParameterArrayDeclaration(ParameterArrayDeclarationNode node)
+        protected virtual T VisitParameterArrayDeclaration(ParameterArrayDeclarationNode node)
         {
             Visit(node.NameNode);
             Visit(node.ArraySizeNode);
+            return DefaultResult;
         }
-        protected virtual void VisitReturnStatement(ReturnStatementNode node) {}
-        protected virtual void VisitBreakStatement(BreakStatementNode node) {}
-        protected virtual void VisitContinueStatement(ContinueStatementNode node) {}
+        protected virtual T VisitReturnStatement(ReturnStatementNode node) { return DefaultResult; }
+        protected virtual T VisitBreakStatement(BreakStatementNode node) { return DefaultResult; }
+        protected virtual T VisitContinueStatement(ContinueStatementNode node) { return DefaultResult; }
 
-        protected virtual void VisitFunctionCall(FunctionCallNode node)
+        protected virtual T VisitFunctionCall(FunctionCallNode node)
         {
             Visit(node.FunctionReferenceNode);
             Visit(node.ArgumentNodes);
+            return DefaultResult;
         }
 
-        protected virtual void VisitIfStatement(IfStatementNode node)
+        protected virtual T VisitIfStatement(IfStatementNode node)
         {
             Visit(node.IfNode);
             Visit(node.ElseIfNodes);
             Visit(node.ElseNodeBodyNodes);
+            return DefaultResult;
         }
 
-        protected virtual void VisitWhileStatement(WhileStatementNode node)
+        protected virtual T VisitWhileStatement(WhileStatementNode node)
         {
             Visit(node.ConditionNode);
             Visit(node.BodyNodes);
+            return DefaultResult;
         }
-        protected virtual void VisitIntegerLiteral(IntegerLiteralNode node) {}
-        protected virtual void VisitFloatLiteral(FloatLiteralNode node) {}
-        protected virtual void VisitStringLiteral(StringLiteralNode node) {}
+        protected virtual T VisitIntegerLiteral(IntegerLiteralNode node) { return DefaultResult; }
+        protected virtual T VisitFloatLiteral(FloatLiteralNode node) { return DefaultResult; }
+        protected virtual T VisitStringLiteral(StringLiteralNode node) { return DefaultResult; }
 
-        protected virtual void VisitNoFunc(NoFuncNode node) {}
+        protected virtual T VisitNoFunc(NoFuncNode node) { return DefaultResult; }
 
-        protected virtual void VisitNull(NullNode node) {}
+        protected virtual T VisitNull(NullNode node) { return DefaultResult; }
 
-        protected virtual void VisitReference(ReferenceNode referenceNode)
+        protected virtual T VisitReference(ReferenceNode referenceNode)
         {
             Visit(referenceNode.ArrayIndexNode);
             Visit(referenceNode.AttributeNode);
+            return DefaultResult;
         }
-        protected virtual void VisitName(NameNode node) {}
+        protected virtual T VisitName(NameNode node) { return DefaultResult; }
         
         
-        private void Visit(List<ConditionalNode> nodes)
+        private T Visit(List<ConditionalNode> nodes)
         {
             foreach (var node in nodes)
             {
                 Visit(node);
             }
+            return DefaultResult;
         }
         
-        private void Visit(List<DeclarationNode> nodes)
+        private T Visit(List<DeclarationNode> nodes)
         {
             foreach (var node in nodes)
             {
                 Visit(node);
             }
+            return DefaultResult;
         }
         
-        private void Visit(List<ExpressionNode> nodes)
+        private T Visit(List<ExpressionNode> nodes)
         {
             foreach (var node in nodes)
             {
                 Visit(node);
             }
+            return DefaultResult;
         }
         
-        private void Visit(List<StatementNode> nodes)
+        private T Visit(List<StatementNode> nodes)
         {
             foreach (var node in nodes)
             {
                 Visit(node);
             }
+            return DefaultResult;
         }
         
-        private void Visit(List<ParameterDeclarationNode> nodes)
+        private T Visit(List<ParameterDeclarationNode> nodes)
         {
             foreach (var node in nodes)
             {
                 Visit(node);
             }
+            return DefaultResult;
         }
 
-        protected void Visit(ASTNode node)
+        protected T Visit(ASTNode node)
         {
             switch (node)
             {
@@ -303,6 +333,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     VisitConditional(conditionalNode);
                     break;
             }
+            return DefaultResult;
         }
     }
 }

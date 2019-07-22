@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Antlr4.Runtime.Tree;
+using DaedalusCompiler.Compilation.SemanticAnalysis;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
@@ -59,6 +60,22 @@ namespace DaedalusCompiler.Compilation
 
             try
             {
+                /*
+                Dictionary<string, NodeValue> d = new Dictionary<string, NodeValue>();
+                d["null"] = null;
+                d["1"] = new IntValue(1);
+                d["1.5"] = new FloatValue(1.5);
+                d["2"] = new IntValue(2);
+                d["2.5"] = new FloatValue(2.5);
+                d["tekst"] = new StringValue("tekst");
+
+                NodeValue x = EvaluationHelper.EvaluateBinaryOperation(BinaryOperator.Mult, d["2"], d["tekst"]);
+                
+                Console.WriteLine($"x: {x}");
+
+                return true;
+                */
+                
                 string[] paths = SrcFileHelper.LoadScriptsFilePaths(absoluteSrcFilePath).ToArray();
                 string srcFileName = Path.GetFileNameWithoutExtension(absoluteSrcFilePath).ToLower();
                 
@@ -131,8 +148,8 @@ namespace DaedalusCompiler.Compilation
                     }
                     */
                 }
-                
-            
+
+
                 
                 Console.WriteLine("parseTrees created");
                 SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(parseTrees, externalFilesCount);
