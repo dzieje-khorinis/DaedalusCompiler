@@ -1,3 +1,4 @@
+using System;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
@@ -6,9 +7,27 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         protected override void VisitConstDefinition(ConstDefinitionNode node)
         {
-            
+            Console.WriteLine($"VisitConstDefinition {node.NameNode.Value}");
+            foreach (var annotation in node.Annotations)
+            {
+                Console.WriteLine(annotation.GetType());
+            }
+
+            base.VisitConstDefinition(node);
         }
 
+        protected override void VisitReference(ReferenceNode referenceNode)
+        {
+            Console.WriteLine($"VisitReference {referenceNode.Name}");
+            foreach (var annotation in referenceNode.Annotations)
+            {
+                Console.WriteLine(annotation.GetType());
+            }
+            
+            base.VisitReference(referenceNode);
+        }
+
+        /*
         protected override void VisitBinaryExpression(BinaryExpressionNode binaryExpressionNode)
         {
             DatSymbolType leftType = binaryExpressionNode.LeftSideNode.BuiltinType;
@@ -18,15 +37,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 && (rightType == DatSymbolType.Int || rightType == DatSymbolType.Instance))
             {
                 
-                /*
+                
                  // TODO: original compiler didn't allow to have lhs or rhs to be functionCall of type Instance,
                  
-                if ((leftType == DatSymbolType.Instance && binaryExpressionNode.LeftSideNode is FunctionCallNode)
-                    || (rightType == DatSymbolType.Instance && binaryExpressionNode.RightSideNode is FunctionCallNode))
-                {
-                    binaryExpressionNode.BuiltinType = DatSymbolType.Undefined;
-                }
-                */
+                //if ((leftType == DatSymbolType.Instance && binaryExpressionNode.LeftSideNode is FunctionCallNode)
+                //    || (rightType == DatSymbolType.Instance && binaryExpressionNode.RightSideNode is FunctionCallNode))
+                //{
+                //    binaryExpressionNode.BuiltinType = DatSymbolType.Undefined;
+                //}
+                
                 binaryExpressionNode.BuiltinType = DatSymbolType.Int;
             }
             else
@@ -40,8 +59,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             //if (node.)
             
             
-            /*
-             *
+            
+             
              switch (lValueType)
             {
                 case DatSymbolType.Int:
@@ -61,7 +80,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
             
             return Compability.None;
-             */
+             
         }
+    
+     */
+        
+        
     }
 }

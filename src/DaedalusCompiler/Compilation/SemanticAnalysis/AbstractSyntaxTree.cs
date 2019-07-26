@@ -86,15 +86,32 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
 
-    public class NodeAnnotation
+    public abstract class NodeAnnotation
     {
-        public string Message;
+        
+    }
 
-        public NodeAnnotation(string message)
+
+    public class TextAnnotation : NodeAnnotation
+    {
+        private string Message;
+
+        public TextAnnotation(string message)
         {
             Message = message;
         }
     }
+
+    public class UndeclaredIdentifierAnnotation : NodeAnnotation
+    {
+        
+    }
+
+    public class CycleAnnotation : NodeAnnotation
+    {
+        
+    }
+
 
     public abstract class ASTNode
     {
@@ -561,8 +578,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             {
                 arrayIndexNode.Parent = this;
             }
-
-            if (attributeNode != null)
+            
             if (attributeNode != null)
             {
                 attributeNode.Parent = this;

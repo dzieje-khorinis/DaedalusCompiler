@@ -53,6 +53,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         
     }
+
+    public class UndeclaredIdentifierValue : ErrorValue
+    {
+        
+    }
     
     public class UndefinedValue : ErrorValue
     {
@@ -63,6 +68,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         
     }
+    
+    
+    public class UnableToEvaluateValue : ErrorValue
+    {
+        
+    }
+    
     
     public class EvaluationHelper
     {

@@ -213,7 +213,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             return DefaultResult;
         }
 
-        protected T Visit(ASTNode node)
+        protected virtual T Visit(ASTNode node)
         {
             switch (node)
             {

@@ -1,268 +1,132 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
-    public class ConstEvaluationVisitor : AbstractSyntaxTreeBaseVisitor
+    public class ConstEvaluationVisitor : AbstractSyntaxTreeBaseGenericVisitor<NodeValue>
     {
-        /*
-         // a może się powinien nazywać Evaluate References?
-         
-         Ten visitor będzie wywoływany z AnnotationsAdditionVisitora czy moze lepiej nie?
-         
-         // evaluate array sizes and constants
-         
-         */
-        //private const int A = B;
-        //private const int B = A + D;
-        /*
-         *
-         const int a = b;
-         const int b = c + 5;
-         const int c = 10;
-         
-         
-         EDGE CASE:
-         a)
-         func void myFunc() {
-             const int a = b;
-             const int b = c + 5;
-             const int c = 10;
-         }
-         
-         0)
-         const int a = 5;
-         func void myFunc() {
-            const int a = a;
-         }
-         
-         1)
-         
-         const int a = b;
-                       ^
-                       error: cycle in constant value computation
-         const int b = a;
-                       ^
-                       error: cycle in constant value computation
-         
-         2)
-         
-         const int a = b;
-                       ^
-                       error: constant initializer must be compile-time constant
-         const int b = c + a;
-
-         
-         3)
-         
-         const int a = b;
-                       ^
-                       error: cycle in constant value computation
-         const int b = a + d;
-                       ^ error: cycle in constant value computation
-                           ^ cannot resolve symbol d
-         
-         
-         
-         2)
-         const int a = a;
-         */
         private readonly Dictionary <string, SymbolContext> _symbolTable;
+        private readonly Dictionary<ASTNode, NodeValue> _visitedNodesValuesCache;
+
+
+        private ReferenceNode referenceChainHead;
+        private HashSet<ReferenceNode> referenceChain;
         
-        private HashSet<ASTNode> _visitedNodes;
-        private Dictionary<ASTNode, NodeValue> _nodesValues;
         
         
         public ConstEvaluationVisitor(Dictionary <string, SymbolContext> symbolTable)
         {
             _symbolTable = symbolTable;
-            _visitedNodes = new HashSet<ASTNode>();
-            _nodesValues = new Dictionary<ASTNode, NodeValue>();
+            _visitedNodesValuesCache = new Dictionary<ASTNode, NodeValue>();
+        }
+
+
+        private void PrintVisit(ASTNode node, bool cached=false)
+        {
+            string message = node.GetType().ToString().Split(".").Last();
+            switch (node)
+            {
+                case ConstDefinitionNode constDefinitionNode:
+                    message = $"{message} {constDefinitionNode.NameNode.Value}";
+                    break;
+                case ReferenceNode referenceNode:
+                    message = $"{message} {referenceNode.Name}";
+                    break;
+                case BinaryExpressionNode _:
+                    break;
+                default:
+                    return;
+            }
+
+            if (cached)
+            {
+                Console.WriteLine($"Visit CACHED: {message}");
+            }
+            else
+            {
+                Console.WriteLine($"Visit: {message}");
+            }
+            
+
         }
         
-        protected override void VisitConstDefinition(ConstDefinitionNode node)
+        protected override NodeValue Visit(ASTNode node)
         {
-            node.Symbol.Content = new object[] {GetNodeValue(node.RightSideNode)};
-            Console.WriteLine("aha");
+            if (_visitedNodesValuesCache.ContainsKey(node))
+            {
+                PrintVisit(node, true);
+                if (_visitedNodesValuesCache[node] == null)
+                {
+                    if (node is ReferenceNode referenceNode)
+                    {
+                        Console.WriteLine($"Add cycle annotation to referenceNode {referenceNode.Name}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Add cycle annotation to {node.GetType().ToString().Split(".").Last()}");
+                    }
+                    
+                    node.Annotations.Add(new CycleAnnotation());
+                }
+                return _visitedNodesValuesCache[node];
+            }
+            
+            PrintVisit(node, false);
+            _visitedNodesValuesCache[node] = null;
+            _visitedNodesValuesCache[node] = base.Visit(node);
+            
+            /*
+            if (_visitedNodesValuesCache[node] == null && node is ReferenceNode)
+            {
+                node.Annotations.Add(new CycleAnnotation());
+            }
+            */
+            
+            return _visitedNodesValuesCache[node];
         }
         
         
-        protected override void VisitReference(ReferenceNode referenceNode)
+        protected override NodeValue VisitConstDefinition(ConstDefinitionNode node)
         {
-            // TODO: Add support of nested references (i.e. `a.b`)
+            NodeValue nodeValue = Visit(node.RightSideNode);
+            return null;
+        }
+
+        protected override NodeValue VisitReference(ReferenceNode referenceNode)
+        {
             string nodeName = referenceNode.Name.ToUpper();
+
+            if (!_symbolTable.ContainsKey(nodeName))
+            {
+                referenceNode.Annotations.Add(new UndeclaredIdentifierAnnotation());
+                return new UndeclaredIdentifierValue();
+            }
+            
             SymbolContext symbolContext = _symbolTable[nodeName];
             
             switch (symbolContext.Node)
             {
-                case ConstArrayDefinitionNode constArrayDefinitionNode:
-                    throw new UnableToEvaluateException();
-                
                 case ConstDefinitionNode constDefinitionNode:
-                    NodeValue nodeValue = GetConstDefinitionValue(constDefinitionNode);
-                    _nodesValues[referenceNode] = nodeValue;
-                    break;
+                    return Visit(constDefinitionNode.RightSideNode);
                 
-                default:
-                    throw new UnableToEvaluateException();
-            }
-            
-            /*
-            if (referenceNode.ArrayIndexNode != null)
-            {
-                NodeValue arrayIndex = GetNodeValue(referenceNode.AttributeNode);
-                switch (symbolContext.Node)
-                {
-                    case ConstArrayDefinitionNode constArrayDefinitionNode:
-                        break;
-                    default:
-                        throw new UnableToEvaluateException();
-                }
-            }
-            else
-            {
-                switch (symbolContext.Node)
-                {
-                    case ConstArrayDefinitionNode constArrayDefinitionNode:
-                        throw new UnableToEvaluateException();
-                
-                    case ConstDefinitionNode constDefinitionNode:
-                        break;
-                
-                    default:
-                        throw new UnableToEvaluateException();
-                }
-
-            }
-            */
-        }
-
-        
-
-        
-        /*
-        protected override void VisitConstArrayDefinition(ConstArrayDefinitionNode node)
-        {
-            //GetV
-        }
-        */
-
-        protected override void VisitBinaryExpression(BinaryExpressionNode node)
-        {
-            if (_nodesValues.ContainsKey(node))
-            {
-                return;
-            }
-            
-            Visit(node.LeftSideNode);
-            Visit(node.RightSideNode);
-            
-            _nodesValues[node] = EvaluationHelper.EvaluateBinaryOperation(node.Operator, _nodesValues[node.LeftSideNode],_nodesValues[node.RightSideNode]);
-        }
-
-        protected override void VisitUnaryExpression(UnaryExpressionNode node)
-        {
-            if (_nodesValues.ContainsKey(node))
-            {
-                return;
-            }
-            
-            Visit(node.ExpressionNode);
-
-            _nodesValues[node] = EvaluationHelper.EvaluateUnaryOperation(node.Operator, _nodesValues[node.ExpressionNode]);
-        }
-        
-
-
-
-        private object GetObjectValue(ASTNode node)
-        {
-            NodeValue nodeValue = GetNodeValue(node);
-            switch (nodeValue)
-            {
-                case IntValue intValue:
-                    return intValue.Value;
-                case FloatValue floatValue:
-                    return floatValue.Value;
-                case StringValue stringValue:
-                    return stringValue.Value;
-                default:
-                    return null;
-            }
-        }
-        private NodeValue GetNodeValue(ASTNode node)
-        {
-            if (node == null)
-            {
-                throw new Exception();
-            }
-            
-            if (_visitedNodes.Contains(node))
-            {
-                if (_nodesValues.ContainsKey(node))
-                {
-                    return _nodesValues[node];
-                }
-
-                return new InfiniteReferenceLoopValue();
             }
 
-            _visitedNodes.Add(node);
-            Visit(node);
-            return _nodesValues[node];
-        }
-        
-        
-
-        private NodeValue GetIndex(ReferenceNode referenceNode)
-        {
-            if (referenceNode.ArrayIndexNode != null)
-            {
-                return GetNodeValue(referenceNode.ArrayIndexNode);
-            }
 
             return null;
         }
         
-        private NodeValue GetArraySize(IArrayDeclarationNode arrayDeclarationNode)
-        {
-            return GetNodeValue(arrayDeclarationNode.ArraySizeNode);
-        }
-
-        private NodeValue GetConstDefinitionValue(ConstDefinitionNode constDefinitionNode)
-        {
-            return GetNodeValue(constDefinitionNode.RightSideNode);
-        }
-        
-        /*
-        private NodeValue GetConstArrayDefinitionElementValue(ConstArrayDefinitionNode constArrayDefinitionNode, int index)
-        {
-            int arraySize = GetArraySize(constArrayDefinitionNode);
-            if (index >= arraySize || index >= constArrayDefinitionNode.ElementNodes.Count)
-            {
-                return new UndefinedValue();
-            }
-
-            return GetNodeValue(constArrayDefinitionNode.ElementNodes[index]);
-        }
-        */
         
         
-        protected override void VisitFloatLiteral(FloatLiteralNode node)
+        protected override NodeValue VisitBinaryExpression(BinaryExpressionNode node)
         {
-            _nodesValues[node] = new FloatValue(node.Value);
+            NodeValue leftNodeValue = Visit(node.LeftSideNode); 
+            NodeValue rightNodeValue = Visit(node.RightSideNode);
+            
+            NodeValue result = EvaluationHelper.EvaluateBinaryOperation(node.Operator, leftNodeValue,rightNodeValue);
+            return result;
         }
-
-        protected override void VisitIntegerLiteral(IntegerLiteralNode node)
-        {
-            _nodesValues[node] = new IntValue(node.Value);
-        }
-
-        protected override void VisitStringLiteral(StringLiteralNode node)
-        {
-            _nodesValues[node] = new StringValue(node.Value);
-        }
-        
     }
 }
