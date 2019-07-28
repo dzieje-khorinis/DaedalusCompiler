@@ -3,9 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
+    //evaluate const content, array elements, array index, array reference index 
     public class ConstEvaluationVisitor : AbstractSyntaxTreeBaseGenericVisitor<NodeValue>
     {
         private readonly Dictionary <string, SymbolContext> _symbolTable;
@@ -48,7 +50,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         }
         
-        protected override NodeValue Visit(ASTNode node)
+        public override NodeValue Visit(ASTNode node)
         {
             if (VisitedNodesValuesCache.ContainsKey(node))
             {
@@ -70,38 +72,113 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             
             PrintVisit(node, false);
             VisitedNodesValuesCache[node] = new UninitializedValue();
-            VisitedNodesValuesCache[node] = base.Visit(node);
+            
+            NodeValue resultValue = base.Visit(node);
+            VisitedNodesValuesCache[node] = resultValue;
+            if (resultValue is ErrorValue)
+            {
+                return new UndefinedErrorValue();
+            }
             return VisitedNodesValuesCache[node];
         }
-        
-        
-        protected override NodeValue VisitConstDefinition(ConstDefinitionNode node)
+
+
+        protected override NodeValue VisitVarArrayDeclaration(VarArrayDeclarationNode node)
         {
-            NodeValue nodeValue = Visit(node.RightSideNode);
+            if (node.ArraySizeValue is ErrorValue)
+            {
+                return new UndefinedErrorValue();
+            }
+            node.ArraySizeValue = Visit(node.ArraySizeNode);
+            
             return null;
         }
 
+        protected override NodeValue VisitConstArrayDefinition(ConstArrayDefinitionNode node)
+        {
+            if (node.ArraySizeValue is ErrorValue)
+            {
+                return new UndefinedErrorValue();
+            }
+            node.ArraySizeValue = Visit(node.ArraySizeNode);
+            return null;
+        }
+
+        protected override NodeValue VisitParameterArrayDeclaration(ParameterArrayDeclarationNode node)
+        {
+            if (node.ArraySizeValue is ErrorValue)
+            {
+                return new UndefinedErrorValue();
+            }
+            node.ArraySizeValue = Visit(node.ArraySizeNode);
+            return null;
+        }
+
+        protected override NodeValue VisitConstDefinition(ConstDefinitionNode node)
+        {
+            if (node.RightSideValue is ErrorValue)
+            {
+                return new UndefinedErrorValue();
+            }
+            node.RightSideValue = Visit(node.RightSideNode);
+            return null; // TODO what to return here?
+        }
+        
+
         protected override NodeValue VisitReference(ReferenceNode referenceNode)
         {
+            if (referenceNode.ArrayIndexNode != null)
+            {
+                referenceNode.ArrayIndexValue = Visit(referenceNode.ArrayIndexNode);
+            }
+            
             string nodeName = referenceNode.Name.ToUpper();
-
             if (!_symbolTable.ContainsKey(nodeName))
             {
-                referenceNode.Errors.Add(new UndeclaredIdentifierAnnotation());
                 return new UndeclaredIdentifierErrorValue();
             }
             
             SymbolContext symbolContext = _symbolTable[nodeName];
-            
+
+
             switch (symbolContext.Node)
             {
+                case ConstArrayDefinitionNode constArrayDefinitionNode:
+                    if (referenceNode.ArrayIndexNode == null)
+                    {
+                        //orinal compiler actually accesses index 0 if no square brackets are provided
+                        return new SquareBracketsExpectedErrorValue();
+                    }
+                    else
+                    {
+                        switch (referenceNode.ArrayIndexValue)
+                        {
+                            case ErrorValue _:
+                                return new UndefinedErrorValue();
+                            case IntValue intValue:
+                                if (intValue.Value >= constArrayDefinitionNode.ElementNodes.Count)
+                                {
+                                    return new IndexOutOfRangeErrorValue();
+                                }
+                                return Visit(constArrayDefinitionNode.ElementNodes[intValue.Value]);
+                            default:
+                                referenceNode.ArrayIndexValue = new ConstIntegerExpectedErrorValue();
+                                return new UndefinedErrorValue();
+                        }
+                    }
+
                 case ConstDefinitionNode constDefinitionNode:
+                    if (referenceNode.ArrayIndexNode != null)
+                    {
+                        return new SquareBracketsNotExpectedErrorValue();
+                    }
                     return Visit(constDefinitionNode.RightSideNode);
                 
+                default:
+                    return new NotConstReferenceErrorValue();
+                
             }
-
-
-            return new UninitializedValue();
+            
         }
         
         
@@ -134,6 +211,5 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             return new StringValue(node.Value);
         }
-
     }
 }

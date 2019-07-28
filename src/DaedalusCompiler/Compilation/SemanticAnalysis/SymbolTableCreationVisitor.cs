@@ -12,9 +12,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         private int _nextSymbolIndex;
         private int _nextStringSymbolNumber;
         
-        private readonly List<VarDeclarationNode> _varDeclarationNodes;
-        private readonly List<IArrayDeclarationNode> _arrayDeclarationNodes;
-        private readonly List<ReferenceNode> _referenceNodes;
+        public readonly List<ConstDefinitionNode> ConstDefinitionNodes;
+        public readonly List<IArrayDeclarationNode> ArrayDeclarationNodes;
+        public readonly List<ReferenceNode> ReferenceNodes;
 
         public SymbolTableCreationVisitor()
         {
@@ -23,9 +23,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             _nextSymbolIndex = 0;
             _nextStringSymbolNumber = 10000;
 
-            _varDeclarationNodes = new List<VarDeclarationNode>();
-            _arrayDeclarationNodes = new List<IArrayDeclarationNode>();
-            _referenceNodes = new List<ReferenceNode>();
+            ConstDefinitionNodes = new List<ConstDefinitionNode>();
+            ArrayDeclarationNodes = new List<IArrayDeclarationNode>();
+            ReferenceNodes = new List<ReferenceNode>();
         }
 
         protected override void VisitFile(FileNode node)
@@ -212,15 +212,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             switch (node)
             {
                 case IArrayDeclarationNode arrayDeclarationNode:
-                    _arrayDeclarationNodes.Add(arrayDeclarationNode);
+                    ArrayDeclarationNodes.Add(arrayDeclarationNode);
                     break;
                 
-                case VarDeclarationNode varDeclarationNode:
-                    _varDeclarationNodes.Add(varDeclarationNode);
+                case ConstDefinitionNode constDefinitionNode:
+                    ConstDefinitionNodes.Add(constDefinitionNode);
                     break;
                 
                 case ReferenceNode referenceNode:
-                    _referenceNodes.Add(referenceNode);
+                    ReferenceNodes.Add(referenceNode);
                     break;
             }
 

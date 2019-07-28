@@ -64,6 +64,33 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class UndeclaredIdentifierErrorValue : ErrorValue
     {
     }
+
+    public class IndexOutOfRangeErrorValue : ErrorValue
+    {
+        
+    }
+    
+    public class ConstIntegerExpectedErrorValue : ErrorValue
+    {
+        
+    }
+
+    public class SquareBracketsExpectedErrorValue : ErrorValue
+    {
+        
+    }
+    
+    public class SquareBracketsNotExpectedErrorValue : ErrorValue
+    {
+    }
+    
+    public class NotConstReferenceErrorValue : ErrorValue
+    {
+    }
+    
+    public class NoAttributeAllowedHereErrorValue : ErrorValue
+    {
+    }
     
     public class RedefinedIdentifierErrorValue : ErrorValue
     {

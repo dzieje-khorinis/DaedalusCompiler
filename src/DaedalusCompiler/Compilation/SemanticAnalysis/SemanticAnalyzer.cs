@@ -33,22 +33,36 @@ namespace DaedalusCompiler.Compilation
 
         public void CreateSymbolTable()
         {
-            Stopwatch timer = new Stopwatch();
-            timer.Start();
-            SymbolTableCreationVisitor visitor = new SymbolTableCreationVisitor();
-            visitor.VisitTree(_abstractSyntaxTree);
-            timer.Stop();
-            Console.WriteLine($"SymbolTable creation time: {timer.Elapsed}");
-            _symbolTable = visitor.SymbolTable;
+            //Stopwatch timer = new Stopwatch();
+            //timer.Start();
+            //SymbolTableCreationVisitor symbolTableCreationVisitor = new SymbolTableCreationVisitor();
+            //symbolTableCreationVisitor.VisitTree(_abstractSyntaxTree);
+            //timer.Stop();
+            //Console.WriteLine($"SymbolTable creation time: {timer.Elapsed}");
+            //_symbolTable = visitor.SymbolTable;
+            
+            
+            SymbolTableCreationVisitor symbolTableCreationVisitor = new SymbolTableCreationVisitor();
+            symbolTableCreationVisitor.VisitTree(_abstractSyntaxTree);
+            _symbolTable = symbolTableCreationVisitor.SymbolTable;
+
+            ConstEvaluationVisitor constEvaluationVisitor = new ConstEvaluationVisitor(_symbolTable);
+            constEvaluationVisitor.Visit(symbolTableCreationVisitor.ConstDefinitionNodes);
+            constEvaluationVisitor.Visit(symbolTableCreationVisitor.ArrayDeclarationNodes);
+            
+            
+            
+            
+            //constEvaluationVisitor.VisitTree(_abstractSyntaxTree);
+            Console.WriteLine("---------");
+            AnnotationsAdditionVisitor annotationsAdditionVisitor = new AnnotationsAdditionVisitor(constEvaluationVisitor.VisitedNodesValuesCache);
+            annotationsAdditionVisitor.VisitTree(_abstractSyntaxTree);
+            
         }
         
         public void EvaluateReferencesAndTypesAndArraySize()
         {
-            ConstEvaluationVisitor constEvaluationVisitor = new ConstEvaluationVisitor(_symbolTable);   
-            constEvaluationVisitor.VisitTree(_abstractSyntaxTree);
-            Console.WriteLine("---------");
-            AnnotationsAdditionVisitor annotationsAdditionVisitor = new AnnotationsAdditionVisitor(constEvaluationVisitor.VisitedNodesValuesCache);
-            annotationsAdditionVisitor.VisitTree(_abstractSyntaxTree);
+           
             
             
             /*

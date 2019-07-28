@@ -168,7 +168,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         protected virtual T VisitName(NameNode node) { return DefaultResult; }
         
         
-        private T Visit(List<ConditionalNode> nodes)
+        public T Visit(List<ConstDefinitionNode> nodes)
         {
             foreach (var node in nodes)
             {
@@ -177,34 +177,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             return DefaultResult;
         }
         
-        private T Visit(List<DeclarationNode> nodes)
-        {
-            foreach (var node in nodes)
-            {
-                Visit(node);
-            }
-            return DefaultResult;
-        }
-        
-        private T Visit(List<ExpressionNode> nodes)
-        {
-            foreach (var node in nodes)
-            {
-                Visit(node);
-            }
-            return DefaultResult;
-        }
-        
-        private T Visit(List<StatementNode> nodes)
-        {
-            foreach (var node in nodes)
-            {
-                Visit(node);
-            }
-            return DefaultResult;
-        }
-        
-        private T Visit(List<ParameterDeclarationNode> nodes)
+        public T Visit(List<IArrayDeclarationNode> nodes)
         {
             foreach (var node in nodes)
             {
@@ -213,7 +186,71 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             return DefaultResult;
         }
 
-        protected virtual T Visit(ASTNode node)
+        public T Visit(List<ConditionalNode> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                Visit(node);
+            }
+            return DefaultResult;
+        }
+        
+        public T Visit(List<DeclarationNode> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                Visit(node);
+            }
+            return DefaultResult;
+        }
+        
+        public T Visit(List<ExpressionNode> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                Visit(node);
+            }
+            return DefaultResult;
+        }
+        
+        public T Visit(List<StatementNode> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                Visit(node);
+            }
+            return DefaultResult;
+        }
+        
+        public T Visit(List<ParameterDeclarationNode> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                Visit(node);
+            }
+            return DefaultResult;
+        }
+
+
+        public T Visit(IArrayDeclarationNode node)
+        {
+            switch (node)
+            {
+                case VarArrayDeclarationNode varArrayDeclarationNode:
+                    return VisitVarArrayDeclaration(varArrayDeclarationNode);
+                
+                case ConstArrayDefinitionNode constArrayDefinitionNode:
+                    return VisitConstArrayDefinition(constArrayDefinitionNode);
+                
+                case ParameterArrayDeclarationNode parameterArrayDeclarationNode:
+                    return VisitParameterArrayDeclaration(parameterArrayDeclarationNode);
+                
+            }
+
+            return DefaultResult;
+        }
+
+        public virtual T Visit(ASTNode node)
         {
             switch (node)
             {

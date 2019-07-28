@@ -111,24 +111,24 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         
     }
-
+    
 
     public abstract class ASTNode
     {
         public NodeLocation Location;
 
-        public List<NodeAnnotation> Errors; //warnings & errors
+        public List<NodeAnnotation> Annotations; //warnings & errors
         public ASTNode Parent { get; set; }
 
         protected ASTNode(NodeLocation location)
         {
-            Errors = new List<NodeAnnotation>();
+            Annotations = new List<NodeAnnotation>();
             Location = location;
         }
 
-        public bool HasErrors()
+        public bool HasAnnotations()
         {
-            return Errors.Count > 0;
+            return Annotations.Count > 0;
         }
     }
     
@@ -165,21 +165,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public interface IArrayDeclarationNode
     {
         ExpressionNode ArraySizeNode { get; set; }
+        NodeValue ArraySizeValue { get; set; }
     }
-    
-    /*
-    public abstract class ArrayDeclarationNode : DeclarationNode, IArrayDeclarationNode
-    {
-        public ExpressionNode ArraySizeNode { get; set; }
 
-        protected ArrayDeclarationNode(NodeLocation location, string type, NameNode nameNode,
-            ExpressionNode arraySizeNode) : base(location, type, nameNode)
-        {
-            ArraySizeNode = arraySizeNode;
-        }
-    }
-    */
-    
     public abstract class ValueNode : ExpressionNode
     {
         protected ValueNode(NodeLocation location) : base(location)
@@ -367,10 +355,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             BodyNodes = bodyNodes;
         }
     }
-
+    
     public class ConstDefinitionNode : VarDeclarationNode
     {
         public ExpressionNode RightSideNode;
+        public NodeValue RightSideValue;
 
         public ConstDefinitionNode(NodeLocation location, string type, NameNode nameNode,
             ExpressionNode rightSideNode) : base(location, type, nameNode)
@@ -388,7 +377,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class ConstArrayDefinitionNode : ConstDefinitionNode, IArrayDeclarationNode
     {
         public readonly List<ExpressionNode> ElementNodes;
+        public readonly List<NodeValue> ElementValues;
         public ExpressionNode ArraySizeNode { get; set; }
+        public NodeValue ArraySizeValue { get; set; }
         
         public ConstArrayDefinitionNode(NodeLocation location, string type, NameNode nameNode,
             ExpressionNode arraySizeNode, List<ExpressionNode> elementNodes) : base(location, type, nameNode)
@@ -415,6 +406,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class VarArrayDeclarationNode : VarDeclarationNode, IArrayDeclarationNode
     {
         public ExpressionNode ArraySizeNode { get; set; }
+        public NodeValue ArraySizeValue { get; set; }
         
         public VarArrayDeclarationNode(NodeLocation location, string type, NameNode nameNode,
             ExpressionNode arraySizeNode) : base(location, type, nameNode)
@@ -436,7 +428,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class ParameterArrayDeclarationNode : ParameterDeclarationNode, IArrayDeclarationNode
     {
         public ExpressionNode ArraySizeNode { get; set; }
-        
+        public NodeValue ArraySizeValue { get; set; }
         public ParameterArrayDeclarationNode(NodeLocation location, string type, NameNode nameNode,
             ExpressionNode arraySizeNode) : base(location, type, nameNode)
         {
@@ -568,6 +560,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public string Name;
         public ExpressionNode ArrayIndexNode; // optional
+        public NodeValue ArrayIndexValue; //optional
         public ReferenceNode AttributeNode; // optional
 
         public string FullName;    //filled in ConstEvalutationVisitor
