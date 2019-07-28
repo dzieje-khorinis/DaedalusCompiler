@@ -9,18 +9,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class ConstEvaluationVisitor : AbstractSyntaxTreeBaseGenericVisitor<NodeValue>
     {
         private readonly Dictionary <string, SymbolContext> _symbolTable;
-        private readonly Dictionary<ASTNode, NodeValue> _visitedNodesValuesCache;
+        public readonly Dictionary<ASTNode, NodeValue> VisitedNodesValuesCache;
 
 
-        private ReferenceNode referenceChainHead;
-        private HashSet<ReferenceNode> referenceChain;
-        
-        
-        
         public ConstEvaluationVisitor(Dictionary <string, SymbolContext> symbolTable)
         {
             _symbolTable = symbolTable;
-            _visitedNodesValuesCache = new Dictionary<ASTNode, NodeValue>();
+            VisitedNodesValuesCache = new Dictionary<ASTNode, NodeValue>();
         }
 
 
@@ -55,37 +50,28 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         protected override NodeValue Visit(ASTNode node)
         {
-            if (_visitedNodesValuesCache.ContainsKey(node))
+            if (VisitedNodesValuesCache.ContainsKey(node))
             {
                 PrintVisit(node, true);
-                if (_visitedNodesValuesCache[node] == null)
+                if (VisitedNodesValuesCache[node] is UninitializedValue)
                 {
+                    VisitedNodesValuesCache[node] = new InfiniteReferenceLoopErrorValue();
                     if (node is ReferenceNode referenceNode)
                     {
-                        Console.WriteLine($"Add cycle annotation to referenceNode {referenceNode.Name}");
+                        Console.WriteLine($"Add InfiniteReferenceLoopErrorValue to referenceNode {referenceNode.Name}");
                     }
                     else
                     {
-                        Console.WriteLine($"Add cycle annotation to {node.GetType().ToString().Split(".").Last()}");
+                        Console.WriteLine($"Add InfiniteReferenceLoopErrorValue to {node.GetType().ToString().Split(".").Last()}");
                     }
-                    
-                    node.Annotations.Add(new CycleAnnotation());
                 }
-                return _visitedNodesValuesCache[node];
+                return VisitedNodesValuesCache[node];
             }
             
             PrintVisit(node, false);
-            _visitedNodesValuesCache[node] = null;
-            _visitedNodesValuesCache[node] = base.Visit(node);
-            
-            /*
-            if (_visitedNodesValuesCache[node] == null && node is ReferenceNode)
-            {
-                node.Annotations.Add(new CycleAnnotation());
-            }
-            */
-            
-            return _visitedNodesValuesCache[node];
+            VisitedNodesValuesCache[node] = new UninitializedValue();
+            VisitedNodesValuesCache[node] = base.Visit(node);
+            return VisitedNodesValuesCache[node];
         }
         
         
@@ -101,8 +87,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
             if (!_symbolTable.ContainsKey(nodeName))
             {
-                referenceNode.Annotations.Add(new UndeclaredIdentifierAnnotation());
-                return new UndeclaredIdentifierValue();
+                referenceNode.Errors.Add(new UndeclaredIdentifierAnnotation());
+                return new UndeclaredIdentifierErrorValue();
             }
             
             SymbolContext symbolContext = _symbolTable[nodeName];
@@ -115,7 +101,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
 
 
-            return null;
+            return new UninitializedValue();
         }
         
         
@@ -124,9 +110,30 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             NodeValue leftNodeValue = Visit(node.LeftSideNode); 
             NodeValue rightNodeValue = Visit(node.RightSideNode);
+            if (leftNodeValue is ErrorValue || rightNodeValue is ErrorValue)
+            {
+                return new UndefinedErrorValue();
+            }
             
             NodeValue result = EvaluationHelper.EvaluateBinaryOperation(node.Operator, leftNodeValue,rightNodeValue);
             return result;
         }
+        
+        
+        protected override NodeValue VisitFloatLiteral(FloatLiteralNode node)
+        {
+            return new FloatValue(node.Value);
+        }
+
+        protected override NodeValue VisitIntegerLiteral(IntegerLiteralNode node)
+        {
+            return new IntValue(node.Value);
+        }
+
+        protected override NodeValue VisitStringLiteral(StringLiteralNode node)
+        {
+            return new StringValue(node.Value);
+        }
+
     }
 }

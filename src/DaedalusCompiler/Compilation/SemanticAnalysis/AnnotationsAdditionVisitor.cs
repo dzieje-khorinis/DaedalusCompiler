@@ -1,10 +1,72 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
     public class AnnotationsAdditionVisitor : AbstractSyntaxTreeBaseVisitor
     {
+        private readonly Dictionary<ASTNode, NodeValue> _visitedNodesValuesCache;
+
+        public AnnotationsAdditionVisitor(Dictionary<ASTNode, NodeValue> visitedNodesValuesCache)
+        {
+            _visitedNodesValuesCache = visitedNodesValuesCache;
+        }
+
+        protected override void Visit(ASTNode node)
+        {
+            if (_visitedNodesValuesCache.ContainsKey(node))
+            {
+                NodeValue nodeValue = _visitedNodesValuesCache[node];
+                if (nodeValue is ErrorValue)
+                {
+                    string errorValueType = nodeValue.GetType().ToString().Split(".").Last();
+                    
+                    string message = node.GetType().ToString().Split(".").Last();
+                    switch (node)
+                    {
+                        case ConstDefinitionNode constDefinitionNode:
+                            message = $"{message} {constDefinitionNode.NameNode.Value}";
+                            break;
+                        case ReferenceNode referenceNode:
+                            message = $"{message} {referenceNode.Name}";
+                            break;
+                    }
+                    Console.WriteLine($"{message}: {errorValueType}");
+                }
+            }
+            
+            /*
+            if (node.Annotations.Count > 0)
+            {
+                string message = node.GetType().ToString().Split(".").Last();
+                switch (node)
+                {
+                    case ConstDefinitionNode constDefinitionNode:
+                        message = $"{message} {constDefinitionNode.NameNode.Value}";
+                        break;
+                    case ReferenceNode referenceNode:
+                        message = $"{message} {referenceNode.Name}";
+                        break;
+                }
+
+                Console.WriteLine($"{message}");
+                foreach (var annotation in node.Annotations)
+                {
+                    Console.WriteLine(annotation.GetType());
+                }
+            }
+            */
+           
+            
+            base.Visit(node);
+            
+
+        }
+        
+        
+        /*
         protected override void VisitConstDefinition(ConstDefinitionNode node)
         {
             Console.WriteLine($"VisitConstDefinition {node.NameNode.Value}");
@@ -26,7 +88,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             
             base.VisitReference(referenceNode);
         }
-
+*/
+        
+        
+        
+        
+        
         /*
         protected override void VisitBinaryExpression(BinaryExpressionNode binaryExpressionNode)
         {

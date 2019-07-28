@@ -1,19 +1,22 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
     public class UnableToEvaluateException : Exception
     {
-        
     }
     
     public abstract class NodeValue
     {
-        
     }
 
+    public class UninitializedValue : NodeValue
+    {
+    }
+    
     public class IntValue : NodeValue
     {
         public int Value;
@@ -48,42 +51,47 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Value = value;
         }
     }
-
+    
+    
     public abstract class ErrorValue : NodeValue
     {
-        
+    }
+    
+    public class UndefinedErrorValue : ErrorValue
+    {
+    }
+    
+    public class UndeclaredIdentifierErrorValue : ErrorValue
+    {
+    }
+    
+    public class RedefinedIdentifierErrorValue : ErrorValue
+    {
+    }
+    
+    public class InfiniteReferenceLoopErrorValue : ErrorValue
+    {
     }
 
-    public class UndeclaredIdentifierValue : ErrorValue
+    public class InvalidBinaryOperationErrorValue : ErrorValue
     {
-        
     }
     
-    public class UndefinedValue : ErrorValue
-    {
-        
-    }
+    
 
-    public class InfiniteReferenceLoopValue : ErrorValue
-    {
-        
-    }
     
     
-    public class UnableToEvaluateValue : ErrorValue
-    {
-        
-    }
+    
     
     
     public class EvaluationHelper
     {
         public static NodeValue EvaluateUnaryOperation(UnaryOperator oper, NodeValue value)
         {
-            Console.WriteLine("UnaryOperator oper, ConstValue value");
-            if (value is UndefinedValue || value is StringValue)
+            Console.WriteLine("UnaryOperator oper, NodeValue value");
+            if (value is ErrorValue || value is StringValue)
             {
-                return new UndefinedValue();
+                return new UndefinedErrorValue();
             }
 
             switch (value)
@@ -135,83 +143,111 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         public static NodeValue EvaluateBinaryOperation(BinaryOperator oper, NodeValue left, NodeValue right)
         {
-            Console.WriteLine("BinaryOperator oper, ConstValue leftValue, ConstValue rightValue");
+            Console.WriteLine("BinaryOperator oper, NodeValue leftValue, NodeValue rightValue");
 
-            if (left is UndefinedValue || right is UndefinedValue)
+            /*
+            if (left is ErrorValue errorValue && errorValue.w)
+            
+            if (left is UnhandledValue || right is UnhandledValue)
             {
-                return new UndefinedValue();
+                return new HandledErrorValue();
+            }
+            */
+
+            NodeValue resultValue;
+ 
+            switch (left)
+            {
+                case IntValue leftIntValue:
+
+                    switch (right)
+                    {
+                        case IntValue rightIntValue:
+                            resultValue = EvaluateBinaryOperation(oper, leftIntValue, rightIntValue);
+                            break;
+                        case FloatValue rightFloatValue:
+                            resultValue = EvaluateBinaryOperation(oper, leftIntValue, rightFloatValue);
+                            break;
+                        case StringValue rightStringValue:
+                            resultValue = EvaluateBinaryOperation(oper, leftIntValue, rightStringValue);
+                            break;
+                        default:
+                            throw new Exception();
+                    }
+
+                    break;
+
+
+                case FloatValue leftFloatValue:
+
+                    switch (right)
+                    {
+                        case IntValue rightIntValue:
+                            resultValue = EvaluateBinaryOperation(oper, leftFloatValue, rightIntValue);
+                            break;
+                        case FloatValue rightFloatValue:
+                            resultValue = EvaluateBinaryOperation(oper, leftFloatValue, rightFloatValue);
+                            break;
+                        case StringValue rightStringValue:
+                            resultValue = EvaluateBinaryOperation(oper, leftFloatValue, rightStringValue);
+                            break;
+                        default:
+                            throw new Exception();
+                    }
+
+                    break;
+
+
+                case StringValue leftStringValue:
+
+                    switch (right)
+                    {
+                        case IntValue rightIntValue:
+                            resultValue = EvaluateBinaryOperation(oper, leftStringValue, rightIntValue);
+                            break;
+                        case FloatValue rightFloatValue:
+                            resultValue = EvaluateBinaryOperation(oper, leftStringValue, rightFloatValue);
+                            break;
+                        case StringValue rightStringValue:
+                            resultValue = EvaluateBinaryOperation(oper, leftStringValue, rightStringValue);
+                            break;
+                        default:
+                            throw new Exception();
+                    }
+
+                    break;
+                    
+                default:
+                    throw new Exception();
             }
 
-            try
-            {
-                switch (left)
-                {
-                    case IntValue leftIntValue:
 
-                        switch (right)
-                        {
-                            case IntValue rightIntValue:
-                                return EvaluateBinaryOperation(oper, leftIntValue, rightIntValue);
-                            case FloatValue rightFloatValue:
-                                return EvaluateBinaryOperation(oper, leftIntValue, rightFloatValue);
-                            case StringValue rightStringValue:
-                                return EvaluateBinaryOperation(oper, leftIntValue, rightStringValue);
-                        }
-
-                        break;
-
-                    case FloatValue leftFloatValue:
-
-                        switch (right)
-                        {
-                            case IntValue rightIntValue:
-                                return EvaluateBinaryOperation(oper, leftFloatValue, rightIntValue);
-                            case FloatValue rightFloatValue:
-                                return EvaluateBinaryOperation(oper, leftFloatValue, rightFloatValue);
-                            case StringValue rightStringValue:
-                                return EvaluateBinaryOperation(oper, leftFloatValue, rightStringValue);
-                        }
-
-                        break;
-
-                    case StringValue leftStringValue:
-
-                        switch (right)
-                        {
-                            case IntValue rightIntValue:
-                                return EvaluateBinaryOperation(oper, leftStringValue, rightIntValue);
-                            case FloatValue rightFloatValue:
-                                return EvaluateBinaryOperation(oper, leftStringValue, rightFloatValue);
-                            case StringValue rightStringValue:
-                                return EvaluateBinaryOperation(oper, leftStringValue, rightStringValue);
-                        }
-
-                        break;
-                }
-            }
-            catch (UnableToEvaluateException)
-            {
-                
-            }
-
-            return new UndefinedValue();
+            
+            return resultValue;
         }
-        
-        public static StringValue EvaluateBinaryOperation(BinaryOperator oper, StringValue left, IntValue right)
+
+        private static NodeValue EvaluateBinaryOperation(BinaryOperator oper, StringValue left, IntValue right)
         {
             Console.WriteLine("BinaryOperator oper, StringValue left, IntValue right");
-            return EvaluateBinaryOperation(oper, right, left);
+            switch (oper)
+            {
+                case BinaryOperator.Mult:
+                    return new StringValue(string.Concat(Enumerable.Repeat(left.Value, right.Value)));
+                default:
+                    return new InvalidBinaryOperationErrorValue();
+            }
         }
-        
-        public static StringValue EvaluateBinaryOperation(BinaryOperator oper, IntValue left, StringValue right)
+
+        private static NodeValue EvaluateBinaryOperation(BinaryOperator oper, IntValue left, StringValue right)
         {
             Console.WriteLine("BinaryOperator oper, IntValue left, StringValue right");
             switch (oper)
             {
                 case BinaryOperator.Mult:
-                    return new StringValue(string.Concat(Enumerable.Repeat(right.Value, left.Value)));string.Concat(Enumerable.Repeat(right.Value, left.Value));
+                    return new StringValue(string.Concat(Enumerable.Repeat(right.Value, left.Value)));
+                default:
+                    return new InvalidBinaryOperationErrorValue();
             }
-            throw new UnableToEvaluateException();
         }
         
 

@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -13,14 +13,14 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
          
          // evaluate array sizes and constants
          
-         */
+         #1#
         //private const int A = B;
         //private const int B = Z + A + X;
         //private const int C = B + 2;
         
         //private const int A = B;
         //private const int B = C;
-        //private const int C = A;
+        //private const int C = B;
 
         /*
          *
@@ -73,7 +73,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
          
          2)
          const int a = a;
-         */
+         #1#
         private readonly Dictionary <string, SymbolContext> _symbolTable;
         
         private HashSet<ASTNode> _visitedNodes;
@@ -102,7 +102,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             if (!_symbolTable.ContainsKey(nodeName))
             {
                 referenceNode.Annotations.Add(new TextAnnotation($"Cannot resolve symbol {nodeName}"));
-                _nodesValues[referenceNode] = new UndefinedValue();
+                _nodesValues[referenceNode] = new HandledValue();
                 //referenceNode.Symbol = UndefinedSymbol
                 return;
             }
@@ -114,7 +114,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 /*
                 case ConstArrayDefinitionNode constArrayDefinitionNode:
                     throw new UnableToEvaluateException();
-                */
+                #1#
                 
                 case ConstDefinitionNode constDefinitionNode:
                     NodeValue nodeValue = GetConstDefinitionValue(constDefinitionNode);
@@ -152,7 +152,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 }
 
             }
-            */
+            #1#
         }
 
         
@@ -163,7 +163,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             //GetV
         }
-        */
+        #1#
 
         protected override void VisitBinaryExpression(BinaryExpressionNode node)
         {
@@ -220,7 +220,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     return _nodesValues[node];
                 }
 
-                return new InfiniteReferenceLoopValue();
+                return new InfiniteReferenceLoopValue(true);
             }
 
             _visitedNodes.Add(node);
@@ -245,7 +245,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             return GetNodeValue(arrayDeclarationNode.ArraySizeNode);
         }
-        */
+        #1#
 
         private NodeValue GetConstDefinitionValue(ConstDefinitionNode constDefinitionNode)
         {
@@ -263,7 +263,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
             return GetNodeValue(constArrayDefinitionNode.ElementNodes[index]);
         }
-        */
+        #1#
         
         
         protected override void VisitFloatLiteral(FloatLiteralNode node)
@@ -282,4 +282,4 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
         
     }
-}
+}*/

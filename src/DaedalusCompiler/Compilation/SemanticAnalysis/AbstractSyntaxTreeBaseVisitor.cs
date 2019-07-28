@@ -137,8 +137,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected virtual void VisitReference(ReferenceNode referenceNode)
         {
-            Visit(referenceNode.ArrayIndexNode);
-            Visit(referenceNode.AttributeNode);
+            if (referenceNode.ArrayIndexNode != null)
+            {
+                Visit(referenceNode.ArrayIndexNode);
+            }
+
+            if (referenceNode.AttributeNode != null)
+            {
+                Visit(referenceNode.AttributeNode);
+            }
         }
         protected virtual void VisitName(NameNode node) {}
         
@@ -183,7 +190,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
         }
 
-        protected void Visit(ASTNode node)
+        protected virtual void Visit(ASTNode node)
         {
             switch (node)
             {

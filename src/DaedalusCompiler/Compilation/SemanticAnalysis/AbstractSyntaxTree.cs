@@ -117,13 +117,18 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public NodeLocation Location;
 
-        public List<NodeAnnotation> Annotations;
+        public List<NodeAnnotation> Errors; //warnings & errors
         public ASTNode Parent { get; set; }
 
         protected ASTNode(NodeLocation location)
         {
-            Annotations = new List<NodeAnnotation>();
+            Errors = new List<NodeAnnotation>();
             Location = location;
+        }
+
+        public bool HasErrors()
+        {
+            return Errors.Count > 0;
         }
     }
     

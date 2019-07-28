@@ -218,120 +218,91 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             switch (node)
             {
                 case FileNode fileNode:
-                    VisitFile(fileNode);
-                    break;
+                    return VisitFile(fileNode);
 
                 case FunctionDefinitionNode functionDefinitionNode:
-                    VisitFunctionDefinition(functionDefinitionNode);
-                    break;
-                
+                    return VisitFunctionDefinition(functionDefinitionNode);
+
                 case AssignmentNode assignmentNode:
-                    VisitAssignment(assignmentNode);
-                    break;
-                
+                    return VisitAssignment(assignmentNode);
+
                 case CompoundAssignmentNode compoundAssignmentNode:
-                    VisitCompoundAssignment(compoundAssignmentNode);
-                    break;
-                
+                    return VisitCompoundAssignment(compoundAssignmentNode);
+
                 case UnaryExpressionNode unaryExpressionNode:
-                    VisitUnaryExpression(unaryExpressionNode);
-                    break;
-                
+                    return VisitUnaryExpression(unaryExpressionNode);
+
                 case BinaryExpressionNode binaryExpressionNode:
-                    VisitBinaryExpression(binaryExpressionNode);
-                    break;
-                
+                    return VisitBinaryExpression(binaryExpressionNode);
+
                 case ClassDefinitionNode classDefinitionNode:
-                    VisitClassDefinition(classDefinitionNode);
-                    break;
-                
+                    return VisitClassDefinition(classDefinitionNode);
+                                    
                 case PrototypeDefinitionNode prototypeDefinitionNode:
-                    VisitPrototypeDefinition(prototypeDefinitionNode);
-                    break;
-                
+                    return VisitPrototypeDefinition(prototypeDefinitionNode);
+                                    
                 case InstanceDefinitionNode instanceDefinitionNode:
-                    VisitInstanceDefinition(instanceDefinitionNode);
-                    break;
-                
+                    return VisitInstanceDefinition(instanceDefinitionNode);
+                                    
                 case ConstArrayDefinitionNode constArrayDefinitionNode:
-                    VisitConstArrayDefinition(constArrayDefinitionNode);
-                    break;
-                
+                    return VisitConstArrayDefinition(constArrayDefinitionNode);
+                                    
                 case ConstDefinitionNode constDefinitionNode:
-                    VisitConstDefinition(constDefinitionNode);
-                    break;
-
+                    return VisitConstDefinition(constDefinitionNode);
+                    
                 case ParameterArrayDeclarationNode parameterArrayDeclarationNode:
-                    VisitParameterArrayDeclaration(parameterArrayDeclarationNode);
-                    break;
-                
+                    return VisitParameterArrayDeclaration(parameterArrayDeclarationNode);
+                                    
                 case ParameterDeclarationNode parameterDeclarationNode:
-                    VisitParameterDeclaration(parameterDeclarationNode);
-                    break;
-                
+                    return VisitParameterDeclaration(parameterDeclarationNode);
+                                    
                 case VarArrayDeclarationNode varArrayDeclarationNode:
-                    VisitVarArrayDeclaration(varArrayDeclarationNode);
-                    break;
-                
+                    return VisitVarArrayDeclaration(varArrayDeclarationNode);
+                                    
                 case VarDeclarationNode varDeclarationNode:
-                    VisitVarDeclaration(varDeclarationNode);
-                    break;
-
+                    return VisitVarDeclaration(varDeclarationNode);
+                    
                 case ReturnStatementNode returnStatementNode:
-                    VisitReturnStatement(returnStatementNode);
-                    break;
-                
+                    return VisitReturnStatement(returnStatementNode);
+                                    
                 case BreakStatementNode breakStatementNode:
-                    VisitBreakStatement(breakStatementNode);
-                    break;
-                
+                    return VisitBreakStatement(breakStatementNode);
+                                    
                 case ContinueStatementNode continueStatementNode:
-                    VisitContinueStatement(continueStatementNode);
-                    break;
-                
+                    return VisitContinueStatement(continueStatementNode);
+                                    
                 case FunctionCallNode functionCallNode:
-                    VisitFunctionCall(functionCallNode);
-                    break;
-                
+                    return VisitFunctionCall(functionCallNode);
+                                    
                 case IfStatementNode ifStatementNode:
-                    VisitIfStatement(ifStatementNode);
-                    break;
-                
+                    return VisitIfStatement(ifStatementNode);
+                                    
                 case WhileStatementNode whileStatementNode:
-                    VisitWhileStatement(whileStatementNode);
-                    break;
-                
+                    return VisitWhileStatement(whileStatementNode);
+                                    
                 case IntegerLiteralNode integerLiteralNode:
-                    VisitIntegerLiteral(integerLiteralNode);
-                    break;
-                
+                    return VisitIntegerLiteral(integerLiteralNode);
+                                    
                 case FloatLiteralNode floatLiteralNode:
-                    VisitFloatLiteral(floatLiteralNode);
-                    break;
-                
+                    return VisitFloatLiteral(floatLiteralNode);
+                                    
                 case StringLiteralNode stringLiteralNode:
-                    VisitStringLiteral(stringLiteralNode);
-                    break;
-                
+                    return VisitStringLiteral(stringLiteralNode);
+                                    
                 case NoFuncNode noFuncNode:
-                    VisitNoFunc(noFuncNode);
-                    break;
-                
+                    return VisitNoFunc(noFuncNode);
+                                    
                 case NullNode nullNode:
-                    VisitNull(nullNode);
-                    break;
-                
+                    return VisitNull(nullNode);
+                                    
                 case ReferenceNode referenceNode:
-                    VisitReference(referenceNode);
-                    break;
-                
+                    return VisitReference(referenceNode);
+                                    
                 case NameNode nameNode:
-                    VisitName(nameNode);
-                    break;
-                
+                    return VisitName(nameNode);
+                                    
                 case ConditionalNode conditionalNode:
-                    VisitConditional(conditionalNode);
-                    break;
+                    return VisitConditional(conditionalNode);
             }
             return DefaultResult;
         }

@@ -47,7 +47,7 @@ namespace DaedalusCompiler.Compilation
             ConstEvaluationVisitor constEvaluationVisitor = new ConstEvaluationVisitor(_symbolTable);   
             constEvaluationVisitor.VisitTree(_abstractSyntaxTree);
             Console.WriteLine("---------");
-            AnnotationsAdditionVisitor annotationsAdditionVisitor = new AnnotationsAdditionVisitor();
+            AnnotationsAdditionVisitor annotationsAdditionVisitor = new AnnotationsAdditionVisitor(constEvaluationVisitor.VisitedNodesValuesCache);
             annotationsAdditionVisitor.VisitTree(_abstractSyntaxTree);
             
             
