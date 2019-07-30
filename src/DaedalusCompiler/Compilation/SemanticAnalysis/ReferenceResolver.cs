@@ -12,11 +12,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         private HashSet<InheritanceReferenceNode> _nodesVisitedThisIteration;
         private readonly HashSet<InheritanceReferenceNode> _nodesInCycle;
+        private readonly Dictionary<ASTNode, ClassDefinitionNode> _node2ParentClassNode;
         
         public ReferenceResolver(Dictionary<string, SymbolContext> symbolTable)
         {
             _symbolTable = symbolTable;
             _nodesInCycle = new HashSet<InheritanceReferenceNode>();
+            _node2ParentClassNode = new Dictionary<ASTNode, ClassDefinitionNode>();
         }
         
         public void Resolve(List<InheritanceReferenceNode> parentReferenceNodes)
@@ -57,14 +59,18 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 return;
             }
 
-            ASTNode node = _symbolTable[path].Node;
-            switch (node)
+            DeclarationNode definitionNode = (DeclarationNode) _symbolTable[path].Node;
+            switch (definitionNode)
             {
                 case PrototypeDefinitionNode prototypeDefinitionNode:
                     //inheritanceReferenceNode.DefinitionNode = prototypeDefinitionNode;
                     Resolve(prototypeDefinitionNode.InheritanceReferenceNode);
                     break;
                 case ClassDefinitionNode classDefinitionNode:
+                    foreach (var node in _nodesVisitedThisIteration)
+                    {
+                        _node2ParentClassNode[node] = classDefinitionNode;
+                    }
                     //inheritanceReferenceNode.DefinitionNode = classDefinitionNode;
                     break;
                 default:
@@ -100,142 +106,88 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public void Resolve(ReferenceNode referenceNode)
         {
             ASTNode ancestor = GetFirstSignificantAncestor(referenceNode);
-            string path;
-            DatSymbol symbol;
+            DatSymbol symbol = null;
+            ClassDefinitionNode classDefinitionNode;
             
             switch (ancestor)
             {
                 case PrototypeDefinitionNode prototypeDefinitionNode:
+                    //look for local variable
                     symbol = GetLocalSymbol(prototypeDefinitionNode.NameNode.Value, referenceNode.Name);
                     if (symbol != null)
                     {
-                        return;
+                        break;
                     }
 
-                    ClassDefinitionNode classDefinitionNode = GetClassDefinitionNode(prototypeDefinitionNode.InheritanceReferenceNode.Name);
+                    // look for class variable
+                    classDefinitionNode = GetClassDefinitionNode(prototypeDefinitionNode);
                     if (classDefinitionNode == null)
                     {
                         // TODO think about adding UndeclatedIdentifierAnnotation
                         return;
                     }
-
                     symbol = GetLocalSymbol(classDefinitionNode.NameNode.Value, referenceNode.Name);
+                    break;
+
+                    
+                case InstanceDefinitionNode instanceDefinitionNode:
+                    //look for local variable
+                    symbol = GetLocalSymbol(instanceDefinitionNode.NameNode.Value, referenceNode.Name);
                     if (symbol != null)
                     {
                         return;
                     }
 
-                    
-                    
-                    /*
-                    path = $"{prototypeDefinitionNode.NameNode.Value.ToUpper()}.{referenceNode.Name}";
-                    if (_symbolTable.ContainsKey(path))
+                    // look for class variable
+                    classDefinitionNode = GetClassDefinitionNode(instanceDefinitionNode);
+                    if (classDefinitionNode == null)
                     {
-                        referenceNode.Path = path;
-                        referenceNode.Symbol = _symbolTable[referenceNode.Path].Symbol;
+                        // TODO think about adding UndeclatedIdentifierAnnotation
                         return;
                     }
-                    */
-                    
-                    //check classvar
-                    
-                    //check global
-                    
+                    symbol = GetLocalSymbol(classDefinitionNode.NameNode.Value, referenceNode.Name);
                     break;
-                case InstanceDefinitionNode instanceDefinitionNode:
-                    //check local
-                    path = $"{instanceDefinitionNode.NameNode.Value.ToUpper()}.{referenceNode.Name}";
-                    if (_symbolTable.ContainsKey(path))
-                    {
-                        referenceNode.Path = path;
-                        referenceNode.Symbol = _symbolTable[referenceNode.Path].Symbol;
-                        return;
-                    }
-                    
-                    //check classvar
-                    
-                    //check global
-                    break;
+                
                 case FunctionDefinitionNode functionDefinitionNode:
                     // check local
-                    path = $"{functionDefinitionNode.NameNode.Value.ToUpper()}.{referenceNode.Name}";
-                    if (_symbolTable.ContainsKey(path))
-                    {
-                        referenceNode.Path = path;
-                        referenceNode.Symbol = _symbolTable[referenceNode.Path].Symbol;
-                        return;
-                    }
-                    
-                    // check global
-                    path = referenceNode.Name.ToUpper();
-                    
-                    
+                    symbol = GetLocalSymbol(functionDefinitionNode.NameNode.Value, referenceNode.Name);
                     break;
                 case FileNode _:
-                    // check global
-                    path = referenceNode.Name.ToUpper();
-                    if (!_symbolTable.ContainsKey(path))
-                    {
-                        referenceNode.Annotations.Add(new UndeclaredIdentifierAnnotation());
-                    }
-                    else
-                    {
-                        referenceNode.Symbol = _symbolTable[path].Symbol;
-                        referenceNode.Path = path;
-                    }
                     break;
+                
+                default:
+                    throw new Exception();
             }
-            
-            /*
-if (referenceNode.ArrayIndexNode != null)
-{
-    if (referenceNode.AttributeNode != null)
-    {
-        referenceNode.AttributeNode.Annotations.Add(new AccessToAttributeOfArrayElementNotSupportedAnnotation());
-        //AccessToAttributeOfArrayElementNotSupported
-        return;
-    }
-}
-*/
-            
-            /*
-             *
-             jeżeli jest arrayIndex to nie może już być atrybutu
-             
-             
-             
-             */
-            // maybe first resolve instance and prototype's parent class reference?
-            
-            // reference . attribute TODO
-            // TODO take attribute into account
-            
+
+            if (symbol == null)
+            {
+                string nameUpper = referenceNode.Name.ToUpper();
+                if (!_symbolTable.ContainsKey(nameUpper))
+                {
+                    referenceNode.Annotations.Add(new UndeclaredIdentifierAnnotation());
+                    return;
+                }
+                else
+                {
+                    symbol = _symbolTable[nameUpper].Symbol;
+                }
+            }
+
+            // at this point symbols is defined
+            // find if it has any attributes or arraysize (checdk if array)
+            //referenceNode.Symbol = symbol;
         }
 
 
         
-        private ClassDefinitionNode GetClassDefinitionNode(string parentName)
+        private ClassDefinitionNode GetClassDefinitionNode(ASTNode node)
         {
-            while (true)
+            if (_node2ParentClassNode.ContainsKey(node))
             {
-                ASTNode node = _symbolTable[parentName].Node;
-
-                switch (node)
-                {
-                    case ClassDefinitionNode classDefinitionNode:
-                        return classDefinitionNode;
-                    case PrototypeDefinitionNode prototypeDefinitionNode:
-                        if (_nodesInCycle.Contains(prototypeDefinitionNode.InheritanceReferenceNode))
-                        {
-                            return null;
-                        }
-
-                        parentName = prototypeDefinitionNode.InheritanceReferenceNode.Name;
-                        break;
-                    default:
-                        return null;
-                }
+                return _node2ParentClassNode[node];
             }
+
+            return null;
         }
 
         private ASTNode GetFirstSignificantAncestor(ASTNode node)
