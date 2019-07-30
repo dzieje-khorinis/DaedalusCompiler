@@ -114,11 +114,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected override NodeValue VisitConstDefinition(ConstDefinitionNode node)
         {
+            node.RightSideValue = Visit(node.RightSideNode);
             if (node.RightSideValue is UndefinedValue)
             {
                 return new UndefinedValue();
             }
-            node.RightSideValue = Visit(node.RightSideNode);
 
             SymbolContext symbolContext = _symbolTable[node.NameNode.Value.ToUpper()];
             DatSymbol symbol = symbolContext.Symbol;
@@ -188,13 +188,16 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             return null; // TODO what to return here?
         }
         
+        
 
         protected override NodeValue VisitReference(ReferenceNode referenceNode)
         {
+            /*
             if (referenceNode.ArrayIndexNode != null)
             {
                 referenceNode.ArrayIndexValue = Visit(referenceNode.ArrayIndexNode);
             }
+            */
             
             string nodeName = referenceNode.Name.ToUpper();
             if (!_symbolTable.ContainsKey(nodeName))
@@ -207,6 +210,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
             switch (symbolContext.Node)
             {
+                /*
                 case ConstArrayDefinitionNode constArrayDefinitionNode:
                     if (referenceNode.ArrayIndexNode == null)
                     {
@@ -233,13 +237,16 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                                 return new UndefinedValue();
                         }
                     }
+                */
 
                 case ConstDefinitionNode constDefinitionNode:
+                    /*
                     if (referenceNode.ArrayIndexNode != null)
                     {
                         referenceNode.Annotations.Add(new SquareBracketsNotExpectedAnnotation());
                         return new UndefinedValue();
                     }
+                    */
                     return Visit(constDefinitionNode.RightSideNode);
                 
                 case FunctionDefinitionNode _:
@@ -252,6 +259,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
             
         }
+        
 
         protected override NodeValue VisitUnaryExpression(UnaryExpressionNode node)
         {

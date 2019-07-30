@@ -98,18 +98,18 @@ namespace DaedalusCompiler.Compilation
 		{
 			NameNode nameNode = new NameNode(GetLocation(prototypeDefContext.nameNode()), prototypeDefContext.nameNode().GetText());
 			DaedalusParser.ParentReferenceContext parentReferenceContext = prototypeDefContext.parentReference();
-			ParentReferenceNode parentReferenceNode = new ParentReferenceNode(GetLocation(parentReferenceContext), parentReferenceContext.GetText());
+			InheritanceReferenceNode inheritanceReferenceNode = new InheritanceReferenceNode(parentReferenceContext.GetText(), GetLocation(parentReferenceContext));
 			List<StatementNode> statementNodes = GetStatementNodes(prototypeDefContext.statementBlock());
-			return new PrototypeDefinitionNode(GetLocation(prototypeDefContext), nameNode, parentReferenceNode, statementNodes);
+			return new PrototypeDefinitionNode(GetLocation(prototypeDefContext), nameNode, inheritanceReferenceNode, statementNodes);
 		}
 
 		public override ASTNode VisitInstanceDef([NotNull] DaedalusParser.InstanceDefContext instanceDefContext)
 		{
 			NameNode nameNode = new NameNode(GetLocation(instanceDefContext.nameNode()), instanceDefContext.nameNode().GetText());
 			DaedalusParser.ParentReferenceContext parentReferenceContext = instanceDefContext.parentReference();
-			ParentReferenceNode parentReferenceNode = new ParentReferenceNode(GetLocation(parentReferenceContext), parentReferenceContext.GetText());
+			InheritanceReferenceNode inheritanceReferenceNode = new InheritanceReferenceNode(parentReferenceContext.GetText(), GetLocation(parentReferenceContext));
 			List<StatementNode> statementNodes = GetStatementNodes(instanceDefContext.statementBlock());
-			return new InstanceDefinitionNode(GetLocation(instanceDefContext), nameNode, parentReferenceNode, statementNodes);
+			return new InstanceDefinitionNode(GetLocation(instanceDefContext), nameNode, inheritanceReferenceNode, statementNodes);
 		}
 		
 		public override ASTNode VisitParameterDecl([NotNull] DaedalusParser.ParameterDeclContext context)
@@ -133,7 +133,7 @@ namespace DaedalusCompiler.Compilation
 		public override ASTNode VisitFunctionCall([NotNull] DaedalusParser.FunctionCallContext context)
 		{
 			DaedalusParser.NameNodeContext nameNodeContext = context.nameNode();
-			ReferenceNode referenceNode = new ReferenceNode(GetLocation(nameNodeContext), nameNodeContext.GetText());
+			ReferenceNode referenceNode = new ReferenceNode(nameNodeContext.GetText(), GetLocation(nameNodeContext));
 			List<ExpressionNode> expressionNodes = new List<ExpressionNode>();
 			foreach (DaedalusParser.ExpressionContext expressionContext in context.expression())
 			{
@@ -277,18 +277,26 @@ namespace DaedalusCompiler.Compilation
 
 		public override ASTNode VisitArrayIndex([NotNull] DaedalusParser.ArrayIndexContext context)
 		{
-			if (context.referenceAtom() != null)
+			ExpressionNode expressionNode;
+			
+			if (context.reference() != null)
 			{
-				return VisitReferenceAtom(context.referenceAtom());
+				expressionNode = (ExpressionNode) VisitReference(context.reference());
 			}
-			return new IntegerLiteralNode(GetLocation(context), long.Parse(context.GetText()));
+			else
+			{
+				expressionNode = new IntegerLiteralNode(GetLocation(context), long.Parse(context.GetText()));
+			}
+			
+			return new ArrayIndexNode(expressionNode, GetLocation(context));
+			
 		}
 
 		public override ASTNode VisitArraySize([NotNull] DaedalusParser.ArraySizeContext context)
 		{
-			if (context.referenceAtom() != null)
+			if (context.reference() != null)
 			{
-				return VisitReferenceAtom(context.referenceAtom());
+				return VisitReference(context.reference());
 			}
 			return new IntegerLiteralNode(GetLocation(context), long.Parse(context.GetText()));
 		}
@@ -328,61 +336,36 @@ namespace DaedalusCompiler.Compilation
 			return VisitReference(context.reference());
 		}
 
-		public override ASTNode VisitReferenceAtom([NotNull] DaedalusParser.ReferenceAtomContext context)
-		{
-			ExpressionNode arrayIndex = null;
-			if (context.arrayIndex() != null)
-			{
-				arrayIndex = (ExpressionNode) VisitArrayIndex(context.arrayIndex());
-			}
-			return new ReferenceNode(GetLocation(context), context.nameNode().GetText(), arrayIndex);
-		}
-
 		public override ASTNode VisitReference([NotNull] DaedalusParser.ReferenceContext context)
 		{
-			ReferenceNode firstReferenceNode = null;
-			ReferenceNode lastReferenceNode = null;
-			
+			List<ReferencePartNode> referencePartNodes = new List<ReferencePartNode>();
 			foreach (var referenceAtomContext in context.referenceAtom())
 			{
-				ReferenceNode referenceNode = (ReferenceNode) VisitReferenceAtom(referenceAtomContext);
-				if (firstReferenceNode == null)
-				{
-					firstReferenceNode = referenceNode;
-				}
-				
-				if (lastReferenceNode != null)
-				{
-					lastReferenceNode.AttributeNode = referenceNode;
-				}
+				referencePartNodes.Add(new AttributeNode(referenceAtomContext.nameNode().GetText(), GetLocation(referenceAtomContext)));
 
-				lastReferenceNode = referenceNode;
+				if (referenceAtomContext.arrayIndex() != null)
+				{
+					referencePartNodes.Add((ReferencePartNode) VisitArrayIndex(referenceAtomContext.arrayIndex()));
+				}
 			}
 
-			return firstReferenceNode;
+			string name = ((AttributeNode) referencePartNodes[0]).Name;
+			referencePartNodes.RemoveAt(0);
+			return new ReferenceNode(name, referencePartNodes, GetLocation(context));
 		}
 		
-		/*
-		public override ASTNode VisitDataType([NotNull] DaedalusParser.DataTypeContext context) { return VisitChildren(context); }
-		*/
-		
-		/*
-		public override ASTNode VisitNameNode([NotNull] DaedalusParser.NameNodeContext context) { return VisitChildren(context); }
-		*/
-
-
 		
 		private InstanceDeclarationsTemporaryNode GetInstanceDeclarationsTemporaryNode(DaedalusParser.InstanceDeclContext instanceDeclContext)
 		{
 			DaedalusParser.ParentReferenceContext parentReferenceContext = instanceDeclContext.parentReference();
-			ParentReferenceNode parentReferenceNode = new ParentReferenceNode(GetLocation(parentReferenceContext), parentReferenceContext.GetText());
+			InheritanceReferenceNode inheritanceReferenceNode = new InheritanceReferenceNode(parentReferenceContext.GetText(), GetLocation(parentReferenceContext));
 			
 			List<DeclarationNode> instanceDeclarationNodes = new List<DeclarationNode>();
 			
 			foreach (DaedalusParser.NameNodeContext nameNodeContext in instanceDeclContext.nameNode())
 			{
 				NameNode nameNode = new NameNode(GetLocation(nameNodeContext), nameNodeContext.GetText());
-				instanceDeclarationNodes.Add(new InstanceDefinitionNode(GetLocation(instanceDeclContext), nameNode, parentReferenceNode, new List<StatementNode>()));
+				instanceDeclarationNodes.Add(new InstanceDefinitionNode(GetLocation(instanceDeclContext), nameNode, inheritanceReferenceNode, new List<StatementNode>()));
 			}
 			
 			return new InstanceDeclarationsTemporaryNode(GetLocation(instanceDeclContext), instanceDeclarationNodes);

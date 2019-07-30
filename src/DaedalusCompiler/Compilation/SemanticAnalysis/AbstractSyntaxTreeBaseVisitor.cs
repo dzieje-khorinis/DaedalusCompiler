@@ -60,14 +60,14 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         protected virtual void VisitPrototypeDefinition(PrototypeDefinitionNode node)
         {
             Visit(node.NameNode);
-            Visit(node.ParentReferenceNode);
+            Visit(node.InheritanceReferenceNode);
             Visit(node.BodyNodes);
         }
 
         protected virtual void VisitInstanceDefinition(InstanceDefinitionNode node)
         {
             Visit(node.NameNode);
-            Visit(node.ParentReferenceNode);
+            Visit(node.InheritanceReferenceNode);
             Visit(node.BodyNodes);
         }
 
@@ -137,14 +137,14 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected virtual void VisitReference(ReferenceNode referenceNode)
         {
-            if (referenceNode.ArrayIndexNode != null)
+            foreach (var partNode in referenceNode.PartNodes)
             {
-                Visit(referenceNode.ArrayIndexNode);
-            }
-
-            if (referenceNode.AttributeNode != null)
-            {
-                Visit(referenceNode.AttributeNode);
+                switch (partNode)
+                {
+                    case ArrayIndexNode arrayIndexNode:
+                        Visit(arrayIndexNode.ExpressionNode);
+                        break;
+                }
             }
         }
         protected virtual void VisitName(NameNode node) {}

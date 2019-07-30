@@ -73,7 +73,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         protected virtual T VisitPrototypeDefinition(PrototypeDefinitionNode node)
         {
             Visit(node.NameNode);
-            Visit(node.ParentReferenceNode);
+            Visit(node.InheritanceReferenceNode);
             Visit(node.BodyNodes);
             return DefaultResult;
         }
@@ -81,7 +81,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         protected virtual T VisitInstanceDefinition(InstanceDefinitionNode node)
         {
             Visit(node.NameNode);
-            Visit(node.ParentReferenceNode);
+            Visit(node.InheritanceReferenceNode);
             Visit(node.BodyNodes);
             return DefaultResult;
         }
@@ -161,8 +161,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected virtual T VisitReference(ReferenceNode referenceNode)
         {
-            Visit(referenceNode.ArrayIndexNode);
-            Visit(referenceNode.AttributeNode);
+            foreach (var partNode in referenceNode.PartNodes)
+            {
+                switch (partNode)
+                {
+                    case ArrayIndexNode arrayIndexNode:
+                        Visit(arrayIndexNode.ExpressionNode);
+                        break;
+                }
+            }
             return DefaultResult;
         }
         protected virtual T VisitName(NameNode node) { return DefaultResult; }

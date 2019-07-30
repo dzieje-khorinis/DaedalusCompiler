@@ -2640,8 +2640,8 @@ public partial class DaedalusParser : Parser {
 
 	public partial class ArrayIndexContext : ParserRuleContext {
 		public ITerminalNode IntegerLiteral() { return GetToken(DaedalusParser.IntegerLiteral, 0); }
-		public ReferenceAtomContext referenceAtom() {
-			return GetRuleContext<ReferenceAtomContext>(0);
+		public ReferenceContext reference() {
+			return GetRuleContext<ReferenceContext>(0);
 		}
 		public ArrayIndexContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
@@ -2683,7 +2683,7 @@ public partial class DaedalusParser : Parser {
 			case Identifier:
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 392; referenceAtom();
+				State = 392; reference();
 				}
 				break;
 			default:
@@ -2703,8 +2703,8 @@ public partial class DaedalusParser : Parser {
 
 	public partial class ArraySizeContext : ParserRuleContext {
 		public ITerminalNode IntegerLiteral() { return GetToken(DaedalusParser.IntegerLiteral, 0); }
-		public ReferenceAtomContext referenceAtom() {
-			return GetRuleContext<ReferenceAtomContext>(0);
+		public ReferenceContext reference() {
+			return GetRuleContext<ReferenceContext>(0);
 		}
 		public ArraySizeContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
@@ -2746,7 +2746,7 @@ public partial class DaedalusParser : Parser {
 			case Identifier:
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 396; referenceAtom();
+				State = 396; reference();
 				}
 				break;
 			default:
@@ -4119,10 +4119,10 @@ public partial class DaedalusParser : Parser {
 		'\x3', '\x2', '\x2', '\x2', '\x186', '\x187', '\x3', '\x2', '\x2', '\x2', 
 		'\x187', '?', '\x3', '\x2', '\x2', '\x2', '\x188', '\x186', '\x3', '\x2', 
 		'\x2', '\x2', '\x189', '\x18C', '\a', '\x37', '\x2', '\x2', '\x18A', '\x18C', 
-		'\x5', '\x46', '$', '\x2', '\x18B', '\x189', '\x3', '\x2', '\x2', '\x2', 
+		'\x5', 'H', '%', '\x2', '\x18B', '\x189', '\x3', '\x2', '\x2', '\x2', 
 		'\x18B', '\x18A', '\x3', '\x2', '\x2', '\x2', '\x18C', '\x41', '\x3', 
 		'\x2', '\x2', '\x2', '\x18D', '\x190', '\a', '\x37', '\x2', '\x2', '\x18E', 
-		'\x190', '\x5', '\x46', '$', '\x2', '\x18F', '\x18D', '\x3', '\x2', '\x2', 
+		'\x190', '\x5', 'H', '%', '\x2', '\x18F', '\x18D', '\x3', '\x2', '\x2', 
 		'\x2', '\x18F', '\x18E', '\x3', '\x2', '\x2', '\x2', '\x190', '\x43', 
 		'\x3', '\x2', '\x2', '\x2', '\x191', '\x199', '\a', '\x37', '\x2', '\x2', 
 		'\x192', '\x199', '\a', '\x38', '\x2', '\x2', '\x193', '\x199', '\a', 

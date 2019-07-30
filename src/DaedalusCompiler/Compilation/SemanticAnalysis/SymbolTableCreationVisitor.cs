@@ -15,7 +15,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         public readonly List<ConstDefinitionNode> ConstDefinitionNodes;
         public readonly List<IArrayDeclarationNode> ArrayDeclarationNodes;
-        public readonly List<ParentReferenceNode> ParentReferenceNodes;
+        public readonly List<InheritanceReferenceNode> ParentReferenceNodes;
         public readonly List<ReferenceNode> ReferenceNodes;
         
 
@@ -28,7 +28,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
             ConstDefinitionNodes = new List<ConstDefinitionNode>();
             ArrayDeclarationNodes = new List<IArrayDeclarationNode>();
-            ParentReferenceNodes = new List<ParentReferenceNode>();
+            ParentReferenceNodes = new List<InheritanceReferenceNode>();
             ReferenceNodes = new List<ReferenceNode>();
         }
 
@@ -163,7 +163,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             
             DatSymbol constSymbol;
 
-            switch (constDefinitionNode.Parent)
+            switch (constDefinitionNode.ParentNode)
             {
                 case ClassDefinitionNode classDefinitionNode:
                     DatSymbol classSymbol = classDefinitionNode.Symbol;
@@ -186,7 +186,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             while (node != null)
             {
-                node = node.Parent;
+                node = node.ParentNode;
                 if (node is FunctionDefinitionNode functionDefinitionNode)
                 {
                     return functionDefinitionNode;
@@ -201,7 +201,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
             DatSymbol varSymbol;
 
-            switch (varDeclarationNode.Parent)
+            switch (varDeclarationNode.ParentNode)
             {
                 case ClassDefinitionNode classDefinitionNode:
                     DatSymbol classSymbol = classDefinitionNode.Symbol;
@@ -270,13 +270,18 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     ConstDefinitionNodes.Add(constDefinitionNode);
                     break;
                 
-                case ParentReferenceNode parentReferenceNode:
-                    ParentReferenceNodes.Add(parentReferenceNode);
-                    break;
-                
                 case ReferenceNode referenceNode:
                     ReferenceNodes.Add(referenceNode);
                     break;
+
+                case InstanceDefinitionNode instanceDefinitionNode:
+                    ParentReferenceNodes.Add(instanceDefinitionNode.InheritanceReferenceNode);
+                    break;
+                
+                case PrototypeDefinitionNode prototypeDefinitionNode:
+                    ParentReferenceNodes.Add(prototypeDefinitionNode.InheritanceReferenceNode);
+                    break;
+                
             }
 
             string nameUpper = symbol.Name.ToUpper();

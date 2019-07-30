@@ -60,18 +60,24 @@ namespace DaedalusCompiler.Compilation
             //_symbolTable = visitor.SymbolTable;
             
             
-            
-            // annotates: DuplicateReference, ArrayOfThatTypeNotSupported
+            // annotates:
+            // RedefinedIdentifierAnnotation
+            // UnsupportedArrayTypeAnnotation
             SymbolTableCreationVisitor symbolTableCreationVisitor = new SymbolTableCreationVisitor();
             symbolTableCreationVisitor.VisitTree(_abstractSyntaxTree);
             _symbolTable = symbolTableCreationVisitor.SymbolTable;
             
-            /*
-            // annotates UndeclaredIdentifier, AccessToAttributeOfArrayElementNotSupported
+            // annotates:
+            // InfiniteReferenceLoopAnnotation (Class/Prototype)
+            // NotClassOrPrototypeReferenceAnnotation
+            // UndeclaredIdentifierAnnotation
+            // AccessToAttributeOfArrayElementNotSupportedAnnotation
             ReferenceResolver referenceResolver = new ReferenceResolver(_symbolTable);
             referenceResolver.Resolve(symbolTableCreationVisitor.ParentReferenceNodes);
             referenceResolver.Resolve(symbolTableCreationVisitor.ReferenceNodes);
 
+            
+            /*
             ConstEvaluationVisitor constEvaluationVisitor = new ConstEvaluationVisitor(_symbolTable);
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ConstDefinitionNodes);
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ArrayDeclarationNodes);

@@ -91,8 +91,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public NodeLocation Location;
 
-        public List<NodeAnnotation> Annotations; //warnings & errors
-        public ASTNode Parent { get; set; }
+        public readonly List<NodeAnnotation> Annotations; //warnings & errors
+        public ASTNode ParentNode { get; set; }
 
         protected ASTNode(NodeLocation location)
         {
@@ -159,7 +159,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             foreach (var node in definitionNodes)
             {
-                node.Parent = this;
+                node.ParentNode = this;
             }
             
             DefinitionNodes = definitionNodes;
@@ -175,10 +175,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public ConditionalNode(NodeLocation location, ExpressionNode conditionNode, List<StatementNode> bodyNodes) :
             base(location)
         {
-            conditionNode.Parent = this;
+            conditionNode.ParentNode = this;
             foreach (var node in bodyNodes)
             {
-                node.Parent = this;
+                node.ParentNode = this;
             }
             
             ConditionNode = conditionNode;
@@ -200,7 +200,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
             foreach (var node in bodyNodes)
             {
-                node.Parent = this;
+                node.ParentNode = this;
             }
             
             ParameterNodes = parameterNodes;
@@ -216,8 +216,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public AssignmentNode(NodeLocation location, ReferenceNode leftSideNode, ExpressionNode rightSideNode) :
             base(location)
         {
-            leftSideNode.Parent = this;
-            rightSideNode.Parent = this;
+            leftSideNode.ParentNode = this;
+            rightSideNode.ParentNode = this;
             
             LeftSideNode = leftSideNode;
             RightSideNode = rightSideNode;
@@ -233,8 +233,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public CompoundAssignmentNode(NodeLocation location, CompoundAssignmentOperator @operator, ReferenceNode leftSideNode,
             ExpressionNode rightSideNode) : base(location)
         {
-            leftSideNode.Parent = this;
-            rightSideNode.Parent = this;
+            leftSideNode.ParentNode = this;
+            rightSideNode.ParentNode = this;
             
             Operator = @operator;
             LeftSideNode = leftSideNode;
@@ -250,7 +250,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public UnaryExpressionNode(NodeLocation location, UnaryOperator @operator, ExpressionNode expressionNode) : base(
             location)
         {
-            expressionNode.Parent = this;
+            expressionNode.ParentNode = this;
             
             Operator = @operator;
             ExpressionNode = expressionNode;
@@ -266,8 +266,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public BinaryExpressionNode(NodeLocation location, BinaryOperator @operator, ExpressionNode leftSideNode,
             ExpressionNode rightSideNode) : base(location)
         {
-            leftSideNode.Parent = this;
-            rightSideNode.Parent = this;
+            leftSideNode.ParentNode = this;
+            rightSideNode.ParentNode = this;
             
             Operator = @operator;
             LeftSideNode = leftSideNode;
@@ -285,7 +285,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             foreach (var node in attributeNodes)
             {
-                node.Parent = this;
+                node.ParentNode = this;
             }
             
             AttributeNodes = attributeNodes;
@@ -294,38 +294,38 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class PrototypeDefinitionNode : DeclarationNode
     {
-        public ParentReferenceNode ParentReferenceNode;
+        public InheritanceReferenceNode InheritanceReferenceNode;
         public List<StatementNode> BodyNodes;
 
-        public PrototypeDefinitionNode(NodeLocation location, NameNode nameNode, ParentReferenceNode parentReferenceNode,
+        public PrototypeDefinitionNode(NodeLocation location, NameNode nameNode, InheritanceReferenceNode inheritanceReferenceNode,
             List<StatementNode> bodyNodes) : base(location, "prototype", nameNode)
         {
-            parentReferenceNode.Parent = this;
+            inheritanceReferenceNode.ParentNode = this;
             foreach (var node in bodyNodes)
             {
-                node.Parent = this;
+                node.ParentNode = this;
             }
             
-            ParentReferenceNode = parentReferenceNode;
+            InheritanceReferenceNode = inheritanceReferenceNode;
             BodyNodes = bodyNodes;
         }
     }
 
     public class InstanceDefinitionNode : DeclarationNode
     {
-        public ParentReferenceNode ParentReferenceNode;
+        public InheritanceReferenceNode InheritanceReferenceNode;
         public List<StatementNode> BodyNodes;
 
-        public InstanceDefinitionNode(NodeLocation location, NameNode nameNode, ParentReferenceNode parentReferenceNode,
+        public InstanceDefinitionNode(NodeLocation location, NameNode nameNode, InheritanceReferenceNode inheritanceReferenceNode,
             List<StatementNode> bodyNodes) : base(location, "instance", nameNode)
         {
-            parentReferenceNode.Parent = this;
+            inheritanceReferenceNode.ParentNode = this;
             foreach (var node in bodyNodes)
             {
-                node.Parent = this;
+                node.ParentNode = this;
             }
             
-            ParentReferenceNode = parentReferenceNode;
+            InheritanceReferenceNode = inheritanceReferenceNode;
             BodyNodes = bodyNodes;
         }
     }
@@ -338,7 +338,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public ConstDefinitionNode(NodeLocation location, string type, NameNode nameNode,
             ExpressionNode rightSideNode) : base(location, type, nameNode)
         {
-            rightSideNode.Parent = this;
+            rightSideNode.ParentNode = this;
             
             RightSideNode = rightSideNode;
         }
@@ -362,7 +362,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             
             foreach (var node in elementNodes)
             {
-                node.Parent = this;
+                node.ParentNode = this;
             }
             
             ElementNodes = elementNodes;
@@ -438,10 +438,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public FunctionCallNode(NodeLocation location, ReferenceNode functionReferenceNode,
             List<ExpressionNode> argumentNodes) : base(location)
         {
-            functionReferenceNode.Parent = this;
+            functionReferenceNode.ParentNode = this;
             foreach (var node in argumentNodes)
             {
-                node.Parent = this;
+                node.ParentNode = this;
             }
             
             
@@ -459,14 +459,14 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public IfStatementNode(NodeLocation location, ConditionalNode ifNode,
             List<ConditionalNode> elseIfNodes, List<StatementNode> elseNodeBodyNodes) : base(location)
         {
-            ifNode.Parent = this;
+            ifNode.ParentNode = this;
             foreach (var node in elseIfNodes)
             {
-                node.Parent = this;
+                node.ParentNode = this;
             }
             foreach (var node in elseNodeBodyNodes)
             {
-                node.Parent = this;
+                node.ParentNode = this;
             }
             
             IfNode = ifNode;
@@ -529,56 +529,62 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
 
-    public class ReferenceNode : ExpressionNode
-    {
-        //a[y].b[x]
-        // nie ma możliwości, żeby po nawiasie kwadratowym była kropka!
-        /*
-         *
-         Reference Part
-         public ExpressionNode ArrayIndexNode; // optional
-         public ReferenceNode AttributeNode; // optional
-         
-         
-         public NodeValue ArrayIndexValue; //optional, filled in ConstEvaluationVisitor????
-         */
-        
-        
-        public string Name;
-        public string Path; //i.e. MYFUNC.X, filled in SymbolTableCreationVisitor
-        
-        public ExpressionNode ArrayIndexNode; // optional
-        public NodeValue ArrayIndexValue; //optional
-        public ReferenceNode AttributeNode; // optional
-
-        //public string FullName;    //filled in ConstEvalutationVisitor
-        public DatSymbol Symbol; //filled in AnnotationsAdditionVisitor
-
-        public ReferenceNode(NodeLocation location, string name, ExpressionNode arrayIndexNode = null,
-            ReferenceNode attributeNode = null) : base(location)
+    public abstract class ReferencePartNode : ASTNode {
+        protected ReferencePartNode(NodeLocation location) : base(location)
         {
-            Symbol = null;
-            //FullName = "";
-            
-            if (arrayIndexNode != null)
-            {
-                arrayIndexNode.Parent = this;
-            }
-            
-            if (attributeNode != null)
-            {
-                attributeNode.Parent = this;
-            }
-            
+        }
+    }
+    
+    class AttributeNode : ReferencePartNode
+    {
+        public string Name;
+        
+        public AttributeNode(string name, NodeLocation location) : base(location)
+        {
             Name = name;
-            ArrayIndexNode = arrayIndexNode;
-            AttributeNode = attributeNode;
         }
     }
 
-    public class ParentReferenceNode : ReferenceNode
+    class ArrayIndexNode : ReferencePartNode
     {
-        public ParentReferenceNode(NodeLocation location, string name, ExpressionNode arrayIndexNode = null, ReferenceNode attributeNode = null) : base(location, name, arrayIndexNode, attributeNode)
+        public ExpressionNode ExpressionNode;
+        public NodeValue Value;
+        public ArrayIndexNode(ExpressionNode expressionNode, NodeLocation location) : base(location)
+        {
+            ExpressionNode = expressionNode;
+        }
+    }
+
+    
+
+    public class ReferenceNode : ExpressionNode
+    {
+        public string Name;
+        public string Path; //i.e. MYFUNC.X, filled in SymbolTableCreationVisitor, not sure if PATH is needed? Rather not
+
+        public List<ReferencePartNode> PartNodes;
+        
+        public DatSymbol Symbol; //filled in AnnotationsAdditionVisitor
+
+        public ReferenceNode(string name, List<ReferencePartNode> partNodes, NodeLocation location) : base(location)
+        {
+            Symbol = null;
+            Name = name;
+            PartNodes = partNodes;
+        }
+        
+        public ReferenceNode(string name, NodeLocation location) : base(location)
+        {
+            Symbol = null;
+            Name = name;
+            PartNodes = new List<ReferencePartNode>();
+        }
+    }
+
+    public class InheritanceReferenceNode : ReferenceNode
+    {
+        //public ASTNode DefinitionNode;
+        public InheritanceReferenceNode(string name, NodeLocation location) : base(name, location)
         {
         }
     }

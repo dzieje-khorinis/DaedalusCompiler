@@ -94,8 +94,8 @@ expression
     | value #valueExpression
     ;
 
-arrayIndex : IntegerLiteral | referenceAtom;
-arraySize : IntegerLiteral | referenceAtom;
+arrayIndex : IntegerLiteral | reference;
+arraySize : IntegerLiteral | reference;
 
 value
     : IntegerLiteral #integerLiteralValue
