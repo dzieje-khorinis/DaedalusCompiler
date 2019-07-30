@@ -15,7 +15,7 @@ namespace DaedalusCompiler.Compilation
     public class Compiler
     {
 
-        private readonly AssemblyBuilder _assemblyBuilder;
+        //private readonly AssemblyBuilder _assemblyBuilder;
         private readonly OutputUnitsBuilder _ouBuilder;
         private readonly string _outputDirPath;
         
@@ -23,7 +23,7 @@ namespace DaedalusCompiler.Compilation
         public Compiler(string outputDirPath="output", bool verbose=true, bool strictSyntax=false)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            _assemblyBuilder = new AssemblyBuilder(verbose, strictSyntax);
+            //_assemblyBuilder = new AssemblyBuilder(verbose, strictSyntax);
             _ouBuilder = new OutputUnitsBuilder(verbose);
             _outputDirPath = outputDirPath;
         }
@@ -296,6 +296,7 @@ namespace DaedalusCompiler.Compilation
             }
         }
 
+        /*
         public List<DatSymbol> GetSymbols()
         {
             return _assemblyBuilder.GetSymbols();
@@ -305,6 +306,7 @@ namespace DaedalusCompiler.Compilation
         {
             return _assemblyBuilder.GetExecBlocks();
         }
+        */
 
         public void SetCompilationDateTimeText(string compilationDateTimeText)
         {

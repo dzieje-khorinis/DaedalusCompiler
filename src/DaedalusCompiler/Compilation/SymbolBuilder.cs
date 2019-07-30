@@ -32,7 +32,7 @@ namespace DaedalusCompiler.Compilation
                 ArrayLength = 1,
                 BuiltinType = builtinType,
                 Flags = DatSymbolFlag.Classvar | DatSymbolFlag.Const,
-                ParentIndex = classSymbol.Index,
+                Parent = classSymbol,
             };
         }
         
@@ -66,7 +66,7 @@ namespace DaedalusCompiler.Compilation
                 ArrayLength = 1,
                 BuiltinType = builtinType,
                 Flags = DatSymbolFlag.Classvar,
-                ParentIndex = classSymbol.Index,
+                Parent = classSymbol,
             };
         }
         

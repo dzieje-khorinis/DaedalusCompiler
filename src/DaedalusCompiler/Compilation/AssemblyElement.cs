@@ -167,6 +167,7 @@ namespace DaedalusCompiler.Compilation
         }
     }
 
+    /*
     public class LazyReferenceAtomInstructions : AssemblyInstruction
     {
         public readonly DaedalusParser.ReferenceContext ReferenceContext;
@@ -180,5 +181,6 @@ namespace DaedalusCompiler.Compilation
             ReferenceContext = referenceContext;
         }
     }
+    */
     
 }

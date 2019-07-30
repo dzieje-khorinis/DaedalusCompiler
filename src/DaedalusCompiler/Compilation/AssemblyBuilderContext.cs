@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using System.Collections.Generic;
 using System.Linq;
 using DaedalusCompiler.Dat;
@@ -470,4 +470,4 @@ namespace DaedalusCompiler.Compilation
             return _parametersTypes[ArgIndex];
         }
     }
-}
+}*/

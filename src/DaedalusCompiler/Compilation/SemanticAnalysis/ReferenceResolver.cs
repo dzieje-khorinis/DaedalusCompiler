@@ -82,6 +82,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             
             inheritanceReferenceNode.Path = path;
             inheritanceReferenceNode.Symbol = _symbolTable[path].Symbol;
+
+            ((DeclarationNode) inheritanceReferenceNode.ParentNode).Symbol.Parent = inheritanceReferenceNode.Symbol;
         }
 
         public void Resolve(List<ReferenceNode> referenceNodes)
@@ -173,6 +175,24 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 }
             }
 
+
+            foreach (ReferencePartNode partNode in referenceNode.PartNodes)
+            {
+                switch (partNode)
+                {
+                    case AttributeNode attributeNode:
+                        if (symbol.BuiltinType != DatSymbolType.Instance)
+                        {
+                            throw new Exception();
+                        }
+                        break;
+                    case ArrayIndexNode arrayIndexNode:
+                        break;
+                    default:
+                        throw new Exception();
+                }
+            }
+            
             // at this point symbols is defined
             // find if it has any attributes or arraysize (checdk if array)
             //referenceNode.Symbol = symbol;

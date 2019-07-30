@@ -1,4 +1,5 @@
-﻿using System;
+﻿/*
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using DaedalusCompiler.Dat;
@@ -296,7 +297,7 @@ namespace DaedalusCompiler.Compilation
                 return new PushInt(symbol.Index);
             }
 
-            if (symbol.BuiltinType == DatSymbolType.Instance || asType == DatSymbolType.Instance)  /* DatSymbolType.Class isn't possible */
+            if (symbol.BuiltinType == DatSymbolType.Instance || asType == DatSymbolType.Instance)  /* DatSymbolType.Class isn't possible #1#
             {
                 return new PushInstance(symbol);
             }
@@ -816,3 +817,4 @@ namespace DaedalusCompiler.Compilation
         }
     }
 }
+*/

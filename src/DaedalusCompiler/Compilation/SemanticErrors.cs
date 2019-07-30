@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -78,12 +78,13 @@ namespace DaedalusCompiler.Compilation
     public class ErrorFileContext : BaseErrorContext
     {
         public int FileIndex;
-        public readonly AssemblyBuilder AssemblyBuilder;
+        //public readonly AssemblyBuilder AssemblyBuilder;
         public string[] FileContentLines;
         public string[] SuppressedWarningCodes;
         
         public static readonly DatSymbol UndeclaredSymbol = new DatSymbol();
 
+        
         public ErrorFileContext(AssemblyBuilder assemblyBuilder)
         {
             AssemblyBuilder = assemblyBuilder;
@@ -569,4 +570,4 @@ namespace DaedalusCompiler.Compilation
             PrintErrorPointer(logger, columnNo, line);
         }
     }
-}
+}*/

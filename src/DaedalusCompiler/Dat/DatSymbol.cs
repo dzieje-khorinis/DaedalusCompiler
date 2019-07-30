@@ -112,9 +112,11 @@ namespace DaedalusCompiler.Dat
         /// <summary>
         /// Reference to parent symbol for nested symbols like class variables
         /// </summary>
-        public int ParentIndex { get; set; }
+        //public int ParentIndex { get; set; }
+        public DatSymbol Parent { get; set; }
         
-        public ErrorLineContext ErrorLineContext;
+        
+        //public ErrorLineContext ErrorLineContext;
         
         public DatSymbol()
         {
@@ -138,9 +140,9 @@ namespace DaedalusCompiler.Dat
             FirstTokenAddress = 0;
             ClassOffset = 0;
             
-            ParentIndex = -1;
+            Parent = null;
             
-            ErrorLineContext = null;
+            //ErrorLineContext = null;
         }
 
         public bool IsStringLiteralSymbol()
@@ -234,7 +236,7 @@ namespace DaedalusCompiler.Dat
             }
 
             // Save parent
-            writer.Write(ParentIndex);
+            writer.Write(Parent?.Index ?? -1);
         }
 
         /// <summary>
@@ -300,7 +302,7 @@ namespace DaedalusCompiler.Dat
                     break;
             }
 
-            symbol.ParentIndex = reader.ReadInt32();
+            //symbol.ParentIndex = reader.ReadInt32();
 
             return symbol;
         }
