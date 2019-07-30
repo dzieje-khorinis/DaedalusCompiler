@@ -86,33 +86,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
 
-    public abstract class NodeAnnotation
-    {
-        
-    }
-
-
-    public class TextAnnotation : NodeAnnotation
-    {
-        private string Message;
-
-        public TextAnnotation(string message)
-        {
-            Message = message;
-        }
-    }
-
-    public class UndeclaredIdentifierAnnotation : NodeAnnotation
-    {
-        
-    }
-
-    public class CycleAnnotation : NodeAnnotation
-    {
-        
-    }
-    
-
+ 
     public abstract class ASTNode
     {
         public NodeLocation Location;
@@ -320,10 +294,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class PrototypeDefinitionNode : DeclarationNode
     {
-        public ReferenceNode ParentReferenceNode;
+        public ParentReferenceNode ParentReferenceNode;
         public List<StatementNode> BodyNodes;
 
-        public PrototypeDefinitionNode(NodeLocation location, NameNode nameNode, ReferenceNode parentReferenceNode,
+        public PrototypeDefinitionNode(NodeLocation location, NameNode nameNode, ParentReferenceNode parentReferenceNode,
             List<StatementNode> bodyNodes) : base(location, "prototype", nameNode)
         {
             parentReferenceNode.Parent = this;
@@ -339,10 +313,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class InstanceDefinitionNode : DeclarationNode
     {
-        public ReferenceNode ParentReferenceNode;
+        public ParentReferenceNode ParentReferenceNode;
         public List<StatementNode> BodyNodes;
 
-        public InstanceDefinitionNode(NodeLocation location, NameNode nameNode, ReferenceNode parentReferenceNode,
+        public InstanceDefinitionNode(NodeLocation location, NameNode nameNode, ParentReferenceNode parentReferenceNode,
             List<StatementNode> bodyNodes) : base(location, "instance", nameNode)
         {
             parentReferenceNode.Parent = this;
@@ -512,9 +486,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class IntegerLiteralNode : ValueNode
     {
-        public int Value;
+        public long Value;
 
-        public IntegerLiteralNode(NodeLocation location, int value) : base(location)
+        public IntegerLiteralNode(NodeLocation location, long value) : base(location)
         {
             Value = value;
         }
@@ -555,22 +529,36 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
 
-
     public class ReferenceNode : ExpressionNode
     {
+        //a[y].b[x]
+        // nie ma możliwości, żeby po nawiasie kwadratowym była kropka!
+        /*
+         *
+         Reference Part
+         public ExpressionNode ArrayIndexNode; // optional
+         public ReferenceNode AttributeNode; // optional
+         
+         
+         public NodeValue ArrayIndexValue; //optional, filled in ConstEvaluationVisitor????
+         */
+        
+        
         public string Name;
+        public string Path; //i.e. MYFUNC.X, filled in SymbolTableCreationVisitor
+        
         public ExpressionNode ArrayIndexNode; // optional
         public NodeValue ArrayIndexValue; //optional
         public ReferenceNode AttributeNode; // optional
 
-        public string FullName;    //filled in ConstEvalutationVisitor
+        //public string FullName;    //filled in ConstEvalutationVisitor
         public DatSymbol Symbol; //filled in AnnotationsAdditionVisitor
 
         public ReferenceNode(NodeLocation location, string name, ExpressionNode arrayIndexNode = null,
             ReferenceNode attributeNode = null) : base(location)
         {
             Symbol = null;
-            FullName = "";
+            //FullName = "";
             
             if (arrayIndexNode != null)
             {
@@ -585,6 +573,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Name = name;
             ArrayIndexNode = arrayIndexNode;
             AttributeNode = attributeNode;
+        }
+    }
+
+    public class ParentReferenceNode : ReferenceNode
+    {
+        public ParentReferenceNode(NodeLocation location, string name, ExpressionNode arrayIndexNode = null, ReferenceNode attributeNode = null) : base(location, name, arrayIndexNode, attributeNode)
+        {
         }
     }
 

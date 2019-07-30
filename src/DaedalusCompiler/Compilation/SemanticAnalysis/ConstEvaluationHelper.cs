@@ -1,11 +1,15 @@
 using System;
-using System.Diagnostics;
 using System.Linq;
 using DaedalusCompiler.Dat;
 
+
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
-    public class UnableToEvaluateException : Exception
+    public class InvalidBinaryOperationException : Exception
+    {
+    }
+
+    public class InvalidUnaryOperationException : Exception
     {
     }
     
@@ -16,12 +20,16 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class UninitializedValue : NodeValue
     {
     }
+
+    public class UndefinedValue : NodeValue
+    {
+    }
     
     public class IntValue : NodeValue
     {
-        public int Value;
+        public long Value;
         
-        public IntValue(int value)
+        public IntValue(long value)
         {
             Value = value;
         }
@@ -51,74 +59,27 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Value = value;
         }
     }
-    
-    
-    public abstract class ErrorValue : NodeValue
-    {
-    }
-    
-    public class UndefinedErrorValue : ErrorValue
-    {
-    }
-    
-    public class UndeclaredIdentifierErrorValue : ErrorValue
-    {
-    }
 
-    public class IndexOutOfRangeErrorValue : ErrorValue
+    public class FunctionValue : NodeValue
     {
-        
-    }
-    
-    public class ConstIntegerExpectedErrorValue : ErrorValue
-    {
-        
-    }
+        public DatSymbol Value;
 
-    public class SquareBracketsExpectedErrorValue : ErrorValue
-    {
-        
+        public FunctionValue(DatSymbol value)
+        {
+            Value = value;
+        }
     }
-    
-    public class SquareBracketsNotExpectedErrorValue : ErrorValue
-    {
-    }
-    
-    public class NotConstReferenceErrorValue : ErrorValue
-    {
-    }
-    
-    public class NoAttributeAllowedHereErrorValue : ErrorValue
-    {
-    }
-    
-    public class RedefinedIdentifierErrorValue : ErrorValue
-    {
-    }
-    
-    public class InfiniteReferenceLoopErrorValue : ErrorValue
-    {
-    }
-
-    public class InvalidBinaryOperationErrorValue : ErrorValue
-    {
-    }
+   
     
     
-
-    
-    
-    
-    
-    
-    public class EvaluationHelper
+    public static class ConstEvaluationHelper
     {
         public static NodeValue EvaluateUnaryOperation(UnaryOperator oper, NodeValue value)
         {
             Console.WriteLine("UnaryOperator oper, NodeValue value");
-            if (value is ErrorValue || value is StringValue)
+            if (value is UndefinedValue || value is StringValue)
             {
-                return new UndefinedErrorValue();
+                return new UndefinedValue();
             }
 
             switch (value)
@@ -127,9 +88,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     return EvaluateUnaryIntExpression(oper, intValue);
                 case FloatValue floatValue:
                     return EvaluateUnaryFloatExpression(oper, floatValue);
+                
+                default:
+                    throw new InvalidUnaryOperationException();
             }
-            
-            throw new UnableToEvaluateException();
         }
         
         public static IntValue EvaluateUnaryIntExpression(UnaryOperator oper, IntValue intValue)
@@ -145,9 +107,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     return new IntValue(intValue.Value == 0 ? 1 : 0);
                 case UnaryOperator.Negate:
                     return new IntValue(~intValue.Value);
+                
+                default:
+                    throw new InvalidUnaryOperationException();
             }
-
-            throw new UnableToEvaluateException();
         }
         
         public static FloatValue EvaluateUnaryFloatExpression(UnaryOperator oper, FloatValue floatValue)
@@ -161,9 +124,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     return floatValue;
                 case UnaryOperator.Not:
                     return new FloatValue(floatValue.Value == 0 ? 1 : 0);
+                
+                default:
+                    throw new InvalidUnaryOperationException();
             }
-
-            throw new UnableToEvaluateException();
         }
         
         
@@ -172,14 +136,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             Console.WriteLine("BinaryOperator oper, NodeValue leftValue, NodeValue rightValue");
 
-            /*
-            if (left is ErrorValue errorValue && errorValue.w)
-            
-            if (left is UnhandledValue || right is UnhandledValue)
+
+            if (left is UndefinedValue || right is UndefinedValue)
             {
-                return new HandledErrorValue();
+                return new UndefinedValue();
             }
-            */
 
             NodeValue resultValue;
  
@@ -259,9 +220,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             switch (oper)
             {
                 case BinaryOperator.Mult:
-                    return new StringValue(string.Concat(Enumerable.Repeat(left.Value, right.Value)));
+                    return new StringValue(string.Concat(Enumerable.Repeat(left.Value, (int)right.Value)));
                 default:
-                    return new InvalidBinaryOperationErrorValue();
+                    throw new InvalidBinaryOperationException();
             }
         }
 
@@ -271,9 +232,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             switch (oper)
             {
                 case BinaryOperator.Mult:
-                    return new StringValue(string.Concat(Enumerable.Repeat(right.Value, left.Value)));
+                    return new StringValue(string.Concat(Enumerable.Repeat(right.Value, (int)left.Value)));
                 default:
-                    return new InvalidBinaryOperationErrorValue();
+                    throw new InvalidBinaryOperationException();
             }
         }
         
@@ -285,8 +246,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             {
                 case BinaryOperator.Add:
                     return new StringValue(left.Value + right.Value);
+                default:
+                    throw new InvalidBinaryOperationException();
             }
-            throw new UnableToEvaluateException();
         }
         
 
@@ -308,9 +270,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     return new IntValue(left.Value - right.Value);
                 
                 case BinaryOperator.ShiftLeft:
-                    return new IntValue(left.Value << right.Value);
+                    return new IntValue(left.Value << (int)right.Value);
                 case BinaryOperator.ShiftRight:
-                    return new IntValue(left.Value << right.Value);
+                    return new IntValue(left.Value << (int)right.Value);
                 
                 case BinaryOperator.Less:
                     return new IntValue(left.Value < right.Value ? 1 : 0);
@@ -337,8 +299,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 
                 case BinaryOperator.LogOr:
                     return new IntValue((left.Value != 0 || right.Value != 0) ? 1 : 0);
+
+                default:
+                    throw new InvalidBinaryOperationException();
             }
-            throw new UnableToEvaluateException();
         }
 
         public static FloatValue EvaluateBinaryOperation(BinaryOperator oper, FloatValue left, FloatValue right)
@@ -377,8 +341,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 
                 case BinaryOperator.LogOr:
                     return new FloatValue((left.Value != 0 || right.Value != 0) ? 1 : 0);
+                
+                default:
+                    throw new InvalidBinaryOperationException();
             }
-            throw new UnableToEvaluateException();
         }
     }
 }

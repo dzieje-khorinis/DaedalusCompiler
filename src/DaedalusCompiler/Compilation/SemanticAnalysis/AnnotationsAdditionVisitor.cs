@@ -7,15 +7,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
     public class AnnotationsAdditionVisitor : AbstractSyntaxTreeBaseVisitor
     {
-        private readonly Dictionary<ASTNode, NodeValue> _visitedNodesValuesCache;
-
-        public AnnotationsAdditionVisitor(Dictionary<ASTNode, NodeValue> visitedNodesValuesCache)
-        {
-            _visitedNodesValuesCache = visitedNodesValuesCache;
-        }
-
         protected override void Visit(ASTNode node)
         {
+            /*
             if (_visitedNodesValuesCache.ContainsKey(node))
             {
                 NodeValue nodeValue = _visitedNodesValuesCache[node];
@@ -36,8 +30,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     Console.WriteLine($"{message}: {errorValueType}");
                 }
             }
+            */
             
-            /*
+            
             if (node.Annotations.Count > 0)
             {
                 string message = node.GetType().ToString().Split(".").Last();
@@ -57,7 +52,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     Console.WriteLine(annotation.GetType());
                 }
             }
-            */
+            
            
             
             base.Visit(node);

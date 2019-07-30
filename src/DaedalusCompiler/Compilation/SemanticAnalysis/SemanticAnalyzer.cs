@@ -11,7 +11,7 @@ namespace DaedalusCompiler.Compilation
     public class SymbolContext
     {
         public DatSymbol Symbol;
-        public DeclarationNode Node;
+        public ASTNode Node; //DeclarationNode or StringLiteralNode
     }
 
     public class SemanticAnalyzer
@@ -33,6 +33,24 @@ namespace DaedalusCompiler.Compilation
 
         public void CreateSymbolTable()
         {
+            /*
+            long a = -2147483648;
+            long c = ~2147483648;
+            long d = 2147483690;
+            long x = 21474836900;
+
+            int a2 = (int) a;
+            int c2 = (int) c;
+            int d2 = (int) d;
+            int x2 = (int) x;
+            
+            Console.WriteLine(a2);
+            Console.WriteLine(c2);
+            Console.WriteLine(d2);
+            Console.WriteLine(x2);
+            return;
+            */
+            
             //Stopwatch timer = new Stopwatch();
             //timer.Start();
             //SymbolTableCreationVisitor symbolTableCreationVisitor = new SymbolTableCreationVisitor();
@@ -42,20 +60,35 @@ namespace DaedalusCompiler.Compilation
             //_symbolTable = visitor.SymbolTable;
             
             
+            
+            // annotates: DuplicateReference, ArrayOfThatTypeNotSupported
             SymbolTableCreationVisitor symbolTableCreationVisitor = new SymbolTableCreationVisitor();
             symbolTableCreationVisitor.VisitTree(_abstractSyntaxTree);
             _symbolTable = symbolTableCreationVisitor.SymbolTable;
+            
+            /*
+            // annotates UndeclaredIdentifier, AccessToAttributeOfArrayElementNotSupported
+            ReferenceResolver referenceResolver = new ReferenceResolver(_symbolTable);
+            referenceResolver.Resolve(symbolTableCreationVisitor.ParentReferenceNodes);
+            referenceResolver.Resolve(symbolTableCreationVisitor.ReferenceNodes);
 
             ConstEvaluationVisitor constEvaluationVisitor = new ConstEvaluationVisitor(_symbolTable);
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ConstDefinitionNodes);
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ArrayDeclarationNodes);
-            
+            */
+            /*
+             *
+             *myślę, że to powinno byc tak:
+             * 1. resolving zwykłych referencji
+             * 2. obliczenie constów
+             * 3. resolving array referencji? bo jak bedzie np. x[5].y to trzeba sprawdzić co znajduje sie w x[5], a może nie trzeba? moze wystarczy typ?
+             */
             
             
             
             //constEvaluationVisitor.VisitTree(_abstractSyntaxTree);
             Console.WriteLine("---------");
-            AnnotationsAdditionVisitor annotationsAdditionVisitor = new AnnotationsAdditionVisitor(constEvaluationVisitor.VisitedNodesValuesCache);
+            AnnotationsAdditionVisitor annotationsAdditionVisitor = new AnnotationsAdditionVisitor();
             annotationsAdditionVisitor.VisitTree(_abstractSyntaxTree);
             
         }

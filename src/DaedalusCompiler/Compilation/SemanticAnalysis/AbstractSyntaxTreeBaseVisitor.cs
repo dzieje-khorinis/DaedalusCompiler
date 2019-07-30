@@ -150,7 +150,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         protected virtual void VisitName(NameNode node) {}
         
         
-        private void Visit(List<ConditionalNode> nodes)
+        protected void Visit(List<ConditionalNode> nodes)
         {
             foreach (var node in nodes)
             {
@@ -158,7 +158,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
         }
         
-        private void Visit(List<DeclarationNode> nodes)
+        public void Visit(List<ReferenceNode> nodes)
         {
             foreach (var node in nodes)
             {
@@ -166,7 +166,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
         }
         
-        private void Visit(List<ExpressionNode> nodes)
+        protected void Visit(List<DeclarationNode> nodes)
         {
             foreach (var node in nodes)
             {
@@ -174,7 +174,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
         }
         
-        private void Visit(List<StatementNode> nodes)
+        protected void Visit(List<ExpressionNode> nodes)
         {
             foreach (var node in nodes)
             {
@@ -182,7 +182,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
         }
         
-        private void Visit(List<ParameterDeclarationNode> nodes)
+        protected void Visit(List<StatementNode> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                Visit(node);
+            }
+        }
+        
+        protected void Visit(List<ParameterDeclarationNode> nodes)
         {
             foreach (var node in nodes)
             {

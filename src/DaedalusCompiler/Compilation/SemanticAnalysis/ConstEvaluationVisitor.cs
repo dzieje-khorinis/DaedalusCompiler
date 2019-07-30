@@ -1,8 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
@@ -11,13 +9,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class ConstEvaluationVisitor : AbstractSyntaxTreeBaseGenericVisitor<NodeValue>
     {
         private readonly Dictionary <string, SymbolContext> _symbolTable;
-        public readonly Dictionary<ASTNode, NodeValue> VisitedNodesValuesCache;
+        private readonly Dictionary<ASTNode, NodeValue> _visitedNodesValuesCache;
 
 
         public ConstEvaluationVisitor(Dictionary <string, SymbolContext> symbolTable)
         {
             _symbolTable = symbolTable;
-            VisitedNodesValuesCache = new Dictionary<ASTNode, NodeValue>();
+            _visitedNodesValuesCache = new Dictionary<ASTNode, NodeValue>();
         }
 
 
@@ -52,53 +50,53 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         public override NodeValue Visit(ASTNode node)
         {
-            if (VisitedNodesValuesCache.ContainsKey(node))
+            if (_visitedNodesValuesCache.ContainsKey(node))
             {
                 PrintVisit(node, true);
-                if (VisitedNodesValuesCache[node] is UninitializedValue)
+                if (_visitedNodesValuesCache[node] is UninitializedValue)
                 {
-                    VisitedNodesValuesCache[node] = new InfiniteReferenceLoopErrorValue();
+                    node.Annotations.Add(new InfiniteReferenceLoopAnnotation());
+                    _visitedNodesValuesCache[node] = new UndefinedValue();
                     if (node is ReferenceNode referenceNode)
                     {
-                        Console.WriteLine($"Add InfiniteReferenceLoopErrorValue to referenceNode {referenceNode.Name}");
+                        Console.WriteLine($"Add InfiniteReferenceLoopUndefinedValue to referenceNode {referenceNode.Name}");
                     }
                     else
                     {
-                        Console.WriteLine($"Add InfiniteReferenceLoopErrorValue to {node.GetType().ToString().Split(".").Last()}");
+                        Console.WriteLine($"Add InfiniteReferenceLoopUndefinedValue to {node.GetType().ToString().Split(".").Last()}");
                     }
                 }
-                return VisitedNodesValuesCache[node];
+                return _visitedNodesValuesCache[node];
             }
             
             PrintVisit(node, false);
-            VisitedNodesValuesCache[node] = new UninitializedValue();
+            _visitedNodesValuesCache[node] = new UninitializedValue();
             
             NodeValue resultValue = base.Visit(node);
-            VisitedNodesValuesCache[node] = resultValue;
-            if (resultValue is ErrorValue)
+            _visitedNodesValuesCache[node] = resultValue;
+            if (resultValue is UndefinedValue)
             {
-                return new UndefinedErrorValue();
+                return new UndefinedValue();
             }
-            return VisitedNodesValuesCache[node];
+            return _visitedNodesValuesCache[node];
         }
 
 
         protected override NodeValue VisitVarArrayDeclaration(VarArrayDeclarationNode node)
         {
-            if (node.ArraySizeValue is ErrorValue)
+            if (node.ArraySizeValue is UndefinedValue)
             {
-                return new UndefinedErrorValue();
+                return new UndefinedValue();
             }
             node.ArraySizeValue = Visit(node.ArraySizeNode);
-            
             return null;
         }
 
         protected override NodeValue VisitConstArrayDefinition(ConstArrayDefinitionNode node)
         {
-            if (node.ArraySizeValue is ErrorValue)
+            if (node.ArraySizeValue is UndefinedValue)
             {
-                return new UndefinedErrorValue();
+                return new UndefinedValue();
             }
             node.ArraySizeValue = Visit(node.ArraySizeNode);
             return null;
@@ -106,9 +104,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected override NodeValue VisitParameterArrayDeclaration(ParameterArrayDeclarationNode node)
         {
-            if (node.ArraySizeValue is ErrorValue)
+            if (node.ArraySizeValue is UndefinedValue)
             {
-                return new UndefinedErrorValue();
+                return new UndefinedValue();
             }
             node.ArraySizeValue = Visit(node.ArraySizeNode);
             return null;
@@ -116,11 +114,77 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected override NodeValue VisitConstDefinition(ConstDefinitionNode node)
         {
-            if (node.RightSideValue is ErrorValue)
+            if (node.RightSideValue is UndefinedValue)
             {
-                return new UndefinedErrorValue();
+                return new UndefinedValue();
             }
             node.RightSideValue = Visit(node.RightSideNode);
+
+            SymbolContext symbolContext = _symbolTable[node.NameNode.Value.ToUpper()];
+            DatSymbol symbol = symbolContext.Symbol;
+            DatSymbolType rightSideType = NodeValueToBuiltinType(node.RightSideValue);
+            
+            
+            
+            switch (symbol.BuiltinType)
+            {
+                case DatSymbolType.Int:
+
+                    switch (rightSideType)
+                    {
+                        case DatSymbolType.Int:
+                            break;
+                        
+                        default:
+                            node.Annotations.Add(new IncompatibleTypesAnnotation(symbol.BuiltinType, rightSideType));
+                            break;
+
+                    }
+                    break;
+                
+                case DatSymbolType.Float:
+                    switch (rightSideType)
+                    {
+                        case DatSymbolType.Int:
+                        case DatSymbolType.Float:
+                            break;
+                        
+                        default:
+                            node.Annotations.Add(new IncompatibleTypesAnnotation(symbol.BuiltinType, rightSideType));
+                            break;
+
+                    }
+                    break;
+                
+                case DatSymbolType.String:
+                    switch (rightSideType)
+                    {
+                        case DatSymbolType.String:
+                            break;
+                        
+                        default:
+                            node.Annotations.Add(new IncompatibleTypesAnnotation(symbol.BuiltinType, rightSideType));
+                            break;
+                    }
+                    break;
+                
+                
+                case DatSymbolType.Func:
+                    switch (rightSideType)
+                    {
+                        case DatSymbolType.Func:
+                            break;
+                        
+                        default:
+                            node.Annotations.Add(new IncompatibleTypesAnnotation(symbol.BuiltinType, rightSideType));
+                            break;
+                    }
+                    break;
+
+                default:
+                    throw new Exception();
+            }
+
             return null; // TODO what to return here?
         }
         
@@ -135,65 +199,97 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             string nodeName = referenceNode.Name.ToUpper();
             if (!_symbolTable.ContainsKey(nodeName))
             {
-                return new UndeclaredIdentifierErrorValue();
+                referenceNode.Annotations.Add(new UndeclaredIdentifierAnnotation());
+                return new UndefinedValue();
             }
             
             SymbolContext symbolContext = _symbolTable[nodeName];
-
 
             switch (symbolContext.Node)
             {
                 case ConstArrayDefinitionNode constArrayDefinitionNode:
                     if (referenceNode.ArrayIndexNode == null)
                     {
-                        //orinal compiler actually accesses index 0 if no square brackets are provided
-                        return new SquareBracketsExpectedErrorValue();
+                        //orignal compiler actually accesses index 0 if no square brackets are provided
+                        referenceNode.Annotations.Add(new SquareBracketsExpectedAnnotation());
+                        return new UndefinedValue();
                     }
                     else
                     {
                         switch (referenceNode.ArrayIndexValue)
                         {
-                            case ErrorValue _:
-                                return new UndefinedErrorValue();
+                            case UndefinedValue _:
+                                return new UndefinedValue();
                             case IntValue intValue:
                                 if (intValue.Value >= constArrayDefinitionNode.ElementNodes.Count)
                                 {
-                                    return new IndexOutOfRangeErrorValue();
+                                    referenceNode.Annotations.Add(new IndexOutOfRangeAnnotation());
+                                    return new UndefinedValue();
                                 }
-                                return Visit(constArrayDefinitionNode.ElementNodes[intValue.Value]);
+                                return Visit(constArrayDefinitionNode.ElementNodes[(int)intValue.Value]);
                             default:
-                                referenceNode.ArrayIndexValue = new ConstIntegerExpectedErrorValue();
-                                return new UndefinedErrorValue();
+                                referenceNode.ArrayIndexNode.Annotations.Add(new ConstIntegerExpectedAnnotation());
+                                referenceNode.ArrayIndexValue = new UndefinedValue();
+                                return new UndefinedValue();
                         }
                     }
 
                 case ConstDefinitionNode constDefinitionNode:
                     if (referenceNode.ArrayIndexNode != null)
                     {
-                        return new SquareBracketsNotExpectedErrorValue();
+                        referenceNode.Annotations.Add(new SquareBracketsNotExpectedAnnotation());
+                        return new UndefinedValue();
                     }
                     return Visit(constDefinitionNode.RightSideNode);
                 
+                case FunctionDefinitionNode _:
+                    return new FunctionValue(symbolContext.Symbol);
+                
                 default:
-                    return new NotConstReferenceErrorValue();
+                    referenceNode.Annotations.Add(new NotConstReferenceAnnotation());
+                    return new UndefinedValue();
                 
             }
             
         }
-        
-        
-        
+
+        protected override NodeValue VisitUnaryExpression(UnaryExpressionNode node)
+        {
+            NodeValue expressionValue = Visit(node.ExpressionNode);
+            if (expressionValue is UndefinedValue)
+            {
+                return new UndefinedValue();
+            }
+            
+            try
+            {
+                return ConstEvaluationHelper.EvaluateUnaryOperation(node.Operator, expressionValue);
+            }
+            catch (InvalidUnaryOperationException)
+            {
+                node.Annotations.Add(new InvalidUnaryOperationAnnotation());
+                return new UndefinedValue();
+            }
+        }
+
         protected override NodeValue VisitBinaryExpression(BinaryExpressionNode node)
         {
             NodeValue leftNodeValue = Visit(node.LeftSideNode); 
             NodeValue rightNodeValue = Visit(node.RightSideNode);
-            if (leftNodeValue is ErrorValue || rightNodeValue is ErrorValue)
+            if (leftNodeValue is UndefinedValue || rightNodeValue is UndefinedValue)
             {
-                return new UndefinedErrorValue();
+                return new UndefinedValue();
             }
-            
-            NodeValue result = EvaluationHelper.EvaluateBinaryOperation(node.Operator, leftNodeValue,rightNodeValue);
-            return result;
+
+            try
+            {
+                return ConstEvaluationHelper.EvaluateBinaryOperation(node.Operator, leftNodeValue, rightNodeValue);
+            }
+            catch (InvalidBinaryOperationException)
+            {
+                node.Annotations.Add(new InvalidBinaryOperationAnnotation());
+                return new UndefinedValue();
+            }
         }
         
         
@@ -211,5 +307,29 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             return new StringValue(node.Value);
         }
+        
+        
+        
+        private DatSymbolType NodeValueToBuiltinType(NodeValue nodeValue)
+        {
+            switch (nodeValue)
+            {
+                case IntValue _:
+                    return DatSymbolType.Int;
+                
+                case FloatValue _:
+                    return DatSymbolType.Float;
+                
+                case StringValue _:
+                    return DatSymbolType.String;
+
+                case FunctionValue _:
+                    return DatSymbolType.Func;
+                
+                default:
+                    throw new Exception();
+            }
+        }
+
     }
 }

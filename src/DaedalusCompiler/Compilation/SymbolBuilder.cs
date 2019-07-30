@@ -96,22 +96,22 @@ namespace DaedalusCompiler.Compilation
         
         
         
-        public static DatSymbol BuildParameter(string name, DatSymbolType builtinType)
+        public static DatSymbol BuildParameter(string name, DatSymbolType builtinType, DatSymbol functionSymbol)
         {
             return new DatSymbol
             {
-                Name = name,
+                Name = $"{functionSymbol.Name}.{name}",
                 ArrayLength = 1,
                 BuiltinType = builtinType,
                 ParametersCount = (uint) ((builtinType == DatSymbolType.Func) ? 1 : 0),
             };
         }
         
-        public static DatSymbol BuildExternalParameter(string name, DatSymbolType builtinType)
+        public static DatSymbol BuildExternalParameter(string name, DatSymbolType builtinType, DatSymbol functionSymbol)
         {
             return new DatSymbol
             {
-                Name = name,
+                Name = $"{functionSymbol.Name}.{name}",
                 BuiltinType = builtinType,
             };
         }
