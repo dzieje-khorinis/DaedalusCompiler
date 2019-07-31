@@ -43,11 +43,16 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
     }
     
-    public class NoAttributeAllowedHereAnnotation : NodeAnnotation
+    public class ReferencedSymbolIsNotArrayAnnotation : NodeAnnotation
     {
     }
 
     public class NotClassOrPrototypeReferenceAnnotation : NodeAnnotation
+    {
+        
+    }
+
+    public class NotInstanceAnnotation : NodeAnnotation
     {
         
     }
@@ -74,6 +79,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class UnsupportedArrayTypeAnnotation : NodeAnnotation
     {
         
+    }
+    
+    public class ClassDoesNotHaveAttributeAnnotation : NodeAnnotation
+    {
+        public string ClassName;
+        public ClassDoesNotHaveAttributeAnnotation(string className)
+        {
+            ClassName = className;
+        }
     }
     
     

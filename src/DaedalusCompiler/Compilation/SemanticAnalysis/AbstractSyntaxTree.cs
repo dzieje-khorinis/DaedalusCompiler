@@ -560,7 +560,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class ReferenceNode : ExpressionNode
     {
         public string Name;
-        public string Path; //i.e. MYFUNC.X, filled in SymbolTableCreationVisitor, not sure if PATH is needed? Rather not
+        //public string Path; //i.e. MYFUNC.X, filled in SymbolTableCreationVisitor, not sure if PATH is needed? Rather not
 
         public List<ReferencePartNode> PartNodes;
         

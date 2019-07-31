@@ -74,6 +74,8 @@ namespace DaedalusCompiler.Compilation
             // AccessToAttributeOfArrayElementNotSupportedAnnotation
             ReferenceResolver referenceResolver = new ReferenceResolver(_symbolTable);
             referenceResolver.Resolve(symbolTableCreationVisitor.ParentReferenceNodes);
+            Console.WriteLine(symbolTableCreationVisitor.ParentReferenceNodes.Count);
+            Console.WriteLine(symbolTableCreationVisitor.ReferenceNodes.Count);
             referenceResolver.Resolve(symbolTableCreationVisitor.ReferenceNodes);
 
             

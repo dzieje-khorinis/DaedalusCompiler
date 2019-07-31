@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Net;
 using System.Security.Cryptography;
 using DaedalusCompiler.Dat;
@@ -80,7 +81,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             
             
             
-            inheritanceReferenceNode.Path = path;
+            //inheritanceReferenceNode.Path = path;
             inheritanceReferenceNode.Symbol = _symbolTable[path].Symbol;
 
             ((DeclarationNode) inheritanceReferenceNode.ParentNode).Symbol.Parent = inheritanceReferenceNode.Symbol;
@@ -94,9 +95,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
         }
 
-        private DatSymbol GetLocalSymbol(string parentBlockName, string symbolName)
+        private DatSymbol GetSymbol(string parentName, string symbolName)
         {
-            string path =  $"{parentBlockName}.{symbolName}".ToUpper();
+            string path =  $"{parentName}.{symbolName}".ToUpper();
             if (_symbolTable.ContainsKey(path))
             {
                 return _symbolTable[path].Symbol;
@@ -109,13 +110,14 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             ASTNode ancestor = GetFirstSignificantAncestor(referenceNode);
             DatSymbol symbol = null;
+            DatSymbol classSymbol = null;
             ClassDefinitionNode classDefinitionNode;
             
             switch (ancestor)
             {
                 case PrototypeDefinitionNode prototypeDefinitionNode:
                     //look for local variable
-                    symbol = GetLocalSymbol(prototypeDefinitionNode.NameNode.Value, referenceNode.Name);
+                    symbol = GetSymbol(prototypeDefinitionNode.NameNode.Value, referenceNode.Name);
                     if (symbol != null)
                     {
                         break;
@@ -128,13 +130,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         // TODO think about adding UndeclatedIdentifierAnnotation
                         return;
                     }
-                    symbol = GetLocalSymbol(classDefinitionNode.NameNode.Value, referenceNode.Name);
+                    symbol = GetSymbol(classDefinitionNode.NameNode.Value, referenceNode.Name);
                     break;
 
                     
                 case InstanceDefinitionNode instanceDefinitionNode:
                     //look for local variable
-                    symbol = GetLocalSymbol(instanceDefinitionNode.NameNode.Value, referenceNode.Name);
+                    symbol = GetSymbol(instanceDefinitionNode.NameNode.Value, referenceNode.Name);
                     if (symbol != null)
                     {
                         return;
@@ -147,12 +149,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         // TODO think about adding UndeclatedIdentifierAnnotation
                         return;
                     }
-                    symbol = GetLocalSymbol(classDefinitionNode.NameNode.Value, referenceNode.Name);
+                    symbol = GetSymbol(classDefinitionNode.NameNode.Value, referenceNode.Name);
                     break;
                 
                 case FunctionDefinitionNode functionDefinitionNode:
                     // check local
-                    symbol = GetLocalSymbol(functionDefinitionNode.NameNode.Value, referenceNode.Name);
+                    symbol = GetSymbol(functionDefinitionNode.NameNode.Value, referenceNode.Name);
                     break;
                 case FileNode _:
                     break;
@@ -176,30 +178,82 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
 
 
+            bool arrayIndexNodeFound = false;
+            
             foreach (ReferencePartNode partNode in referenceNode.PartNodes)
             {
+                if (arrayIndexNodeFound)
+                {
+                    partNode.Annotations.Add(new AccessToAttributeOfArrayElementNotSupportedAnnotation());
+                    return;
+                }
+                
                 switch (partNode)
                 {
                     case AttributeNode attributeNode:
+                        classSymbol = GetClassSymbol(symbol);
+
+                        if (classSymbol == null)
+                        {
+                            attributeNode.Annotations.Add(new NotInstanceAnnotation());
+                            // error: cannot access attribute of x, x is not an instance of a clasds
+                            // x.y
+                            // ^ is not an instance of a class
+                            return;
+                        }
+                        
+                        /*
                         if (symbol.BuiltinType != DatSymbolType.Instance)
                         {
-                            throw new Exception();
+                            attributeNode.Annotations.Add(new NotInstanceAnnotation());
+                            // error: cannot access attribute of x, x is not an instance of a clasds
+                            // x.y
+                            // ^ is not an instance of a class
+                            return;
                         }
+                        */
+                        
+                        symbol = GetSymbol(classSymbol.Name, attributeNode.Name);
+                        if (symbol == null) {
+                            // CLASS X doesn't have attribute Y
+                            attributeNode.Annotations.Add(new ClassDoesNotHaveAttributeAnnotation(classSymbol.Name));
+                            return;
+                        }
+
+
                         break;
-                    case ArrayIndexNode arrayIndexNode:
+                    case ArrayIndexNode _:
+                        arrayIndexNodeFound = true;
+                        
+                        if (!(_symbolTable[symbol.Name].Node is IArrayDeclarationNode))
+                        {
+                            referenceNode.Annotations.Add(new ReferencedSymbolIsNotArrayAnnotation());
+                            return;
+                        }
                         break;
                     default:
                         throw new Exception();
                 }
             }
-            
-            // at this point symbols is defined
-            // find if it has any attributes or arraysize (checdk if array)
-            //referenceNode.Symbol = symbol;
+
+
+            referenceNode.Symbol = symbol;
         }
 
+        private DatSymbol GetClassSymbol(DatSymbol symbol)
+        {
+            while (symbol != null)
+            {
+                symbol = symbol.Parent;
+                if (symbol.BuiltinType == DatSymbolType.Class)
+                {
+                    return symbol;
+                }
+            }
 
-        
+            return null;
+        }
+
         private ClassDefinitionNode GetClassDefinitionNode(ASTNode node)
         {
             if (_node2ParentClassNode.ContainsKey(node))

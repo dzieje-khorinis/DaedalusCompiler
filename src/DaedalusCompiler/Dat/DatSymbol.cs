@@ -115,11 +115,14 @@ namespace DaedalusCompiler.Dat
         //public int ParentIndex { get; set; }
         public DatSymbol Parent { get; set; }
         
+       // public bool IsArray { get; set; }
         
         //public ErrorLineContext ErrorLineContext;
         
         public DatSymbol()
         {
+            //IsArray = false;
+            
             Index = -1;
             Name = "";
             ArrayLength = 0;
