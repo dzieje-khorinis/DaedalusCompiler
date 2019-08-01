@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Net;
@@ -9,13 +9,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
     public class ReferenceResolver
     {
-        private readonly Dictionary <string, SymbolContext> _symbolTable;
+        private readonly Dictionary <string, Symbol> _symbolTable;
         
         private HashSet<InheritanceReferenceNode> _nodesVisitedThisIteration;
         private readonly HashSet<InheritanceReferenceNode> _nodesInCycle;
         private readonly Dictionary<ASTNode, ClassDefinitionNode> _node2ParentClassNode;
         
-        public ReferenceResolver(Dictionary<string, SymbolContext> symbolTable)
+        public ReferenceResolver(Dictionary<string, Symbol> symbolTable)
         {
             _symbolTable = symbolTable;
             _nodesInCycle = new HashSet<InheritanceReferenceNode>();
@@ -208,7 +208,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                             // ^ is not an instance of a class
                             return;
                         }
-                        */
+                        #1#
                         
                         symbol = GetSymbol(classSymbol.Name, attributeNode.Name);
                         if (symbol == null) {
@@ -283,4 +283,4 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         
     }
-}
+}*/

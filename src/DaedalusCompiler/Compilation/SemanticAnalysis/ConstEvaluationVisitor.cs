@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using System.Collections.Generic;
 using System.Linq;
 using DaedalusCompiler.Dat;
@@ -8,11 +8,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     //evaluate const content, array elements, array index, array reference index 
     public class ConstEvaluationVisitor : AbstractSyntaxTreeBaseGenericVisitor<NodeValue>
     {
-        private readonly Dictionary <string, SymbolContext> _symbolTable;
+        private readonly Dictionary <string, Symbol> _symbolTable;
         private readonly Dictionary<ASTNode, NodeValue> _visitedNodesValuesCache;
 
 
-        public ConstEvaluationVisitor(Dictionary <string, SymbolContext> symbolTable)
+        public ConstEvaluationVisitor(Dictionary <string, Symbol> symbolTable)
         {
             _symbolTable = symbolTable;
             _visitedNodesValuesCache = new Dictionary<ASTNode, NodeValue>();
@@ -197,7 +197,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             {
                 referenceNode.ArrayIndexValue = Visit(referenceNode.ArrayIndexNode);
             }
-            */
+            #1#
             
             string nodeName = referenceNode.Name.ToUpper();
             if (!_symbolTable.ContainsKey(nodeName))
@@ -237,7 +237,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                                 return new UndefinedValue();
                         }
                     }
-                */
+                #1#
 
                 case ConstDefinitionNode constDefinitionNode:
                     /*
@@ -246,7 +246,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         referenceNode.Annotations.Add(new SquareBracketsNotExpectedAnnotation());
                         return new UndefinedValue();
                     }
-                    */
+                    #1#
                     return Visit(constDefinitionNode.RightSideNode);
                 
                 case FunctionDefinitionNode _:
@@ -340,4 +340,4 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
 
     }
-}
+}*/

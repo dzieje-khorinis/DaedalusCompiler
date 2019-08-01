@@ -139,12 +139,14 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public string TypeName;
         public NameNode NameNode;
-        public DatSymbol Symbol; //filled in SymbolTableCreationVisitor
+
+        public Symbol Symbol;
 
         protected DeclarationNode(NodeLocation location, string type, NameNode nameNode) : base(location)
         {
             TypeName = type.First().ToString().ToUpper() + type.Substring(1).ToLower(); //capitalized
             NameNode = nameNode;
+            Symbol = null;
         }
     }
 
@@ -520,7 +522,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class StringLiteralNode : ValueNode
     {
         public string Value;
-        public DatSymbol Symbol; //filled in SymbolTableCreationVisitor
+        public StringConstSymbol Symbol; //filled in SymbolTableCreationVisitor
 
         public StringLiteralNode(NodeLocation location, string value) : base(location)
         {
@@ -573,11 +575,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class ReferenceNode : ExpressionNode
     {
         public string Name;
-        //public string Path; //i.e. MYFUNC.X, filled in SymbolTableCreationVisitor, not sure if PATH is needed? Rather not
-
         public List<ReferencePartNode> PartNodes;
-        
-        public DatSymbol Symbol; //filled in AnnotationsAdditionVisitor
+
+        public Symbol Symbol; // TODO filled in ???
 
         public ReferenceNode(string name, List<ReferencePartNode> partNodes, NodeLocation location) : base(location)
         {
@@ -596,7 +596,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class InheritanceReferenceNode : ReferenceNode
     {
-        //public ASTNode DefinitionNode;
         public InheritanceReferenceNode(string name, NodeLocation location) : base(name, location)
         {
         }

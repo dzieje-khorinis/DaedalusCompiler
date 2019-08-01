@@ -8,16 +8,18 @@ using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
 {
+    /*
     public class SymbolContext
     {
         public DatSymbol Symbol;
         public ASTNode Node; //DeclarationNode or StringLiteralNode
     }
+    */
 
     public class SemanticAnalyzer
     {
         private AbstractSyntaxTree _abstractSyntaxTree;
-        private Dictionary<string, SymbolContext> _symbolTable;
+        private Dictionary<string, Symbol> _symbolTable;
 
         public SemanticAnalyzer(List<IParseTree> parseTrees, int externalFilesCount)
         {
@@ -62,10 +64,16 @@ namespace DaedalusCompiler.Compilation
             
             // annotates:
             // RedefinedIdentifierAnnotation
-            // UnsupportedArrayTypeAnnotation
             SymbolTableCreationVisitor symbolTableCreationVisitor = new SymbolTableCreationVisitor();
             symbolTableCreationVisitor.VisitTree(_abstractSyntaxTree);
             _symbolTable = symbolTableCreationVisitor.SymbolTable;
+            
+            // annotates:
+            // UnsupportedArrayTypeAnnotation
+            TypeResolver typeResolver = new TypeResolver(_symbolTable);
+            typeResolver.Resolve(symbolTableCreationVisitor.TypedSymbols);
+            
+            
             /*
              *
              * Make symbol table
@@ -78,13 +86,15 @@ namespace DaedalusCompiler.Compilation
             // NotClassOrPrototypeReferenceAnnotation
             // UndeclaredIdentifierAnnotation
             // AccessToAttributeOfArrayElementNotSupportedAnnotation
+            
+            /*
             Console.WriteLine(_abstractSyntaxTree.InheritanceReferenceNodes.Count);
             Console.WriteLine(_abstractSyntaxTree.ReferenceNodes.Count);
             
             ReferenceResolver referenceResolver = new ReferenceResolver(_symbolTable);
             referenceResolver.Resolve(_abstractSyntaxTree.InheritanceReferenceNodes);
             referenceResolver.Resolve(_abstractSyntaxTree.ReferenceNodes);
-
+            */
             
             /*
             ConstEvaluationVisitor constEvaluationVisitor = new ConstEvaluationVisitor(_symbolTable);

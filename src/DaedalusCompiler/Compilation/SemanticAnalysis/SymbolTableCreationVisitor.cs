@@ -1,35 +1,29 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
     public class SymbolTableCreationVisitor : AbstractSyntaxTreeBaseVisitor
     {
-        public readonly Dictionary <string, SymbolContext> SymbolTable;
+        public readonly Dictionary <string, Symbol> SymbolTable;
         private bool _isInExternal;
         private int _nextSymbolIndex;
         private int _nextStringSymbolNumber;
         
         public readonly List<ConstDefinitionNode> ConstDefinitionNodes;
         public readonly List<IArrayDeclarationNode> ArrayDeclarationNodes;
-        //public readonly List<InheritanceReferenceNode> ParentReferenceNodes;
-        //public readonly List<ReferenceNode> ReferenceNodes;
-        
+        public readonly List<ITypedSymbol> TypedSymbols;
 
         public SymbolTableCreationVisitor()
         {
-            SymbolTable = new Dictionary<string, SymbolContext>();
+            SymbolTable = new Dictionary<string, Symbol>();
             _isInExternal = false;
             _nextSymbolIndex = 0;
             _nextStringSymbolNumber = 10000;
 
             ConstDefinitionNodes = new List<ConstDefinitionNode>();
             ArrayDeclarationNodes = new List<IArrayDeclarationNode>();
-            //ParentReferenceNodes = new List<InheritanceReferenceNode>();
-            //ReferenceNodes = new List<ReferenceNode>();
+            TypedSymbols = new List<ITypedSymbol>();
         }
 
         protected override void VisitFile(FileNode node)
@@ -41,35 +35,18 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         protected override void VisitClassDefinition(ClassDefinitionNode classDefinitionNode)
         {
             string className = classDefinitionNode.NameNode.Value;
-            
-            if (SymbolTable.ContainsKey(className))
-            {
-                return;
-            }
-
-            DatSymbol classSymbol = SymbolBuilder.BuildClass(className, classDefinitionNode.AttributeNodes.Count);
-            AddSymbol(classSymbol, classDefinitionNode);
-
-            int classVarOffset = classSymbol.ClassOffset;
-            foreach (var declarationNode in classDefinitionNode.AttributeNodes)
-            {
-                Visit(declarationNode);
-                declarationNode.Symbol.ClassVarOffset = classVarOffset;
-                classVarOffset += declarationNode.Symbol.BuiltinType == DatSymbolType.String ? 20 : 4;
-            }
-
-            classSymbol.ClassSize = classVarOffset - classSymbol.ClassOffset;
+            ClassSymbol classSymbol = new ClassSymbol(className, classDefinitionNode);
+            AddSymbol(classSymbol);
+            Visit(classDefinitionNode.AttributeNodes);
         }
 
         protected override void VisitFunctionDefinition(FunctionDefinitionNode functionDefinitionNode)
         {
             string functionName = functionDefinitionNode.NameNode.Value;
-            DatSymbolType returnType = GetBuiltinType(functionDefinitionNode.TypeName);
-            int parametersCount = functionDefinitionNode.ParameterNodes.Count;
+            string returnTypeName = functionDefinitionNode.TypeName;
             
-            DatSymbol functionSymbol = SymbolBuilder.BuildFunction(functionName, parametersCount, returnType);
-            AddSymbol(functionSymbol, functionDefinitionNode);
-            
+            FunctionSymbol functionSymbol = new FunctionSymbol(returnTypeName, functionName, functionDefinitionNode);
+            AddSymbol(functionSymbol);
             Visit(functionDefinitionNode.ParameterNodes);
             Visit(functionDefinitionNode.BodyNodes);
         }
@@ -77,23 +54,25 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         protected override void VisitInstanceDefinition(InstanceDefinitionNode instanceDefinitionNode)
         {
             string instanceName = instanceDefinitionNode.NameNode.Value;
-            DatSymbol instanceSymbol = SymbolBuilder.BuildInstance(instanceName);
-            AddSymbol(instanceSymbol, instanceDefinitionNode);
+            InstanceSymbol instanceSymbol = new InstanceSymbol(instanceName, instanceDefinitionNode);
+            AddSymbol(instanceSymbol);
+            Visit(instanceDefinitionNode.BodyNodes);
         }
 
         protected override void VisitPrototypeDefinition(PrototypeDefinitionNode prototypeDefinitionNode)
         {
             string prototypeName = prototypeDefinitionNode.NameNode.Value;
-            DatSymbol prototypeSymbol = SymbolBuilder.BuildPrototype(prototypeName);
-            AddSymbol(prototypeSymbol, prototypeDefinitionNode);
+            PrototypeSymbol prototypeSymbol = new PrototypeSymbol(prototypeName, prototypeDefinitionNode);
+            AddSymbol(prototypeSymbol);
+            Visit(prototypeDefinitionNode.BodyNodes);
         }
 
         protected override void VisitStringLiteral(StringLiteralNode stringLiteralNode)
         {
             string name = $"{(char)255}{_nextStringSymbolNumber++}";
             string value = stringLiteralNode.Value;
-            DatSymbol stringConstSymbol = SymbolBuilder.BuildStringConst(name, value);
-            AddSymbol(stringConstSymbol, stringLiteralNode);
+            StringConstSymbol stringConstSymbol = new StringConstSymbol(value, name, stringLiteralNode);
+            AddSymbol(stringConstSymbol);
         }
 
         protected override void VisitConstDefinition(ConstDefinitionNode constDefinitionNode)
@@ -103,11 +82,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected override void VisitConstArrayDefinition(ConstArrayDefinitionNode constArrayDefinitionNode)
         {
-            BuildConst(constArrayDefinitionNode);
-            if (!IsArrayTypeSupported(constArrayDefinitionNode.TypeName))
-            {
-                constArrayDefinitionNode.Annotations.Add(new UnsupportedArrayTypeAnnotation());
-            }
+            BuildConst(constArrayDefinitionNode, true);
         }
 
         protected override void VisitParameterDeclaration(ParameterDeclarationNode parameterDeclarationNode)
@@ -117,11 +92,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected override void VisitParameterArrayDeclaration(ParameterArrayDeclarationNode parameterArrayDeclarationNode)
         {
-            BuildParameter(parameterArrayDeclarationNode);
-            if (!IsArrayTypeSupported(parameterArrayDeclarationNode.TypeName))
-            {
-                parameterArrayDeclarationNode.Annotations.Add(new UnsupportedArrayTypeAnnotation());
-            }
+            BuildParameter(parameterArrayDeclarationNode, true);
         }
         
         protected override void VisitVarDeclaration(VarDeclarationNode varDeclarationNode)
@@ -131,139 +102,92 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected override void VisitVarArrayDeclaration(VarArrayDeclarationNode varArrayDeclarationNode)
         {
-            BuildVar(varArrayDeclarationNode);
-            if (!IsArrayTypeSupported(varArrayDeclarationNode.TypeName))
-            {
-                varArrayDeclarationNode.Annotations.Add(new UnsupportedArrayTypeAnnotation());
-            }
+            BuildVar(varArrayDeclarationNode, true);
         }
 
-        private void BuildParameter(ParameterDeclarationNode parameterDeclarationNode)
+        private void BuildParameter(ParameterDeclarationNode parameterDeclarationNode, bool buildArray=false)
         {
             if (parameterDeclarationNode.Parent is FunctionDefinitionNode functionDefinitionNode)
             {
-                DatSymbol functionSymbol = functionDefinitionNode.Symbol;
-                string varName = parameterDeclarationNode.NameNode.Value;
-                DatSymbolType varType = GetBuiltinType(parameterDeclarationNode.TypeName);
-                DatSymbol parameterSymbol = _isInExternal ? SymbolBuilder.BuildExternalParameter(varName, varType, functionSymbol) : SymbolBuilder.BuildParameter(varName, varType, functionSymbol);
-                AddSymbol(parameterSymbol, parameterDeclarationNode);
+                FunctionSymbol functionSymbol = (FunctionSymbol) functionDefinitionNode.Symbol;
+                string parameterName = parameterDeclarationNode.NameNode.Value;
+                string parameterTypeName = parameterDeclarationNode.TypeName;
+
+                ParameterSymbol parameterSymbol;
+                if (_isInExternal)
+                {
+                    parameterSymbol = buildArray
+                        ? new ParameterArraySymbol(functionSymbol, parameterTypeName, parameterName, parameterDeclarationNode)
+                        : new ParameterSymbol(functionSymbol, parameterTypeName, parameterName, parameterDeclarationNode);
+                }
+                else
+                {
+                    parameterSymbol = buildArray
+                        ? new ExternalParameterArraySymbol(functionSymbol, parameterTypeName, parameterName, parameterDeclarationNode)
+                        : new ExternalParameterSymbol(functionSymbol, parameterTypeName, parameterName, parameterDeclarationNode);
+                }
+                AddSymbol(parameterSymbol);
             }
             else
             {
                 throw new Exception();
             }
-            
-            
         }
 
-        private void BuildConst(ConstDefinitionNode constDefinitionNode)
+
+
+        private void BuildConst(ConstDefinitionNode constDefinitionNode, bool buildArray=false)
         {
             string constName = constDefinitionNode.NameNode.Value;
-            DatSymbolType constType = GetBuiltinType(constDefinitionNode.TypeName);
-            
-            DatSymbol constSymbol;
+            string constTypeName = constDefinitionNode.TypeName;
 
-            switch (constDefinitionNode.ParentNode)
-            {
-                case ClassDefinitionNode classDefinitionNode:
-                    DatSymbol classSymbol = classDefinitionNode.Symbol;
-                    constSymbol = SymbolBuilder.BuildClassConst(constName, constType, classSymbol);
-                    break;
-                case FileNode _:
-                    constSymbol = SymbolBuilder.BuildGlobalConst(constName, constType);
-                    break;
-                default:
-                    var functionDefinitionNode = GetAncestorFunctionDefinitionNode(constDefinitionNode);
-                    DatSymbol functionSymbol = functionDefinitionNode.Symbol;
-                    constSymbol = SymbolBuilder.BuildLocalConst(constName, constType, functionSymbol);
-                    break;
-            }
-
-            AddSymbol(constSymbol, constDefinitionNode);
+            BlockSymbol parentBlockSymbol = GetParentBlockSymbol(constDefinitionNode);
+            ConstSymbol constSymbol = buildArray ? new ConstArraySymbol(parentBlockSymbol, constTypeName, constName, constDefinitionNode) : new ConstSymbol(parentBlockSymbol, constTypeName, constName, constDefinitionNode);
+            AddSymbol(constSymbol);
         }
 
-        private FunctionDefinitionNode GetAncestorFunctionDefinitionNode(ASTNode node)
-        {
-            while (node != null)
-            {
-                node = node.ParentNode;
-                if (node is FunctionDefinitionNode functionDefinitionNode)
-                {
-                    return functionDefinitionNode;
-                }
-            }
-            throw new Exception();
-        }
-        private void BuildVar(VarDeclarationNode varDeclarationNode)
+     
+        private void BuildVar(VarDeclarationNode varDeclarationNode, bool buildArray=false)
         {
             string varName = varDeclarationNode.NameNode.Value;
-            DatSymbolType varType = GetBuiltinType(varDeclarationNode.TypeName);
+            string varTypeName = varDeclarationNode.TypeName;
 
-            DatSymbol varSymbol;
-
-            switch (varDeclarationNode.ParentNode)
-            {
-                case ClassDefinitionNode classDefinitionNode:
-                    DatSymbol classSymbol = classDefinitionNode.Symbol;
-                    varSymbol = SymbolBuilder.BuildClassVar(varName, varType, classSymbol);
-                    break;
-                case FileNode _:
-                    varSymbol = SymbolBuilder.BuildGlobalVar(varName, varType);
-                    break;
-                default:
-                    var functionDefinitionNode = GetAncestorFunctionDefinitionNode(varDeclarationNode);
-                    DatSymbol functionSymbol = functionDefinitionNode.Symbol;
-                    varSymbol = SymbolBuilder.BuildLocalVar(varName, varType, functionSymbol);
-                    break;
-            }
-            
-            AddSymbol(varSymbol, varDeclarationNode);
-        }
-
-        private bool IsArrayTypeSupported(string typeName)
-        {
-            switch (typeName.ToUpper())
-            {
-                case "INT":
-                case "STRING":
-                case "FUNC":
-                    return true;
-                default:
-                    return false;
-            }
-        }
-        private DatSymbolType GetBuiltinType(string typeName)
-        {
-            string capitalizedTypeName = typeName.First().ToString().ToUpper() + typeName.Substring(1).ToLower();
-            if(Enum.TryParse(capitalizedTypeName, out DatSymbolType symbolType))
-            {
-                return symbolType;
-            }
-
-            return DatSymbolType.Undefined;
+            BlockSymbol parentBlockSymbol = GetParentBlockSymbol(varDeclarationNode);
+            VarSymbol varSymbol = buildArray ? new VarArraySymbol(parentBlockSymbol, varTypeName, varName, varDeclarationNode) : new VarSymbol(parentBlockSymbol, varTypeName, varName, varDeclarationNode);
+            AddSymbol(varSymbol);
         }
         
-        private void AddSymbol(DatSymbol symbol, DeclarationNode node)
-        {
-            node.Symbol = symbol;
-            symbol.ComplexTypeName = node.TypeName;
-            AddSymbol(symbol, (ASTNode)node);
-        }
         
-        private void AddSymbol(DatSymbol symbol, StringLiteralNode node)
-        {
-            node.Symbol = symbol;
-            AddSymbol(symbol, (ASTNode)node);
-        }
-
-        private void AddSymbol(DatSymbol symbol, ASTNode node)
+        private void AddSymbol(Symbol symbol)
         {
             symbol.Index = _nextSymbolIndex++;
-            symbol.Location = node.Location;
 
-            switch (node)
+            if (SymbolTable.ContainsKey(symbol.Path))
             {
-                
+                symbol.Node.Annotations.Add(new RedefinedIdentifierAnnotation());
+                return;
+            }
+            
+            if (symbol is ITypedSymbol typedSymbol)
+            {
+                TypedSymbols.Add(typedSymbol);
+            }
+            
+            switch (symbol.Node)
+            {
+                case DeclarationNode declarationNode:
+                    declarationNode.Symbol = symbol;
+                    break;
+                case ReferenceNode referenceNode:
+                    referenceNode.Symbol = symbol;
+                    break;
+                case StringLiteralNode stringLiteralNode:
+                    stringLiteralNode.Symbol = (StringConstSymbol) symbol;
+                    break;
+            }
+
+            switch (symbol.Node)
+            {
                 case IArrayDeclarationNode arrayDeclarationNode:
                     ArrayDeclarationNodes.Add(arrayDeclarationNode);
                     break;
@@ -271,32 +195,61 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 case ConstDefinitionNode constDefinitionNode:
                     ConstDefinitionNodes.Add(constDefinitionNode);
                     break;
-                    
-                
-                /*
-                case ReferenceNode referenceNode:
-                    ReferenceNodes.Add(referenceNode);
-                    break;
-
-                case InstanceDefinitionNode instanceDefinitionNode:
-                    ParentReferenceNodes.Add(instanceDefinitionNode.InheritanceReferenceNode);
-                    break;
-                
-                case PrototypeDefinitionNode prototypeDefinitionNode:
-                    ParentReferenceNodes.Add(prototypeDefinitionNode.InheritanceReferenceNode);
-                    break;
-                    */
-                
             }
-
-            string nameUpper = symbol.Name.ToUpper();
-            if (SymbolTable.ContainsKey(nameUpper))
+            
+            SymbolTable[symbol.Path] = symbol;
+        }
+        
+        
+        private DeclarationNode GetParentBlockNode(ASTNode node)
+        {
+            while (node != null)
             {
-                node.Annotations.Add(new RedefinedIdentifierAnnotation());
-                return;
+                switch (node)
+                {
+                    case PrototypeDefinitionNode prototypeDefinitionNode:
+                        return prototypeDefinitionNode;
+                    
+                    case InstanceDefinitionNode instanceDefinitionNode:
+                        return instanceDefinitionNode;
+                    
+                    case FunctionDefinitionNode functionDefinitionNode:
+                        return functionDefinitionNode;
+                }
+                node = node.ParentNode;
+                
             }
+            throw new Exception();
+        }
 
-            SymbolTable[nameUpper] = new SymbolContext {Symbol = symbol, Node = node};
+        private BlockSymbol GetParentBlockSymbol(ASTNode node)
+        {
+            node = node.ParentNode;
+            switch (node)
+            {
+                case FileNode _:
+                    return null;
+                
+                case ClassDefinitionNode classDefinitionNode:
+                    return (BlockSymbol) classDefinitionNode.Symbol;
+
+                default:
+                    DeclarationNode parentBlockNode = GetParentBlockNode(node);
+                    switch (parentBlockNode)
+                    {
+                        case PrototypeDefinitionNode prototypeDefinitionNode:
+                            return (BlockSymbol) prototypeDefinitionNode.Symbol;
+                    
+                        case InstanceDefinitionNode instanceDefinitionNode:
+                            return (BlockSymbol) instanceDefinitionNode.Symbol;
+                    
+                        case FunctionDefinitionNode functionDefinitionNode:
+                            return (BlockSymbol) functionDefinitionNode.Symbol;
+                        
+                        default:
+                            throw new Exception();
+                    }
+            }
         }
     }
 }

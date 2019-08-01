@@ -80,6 +80,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         
     }
+
+    public class UnsupportedTypeAnnotation : NodeAnnotation
+    {
+        
+    }
     
     public class ClassDoesNotHaveAttributeAnnotation : NodeAnnotation
     {
