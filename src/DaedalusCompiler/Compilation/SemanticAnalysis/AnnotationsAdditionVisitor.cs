@@ -44,6 +44,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     case ReferenceNode referenceNode:
                         message = $"{message} {referenceNode.Name}";
                         break;
+                    case AttributeNode attributeNode:
+                        message = $"{message} {attributeNode.Name}";
+                        break;
                 }
 
                 Console.WriteLine($"{message}");

@@ -171,13 +171,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     referenceNode.Annotations.Add(new UndeclaredIdentifierAnnotation());
                     return;
                 }
-                else
-                {
-                    symbol = _symbolTable[nameUpper].Symbol;
-                }
+
+                symbol = _symbolTable[nameUpper].Symbol;
             }
-
-
+            
             bool arrayIndexNodeFound = false;
             
             foreach (ReferencePartNode partNode in referenceNode.PartNodes)
@@ -195,10 +192,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
                         if (classSymbol == null)
                         {
-                            attributeNode.Annotations.Add(new NotInstanceAnnotation());
-                            // error: cannot access attribute of x, x is not an instance of a clasds
+                            attributeNode.Annotations.Add(new AttributeOfNonInstanceAnnotation());
+                            // error: cannot access attribute y of non instance object
                             // x.y
-                            // ^ is not an instance of a class
+                            //   ^
                             return;
                         }
                         
@@ -242,15 +239,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         private DatSymbol GetClassSymbol(DatSymbol symbol)
         {
+            symbol = symbol.Parent;
             while (symbol != null)
             {
-                symbol = symbol.Parent;
                 if (symbol.BuiltinType == DatSymbolType.Class)
                 {
                     return symbol;
                 }
+                symbol = symbol.Parent;
             }
-
             return null;
         }
 

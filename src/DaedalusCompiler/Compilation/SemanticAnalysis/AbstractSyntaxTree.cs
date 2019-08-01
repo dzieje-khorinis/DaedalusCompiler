@@ -65,23 +65,36 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class AbstractSyntaxTree
     {
-        public List<FileNode> FileNodes;
+        public List<FileNode> RootNodes;
 
+        public readonly List<InheritanceReferenceNode> InheritanceReferenceNodes;
+        public readonly List<ReferenceNode> ReferenceNodes;
+        public readonly List<ConstDefinitionNode> ConstDefinitionNodes;
+        public readonly List<IArrayDeclarationNode> ArrayDeclarationNodes;
+        
         public AbstractSyntaxTree(List<IParseTree> parseTrees, int externalFilesCount)
         {
-            FileNodes = new List<FileNode>();
-
+            RootNodes = new List<FileNode>();
+            ConstDefinitionNodes = new List<ConstDefinitionNode>();
+            ArrayDeclarationNodes = new List<IArrayDeclarationNode>();
+            InheritanceReferenceNodes = new List<InheritanceReferenceNode>();
+            ReferenceNodes = new List<ReferenceNode>();
+            
             int index = 0;
             foreach (IParseTree parseTree in parseTrees)
             {
                 ParseTreeVisitor visitor = new ParseTreeVisitor(index);
-                FileNodes.Add((FileNode) visitor.Visit(parseTree));
+                RootNodes.Add((FileNode) visitor.Visit(parseTree));
+                ConstDefinitionNodes.AddRange(visitor.ConstDefinitionNodes);
+                ArrayDeclarationNodes.AddRange(visitor.ArrayDeclarationNodes);
+                InheritanceReferenceNodes.AddRange(visitor.InheritanceReferenceNodes);
+                ReferenceNodes.AddRange(visitor.ReferenceNodes);
                 index++;
             }
 
             for (int i = 0; i < externalFilesCount; ++i)
             {
-                FileNodes[i].IsExternal = true;
+                RootNodes[i].IsExternal = true;
             }
         }
     }

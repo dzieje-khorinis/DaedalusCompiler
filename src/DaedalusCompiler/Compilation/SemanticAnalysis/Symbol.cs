@@ -2,6 +2,7 @@ using System.Collections.Generic;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
+    /*
     public class SymbolTree
     {
         public List<Symbol> Symbols;
@@ -11,78 +12,98 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Symbols = new List<Symbol>();
         }
     }
+    */
 
 
-    public interface ILocalSymbol
-    {
-        Symbol Parent { get; set; }
-    }
-    
-    
     public abstract class Symbol
     {
         public ASTNode Node;
     }
     
     
+    public abstract class BlockSymbol : Symbol
+    {
+        public List<NestableSymbol> BodySymbols;
+    }
+    
+    public abstract class NestableSymbol : Symbol
+    {
+        public BlockSymbol ParentBlockSymbol;
+        public string TypeName;
+    }
+
+    public abstract class InheritanceSymbol : Symbol
+    {
+    }
+
+    public abstract class SubclassSymbol : InheritanceSymbol //Prototype / Instance
+    {
+        public InheritanceSymbol InheritanceParentSymbol;
+        public ClassSymbol BaseClassSymbol;
+    }
+    
     
     public class FunctionSymbol : Symbol
     {
         public List<ParameterSymbol> ParametersSymbols;
-        public List<ILocalSymbol> VarsSymbols;
-    }
-    
-        
-    public class ClassSymbol : Symbol
-    {
-        public List<VarSymbol> Attributes;
-    }
-    
-    
-    
-    public class PrototypeSymbol : Symbol
-    {
-        public Symbol Parent;
-    }
-
-    public class InstanceSymbol : Symbol
-    {
-        
-    }
-    
-
-    public class StringConstSymbol : Symbol
-    {
-        
-    }
-    
-    
-    public class VarSymbol : Symbol
-    {
         
     }
 
-    public class ConstSymbol : Symbol
+    public interface IArraySymbol
     {
-
+        int Size { get; set; }
     }
     
+    public class ClassSymbol : InheritanceSymbol
+    {
+        public List<NestableSymbol> AttributesSymbols;
+    }
+
+    public class PrototypeSymbol : SubclassSymbol
+    {
+    }
+
+    public class InstanceSymbol : SubclassSymbol
+    {
+    }
+
+    public class VarSymbol : NestableSymbol
+    {
+    }
     
+    public class VarArraySymbol : VarSymbol, IArraySymbol
+    {
+        public int Size { get; set; }
+    }
+
+    public class ConstSymbol : NestableSymbol
+    {
+    }
+    
+    public class ConstArraySymbol : ConstSymbol, IArraySymbol
+    {
+        public int Size { get; set; }
+    }
     
     public class ParameterSymbol : Symbol
     {
-        public bool IsExternal;
-    }
-
-
-
-    public class ClassVarSymbol : Symbol
-    {
-        
     }
     
-    public class ClassConstSymbol : Symbol
+    public class ParameterArraySymbol : ParameterSymbol, IArraySymbol
     {
-        // TODO is this even ever used?
+        public int Size { get; set; }
+    }
+    
+    public class ExternalParameterSymbol : ParameterSymbol
+    {
+    }
+    
+    public class ExternalParameterArraySymbol : ExternalParameterSymbol, IArraySymbol
+    {
+        public int Size { get; set; }
+    }
+    
+    public class StringConstSymbol : Symbol
+    {
     }
 }

@@ -52,7 +52,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
     }
 
-    public class NotInstanceAnnotation : NodeAnnotation
+    public class AttributeOfNonInstanceAnnotation : NodeAnnotation
     {
         
     }

@@ -15,8 +15,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         public readonly List<ConstDefinitionNode> ConstDefinitionNodes;
         public readonly List<IArrayDeclarationNode> ArrayDeclarationNodes;
-        public readonly List<InheritanceReferenceNode> ParentReferenceNodes;
-        public readonly List<ReferenceNode> ReferenceNodes;
+        //public readonly List<InheritanceReferenceNode> ParentReferenceNodes;
+        //public readonly List<ReferenceNode> ReferenceNodes;
         
 
         public SymbolTableCreationVisitor()
@@ -28,8 +28,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
             ConstDefinitionNodes = new List<ConstDefinitionNode>();
             ArrayDeclarationNodes = new List<IArrayDeclarationNode>();
-            ParentReferenceNodes = new List<InheritanceReferenceNode>();
-            ReferenceNodes = new List<ReferenceNode>();
+            //ParentReferenceNodes = new List<InheritanceReferenceNode>();
+            //ReferenceNodes = new List<ReferenceNode>();
         }
 
         protected override void VisitFile(FileNode node)
@@ -232,9 +232,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     return false;
             }
         }
-        private DatSymbolType GetBuiltinType(string type)
+        private DatSymbolType GetBuiltinType(string typeName)
         {
-            if(Enum.TryParse(type, out DatSymbolType symbolType))
+            string capitalizedTypeName = typeName.First().ToString().ToUpper() + typeName.Substring(1).ToLower();
+            if(Enum.TryParse(capitalizedTypeName, out DatSymbolType symbolType))
             {
                 return symbolType;
             }
@@ -262,6 +263,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
             switch (node)
             {
+                
                 case IArrayDeclarationNode arrayDeclarationNode:
                     ArrayDeclarationNodes.Add(arrayDeclarationNode);
                     break;
@@ -269,7 +271,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 case ConstDefinitionNode constDefinitionNode:
                     ConstDefinitionNodes.Add(constDefinitionNode);
                     break;
+                    
                 
+                /*
                 case ReferenceNode referenceNode:
                     ReferenceNodes.Add(referenceNode);
                     break;
@@ -281,6 +285,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 case PrototypeDefinitionNode prototypeDefinitionNode:
                     ParentReferenceNodes.Add(prototypeDefinitionNode.InheritanceReferenceNode);
                     break;
+                    */
                 
             }
 

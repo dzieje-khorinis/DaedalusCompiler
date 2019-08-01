@@ -8,7 +8,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         public T VisitTree(AbstractSyntaxTree tree)
         {
-            foreach (var fileNode in tree.FileNodes)
+            foreach (var fileNode in tree.RootNodes)
             {
                 VisitFile(fileNode);
             }
@@ -163,12 +163,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             foreach (var partNode in referenceNode.PartNodes)
             {
+                Visit(partNode);
+                /*
                 switch (partNode)
                 {
                     case ArrayIndexNode arrayIndexNode:
                         Visit(arrayIndexNode.ExpressionNode);
                         break;
                 }
+                */
             }
             return DefaultResult;
         }

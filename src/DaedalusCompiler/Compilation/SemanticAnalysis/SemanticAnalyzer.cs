@@ -66,17 +66,24 @@ namespace DaedalusCompiler.Compilation
             SymbolTableCreationVisitor symbolTableCreationVisitor = new SymbolTableCreationVisitor();
             symbolTableCreationVisitor.VisitTree(_abstractSyntaxTree);
             _symbolTable = symbolTableCreationVisitor.SymbolTable;
+            /*
+             *
+             * Make symbol table
+             * 
+             */
+            
             
             // annotates:
             // InfiniteReferenceLoopAnnotation (Class/Prototype)
             // NotClassOrPrototypeReferenceAnnotation
             // UndeclaredIdentifierAnnotation
             // AccessToAttributeOfArrayElementNotSupportedAnnotation
+            Console.WriteLine(_abstractSyntaxTree.InheritanceReferenceNodes.Count);
+            Console.WriteLine(_abstractSyntaxTree.ReferenceNodes.Count);
+            
             ReferenceResolver referenceResolver = new ReferenceResolver(_symbolTable);
-            referenceResolver.Resolve(symbolTableCreationVisitor.ParentReferenceNodes);
-            Console.WriteLine(symbolTableCreationVisitor.ParentReferenceNodes.Count);
-            Console.WriteLine(symbolTableCreationVisitor.ReferenceNodes.Count);
-            referenceResolver.Resolve(symbolTableCreationVisitor.ReferenceNodes);
+            referenceResolver.Resolve(_abstractSyntaxTree.InheritanceReferenceNodes);
+            referenceResolver.Resolve(_abstractSyntaxTree.ReferenceNodes);
 
             
             /*

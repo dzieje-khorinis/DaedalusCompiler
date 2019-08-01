@@ -12,10 +12,19 @@ namespace DaedalusCompiler.Compilation
     {
 	    private readonly int _sourceFileNumber;
 	    public bool IsVisitingExternal;
+	    
+	    public readonly List<InheritanceReferenceNode> InheritanceReferenceNodes;
+	    public readonly List<ReferenceNode> ReferenceNodes;
+	    public readonly List<ConstDefinitionNode> ConstDefinitionNodes;
+	    public readonly List<IArrayDeclarationNode> ArrayDeclarationNodes;
 
 	    public ParseTreeVisitor(int sourceFileNumber)
 	    {
 		    _sourceFileNumber = sourceFileNumber;
+		    ConstDefinitionNodes = new List<ConstDefinitionNode>();
+		    ArrayDeclarationNodes = new List<IArrayDeclarationNode>();
+		    InheritanceReferenceNodes = new List<InheritanceReferenceNode>();
+		    ReferenceNodes = new List<ReferenceNode>();
 	    }
 
 	    public override ASTNode VisitDaedalusFile([NotNull] DaedalusParser.DaedalusFileContext context)
@@ -99,6 +108,7 @@ namespace DaedalusCompiler.Compilation
 			NameNode nameNode = new NameNode(GetLocation(prototypeDefContext.nameNode()), prototypeDefContext.nameNode().GetText());
 			DaedalusParser.ParentReferenceContext parentReferenceContext = prototypeDefContext.parentReference();
 			InheritanceReferenceNode inheritanceReferenceNode = new InheritanceReferenceNode(parentReferenceContext.GetText(), GetLocation(parentReferenceContext));
+			InheritanceReferenceNodes.Add(inheritanceReferenceNode);
 			List<StatementNode> statementNodes = GetStatementNodes(prototypeDefContext.statementBlock());
 			return new PrototypeDefinitionNode(GetLocation(prototypeDefContext), nameNode, inheritanceReferenceNode, statementNodes);
 		}
@@ -108,6 +118,7 @@ namespace DaedalusCompiler.Compilation
 			NameNode nameNode = new NameNode(GetLocation(instanceDefContext.nameNode()), instanceDefContext.nameNode().GetText());
 			DaedalusParser.ParentReferenceContext parentReferenceContext = instanceDefContext.parentReference();
 			InheritanceReferenceNode inheritanceReferenceNode = new InheritanceReferenceNode(parentReferenceContext.GetText(), GetLocation(parentReferenceContext));
+			InheritanceReferenceNodes.Add(inheritanceReferenceNode);
 			List<StatementNode> statementNodes = GetStatementNodes(instanceDefContext.statementBlock());
 			return new InstanceDefinitionNode(GetLocation(instanceDefContext), nameNode, inheritanceReferenceNode, statementNodes);
 		}
@@ -120,7 +131,9 @@ namespace DaedalusCompiler.Compilation
 			if (context.arraySize() != null)
 			{
 				var arraySize = (ExpressionNode) VisitArraySize(context.arraySize());
-				return new ParameterArrayDeclarationNode(location, type, name, arraySize);
+				ParameterArrayDeclarationNode parameterArrayDeclarationNode = new ParameterArrayDeclarationNode(location, type, name, arraySize);
+				ArrayDeclarationNodes.Add(parameterArrayDeclarationNode);
+				return parameterArrayDeclarationNode;
 			}
 			return new ParameterDeclarationNode(location, type, name);
 		}
@@ -134,6 +147,7 @@ namespace DaedalusCompiler.Compilation
 		{
 			DaedalusParser.NameNodeContext nameNodeContext = context.nameNode();
 			ReferenceNode referenceNode = new ReferenceNode(nameNodeContext.GetText(), GetLocation(nameNodeContext));
+			ReferenceNodes.Add(referenceNode);
 			List<ExpressionNode> expressionNodes = new List<ExpressionNode>();
 			foreach (DaedalusParser.ExpressionContext expressionContext in context.expression())
 			{
@@ -351,7 +365,9 @@ namespace DaedalusCompiler.Compilation
 
 			string name = ((AttributeNode) referencePartNodes[0]).Name;
 			referencePartNodes.RemoveAt(0);
-			return new ReferenceNode(name, referencePartNodes, GetLocation(context));
+			ReferenceNode referenceNode = new ReferenceNode(name, referencePartNodes, GetLocation(context));
+			ReferenceNodes.Add(referenceNode);
+			return referenceNode;
 		}
 		
 		
@@ -359,6 +375,7 @@ namespace DaedalusCompiler.Compilation
 		{
 			DaedalusParser.ParentReferenceContext parentReferenceContext = instanceDeclContext.parentReference();
 			InheritanceReferenceNode inheritanceReferenceNode = new InheritanceReferenceNode(parentReferenceContext.GetText(), GetLocation(parentReferenceContext));
+			InheritanceReferenceNodes.Add(inheritanceReferenceNode);
 			
 			List<DeclarationNode> instanceDeclarationNodes = new List<DeclarationNode>();
 			
@@ -386,7 +403,10 @@ namespace DaedalusCompiler.Compilation
 					DaedalusParser.NameNodeContext nameNodeContext = constValueDefContext.nameNode();
 					NameNode nameNode = new NameNode(GetLocation(nameNodeContext), nameNodeContext.GetText());
 					ExpressionNode rightSideNode = (ExpressionNode) Visit(constValueDefContext.constValueAssignment().expression());
-					constDefinitionNodes.Add(new ConstDefinitionNode(GetLocation(constValueDefContext), type, nameNode, rightSideNode));
+					ConstDefinitionNode constDefinitionNode = new ConstDefinitionNode(GetLocation(constValueDefContext),
+						type, nameNode, rightSideNode);
+					ConstDefinitionNodes.Add(constDefinitionNode);
+					constDefinitionNodes.Add(constDefinitionNode);
 				}
 				else if (childContext is DaedalusParser.ConstArrayDefContext constArrayDefContext)
 				{	
@@ -399,8 +419,12 @@ namespace DaedalusCompiler.Compilation
 					{
 						elementNodes.Add((ExpressionNode) Visit(expressionContext));
 					}
-					
-					constDefinitionNodes.Add(new ConstArrayDefinitionNode(GetLocation(nameNodeContext), type, nameNode, arraySizeNode, elementNodes));
+
+					ConstArrayDefinitionNode constArrayDefinitionNode =
+						new ConstArrayDefinitionNode(GetLocation(nameNodeContext), type, nameNode, arraySizeNode,
+							elementNodes);
+					ArrayDeclarationNodes.Add(constArrayDefinitionNode);
+					constDefinitionNodes.Add(constArrayDefinitionNode);
 				}
 			}
 			return new ConstDefinitionsTemporaryNode(GetLocation(constDefContext), constDefinitionNodes);
@@ -425,7 +449,10 @@ namespace DaedalusCompiler.Compilation
 					DaedalusParser.NameNodeContext nameNodeContext = varArrayDeclContext.nameNode();
 					NameNode nameNode = new NameNode(GetLocation(nameNodeContext), nameNodeContext.GetText());
 					ExpressionNode arraySizeNode = (ExpressionNode) VisitArraySize(varArrayDeclContext.arraySize());
-					varDeclarationNodes.Add(new VarArrayDeclarationNode(GetLocation(nameNodeContext), type, nameNode, arraySizeNode));
+					VarArrayDeclarationNode varArrayDeclarationNode =
+						new VarArrayDeclarationNode(GetLocation(nameNodeContext), type, nameNode, arraySizeNode);
+					ArrayDeclarationNodes.Add(varArrayDeclarationNode);
+					varDeclarationNodes.Add(varArrayDeclarationNode);
 				}
 			}
 			return new VarDeclarationsTemporaryNode(GetLocation(varDeclContext), varDeclarationNodes);
