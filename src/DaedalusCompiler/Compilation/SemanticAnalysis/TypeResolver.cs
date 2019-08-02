@@ -21,148 +21,73 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 Resolve(typedSymbol);    
             }
         }
-
-
-        public bool IsTypeAllowed(FunctionSymbol functionSymbol)
-        {
-            DatSymbolType symbolType = GetBuiltinType(functionSymbol.TypeName);
-            return true;
-        }
         
         public void Resolve(ITypedSymbol typedSymbol)
         {
-            /*
-            switch (typedSymbol.TypeName)
-            {
-                case "VOID":
-                    break;
-                
-                case "FLOAT":
-                    break;
-                
-                case "STRING":
-                case "FUNC":
-                    break;
-                default:
-                    ((Symbol)typedSymbol).Node.Annotations.Add(new UnsupportedArrayTypeAnnotation());
-                    break;
-            }
-            break;
-            */
-
+            SymbolType? symbolType = typedSymbol.BuiltinType;
+            ASTNode typedSymbolNode = ((Symbol) typedSymbol).Node;
             
-            ASTNode node = (Symbol) typedSymbol;
-            string capitalizedTypeName = typedSymbol.TypeName[0].ToUpper() + typedSymbol.TypeName.Substring(1).ToLower();
-            if(Enum.TryParse(capitalizedTypeName, out DatSymbolType symbolType))
+            if (!symbolType.HasValue)
             {
-                switch (symbolType)
+                if (_symbolTable.ContainsKey(typedSymbol.TypeName))
                 {
-                    case DatSymbolType.Class:
-                    case DatSymbolType.Prototype:
-                        node.Annotations.Add(new UnsupportedTypeAnnotation());
-                        break;
-                        
-                    case DatSymbolType.Instance:
-                        node.Annotations.Add(new UnsupportedTypeAnnotation());
-                        break;
+                    Symbol typeSymbol = _symbolTable[typedSymbol.TypeName];
                     
-                    case DatSymbolType.Void:
-                        if (!(typedSymbol is FunctionSymbol))
-                        {
-                            node.Annotations.Add(new UnsupportedTypeAnnotation());
-                        }
-                        break;
+                    if (typeSymbol is ClassSymbol)
+                    {
+                        typedSymbol.ComplexType = typeSymbol;
+                        symbolType = SymbolType.Instance;    
+                    }
+                    else
+                    {
+                        typedSymbolNode.Annotations.Add(new UnsupportedTypeAnnotation());
+                        return;
+                    }
+                }
+                else
+                {
+                    typedSymbolNode.Annotations.Add(new UndeclaredIdentifierAnnotation());
+                    return;
                 }
             }
             
             
-            
-            /*
-            switch (typedSymbol.TypeName)
-            {
-                 
-            }
-            */
-            
-
-            
-            /*
-             
-             
-             string capitalizedTypeName = typeName.First().ToString().ToUpper() + typeName.Substring(1).ToLower();
-            if(Enum.TryParse(capitalizedTypeName, out DatSymbolType symbolType))
-            {
-                return symbolType;
-            }
-             
-             */
-            
-            /*
-            Void = 0, //tylko dla funkcji
-            Float = 1, // dla funkcji i zmiennych
-            Int = 2, // dla wszystkiego
-            String = 3, //dla wszystkiego
-            Class = 4, //dla niczego
-            Func = 5, //tylko dla zmiennych i tablic
-            Prototype = 6, //dla niczego
-            Instance = 7, //dla funkcji i zmiennych
-            Undefined = 8,
-            */
-            /*
-             * 
-             */
-            
-            
-            
             switch (typedSymbol)
             {
-                case IArraySymbol _:
-                    switch (typedSymbol.TypeName.ToUpper())
+                case FunctionSymbol _:
+                    switch (symbolType)
                     {
-                        case "INT":
-                        case "STRING":
-                        case "FUNC":
+                        case SymbolType.Class:
+                        case SymbolType.Prototype:
+                        case SymbolType.Func:
+                            typedSymbolNode.Annotations.Add(new UnsupportedTypeAnnotation());
+                            return;
+                    }
+
+                    break;
+                case IArraySymbol _:
+                    switch (symbolType)
+                    {
+                        case SymbolType.Int:
+                        case SymbolType.String:
+                        case SymbolType.Func:
                             break;
                         default:
-                            ((Symbol)typedSymbol).Node.Annotations.Add(new UnsupportedArrayTypeAnnotation());
-                            break;
+                            typedSymbolNode.Annotations.Add(new UnsupportedTypeAnnotation());
+                            return;
                     }
                     break;
-
-            }
-            
-            
-        }
-        
-                
-                
-        
-        /*
-        private bool IsArrayTypeSupported(string typeName) // TODO this can be done in TypeResolver
-        {
-            switch (typeName.ToUpper())
-            {
-                case "INT":
-                case "STRING":
-                case "FUNC":
-                    return true;
-                default:
-                    return false;
+                case NestableSymbol _:
+                    switch (symbolType)
+                    {
+                        case SymbolType.Class:
+                        case SymbolType.Prototype:
+                        case SymbolType.Void:
+                            typedSymbolNode.Annotations.Add(new UnsupportedTypeAnnotation());
+                            return;
+                    }
+                    break;
             }
         }
-        */
-        
-        
-        private DatSymbolType? GetBuiltinType(string typeName)
-        {
-            string capitalizedTypeName = typeName.First().ToString().ToUpper() + typeName.Substring(1).ToLower();
-            if(Enum.TryParse(capitalizedTypeName, out DatSymbolType symbolType))
-            {
-                return symbolType;
-            }
-
-            return null;
-        }
-        
     }
 }

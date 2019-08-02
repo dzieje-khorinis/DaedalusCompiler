@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
@@ -33,12 +35,26 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public string Path;
         public ASTNode Node;
 
+        public SymbolType? BuiltinType;
+
         protected Symbol(string name, ASTNode node)
         {
             Index = -1;
             Name = name;
             Path = name.ToUpper();
             Node = node;
+            BuiltinType = null;
+        }
+        
+        public static SymbolType? GetBuiltinType(string typeName)
+        {
+            string capitalizedTypeName = typeName.First().ToString().ToUpper() + typeName.Substring(1).ToLower();
+            if(Enum.TryParse(capitalizedTypeName, out SymbolType symbolType))
+            {
+                return symbolType;
+            }
+
+            return null;
         }
     }
     
@@ -77,16 +93,20 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public BlockSymbol ParentBlockSymbol;
         public string TypeName { get; set; }
+        public SymbolType? BuiltinType { get; set; }
+        public Symbol ComplexType { get; set; }
 
         protected NestableSymbol(BlockSymbol parentBlockSymbol, string typeName, string name, ASTNode node) : base(name, node)
         {
             ParentBlockSymbol = parentBlockSymbol;
             TypeName = typeName.ToUpper();
+            BuiltinType = GetBuiltinType(TypeName);
+            ComplexType = null;
             if (parentBlockSymbol != null)
             {
                 Path = $"{parentBlockSymbol.Name}.{name}".ToUpper();
                 parentBlockSymbol.AddBodySymbol(this);
-            }   
+            }
         }
     }
 
@@ -110,20 +130,26 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     
     public class FunctionSymbol : BlockSymbol, ITypedSymbol
     {
-        public List<ParameterSymbol> ParametersSymbols;
+        //public List<ParameterSymbol> ParametersSymbols;
 
         public string TypeName { get; set; }
+        public SymbolType? BuiltinType { get; set; }
+        public Symbol ComplexType { get; set; }
 
         public FunctionSymbol(string typeName, string name, ASTNode node) : base(name, node)
         {
-            TypeName = typeName;
+            TypeName = typeName.ToUpper();
+            BuiltinType = GetBuiltinType(TypeName);
+            ComplexType = null;
         }
 
+        /*
         public void AddParameterSymbol(ParameterSymbol parameterSymbol)
         {
             ParametersSymbols.Add(parameterSymbol);
             AddBodySymbol(parameterSymbol);
         }
+        */
     }
 
     public interface IArraySymbol
@@ -134,6 +160,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public interface ITypedSymbol
     {
         string TypeName { get; set; }
+        SymbolType? BuiltinType { get; set; }
+        
+        Symbol ComplexType { get; set; }
     }
     
     public class ClassSymbol : InheritanceSymbol

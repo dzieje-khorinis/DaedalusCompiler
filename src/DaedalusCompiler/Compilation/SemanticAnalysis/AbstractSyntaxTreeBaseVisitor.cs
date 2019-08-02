@@ -60,14 +60,14 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         protected virtual void VisitPrototypeDefinition(PrototypeDefinitionNode node)
         {
             Visit(node.NameNode);
-            Visit(node.InheritanceReferenceNode);
+            Visit(node.InheritanceParentReferenceNode);
             Visit(node.BodyNodes);
         }
 
         protected virtual void VisitInstanceDefinition(InstanceDefinitionNode node)
         {
             Visit(node.NameNode);
-            Visit(node.InheritanceReferenceNode);
+            Visit(node.InheritanceParentReferenceNode);
             Visit(node.BodyNodes);
         }
 

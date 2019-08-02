@@ -6,6 +6,19 @@ using DaedalusCompiler.Compilation.SemanticAnalysis;
 
 namespace DaedalusCompiler.Dat
 {
+    public enum DatSymbolType
+    {
+        Void = 0,
+        Float = 1,
+        Int = 2,
+        String = 3,
+        Class = 4,
+        Func = 5,
+        Prototype = 6,
+        Instance = 7,
+        Undefined = 8,
+    }
+
     [Flags]
     public enum DatSymbolFlag
     {

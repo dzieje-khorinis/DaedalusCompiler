@@ -67,7 +67,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public List<FileNode> RootNodes;
 
-        public readonly List<InheritanceReferenceNode> InheritanceReferenceNodes;
+        public readonly List<InheritanceParentReferenceNode> InheritanceReferenceNodes;
         public readonly List<ReferenceNode> ReferenceNodes;
         public readonly List<ConstDefinitionNode> ConstDefinitionNodes;
         public readonly List<IArrayDeclarationNode> ArrayDeclarationNodes;
@@ -77,7 +77,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             RootNodes = new List<FileNode>();
             ConstDefinitionNodes = new List<ConstDefinitionNode>();
             ArrayDeclarationNodes = new List<IArrayDeclarationNode>();
-            InheritanceReferenceNodes = new List<InheritanceReferenceNode>();
+            InheritanceReferenceNodes = new List<InheritanceParentReferenceNode>();
             ReferenceNodes = new List<ReferenceNode>();
             
             int index = 0;
@@ -309,38 +309,38 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class PrototypeDefinitionNode : DeclarationNode
     {
-        public InheritanceReferenceNode InheritanceReferenceNode;
+        public InheritanceParentReferenceNode InheritanceParentReferenceNode;
         public List<StatementNode> BodyNodes;
 
-        public PrototypeDefinitionNode(NodeLocation location, NameNode nameNode, InheritanceReferenceNode inheritanceReferenceNode,
+        public PrototypeDefinitionNode(NodeLocation location, NameNode nameNode, InheritanceParentReferenceNode inheritanceParentReferenceNode,
             List<StatementNode> bodyNodes) : base(location, "prototype", nameNode)
         {
-            inheritanceReferenceNode.ParentNode = this;
+            inheritanceParentReferenceNode.ParentNode = this;
             foreach (var node in bodyNodes)
             {
                 node.ParentNode = this;
             }
             
-            InheritanceReferenceNode = inheritanceReferenceNode;
+            InheritanceParentReferenceNode = inheritanceParentReferenceNode;
             BodyNodes = bodyNodes;
         }
     }
 
     public class InstanceDefinitionNode : DeclarationNode
     {
-        public InheritanceReferenceNode InheritanceReferenceNode;
+        public InheritanceParentReferenceNode InheritanceParentReferenceNode;
         public List<StatementNode> BodyNodes;
 
-        public InstanceDefinitionNode(NodeLocation location, NameNode nameNode, InheritanceReferenceNode inheritanceReferenceNode,
+        public InstanceDefinitionNode(NodeLocation location, NameNode nameNode, InheritanceParentReferenceNode inheritanceParentReferenceNode,
             List<StatementNode> bodyNodes) : base(location, "instance", nameNode)
         {
-            inheritanceReferenceNode.ParentNode = this;
+            inheritanceParentReferenceNode.ParentNode = this;
             foreach (var node in bodyNodes)
             {
                 node.ParentNode = this;
             }
             
-            InheritanceReferenceNode = inheritanceReferenceNode;
+            InheritanceParentReferenceNode = inheritanceParentReferenceNode;
             BodyNodes = bodyNodes;
         }
     }
@@ -594,9 +594,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
 
-    public class InheritanceReferenceNode : ReferenceNode
+    public class InheritanceParentReferenceNode : ReferenceNode
     {
-        public InheritanceReferenceNode(string name, NodeLocation location) : base(name, location)
+        public InheritanceParentReferenceNode(string name, NodeLocation location) : base(name, location)
         {
         }
     }

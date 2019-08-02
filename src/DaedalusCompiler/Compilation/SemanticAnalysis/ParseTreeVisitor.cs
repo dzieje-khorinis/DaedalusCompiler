@@ -13,7 +13,7 @@ namespace DaedalusCompiler.Compilation
 	    private readonly int _sourceFileNumber;
 	    public bool IsVisitingExternal;
 	    
-	    public readonly List<InheritanceReferenceNode> InheritanceReferenceNodes;
+	    public readonly List<InheritanceParentReferenceNode> InheritanceReferenceNodes;
 	    public readonly List<ReferenceNode> ReferenceNodes;
 	    public readonly List<ConstDefinitionNode> ConstDefinitionNodes;
 	    public readonly List<IArrayDeclarationNode> ArrayDeclarationNodes;
@@ -23,7 +23,7 @@ namespace DaedalusCompiler.Compilation
 		    _sourceFileNumber = sourceFileNumber;
 		    ConstDefinitionNodes = new List<ConstDefinitionNode>();
 		    ArrayDeclarationNodes = new List<IArrayDeclarationNode>();
-		    InheritanceReferenceNodes = new List<InheritanceReferenceNode>();
+		    InheritanceReferenceNodes = new List<InheritanceParentReferenceNode>();
 		    ReferenceNodes = new List<ReferenceNode>();
 	    }
 
@@ -107,20 +107,20 @@ namespace DaedalusCompiler.Compilation
 		{
 			NameNode nameNode = new NameNode(GetLocation(prototypeDefContext.nameNode()), prototypeDefContext.nameNode().GetText());
 			DaedalusParser.ParentReferenceContext parentReferenceContext = prototypeDefContext.parentReference();
-			InheritanceReferenceNode inheritanceReferenceNode = new InheritanceReferenceNode(parentReferenceContext.GetText(), GetLocation(parentReferenceContext));
-			InheritanceReferenceNodes.Add(inheritanceReferenceNode);
+			InheritanceParentReferenceNode inheritanceParentReferenceNode = new InheritanceParentReferenceNode(parentReferenceContext.GetText(), GetLocation(parentReferenceContext));
+			InheritanceReferenceNodes.Add(inheritanceParentReferenceNode);
 			List<StatementNode> statementNodes = GetStatementNodes(prototypeDefContext.statementBlock());
-			return new PrototypeDefinitionNode(GetLocation(prototypeDefContext), nameNode, inheritanceReferenceNode, statementNodes);
+			return new PrototypeDefinitionNode(GetLocation(prototypeDefContext), nameNode, inheritanceParentReferenceNode, statementNodes);
 		}
 
 		public override ASTNode VisitInstanceDef([NotNull] DaedalusParser.InstanceDefContext instanceDefContext)
 		{
 			NameNode nameNode = new NameNode(GetLocation(instanceDefContext.nameNode()), instanceDefContext.nameNode().GetText());
 			DaedalusParser.ParentReferenceContext parentReferenceContext = instanceDefContext.parentReference();
-			InheritanceReferenceNode inheritanceReferenceNode = new InheritanceReferenceNode(parentReferenceContext.GetText(), GetLocation(parentReferenceContext));
-			InheritanceReferenceNodes.Add(inheritanceReferenceNode);
+			InheritanceParentReferenceNode inheritanceParentReferenceNode = new InheritanceParentReferenceNode(parentReferenceContext.GetText(), GetLocation(parentReferenceContext));
+			InheritanceReferenceNodes.Add(inheritanceParentReferenceNode);
 			List<StatementNode> statementNodes = GetStatementNodes(instanceDefContext.statementBlock());
-			return new InstanceDefinitionNode(GetLocation(instanceDefContext), nameNode, inheritanceReferenceNode, statementNodes);
+			return new InstanceDefinitionNode(GetLocation(instanceDefContext), nameNode, inheritanceParentReferenceNode, statementNodes);
 		}
 		
 		public override ASTNode VisitParameterDecl([NotNull] DaedalusParser.ParameterDeclContext context)
@@ -374,15 +374,15 @@ namespace DaedalusCompiler.Compilation
 		private InstanceDeclarationsTemporaryNode GetInstanceDeclarationsTemporaryNode(DaedalusParser.InstanceDeclContext instanceDeclContext)
 		{
 			DaedalusParser.ParentReferenceContext parentReferenceContext = instanceDeclContext.parentReference();
-			InheritanceReferenceNode inheritanceReferenceNode = new InheritanceReferenceNode(parentReferenceContext.GetText(), GetLocation(parentReferenceContext));
-			InheritanceReferenceNodes.Add(inheritanceReferenceNode);
+			InheritanceParentReferenceNode inheritanceParentReferenceNode = new InheritanceParentReferenceNode(parentReferenceContext.GetText(), GetLocation(parentReferenceContext));
+			InheritanceReferenceNodes.Add(inheritanceParentReferenceNode);
 			
 			List<DeclarationNode> instanceDeclarationNodes = new List<DeclarationNode>();
 			
 			foreach (DaedalusParser.NameNodeContext nameNodeContext in instanceDeclContext.nameNode())
 			{
 				NameNode nameNode = new NameNode(GetLocation(nameNodeContext), nameNodeContext.GetText());
-				instanceDeclarationNodes.Add(new InstanceDefinitionNode(GetLocation(instanceDeclContext), nameNode, inheritanceReferenceNode, new List<StatementNode>()));
+				instanceDeclarationNodes.Add(new InstanceDefinitionNode(GetLocation(instanceDeclContext), nameNode, inheritanceParentReferenceNode, new List<StatementNode>()));
 			}
 			
 			return new InstanceDeclarationsTemporaryNode(GetLocation(instanceDeclContext), instanceDeclarationNodes);

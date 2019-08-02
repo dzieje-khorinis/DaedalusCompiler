@@ -69,9 +69,25 @@ namespace DaedalusCompiler.Compilation
             _symbolTable = symbolTableCreationVisitor.SymbolTable;
             
             // annotates:
+            // UnsupportedTypeAnnotation
+            // UndeclaredIdentifierAnnotation
             // UnsupportedArrayTypeAnnotation
             TypeResolver typeResolver = new TypeResolver(_symbolTable);
             typeResolver.Resolve(symbolTableCreationVisitor.TypedSymbols);
+            
+            // annotates:
+            // InfiniteReferenceLoopAnnotation (Class/Prototype)
+            // NotClassOrPrototypeReferenceAnnotation
+            // UndeclaredIdentifierAnnotation
+            // AccessToAttributeOfArrayElementNotSupportedAnnotation
+            // AttributeOfNonInstanceAnnotation
+            // ClassDoesNotHaveAttributeAnnotation
+            // ReferencedSymbolIsNotArrayAnnotation
+            ReferenceResolver referenceResolver = new ReferenceResolver(_symbolTable);
+            referenceResolver.Resolve(_abstractSyntaxTree.InheritanceReferenceNodes);
+            //referenceResolver.Resolve(_abstractSyntaxTree.ReferenceNodes);
+            
+            
             
             
             /*

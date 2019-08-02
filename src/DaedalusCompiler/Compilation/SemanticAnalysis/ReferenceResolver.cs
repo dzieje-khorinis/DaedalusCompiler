@@ -1,4 +1,4 @@
-/*using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Net;
@@ -10,81 +10,83 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class ReferenceResolver
     {
         private readonly Dictionary <string, Symbol> _symbolTable;
-        
-        private HashSet<InheritanceReferenceNode> _nodesVisitedThisIteration;
-        private readonly HashSet<InheritanceReferenceNode> _nodesInCycle;
-        private readonly Dictionary<ASTNode, ClassDefinitionNode> _node2ParentClassNode;
-        
+
+        private HashSet<InheritanceParentReferenceNode> _visitedNodes;
+        private HashSet<InheritanceParentReferenceNode> _visitedNodesCurrentIteration;
+        private readonly HashSet<InheritanceParentReferenceNode> _nodesInCycle;
+
         public ReferenceResolver(Dictionary<string, Symbol> symbolTable)
         {
             _symbolTable = symbolTable;
-            _nodesInCycle = new HashSet<InheritanceReferenceNode>();
-            _node2ParentClassNode = new Dictionary<ASTNode, ClassDefinitionNode>();
+            _visitedNodes = new HashSet<InheritanceParentReferenceNode>();
+            _nodesInCycle = new HashSet<InheritanceParentReferenceNode>();
         }
         
-        public void Resolve(List<InheritanceReferenceNode> parentReferenceNodes)
+        public void Resolve(List<InheritanceParentReferenceNode> parentReferenceNodes)
         {
             foreach (var parentReferenceNode in parentReferenceNodes)
             {
-                _nodesVisitedThisIteration = new HashSet<InheritanceReferenceNode>();
+                _visitedNodesCurrentIteration = new HashSet<InheritanceParentReferenceNode>();
                 Resolve(parentReferenceNode);
             }
         }
 
-        public void Resolve(InheritanceReferenceNode inheritanceReferenceNode)
+        public void Resolve(InheritanceParentReferenceNode inheritanceParentReferenceNode)
         {
-
-            if (_nodesVisitedThisIteration.Contains(inheritanceReferenceNode))
+            if (_visitedNodesCurrentIteration.Contains(inheritanceParentReferenceNode))
             {
-                inheritanceReferenceNode.Annotations.Add(new InfiniteReferenceLoopAnnotation());
-                _nodesInCycle.UnionWith(_nodesVisitedThisIteration);
+                inheritanceParentReferenceNode.Annotations.Add(new InfiniteReferenceLoopAnnotation());
+                _nodesInCycle.UnionWith(_visitedNodesCurrentIteration);
                 return;
             }
-            _nodesVisitedThisIteration.Add(inheritanceReferenceNode);
             
-            if (inheritanceReferenceNode.Symbol != null)
+            if (_visitedNodes.Contains(inheritanceParentReferenceNode))
             {
                 return;
             }
 
-            if (inheritanceReferenceNode.PartNodes.Count > 0)
+            if (inheritanceParentReferenceNode.PartNodes.Count > 0)
             {
-                inheritanceReferenceNode.Annotations.Add(new NotClassOrPrototypeReferenceAnnotation());
+                inheritanceParentReferenceNode.Annotations.Add(new NotClassOrPrototypeReferenceAnnotation());
                 return;
             }
-
-            string path = inheritanceReferenceNode.Name.ToUpper();
+            
+            string path = inheritanceParentReferenceNode.Name.ToUpper();
             if (!_symbolTable.ContainsKey(path))
             {
-                inheritanceReferenceNode.Annotations.Add(new UndeclaredIdentifierAnnotation());
+                inheritanceParentReferenceNode.Annotations.Add(new UndeclaredIdentifierAnnotation());
                 return;
             }
 
-            DeclarationNode definitionNode = (DeclarationNode) _symbolTable[path].Node;
-            switch (definitionNode)
+            SubclassSymbol symbol = (SubclassSymbol) _symbolTable[path];
+            switch (symbol.Node)
             {
                 case PrototypeDefinitionNode prototypeDefinitionNode:
-                    //inheritanceReferenceNode.DefinitionNode = prototypeDefinitionNode;
-                    Resolve(prototypeDefinitionNode.InheritanceReferenceNode);
+                    PrototypeSymbol prototypeSymbol = (PrototypeSymbol) prototypeDefinitionNode.Symbol;
+                    symbol.InheritanceParentSymbol = prototypeSymbol;
+                    Resolve(prototypeDefinitionNode.InheritanceParentReferenceNode);
                     break;
                 case ClassDefinitionNode classDefinitionNode:
-                    foreach (var node in _nodesVisitedThisIteration)
+                    ClassSymbol classSymbol = (ClassSymbol) classDefinitionNode.Symbol;
+                    symbol.BaseClassSymbol = classSymbol;
+                    symbol.InheritanceParentSymbol = classSymbol;
+
+                    foreach (var node in _visitedNodesCurrentIteration)
                     {
-                        _node2ParentClassNode[node] = classDefinitionNode;
+                        SubclassSymbol subclassSymbol = (SubclassSymbol) node.Symbol;
+                        subclassSymbol.BaseClassSymbol = classSymbol;
                     }
-                    //inheritanceReferenceNode.DefinitionNode = classDefinitionNode;
+                    
                     break;
                 default:
-                    inheritanceReferenceNode.Annotations.Add(new NotClassOrPrototypeReferenceAnnotation());
+                    inheritanceParentReferenceNode.Annotations.Add(new NotClassOrPrototypeReferenceAnnotation());
                     return;
             }
-            
-            
-            
-            //inheritanceReferenceNode.Path = path;
-            inheritanceReferenceNode.Symbol = _symbolTable[path].Symbol;
 
-            ((DeclarationNode) inheritanceReferenceNode.ParentNode).Symbol.Parent = inheritanceReferenceNode.Symbol;
+            inheritanceParentReferenceNode.Symbol = symbol;
+            _visitedNodesCurrentIteration.Add(inheritanceParentReferenceNode);
+            _visitedNodes.Add(inheritanceParentReferenceNode);
+            ((DeclarationNode) inheritanceParentReferenceNode.ParentNode).Symbol.Parent = inheritanceParentReferenceNode.Symbol;
         }
 
         public void Resolve(List<ReferenceNode> referenceNodes)
@@ -95,12 +97,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
         }
 
-        private DatSymbol GetSymbol(string parentName, string symbolName)
+        private Symbol GetSymbol(string parentName, string symbolName)
         {
             string path =  $"{parentName}.{symbolName}".ToUpper();
             if (_symbolTable.ContainsKey(path))
             {
-                return _symbolTable[path].Symbol;
+                return _symbolTable[path];
             }
 
             return null;
@@ -109,8 +111,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public void Resolve(ReferenceNode referenceNode)
         {
             ASTNode ancestor = GetFirstSignificantAncestor(referenceNode);
-            DatSymbol symbol = null;
-            DatSymbol classSymbol = null;
+            Symbol symbol = null;
+            Symbol classSymbol = null;
             ClassDefinitionNode classDefinitionNode;
             
             switch (ancestor)
@@ -172,7 +174,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     return;
                 }
 
-                symbol = _symbolTable[nameUpper].Symbol;
+                symbol = _symbolTable[nameUpper];
             }
             
             bool arrayIndexNodeFound = false;
@@ -200,7 +202,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         }
                         
                         /*
-                        if (symbol.BuiltinType != DatSymbolType.Instance)
+                        if (symbol.BuiltinType != SymbolType.Instance)
                         {
                             attributeNode.Annotations.Add(new NotInstanceAnnotation());
                             // error: cannot access attribute of x, x is not an instance of a clasds
@@ -208,7 +210,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                             // ^ is not an instance of a class
                             return;
                         }
-                        #1#
+                        */
                         
                         symbol = GetSymbol(classSymbol.Name, attributeNode.Name);
                         if (symbol == null) {
@@ -237,12 +239,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             referenceNode.Symbol = symbol;
         }
 
-        private DatSymbol GetClassSymbol(DatSymbol symbol)
+        private Symbol GetClassSymbol(Symbol symbol)
         {
             symbol = symbol.Parent;
             while (symbol != null)
             {
-                if (symbol.BuiltinType == DatSymbolType.Class)
+                if (symbol.BuiltinType == SymbolType.Class)
                 {
                     return symbol;
                 }
@@ -250,16 +252,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
             return null;
         }
-
-        private ClassDefinitionNode GetClassDefinitionNode(ASTNode node)
-        {
-            if (_node2ParentClassNode.ContainsKey(node))
-            {
-                return _node2ParentClassNode[node];
-            }
-
-            return null;
-        }
+        
 
         private ASTNode GetFirstSignificantAncestor(ASTNode node)
         {
@@ -283,4 +276,4 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         
     }
-}*/
+}
