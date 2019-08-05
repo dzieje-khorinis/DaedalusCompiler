@@ -150,6 +150,22 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
 
+    public abstract class InheritanceNode : DeclarationNode
+    {
+        protected InheritanceNode(NodeLocation location, string type, NameNode nameNode) : base(location, type, nameNode)
+        {
+        }
+    }
+
+    public abstract class SubclassNode : InheritanceNode
+    {
+        public InheritanceParentReferenceNode InheritanceParentReferenceNode;
+        protected SubclassNode(NodeLocation location, string type, NameNode nameNode, InheritanceParentReferenceNode inheritanceParentReferenceNode) : base(location, type, nameNode)
+        {
+            inheritanceParentReferenceNode.ParentNode = this;
+            InheritanceParentReferenceNode = inheritanceParentReferenceNode;
+        }
+    }
 
     public interface IArrayDeclarationNode
     {
@@ -291,7 +307,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     }
 
 
-    public class ClassDefinitionNode : DeclarationNode
+    public class ClassDefinitionNode : InheritanceNode
     {
         public List<DeclarationNode> AttributeNodes;
 
@@ -307,40 +323,32 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
 
-    public class PrototypeDefinitionNode : DeclarationNode
+    public class PrototypeDefinitionNode : SubclassNode
     {
-        public InheritanceParentReferenceNode InheritanceParentReferenceNode;
         public List<StatementNode> BodyNodes;
 
         public PrototypeDefinitionNode(NodeLocation location, NameNode nameNode, InheritanceParentReferenceNode inheritanceParentReferenceNode,
-            List<StatementNode> bodyNodes) : base(location, "prototype", nameNode)
+            List<StatementNode> bodyNodes) : base(location, "prototype", nameNode, inheritanceParentReferenceNode)
         {
-            inheritanceParentReferenceNode.ParentNode = this;
             foreach (var node in bodyNodes)
             {
                 node.ParentNode = this;
             }
-            
-            InheritanceParentReferenceNode = inheritanceParentReferenceNode;
             BodyNodes = bodyNodes;
         }
     }
 
-    public class InstanceDefinitionNode : DeclarationNode
+    public class InstanceDefinitionNode : SubclassNode
     {
-        public InheritanceParentReferenceNode InheritanceParentReferenceNode;
         public List<StatementNode> BodyNodes;
 
         public InstanceDefinitionNode(NodeLocation location, NameNode nameNode, InheritanceParentReferenceNode inheritanceParentReferenceNode,
-            List<StatementNode> bodyNodes) : base(location, "instance", nameNode)
+            List<StatementNode> bodyNodes) : base(location, "instance", nameNode, inheritanceParentReferenceNode)
         {
-            inheritanceParentReferenceNode.ParentNode = this;
             foreach (var node in bodyNodes)
             {
                 node.ParentNode = this;
             }
-            
-            InheritanceParentReferenceNode = inheritanceParentReferenceNode;
             BodyNodes = bodyNodes;
         }
     }

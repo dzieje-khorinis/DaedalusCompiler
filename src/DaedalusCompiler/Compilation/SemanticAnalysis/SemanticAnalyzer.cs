@@ -75,6 +75,13 @@ namespace DaedalusCompiler.Compilation
             TypeResolver typeResolver = new TypeResolver(_symbolTable);
             typeResolver.Resolve(symbolTableCreationVisitor.TypedSymbols);
             
+            
+            // NotClassOrPrototypeReferenceAnnotation
+            // UndeclaredIdentifierAnnotation
+            InheritanceResolver inheritanceResolver = new InheritanceResolver(_symbolTable);
+            inheritanceResolver.Resolve(symbolTableCreationVisitor.SubclassSymbols);
+            
+            Console.Write("asfd");
             // annotates:
             // InfiniteReferenceLoopAnnotation (Class/Prototype)
             // NotClassOrPrototypeReferenceAnnotation
@@ -83,8 +90,8 @@ namespace DaedalusCompiler.Compilation
             // AttributeOfNonInstanceAnnotation
             // ClassDoesNotHaveAttributeAnnotation
             // ReferencedSymbolIsNotArrayAnnotation
-            ReferenceResolver referenceResolver = new ReferenceResolver(_symbolTable);
-            referenceResolver.Resolve(_abstractSyntaxTree.InheritanceReferenceNodes);
+            //ReferenceResolver referenceResolver = new ReferenceResolver(_symbolTable);
+            //referenceResolver.Resolve(_abstractSyntaxTree.InheritanceReferenceNodes);
             //referenceResolver.Resolve(_abstractSyntaxTree.ReferenceNodes);
             
             

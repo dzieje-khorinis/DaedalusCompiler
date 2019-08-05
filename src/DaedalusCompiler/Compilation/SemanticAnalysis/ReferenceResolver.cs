@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Net;
@@ -210,7 +210,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                             // ^ is not an instance of a class
                             return;
                         }
-                        */
+                        #1#
                         
                         symbol = GetSymbol(classSymbol.Name, attributeNode.Name);
                         if (symbol == null) {
@@ -276,4 +276,4 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         
     }
-}
+}*/
