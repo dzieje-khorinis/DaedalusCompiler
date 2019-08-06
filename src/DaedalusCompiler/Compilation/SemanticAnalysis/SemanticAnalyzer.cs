@@ -75,62 +75,34 @@ namespace DaedalusCompiler.Compilation
             TypeResolver typeResolver = new TypeResolver(_symbolTable);
             typeResolver.Resolve(symbolTableCreationVisitor.TypedSymbols);
             
-            
             // NotClassOrPrototypeReferenceAnnotation
             // UndeclaredIdentifierAnnotation
+            // InfiniteReferenceLoopAnnotation
             InheritanceResolver inheritanceResolver = new InheritanceResolver(_symbolTable);
             inheritanceResolver.Resolve(symbolTableCreationVisitor.SubclassSymbols);
             
-            Console.Write("asfd");
             // annotates:
-            // InfiniteReferenceLoopAnnotation (Class/Prototype)
-            // NotClassOrPrototypeReferenceAnnotation
             // UndeclaredIdentifierAnnotation
             // AccessToAttributeOfArrayElementNotSupportedAnnotation
             // AttributeOfNonInstanceAnnotation
             // ClassDoesNotHaveAttributeAnnotation
             // ReferencedSymbolIsNotArrayAnnotation
-            //ReferenceResolver referenceResolver = new ReferenceResolver(_symbolTable);
-            //referenceResolver.Resolve(_abstractSyntaxTree.InheritanceReferenceNodes);
-            //referenceResolver.Resolve(_abstractSyntaxTree.ReferenceNodes);
+            ReferenceResolvingVisitor referenceResolvingVisitor = new ReferenceResolvingVisitor(_symbolTable);
+            referenceResolvingVisitor.Visit(_abstractSyntaxTree.ReferenceNodes);
             
-            
-            
-            
-            /*
-             *
-             * Make symbol table
-             * 
-             */
-            
-            
-            // annotates:
-            // InfiniteReferenceLoopAnnotation (Class/Prototype)
-            // NotClassOrPrototypeReferenceAnnotation
-            // UndeclaredIdentifierAnnotation
-            // AccessToAttributeOfArrayElementNotSupportedAnnotation
-            
-            /*
-            Console.WriteLine(_abstractSyntaxTree.InheritanceReferenceNodes.Count);
-            Console.WriteLine(_abstractSyntaxTree.ReferenceNodes.Count);
-            
-            ReferenceResolver referenceResolver = new ReferenceResolver(_symbolTable);
-            referenceResolver.Resolve(_abstractSyntaxTree.InheritanceReferenceNodes);
-            referenceResolver.Resolve(_abstractSyntaxTree.ReferenceNodes);
-            */
-            
-            /*
             ConstEvaluationVisitor constEvaluationVisitor = new ConstEvaluationVisitor(_symbolTable);
+            //consty, stałe, referencje z indexami
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ConstDefinitionNodes);
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ArrayDeclarationNodes);
-            */
-            /*
-             *
-             *myślę, że to powinno byc tak:
-             * 1. resolving zwykłych referencji
-             * 2. obliczenie constów
-             * 3. resolving array referencji? bo jak bedzie np. x[5].y to trzeba sprawdzić co znajduje sie w x[5], a może nie trzeba? moze wystarczy typ?
-             */
+            // constEvaluationVisitor.Visit(_abstractSyntaxTree.ReferenceNodes); ale tylko te, które mają odwołanie do indeksu + nie mają annotacji??
+            
+            
+            // TypeCheckingVisitor
+            
+            
+            
+            // ErrorDetectionVisitor
+            
             
             
             

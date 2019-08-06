@@ -1,4 +1,4 @@
-/*using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using DaedalusCompiler.Dat;
@@ -120,63 +120,62 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 return new UndefinedValue();
             }
 
-            SymbolContext symbolContext = _symbolTable[node.NameNode.Value.ToUpper()];
-            DatSymbol symbol = symbolContext.Symbol;
-            DatSymbolType rightSideType = NodeValueToBuiltinType(node.RightSideValue);
+            Symbol symbol = _symbolTable[node.NameNode.Value.ToUpper()];
+            SymbolType rightSideType = NodeValueToBuiltinType(node.RightSideValue);
             
             
             
             switch (symbol.BuiltinType)
             {
-                case DatSymbolType.Int:
+                case SymbolType.Int:
 
                     switch (rightSideType)
                     {
-                        case DatSymbolType.Int:
+                        case SymbolType.Int:
                             break;
                         
                         default:
-                            node.Annotations.Add(new IncompatibleTypesAnnotation(symbol.BuiltinType, rightSideType));
-                            break;
-
-                    }
-                    break;
-                
-                case DatSymbolType.Float:
-                    switch (rightSideType)
-                    {
-                        case DatSymbolType.Int:
-                        case DatSymbolType.Float:
-                            break;
-                        
-                        default:
-                            node.Annotations.Add(new IncompatibleTypesAnnotation(symbol.BuiltinType, rightSideType));
+                            node.Annotations.Add(new IncompatibleTypesAnnotation((SymbolType) symbol.BuiltinType, rightSideType));
                             break;
 
                     }
                     break;
                 
-                case DatSymbolType.String:
+                case SymbolType.Float:
                     switch (rightSideType)
                     {
-                        case DatSymbolType.String:
+                        case SymbolType.Int:
+                        case SymbolType.Float:
                             break;
                         
                         default:
-                            node.Annotations.Add(new IncompatibleTypesAnnotation(symbol.BuiltinType, rightSideType));
+                            node.Annotations.Add(new IncompatibleTypesAnnotation((SymbolType) symbol.BuiltinType, rightSideType));
+                            break;
+
+                    }
+                    break;
+                
+                case SymbolType.String:
+                    switch (rightSideType)
+                    {
+                        case SymbolType.String:
+                            break;
+                        
+                        default:
+                            node.Annotations.Add(new IncompatibleTypesAnnotation((SymbolType) symbol.BuiltinType, rightSideType));
                             break;
                     }
                     break;
                 
                 
-                case DatSymbolType.Func:
+                case SymbolType.Func:
                     switch (rightSideType)
                     {
-                        case DatSymbolType.Func:
+                        case SymbolType.Func:
                             break;
                         
                         default:
-                            node.Annotations.Add(new IncompatibleTypesAnnotation(symbol.BuiltinType, rightSideType));
+                            node.Annotations.Add(new IncompatibleTypesAnnotation((SymbolType) symbol.BuiltinType, rightSideType));
                             break;
                     }
                     break;
@@ -197,7 +196,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             {
                 referenceNode.ArrayIndexValue = Visit(referenceNode.ArrayIndexNode);
             }
-            #1#
+            */
             
             string nodeName = referenceNode.Name.ToUpper();
             if (!_symbolTable.ContainsKey(nodeName))
@@ -206,9 +205,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 return new UndefinedValue();
             }
             
-            SymbolContext symbolContext = _symbolTable[nodeName];
+            Symbol symbol = _symbolTable[nodeName];
 
-            switch (symbolContext.Node)
+            switch (symbol.Node)
             {
                 /*
                 case ConstArrayDefinitionNode constArrayDefinitionNode:
@@ -237,7 +236,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                                 return new UndefinedValue();
                         }
                     }
-                #1#
+                */
 
                 case ConstDefinitionNode constDefinitionNode:
                     /*
@@ -246,11 +245,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         referenceNode.Annotations.Add(new SquareBracketsNotExpectedAnnotation());
                         return new UndefinedValue();
                     }
-                    #1#
+                    */
                     return Visit(constDefinitionNode.RightSideNode);
                 
                 case FunctionDefinitionNode _:
-                    return new FunctionValue(symbolContext.Symbol);
+                    return new FunctionValue(symbol);
                 
                 default:
                     referenceNode.Annotations.Add(new NotConstReferenceAnnotation());
@@ -318,21 +317,21 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         
         
-        private DatSymbolType NodeValueToBuiltinType(NodeValue nodeValue)
+        private SymbolType NodeValueToBuiltinType(NodeValue nodeValue)
         {
             switch (nodeValue)
             {
                 case IntValue _:
-                    return DatSymbolType.Int;
+                    return SymbolType.Int;
                 
                 case FloatValue _:
-                    return DatSymbolType.Float;
+                    return SymbolType.Float;
                 
                 case StringValue _:
-                    return DatSymbolType.String;
+                    return SymbolType.String;
 
                 case FunctionValue _:
-                    return DatSymbolType.Func;
+                    return SymbolType.Func;
                 
                 default:
                     throw new Exception();
@@ -340,4 +339,4 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
 
     }
-}*/
+}

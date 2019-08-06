@@ -9,10 +9,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class IncompatibleTypesAnnotation : NodeAnnotation
     {
-        public DatSymbolType LeftSymbolType;
-        public DatSymbolType RightSymbolType;
+        public SymbolType LeftSymbolType;
+        public SymbolType RightSymbolType;
 
-        public IncompatibleTypesAnnotation(DatSymbolType leftSymbolType, DatSymbolType rightSymbolType)
+        public IncompatibleTypesAnnotation(SymbolType leftSymbolType, SymbolType rightSymbolType)
         {
             LeftSymbolType = leftSymbolType;
             RightSymbolType = rightSymbolType;

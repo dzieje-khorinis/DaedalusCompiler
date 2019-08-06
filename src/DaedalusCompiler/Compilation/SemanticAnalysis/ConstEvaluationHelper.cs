@@ -62,9 +62,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class FunctionValue : NodeValue
     {
-        public DatSymbol Value;
+        public Symbol Value;
 
-        public FunctionValue(DatSymbol value)
+        public FunctionValue(Symbol value)
         {
             Value = value;
         }
