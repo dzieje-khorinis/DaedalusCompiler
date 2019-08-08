@@ -317,7 +317,8 @@ namespace DaedalusCompiler.Compilation
 
 		public override ASTNode VisitIntegerLiteralValue([NotNull] DaedalusParser.IntegerLiteralValueContext context)
 		{
-			return new IntegerLiteralNode(GetLocation(context), long.Parse(context.GetText()));
+			bool evaluatedCorrectly = long.TryParse(context.GetText(), out long value);
+			return new IntegerLiteralNode(GetLocation(context), value, evaluatedCorrectly);
 		}
 
 		public override ASTNode VisitFloatLiteralValue([NotNull] DaedalusParser.FloatLiteralValueContext context)

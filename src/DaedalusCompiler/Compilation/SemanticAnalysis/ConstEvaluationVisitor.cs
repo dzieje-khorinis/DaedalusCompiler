@@ -99,10 +99,20 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             node.ArraySizeValue = Visit(node.ArraySizeNode);
 
             
-            for (int i = 0; i < node.ElementNodes.Count; ++i)
+            SymbolType builtinType = node.Symbol.BuiltinType;
+            foreach (var elementNode in node.ElementNodes)
             {
-                node.ElementValues.Add(Visit(node.ElementNodes[i]));
+                NodeValue elementValue = Visit(elementNode);
+                node.ElementValues.Add(elementValue);
+
+                if (elementValue is UndefinedValue)
+                {
+                    continue;
+                }
+                SymbolType elementType = NodeValueToBuiltinType(elementValue);
+                CheckType(builtinType, elementType, elementNode);
             }
+
 
             switch (node.ArraySizeValue)
             {
@@ -131,69 +141,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             node.ArraySizeValue = Visit(node.ArraySizeNode);
             return null;
         }
-
-
-        private void CheckType(SymbolType expectedType, SymbolType actualType, ASTNode node)
-        {
-            switch (symbol.BuiltinType)
-            {
-                case SymbolType.Int:
-
-                    switch (rightSideType)
-                    {
-                        case SymbolType.Int:
-                            break;
-                        
-                        default:
-                            node.RightSideNode.Annotations.Add(new IncompatibleTypesAnnotation((SymbolType) symbol.BuiltinType, rightSideType));
-                            break;
-
-                    }
-                    break;
-                
-                case SymbolType.Float:
-                    switch (rightSideType)
-                    {
-                        case SymbolType.Int:
-                        case SymbolType.Float:
-                            break;
-                        
-                        default:
-                            node.RightSideNode.Annotations.Add(new IncompatibleTypesAnnotation((SymbolType) symbol.BuiltinType, rightSideType));
-                            break;
-
-                    }
-                    break;
-                
-                case SymbolType.String:
-                    switch (rightSideType)
-                    {
-                        case SymbolType.String:
-                            break;
-                        
-                        default:
-                            node.RightSideNode.Annotations.Add(new IncompatibleTypesAnnotation((SymbolType) symbol.BuiltinType, rightSideType));
-                            break;
-                    }
-                    break;
-                
-                
-                case SymbolType.Func:
-                    switch (rightSideType)
-                    {
-                        case SymbolType.Func:
-                            break;
-                        
-                        default:
-                            node.RightSideNode.Annotations.Add(new IncompatibleTypesAnnotation((SymbolType) symbol.BuiltinType, rightSideType));
-                            break;
-                    }
-                    break;
-
-                default:
-                    throw new Exception();
-            }
-        }
+        
 
         protected override NodeValue VisitConstDefinition(ConstDefinitionNode node)
         {
@@ -202,15 +150,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             {
                 return null;
             }
-
-            Symbol symbol = _symbolTable[node.NameNode.Value.ToUpper()];
+            
             SymbolType rightSideType = NodeValueToBuiltinType(node.RightSideValue);
-
-            if (symbol.BuiltinType != null)
-            {
-                CheckType(symbol.BuiltinType.Value, rightSideType, node.RightSideNode);
-            }
-
+            CheckType(node.Symbol.BuiltinType, rightSideType, node.RightSideNode);
             return null;
         }
 
@@ -346,6 +288,67 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
         
         
+        private void CheckType(SymbolType expectedType, SymbolType actualType, ASTNode node)
+        {
+            switch (expectedType)
+            {
+                case SymbolType.Int:
+
+                    switch (actualType)
+                    {
+                        case SymbolType.Int:
+                            break;
+                        
+                        default:
+                            node.Annotations.Add(new IncompatibleTypesAnnotation(expectedType, actualType));
+                            break;
+
+                    }
+                    break;
+                
+                case SymbolType.Float:
+                    switch (actualType)
+                    {
+                        case SymbolType.Int:
+                        case SymbolType.Float:
+                            break;
+                        
+                        default:
+                            node.Annotations.Add(new IncompatibleTypesAnnotation(expectedType, actualType));
+                            break;
+
+                    }
+                    break;
+                
+                case SymbolType.String:
+                    switch (actualType)
+                    {
+                        case SymbolType.String:
+                            break;
+                        
+                        default:
+                            node.Annotations.Add(new IncompatibleTypesAnnotation(expectedType, actualType));
+                            break;
+                    }
+                    break;
+                
+                
+                case SymbolType.Func:
+                    switch (actualType)
+                    {
+                        case SymbolType.Func:
+                            break;
+                        
+                        default:
+                            node.Annotations.Add(new IncompatibleTypesAnnotation(expectedType, actualType));
+                            break;
+                    }
+                    break;
+
+                default:
+                    throw new Exception();
+            }
+        }
         
         private SymbolType NodeValueToBuiltinType(NodeValue nodeValue)
         {

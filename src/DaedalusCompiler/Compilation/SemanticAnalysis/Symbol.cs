@@ -36,7 +36,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public string Path;
         public ASTNode Node;
 
-        public SymbolType? BuiltinType;
+        public SymbolType BuiltinType;
 
         protected Symbol(string name, ASTNode node)
         {
@@ -44,10 +44,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Name = name;
             Path = name.ToUpper();
             Node = node;
-            BuiltinType = null;
+            BuiltinType = SymbolType.Uninitialized;
         }
         
-        public static SymbolType? GetBuiltinType(string typeName)
+        public static SymbolType GetBuiltinType(string typeName)
         {
             string capitalizedTypeName = typeName.First().ToString().ToUpper() + typeName.Substring(1).ToLower();
             if(Enum.TryParse(capitalizedTypeName, out SymbolType symbolType))
@@ -55,7 +55,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 return symbolType;
             }
 
-            return null;
+            return SymbolType.Uninitialized;
         }
     }
     

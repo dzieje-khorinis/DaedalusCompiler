@@ -511,10 +511,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class IntegerLiteralNode : ValueNode
     {
         public long Value;
+        public bool EvaluatedCorrectly;
 
-        public IntegerLiteralNode(NodeLocation location, long value) : base(location)
+        public IntegerLiteralNode(NodeLocation location, long value, bool evaluatedCorrectly=true) : base(location)
         {
             Value = value;
+            EvaluatedCorrectly = evaluatedCorrectly;
         }
     }
 

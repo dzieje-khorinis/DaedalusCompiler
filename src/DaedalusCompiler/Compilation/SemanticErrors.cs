@@ -1,3 +1,27 @@
+using System;
+
+namespace DaedalusCompiler.Compilation
+{
+    public abstract class ErrorLogger
+    {
+        public abstract void LogLine(string message);
+    }
+
+    public class StdErrorLogger : ErrorLogger
+    {
+        public override void LogLine(string message)
+        {
+            Console.WriteLine(message);
+        }
+
+        public void Log(string message)
+        {
+            Console.Write(message);
+        }
+    }
+}
+
+
 /*using System;
 using System.Collections.Generic;
 using System.IO;

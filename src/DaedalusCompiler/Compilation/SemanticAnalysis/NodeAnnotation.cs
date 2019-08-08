@@ -9,13 +9,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class IncompatibleTypesAnnotation : NodeAnnotation
     {
-        public SymbolType LeftSymbolType;
-        public SymbolType RightSymbolType;
+        public SymbolType ExpectedSymbolType;
+        public SymbolType ActualSymbolType;
 
-        public IncompatibleTypesAnnotation(SymbolType leftSymbolType, SymbolType rightSymbolType)
+        public IncompatibleTypesAnnotation(SymbolType expectedSymbolType, SymbolType actualSymbolType)
         {
-            LeftSymbolType = leftSymbolType;
-            RightSymbolType = rightSymbolType;
+            ExpectedSymbolType = expectedSymbolType;
+            ActualSymbolType = actualSymbolType;
         }
     }
 

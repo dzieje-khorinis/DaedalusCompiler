@@ -148,7 +148,13 @@ namespace DaedalusCompiler.Compilation
                     }
                     */
                 }
-
+                
+                if (syntaxErrorsCount > 0)
+                {
+                    StdErrorLogger logger = new StdErrorLogger();
+                    logger.LogLine($"{syntaxErrorsCount} syntax {(syntaxErrorsCount == 1 ? "error" : "errors")} generated.");
+                    return false;
+                }
 
                 
                 Console.WriteLine("parseTrees created");
