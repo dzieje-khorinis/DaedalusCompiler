@@ -71,14 +71,22 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public readonly List<ReferenceNode> ReferenceNodes;
         public readonly List<ConstDefinitionNode> ConstDefinitionNodes;
         public readonly List<IArrayDeclarationNode> ArrayDeclarationNodes;
+
+        public List<string> FilesPaths;
+        public List<string[]> FilesContents;
+        public List<string[]> SuppressedWarningCodes;
         
-        public AbstractSyntaxTree(List<IParseTree> parseTrees, int externalFilesCount)
+        public AbstractSyntaxTree(List<IParseTree> parseTrees, int externalFilesCount, List<string> filesPaths, List<string[]> filesContents, List<string[]> suppressedWarningCodes)
         {
             RootNodes = new List<FileNode>();
             ConstDefinitionNodes = new List<ConstDefinitionNode>();
             ArrayDeclarationNodes = new List<IArrayDeclarationNode>();
             InheritanceReferenceNodes = new List<InheritanceParentReferenceNode>();
             ReferenceNodes = new List<ReferenceNode>();
+
+            FilesPaths = filesPaths;
+            FilesContents = filesContents;
+            SuppressedWarningCodes = suppressedWarningCodes;
             
             int index = 0;
             foreach (IParseTree parseTree in parseTrees)
@@ -95,6 +103,14 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             for (int i = 0; i < externalFilesCount; ++i)
             {
                 RootNodes[i].IsExternal = true;
+            }
+
+            for (int i = 0; i < RootNodes.Count; ++i)
+            {
+                RootNodes[i].Index = i;
+                RootNodes[i].Path = FilesPaths[i];
+                RootNodes[i].Content = FilesContents[i];
+                RootNodes[i].SuppressedWarningCodes = SuppressedWarningCodes[i];
             }
         }
     }
@@ -185,6 +201,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public List<DeclarationNode> DefinitionNodes;
         public bool IsExternal;
 
+
+        public int Index;
+        public string Path;
+        public string[] Content;
+        public string[] SuppressedWarningCodes;
+        
+        
         public FileNode(NodeLocation location, List<DeclarationNode> definitionNodes, bool isExternal = false) :
             base(location)
         {

@@ -21,13 +21,13 @@ namespace DaedalusCompiler.Compilation
         private AbstractSyntaxTree _abstractSyntaxTree;
         private Dictionary<string, Symbol> _symbolTable;
 
-        public SemanticAnalyzer(List<IParseTree> parseTrees, int externalFilesCount)
+        public SemanticAnalyzer(List<IParseTree> parseTrees, int externalFilesCount, List<string> filesPaths, List<string[]> filesContents, List<string[]> suppressedWarningCodes)
         {
             _symbolTable = null;
             
             Stopwatch timer = new Stopwatch();
             timer.Start();
-            _abstractSyntaxTree = new AbstractSyntaxTree(parseTrees, externalFilesCount);
+            _abstractSyntaxTree = new AbstractSyntaxTree(parseTrees, externalFilesCount, filesPaths, filesContents, suppressedWarningCodes);
             timer.Stop();
             Console.WriteLine($"AbstractSyntaxTree creation time: {timer.Elapsed}");
         }
@@ -35,24 +35,6 @@ namespace DaedalusCompiler.Compilation
 
         public void CreateSymbolTable()
         {
-            /*
-            long a = -2147483648;
-            long c = ~2147483648;
-            long d = 2147483690;
-            long x = 21474836900;
-
-            int a2 = (int) a;
-            int c2 = (int) c;
-            int d2 = (int) d;
-            int x2 = (int) x;
-            
-            Console.WriteLine(a2);
-            Console.WriteLine(c2);
-            Console.WriteLine(d2);
-            Console.WriteLine(x2);
-            return;
-            */
-            
             //Stopwatch timer = new Stopwatch();
             //timer.Start();
             //SymbolTableCreationVisitor symbolTableCreationVisitor = new SymbolTableCreationVisitor();
@@ -90,30 +72,39 @@ namespace DaedalusCompiler.Compilation
             ReferenceResolvingVisitor referenceResolvingVisitor = new ReferenceResolvingVisitor(_symbolTable);
             referenceResolvingVisitor.Visit(_abstractSyntaxTree.ReferenceNodes);
             
-            
+            // annotates:
+            // InfiniteReferenceLoopAnnotation
+            // InconsistentSizeAnnotation
+            // UnsupportedTypeAnnotation
+            // ConstIntegerExpectedAnnotation
+            // IndexOutOfRangeAnnotation
+            // NotConstReferenceAnnotation
+            // InvalidUnaryOperationAnnotation
+            // InvalidBinaryOperationAnnotation
+            // IncompatibleTypesAnnotation
             ConstEvaluationVisitor constEvaluationVisitor = new ConstEvaluationVisitor(_symbolTable);
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ConstDefinitionNodes);
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ArrayDeclarationNodes);
-            // constEvaluationVisitor.Visit(_abstractSyntaxTree.ReferenceNodes); ale tylko te, które mają odwołanie do indeksu + nie mają annotacji??
-            // a może ConstEvalutationVisitor.Visit(_abstractSyntaxTree.ArrayIndexNodes)
+            constEvaluationVisitor.Visit(referenceResolvingVisitor.ArrayIndexNodes);
+
             
             
             // TypeCheckingVisitor
             
             
-            
-            // ErrorDetectionVisitor // ErrorCollectionVisitor
-            
-            
-            
-            
-            
-            
             //constEvaluationVisitor.VisitTree(_abstractSyntaxTree);
+            /*
+             *
+             * Dodaje pozostałe adnotacje
+             */
+            // Error o rozmiarze C_NPC (800), warningi o tym, ze nazwy uzywamy np. małymi, a zadeklaorwaliśy duzymi, albo, ze sa nieuzywane funkcje
             Console.WriteLine("---------");
-            AnnotationsAdditionVisitor annotationsAdditionVisitor = new AnnotationsAdditionVisitor();
-            annotationsAdditionVisitor.VisitTree(_abstractSyntaxTree);
+            RemainingAnnotationsAdditionVisitor remainingAnnotationsAdditionVisitor = new RemainingAnnotationsAdditionVisitor();
+            remainingAnnotationsAdditionVisitor.VisitTree(_abstractSyntaxTree);
             
+            
+            ErrorCollectionVisitor errorCollectionVisitor = new ErrorCollectionVisitor();
+            errorCollectionVisitor.VisitTree(_abstractSyntaxTree);
         }
         
         public void EvaluateReferencesAndTypesAndArraySize()

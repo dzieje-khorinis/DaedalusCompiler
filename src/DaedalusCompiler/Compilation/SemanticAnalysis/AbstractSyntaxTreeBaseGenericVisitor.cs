@@ -170,6 +170,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected virtual T VisitArrayIndexNode(ArrayIndexNode arrayIndexNode)
         {
+            Visit(arrayIndexNode.ExpressionNode);
             return DefaultResult;
         }
 
@@ -194,6 +195,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             return DefaultResult;
         }
 
+        public T Visit(List<ArrayIndexNode> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                Visit(node);
+            }
+            return DefaultResult;
+        }
+        
         public T Visit(List<ConditionalNode> nodes)
         {
             foreach (var node in nodes)

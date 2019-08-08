@@ -187,8 +187,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             {
                 switch (partNode)
                 {
-                    case ArrayIndexNode node:
-                        arrayIndexValue = Visit(node);
+                    case ArrayIndexNode arrayIndexNode:
+                        arrayIndexValue = Visit(arrayIndexNode);
                         break;
                 }
             }
@@ -370,6 +370,5 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     throw new Exception();
             }
         }
-
     }
 }

@@ -145,6 +145,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected virtual void VisitArrayIndexNode(ArrayIndexNode arrayIndexNode)
         {
+            Visit(arrayIndexNode.ExpressionNode);
         }
 
         protected virtual void VisitName(NameNode node) {}

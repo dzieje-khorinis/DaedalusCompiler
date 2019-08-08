@@ -10,10 +10,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class ReferenceResolvingVisitor : AbstractSyntaxTreeBaseVisitor
     {
         private readonly Dictionary <string, Symbol> _symbolTable;
+        public readonly List<ArrayIndexNode> ArrayIndexNodes;
 
         public ReferenceResolvingVisitor(Dictionary<string, Symbol> symbolTable)
         {
             _symbolTable = symbolTable;
+            ArrayIndexNodes = new List<ArrayIndexNode>();
         }
 
         protected override void VisitReference(ReferenceNode referenceNode)
@@ -72,7 +74,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         }
                         break;
                     
-                    case ArrayIndexNode _:
+                    case ArrayIndexNode arrayIndexNode:
                         arrayIndexNodeFound = true;
                         
                         if (!(symbol.Node is IArrayDeclarationNode))
@@ -80,6 +82,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                             referenceNode.Annotations.Add(new ReferencedSymbolIsNotArrayAnnotation());
                             return;
                         }
+                        
+                        ArrayIndexNodes.Add(arrayIndexNode);
                         break;
                     default:
                         throw new Exception();

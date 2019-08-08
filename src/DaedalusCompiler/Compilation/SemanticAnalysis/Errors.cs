@@ -1,27 +1,3 @@
-using System;
-
-namespace DaedalusCompiler.Compilation
-{
-    public abstract class ErrorLogger
-    {
-        public abstract void LogLine(string message);
-    }
-
-    public class StdErrorLogger : ErrorLogger
-    {
-        public override void LogLine(string message)
-        {
-            Console.WriteLine(message);
-        }
-
-        public void Log(string message)
-        {
-            Console.Write(message);
-        }
-    }
-}
-
-
 /*using System;
 using System.Collections.Generic;
 using System.IO;
@@ -29,48 +5,8 @@ using System.Linq;
 using Antlr4.Runtime;
 using DaedalusCompiler.Dat;
 
-namespace DaedalusCompiler.Compilation
+namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
-    public abstract class ErrorLogger
-    {
-        public abstract void LogLine(string message);
-    }
-
-    public class StdErrorLogger : ErrorLogger
-    {
-        public override void LogLine(string message)
-        {
-            Console.WriteLine(message);
-        }
-        
-        public void Log(string message)
-        {
-            Console.Write(message);
-        }
-    }
-
-    public class StringBufforErrorLogger : ErrorLogger
-    {
-        private string buffor;
-
-        public override void LogLine(string message)
-        {
-            if (buffor == null)
-            {
-                buffor = message;
-            }
-            else
-            {
-                buffor = $"{buffor}{Environment.NewLine}{message}";
-            }
-        }
-
-        public string GetBuffor()
-        {
-            return buffor;
-        }
-    }
-
     public class UndeclaredIdentifierException : Exception
     {
         
@@ -99,6 +35,8 @@ namespace DaedalusCompiler.Compilation
         }
     }
     
+    
+    
     public class ErrorFileContext : BaseErrorContext
     {
         public int FileIndex;
@@ -125,6 +63,8 @@ namespace DaedalusCompiler.Compilation
             SuppressedWarningCodes = errorFileContext.SuppressedWarningCodes;
         }
     }
+    
+    
     
     public abstract class CompilationMessage {
         public string FilePath;

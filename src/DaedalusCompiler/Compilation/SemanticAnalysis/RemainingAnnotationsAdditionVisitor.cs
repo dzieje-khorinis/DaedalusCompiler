@@ -5,7 +5,7 @@ using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
-    public class AnnotationsAdditionVisitor : AbstractSyntaxTreeBaseVisitor
+    public class RemainingAnnotationsAdditionVisitor : AbstractSyntaxTreeBaseVisitor
     {
         protected override void Visit(ASTNode node)
         {
