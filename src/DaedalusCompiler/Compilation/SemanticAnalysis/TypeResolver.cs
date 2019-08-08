@@ -21,7 +21,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         public void Resolve(ITypedSymbol typedSymbol)
         {
-            SymbolType? symbolType = typedSymbol.BuiltinType;
+            SymbolType? symbolType = ((Symbol)typedSymbol).BuiltinType;
             ASTNode typedSymbolNode = ((Symbol) typedSymbol).Node;
             
             if (!symbolType.HasValue)
@@ -43,7 +43,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 }
                 else
                 {
-                    typedSymbolNode.Annotations.Add(new UndeclaredIdentifierAnnotation());
+                    typedSymbolNode.Annotations.Add(new UndefinedTypeAnnotation());
                     return;
                 }
             }

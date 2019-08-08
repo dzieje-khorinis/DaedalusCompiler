@@ -44,8 +44,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             {
                 Console.WriteLine($"Visit: {message}");
             }
-            
-
         }
         
         public override NodeValue Visit(ASTNode node)
@@ -99,6 +97,28 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 return new UndefinedValue();
             }
             node.ArraySizeValue = Visit(node.ArraySizeNode);
+
+            
+            for (int i = 0; i < node.ElementNodes.Count; ++i)
+            {
+                node.ElementValues.Add(Visit(node.ElementNodes[i]));
+            }
+
+            switch (node.ArraySizeValue)
+            {
+                case UndefinedValue _:
+                    break;
+                case IntValue intValue:
+                    if (intValue.Value != node.ElementNodes.Count)
+                    {
+                        node.Annotations.Add(new InconsistentSizeAnnotation());
+                    }
+                    break;
+                default:
+                    node.ArraySizeNode.Annotations.Add(new UnsupportedTypeAnnotation());
+                    break;
+            }
+            
             return null;
         }
 
@@ -112,19 +132,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             return null;
         }
 
-        protected override NodeValue VisitConstDefinition(ConstDefinitionNode node)
-        {
-            node.RightSideValue = Visit(node.RightSideNode);
-            if (node.RightSideValue is UndefinedValue)
-            {
-                return new UndefinedValue();
-            }
 
-            Symbol symbol = _symbolTable[node.NameNode.Value.ToUpper()];
-            SymbolType rightSideType = NodeValueToBuiltinType(node.RightSideValue);
-            
-            
-            
+        private void CheckType(SymbolType expectedType, SymbolType actualType, ASTNode node)
+        {
             switch (symbol.BuiltinType)
             {
                 case SymbolType.Int:
@@ -135,7 +145,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                             break;
                         
                         default:
-                            node.Annotations.Add(new IncompatibleTypesAnnotation((SymbolType) symbol.BuiltinType, rightSideType));
+                            node.RightSideNode.Annotations.Add(new IncompatibleTypesAnnotation((SymbolType) symbol.BuiltinType, rightSideType));
                             break;
 
                     }
@@ -149,7 +159,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                             break;
                         
                         default:
-                            node.Annotations.Add(new IncompatibleTypesAnnotation((SymbolType) symbol.BuiltinType, rightSideType));
+                            node.RightSideNode.Annotations.Add(new IncompatibleTypesAnnotation((SymbolType) symbol.BuiltinType, rightSideType));
                             break;
 
                     }
@@ -162,7 +172,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                             break;
                         
                         default:
-                            node.Annotations.Add(new IncompatibleTypesAnnotation((SymbolType) symbol.BuiltinType, rightSideType));
+                            node.RightSideNode.Annotations.Add(new IncompatibleTypesAnnotation((SymbolType) symbol.BuiltinType, rightSideType));
                             break;
                     }
                     break;
@@ -175,7 +185,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                             break;
                         
                         default:
-                            node.Annotations.Add(new IncompatibleTypesAnnotation((SymbolType) symbol.BuiltinType, rightSideType));
+                            node.RightSideNode.Annotations.Add(new IncompatibleTypesAnnotation((SymbolType) symbol.BuiltinType, rightSideType));
                             break;
                     }
                     break;
@@ -183,80 +193,100 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 default:
                     throw new Exception();
             }
-
-            return null; // TODO what to return here?
         }
-        
-        
+
+        protected override NodeValue VisitConstDefinition(ConstDefinitionNode node)
+        {
+            node.RightSideValue = Visit(node.RightSideNode);
+            if (node.RightSideValue is UndefinedValue)
+            {
+                return null;
+            }
+
+            Symbol symbol = _symbolTable[node.NameNode.Value.ToUpper()];
+            SymbolType rightSideType = NodeValueToBuiltinType(node.RightSideValue);
+
+            if (symbol.BuiltinType != null)
+            {
+                CheckType(symbol.BuiltinType.Value, rightSideType, node.RightSideNode);
+            }
+
+            return null;
+        }
+
+
+        protected override NodeValue VisitArrayIndexNode(ArrayIndexNode arrayIndexNode)
+        {
+            arrayIndexNode.Value = Visit(arrayIndexNode.ExpressionNode);
+
+            switch (arrayIndexNode.Value)
+            {
+                case IntValue _:
+                case UndefinedValue _:
+                    break;
+                default:
+                    arrayIndexNode.Annotations.Add(new ConstIntegerExpectedAnnotation());
+                    return new UndefinedValue();
+            }
+            
+            return arrayIndexNode.Value;
+        }
 
         protected override NodeValue VisitReference(ReferenceNode referenceNode)
         {
-            /*
-            if (referenceNode.ArrayIndexNode != null)
+            if (referenceNode.Symbol == null)
             {
-                referenceNode.ArrayIndexValue = Visit(referenceNode.ArrayIndexNode);
-            }
-            */
-            
-            string nodeName = referenceNode.Name.ToUpper();
-            if (!_symbolTable.ContainsKey(nodeName))
-            {
-                referenceNode.Annotations.Add(new UndeclaredIdentifierAnnotation());
                 return new UndefinedValue();
             }
-            
-            Symbol symbol = _symbolTable[nodeName];
 
-            switch (symbol.Node)
+            
+            NodeValue arrayIndexValue = new IntValue(0);
+            foreach (var partNode in referenceNode.PartNodes)
             {
-                /*
+                switch (partNode)
+                {
+                    case ArrayIndexNode node:
+                        arrayIndexValue = Visit(node);
+                        break;
+                }
+            }
+            
+            switch (referenceNode.Symbol.Node)
+            {
                 case ConstArrayDefinitionNode constArrayDefinitionNode:
-                    if (referenceNode.ArrayIndexNode == null)
+                    
+                    switch (arrayIndexValue)
                     {
-                        //orignal compiler actually accesses index 0 if no square brackets are provided
-                        referenceNode.Annotations.Add(new SquareBracketsExpectedAnnotation());
-                        return new UndefinedValue();
-                    }
-                    else
-                    {
-                        switch (referenceNode.ArrayIndexValue)
-                        {
-                            case UndefinedValue _:
+                        case IntValue intValue:
+                            if (intValue.Value >= constArrayDefinitionNode.ElementNodes.Count)
+                            {
+                                referenceNode.Annotations.Add(new IndexOutOfRangeAnnotation());
                                 return new UndefinedValue();
-                            case IntValue intValue:
-                                if (intValue.Value >= constArrayDefinitionNode.ElementNodes.Count)
-                                {
-                                    referenceNode.Annotations.Add(new IndexOutOfRangeAnnotation());
-                                    return new UndefinedValue();
-                                }
-                                return Visit(constArrayDefinitionNode.ElementNodes[(int)intValue.Value]);
-                            default:
-                                referenceNode.ArrayIndexNode.Annotations.Add(new ConstIntegerExpectedAnnotation());
-                                referenceNode.ArrayIndexValue = new UndefinedValue();
+                            }
+                            else if (intValue.Value > 255)
+                            {
+                                //referenceNode.Annotations.Add(new TooBigIndexValue());
                                 return new UndefinedValue();
-                        }
+                            }
+                            return Visit(constArrayDefinitionNode.ElementNodes[(int)intValue.Value]);
+                        
+                        case UndefinedValue _:
+                            return new UndefinedValue();
+                        
+                        default:
+                            throw new Exception();
                     }
-                */
 
                 case ConstDefinitionNode constDefinitionNode:
-                    /*
-                    if (referenceNode.ArrayIndexNode != null)
-                    {
-                        referenceNode.Annotations.Add(new SquareBracketsNotExpectedAnnotation());
-                        return new UndefinedValue();
-                    }
-                    */
                     return Visit(constDefinitionNode.RightSideNode);
                 
                 case FunctionDefinitionNode _:
-                    return new FunctionValue(symbol);
+                    return new FunctionValue(referenceNode.Symbol);
                 
                 default:
                     referenceNode.Annotations.Add(new NotConstReferenceAnnotation());
                     return new UndefinedValue();
-                
             }
-            
         }
         
 

@@ -140,16 +140,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             foreach (var partNode in referenceNode.PartNodes)
             {
                 Visit(partNode);
-                /*
-                switch (partNode)
-                {
-                    case ArrayIndexNode arrayIndexNode:
-                        Visit(arrayIndexNode.ExpressionNode);
-                        break;
-                }
-                */
             }
         }
+
+        protected virtual void VisitArrayIndexNode(ArrayIndexNode arrayIndexNode)
+        {
+        }
+
         protected virtual void VisitName(NameNode node) {}
         
         
@@ -311,6 +308,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 
                 case ReferenceNode referenceNode:
                     VisitReference(referenceNode);
+                    break;
+                
+                case ArrayIndexNode arrayIndexNode:
+                    VisitArrayIndexNode(arrayIndexNode);
                     break;
                 
                 case NameNode nameNode:

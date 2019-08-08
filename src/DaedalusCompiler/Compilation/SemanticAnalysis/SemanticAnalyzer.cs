@@ -70,7 +70,7 @@ namespace DaedalusCompiler.Compilation
             
             // annotates:
             // UnsupportedTypeAnnotation
-            // UndeclaredIdentifierAnnotation
+            // UndefinedTypeAnnotation
             // UnsupportedArrayTypeAnnotation
             TypeResolver typeResolver = new TypeResolver(_symbolTable);
             typeResolver.Resolve(symbolTableCreationVisitor.TypedSymbols);
@@ -90,18 +90,21 @@ namespace DaedalusCompiler.Compilation
             ReferenceResolvingVisitor referenceResolvingVisitor = new ReferenceResolvingVisitor(_symbolTable);
             referenceResolvingVisitor.Visit(_abstractSyntaxTree.ReferenceNodes);
             
+            
             ConstEvaluationVisitor constEvaluationVisitor = new ConstEvaluationVisitor(_symbolTable);
-            //consty, stałe, referencje z indexami
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ConstDefinitionNodes);
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ArrayDeclarationNodes);
             // constEvaluationVisitor.Visit(_abstractSyntaxTree.ReferenceNodes); ale tylko te, które mają odwołanie do indeksu + nie mają annotacji??
+            // a może ConstEvalutationVisitor.Visit(_abstractSyntaxTree.ArrayIndexNodes)
             
             
             // TypeCheckingVisitor
             
             
             
-            // ErrorDetectionVisitor
+            // ErrorDetectionVisitor // ErrorCollectionVisitor
+            
+            
             
             
             
@@ -150,6 +153,8 @@ namespace DaedalusCompiler.Compilation
                 * C_NPC size has to be 800 bytes if declared
              New warnings:
                 * used name isn't exacly the same as declared (match-case)
+                * function / class /prototype isn't used
+             
              */
         }
         

@@ -111,7 +111,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         private void BuildParameter(ParameterDeclarationNode parameterDeclarationNode, bool buildArray=false)
         {
-            if (parameterDeclarationNode.Parent is FunctionDefinitionNode functionDefinitionNode)
+            if (parameterDeclarationNode.ParentNode is FunctionDefinitionNode functionDefinitionNode)
             {
                 FunctionSymbol functionSymbol = (FunctionSymbol) functionDefinitionNode.Symbol;
                 string parameterName = parameterDeclarationNode.NameNode.Value;

@@ -31,14 +31,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
     }
 
-    public class SquareBracketsExpectedAnnotation : NodeAnnotation
-    {
-    }
-    
-    public class SquareBracketsNotExpectedAnnotation : NodeAnnotation
-    {
-    }
-    
+
     public class NotConstReferenceAnnotation : NodeAnnotation
     {
     }
@@ -76,6 +69,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
     }
 
+
+    public class InconsistentSizeAnnotation : NodeAnnotation
+    {
+        
+    }
+    
     public class UnsupportedArrayTypeAnnotation : NodeAnnotation
     {
         
@@ -85,6 +84,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         
     }
+    
+    public class UndefinedTypeAnnotation : NodeAnnotation
+    {
+        
+    }
+
     
     public class ClassDoesNotHaveAttributeAnnotation : NodeAnnotation
     {

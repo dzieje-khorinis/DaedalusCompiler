@@ -84,7 +84,7 @@ namespace DaedalusCompiler.Compilation
 
                 int externalFilesCount = 0;
                 
-                if (File.Exists(runtimePath))
+                if (File.Exists(runtimePath) && false)
                 {
                     externalFilesCount++;
                     

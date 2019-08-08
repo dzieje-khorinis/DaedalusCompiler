@@ -227,7 +227,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             foreach (var node in parameterNodes)
             {
-                node.Parent = this;
+                node.ParentNode = this;
             }
             foreach (var node in bodyNodes)
             {
@@ -389,6 +389,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
             
             ElementNodes = elementNodes;
+            ElementValues = new List<NodeValue>();
         }
     }
 
@@ -414,7 +415,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     
     public class ParameterDeclarationNode : VarDeclarationNode
     {
-        public new FunctionDefinitionNode Parent { get; set; }
+        //public new FunctionDefinitionNode Parent { get; set; }
         
         public ParameterDeclarationNode(NodeLocation location, string type, NameNode nameNode) : base(location, type,
             nameNode)
@@ -568,13 +569,14 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
 
-    class ArrayIndexNode : ReferencePartNode
+    public class ArrayIndexNode : ReferencePartNode
     {
         public ExpressionNode ExpressionNode;
         public NodeValue Value;
         public ArrayIndexNode(ExpressionNode expressionNode, NodeLocation location) : base(location)
         {
             ExpressionNode = expressionNode;
+            ExpressionNode.ParentNode = this;
         }
     }
 
@@ -592,6 +594,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Symbol = null;
             Name = name;
             PartNodes = partNodes;
+
+            foreach (var partNode in partNodes)
+            {
+                partNode.ParentNode = this;
+            }
         }
         
         public ReferenceNode(string name, NodeLocation location) : base(location)

@@ -18,6 +18,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public enum SymbolType
     {
+        Uninitialized = -1,
         Void = 0,
         Float = 1,
         Int = 2,
@@ -93,7 +94,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public BlockSymbol ParentBlockSymbol;
         public string TypeName { get; set; }
-        public SymbolType? BuiltinType { get; set; }
+        //public SymbolType? BuiltinType { get; set; }
         public Symbol ComplexType { get; set; }
 
         protected NestableSymbol(BlockSymbol parentBlockSymbol, string typeName, string name, ASTNode node) : base(name, node)
@@ -160,7 +161,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public interface ITypedSymbol
     {
         string TypeName { get; set; }
-        SymbolType? BuiltinType { get; set; }
+        //SymbolType? BuiltinType { get; set; }
         
         Symbol ComplexType { get; set; }
     }
