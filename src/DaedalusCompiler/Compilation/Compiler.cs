@@ -140,7 +140,7 @@ namespace DaedalusCompiler.Compilation
                     parseTrees.Add(parser.daedalusFile());
 
                     string[] fileContentLines = fileContent.Split(Environment.NewLine);
-                    FilesPaths.Add(runtimePath);
+                    FilesPaths.Add(paths[i]);
                     FilesContents.Add(fileContentLines);
                     SuppressedWarningCodes.Add(GetWarningCodesToSuppress(fileContentLines[0]));
                     

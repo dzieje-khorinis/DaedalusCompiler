@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
@@ -168,7 +169,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
             if (SymbolTable.ContainsKey(symbol.Path))
             {
-                symbol.Node.Annotations.Add(new RedefinedIdentifierAnnotation());
+                Symbol previousSymbol = SymbolTable[symbol.Path];
+                symbol.Node.Annotations.Add(new RedefinedIdentifierAnnotation(symbol.Name, previousSymbol.Node.Location));
                 return;
             }
             

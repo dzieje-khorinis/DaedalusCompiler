@@ -103,7 +103,7 @@ namespace DaedalusCompiler.Compilation
             remainingAnnotationsAdditionVisitor.VisitTree(_abstractSyntaxTree);
             
             
-            ErrorCollectionVisitor errorCollectionVisitor = new ErrorCollectionVisitor();
+            ErrorCollectionVisitor errorCollectionVisitor = new ErrorCollectionVisitor(new StdErrorLogger(), _abstractSyntaxTree.FilesPaths);
             errorCollectionVisitor.VisitTree(_abstractSyntaxTree);
         }
         
