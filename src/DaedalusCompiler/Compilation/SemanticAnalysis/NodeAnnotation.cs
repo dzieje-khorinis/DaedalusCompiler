@@ -26,7 +26,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public abstract class WarningAnnotation : NodeAnnotation
     {
-        public const string Code = "WARNING";
+        //public const string Code = "WARNING";
     }
 
     public abstract class ErrorAnnotationNoted : ErrorAnnotation, INotedAnnotation
@@ -59,9 +59,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             return String.Empty;
         }
     }
-    
-    
-    
 
     public class IncompatibleTypesAnnotation : NodeAnnotation
     {
@@ -75,8 +72,19 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
 
-    public class UndeclaredIdentifierAnnotation : NodeAnnotation
+    public class UndeclaredIdentifierAnnotation : ErrorAnnotation
     {
+        private readonly string _identifier;
+
+        public UndeclaredIdentifierAnnotation(string identifier)
+        {
+            _identifier = identifier;
+        }
+
+        public override string GetMessage()
+        {
+            return $"‘{_identifier}’ undeclared";
+        }
     }
 
     public class IndexOutOfRangeAnnotation : NodeAnnotation
@@ -116,7 +124,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         public override string GetMessage()
         {
-            return $"redefinition of '{_identifier}'";
+            return $"redefinition of ‘{_identifier}’";
         }
 
         public override string GetNote()
@@ -124,44 +132,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             return "previous definition is here";
         }
     }
-    
-    
-     
-    /*
-       public class RedefinitionError : CompilationError
-    {
-        private readonly string _identifier;
-        private readonly ErrorLineContext _errorLineContext;
 
-        public RedefinitionError(
-            ErrorFileContext errorFileContext,
-            ErrorLineContext errorLineContext,
-            string identifier) : base(errorFileContext)
-        {
-            _identifier = GetIdentifierRelativeName(identifier);
-            _errorLineContext = errorLineContext;
-        }
-
-        protected override void PrintMessage(ErrorLogger logger)
-        {
-            logger.LogLine($"{FileName}:{_lineNo}:{_columnNo}: error: redefinition of '{_identifier}'");
-        }
-
-        protected override void PrintNote(ErrorLogger logger)
-        {
-            ParserRuleContext parserContext = _errorLineContext.ParserContext;
-            
-            string fileName = Path.GetFileName(_errorLineContext.FilePath);
-            int lineNo = parserContext.Start.Line;
-            int columnNo = parserContext.Start.Column;
-            string line = _errorLineContext.FileContentLine;
-            logger.LogLine($"{fileName}:{lineNo}:{columnNo}: note: previous definition is here");
-            logger.LogLine(line);
-            PrintErrorPointer(logger, columnNo, line);
-        }
-     */
-
-    
     public class InfiniteReferenceLoopAnnotation : NodeAnnotation
     {
     }
@@ -179,9 +150,23 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     }
 
 
-    public class InconsistentSizeAnnotation : NodeAnnotation
+    public class InconsistentSizeAnnotation : ErrorAnnotation
     {
-        
+        private readonly string _identifier;
+        private readonly int _declaredSize;
+        private readonly int _elementsCount;
+
+        public InconsistentSizeAnnotation(string identifier, int declaredSize, int elementsCount)
+        {
+            _declaredSize = declaredSize;
+            _elementsCount = elementsCount;
+            _identifier = identifier;
+        }
+
+        public override string GetMessage()
+        {
+            return $"array ‘{_identifier}’ has inconsistent size (declared size: {_declaredSize}, elements count: {_elementsCount})";
+        }
     }
     
     public class UnsupportedArrayTypeAnnotation : NodeAnnotation
@@ -199,15 +184,24 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
     }
 
-    
-    public class ClassDoesNotHaveAttributeAnnotation : NodeAnnotation
+
+    public class ClassDoesNotHaveAttributeAnnotation : ErrorAnnotation
     {
-        public string ClassName;
-        public ClassDoesNotHaveAttributeAnnotation(string className)
+        private readonly string _objectName;
+        private readonly string _className;
+        private readonly string _attributeName;
+
+        public ClassDoesNotHaveAttributeAnnotation(string objectName, string className, string attributeName)
         {
-            ClassName = className;
+            _objectName = objectName;
+            _className = className;
+            _attributeName = attributeName;
         }
+
+        public override string GetMessage()
+        {
+            return $"object ‘{_objectName}’ of type ‘{_className}’ has no member named ‘{_attributeName}’";
+        }
+
     }
-    
-    
 }

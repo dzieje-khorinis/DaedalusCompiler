@@ -121,7 +121,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 case IntValue intValue:
                     if (intValue.Value != node.ElementNodes.Count)
                     {
-                        node.Annotations.Add(new InconsistentSizeAnnotation());
+                        node.ArraySizeNode.Annotations.Add(new InconsistentSizeAnnotation(node.NameNode.Value, (int) intValue.Value, node.ElementNodes.Count));
                     }
                     break;
                 default:

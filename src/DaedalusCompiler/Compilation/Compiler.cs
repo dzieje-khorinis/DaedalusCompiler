@@ -172,25 +172,52 @@ namespace DaedalusCompiler.Compilation
                     */
                 }
                 
+                
+                StdErrorLogger logger = new StdErrorLogger();
+                
                 if (syntaxErrorsCount > 0)
                 {
-                    StdErrorLogger logger = new StdErrorLogger();
                     logger.LogLine($"{syntaxErrorsCount} syntax {(syntaxErrorsCount == 1 ? "error" : "errors")} generated.");
                     return false;
                 }
 
                 
                 Console.WriteLine("parseTrees created");
+                
                 SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(parseTrees, externalFilesCount, FilesPaths, FilesContents, SuppressedWarningCodes, _strictSyntax);
-                semanticAnalyzer.CreateSymbolTable();
+                semanticAnalyzer.Run();
                 
                 
-                /*
-                semanticAnalyzer.EvaluateReferencesAndTypesAndArraySize();
                 
-                semanticAnalyzer.DetectErrors();
-                */
-                Console.WriteLine(parseTrees.Count);
+                
+                int errorsCount = semanticAnalyzer.ErrorsCount;
+                int warningsCount = semanticAnalyzer.WarningsCount;
+                string error = errorsCount == 1 ? "error" : "errors";
+                string warning = warningsCount == 1 ? "warning" : "warnings";
+
+                if (errorsCount > 0)
+                {    
+                    if (warningsCount > 0)
+                    {
+                        logger.LogLine($"{errorsCount} {error}, {warningsCount} {warning} generated.");
+                    }
+                    else
+                    {
+                        logger.LogLine($"{errorsCount} {error} generated.");
+                    }
+                    return false;
+                }
+
+                if (warningsCount > 0)
+                {
+                    logger.LogLine($"{warningsCount} {warning} generated.");
+                }
+                
+                Console.WriteLine($"parseTrees.Count: {parseTrees.Count}");
+                return true;
+                
+                
+                
                 
                 
                 /*

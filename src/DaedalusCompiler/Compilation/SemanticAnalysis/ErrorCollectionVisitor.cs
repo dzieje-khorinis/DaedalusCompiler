@@ -37,6 +37,7 @@ public class ErrorCollectionVisitor : AbstractSyntaxTreeBaseVisitor
         public int WarningsCount;
 
         public int FileAnnotationsCount;
+        public ASTNode LastParentBlockNode;
 
         private readonly bool _strictSyntax;
         
@@ -45,6 +46,7 @@ public class ErrorCollectionVisitor : AbstractSyntaxTreeBaseVisitor
             CurrentFileNode = null;
             ErrorLogger = errorLogger;
             _strictSyntax = strictSyntax;
+            LastParentBlockNode = null;
 
             ErrorsCount = 0;
             WarningsCount = 0;
@@ -128,8 +130,7 @@ public class ErrorCollectionVisitor : AbstractSyntaxTreeBaseVisitor
         
         public void PrintAnnotation(NodeAnnotation annotation, ASTNode node)
         {
-            string annotationType = String.Empty;
-            ;
+            string annotationType;
             if (annotation is ErrorAnnotation || _strictSyntax)
             {
                 ErrorsCount++;
@@ -142,12 +143,52 @@ public class ErrorCollectionVisitor : AbstractSyntaxTreeBaseVisitor
             }
             
             string message = annotation.GetMessage();
+            if (message == String.Empty) //TODO remove it in the final version
+            {
+                message = annotation.GetType().ToString();
+            }
+            
             NodeLocation messageLocation = node.Location;
 
             if (FileAnnotationsCount == 0)
             {
                 ErrorLogger.LogLine(FilesPaths[messageLocation.FileIndex]);
             }
+
+
+            string parentBlockName = String.Empty;
+            ASTNode ancestor = node.GetFirstSignificantAncestor();
+            if (ancestor != LastParentBlockNode)
+            {
+                switch (ancestor)
+                {
+                    case PrototypeDefinitionNode prototypeDefinitionNode:
+                        parentBlockName = $"prototype ‘{prototypeDefinitionNode.NameNode.Value}‘";
+                        break;
+                    case InstanceDefinitionNode instanceDefinitionNode:
+                        parentBlockName = $"instance ‘{instanceDefinitionNode.NameNode.Value}‘";
+                        break;
+                    case FunctionDefinitionNode functionDefinitionNode:
+                        parentBlockName = $"function ‘{functionDefinitionNode.NameNode.Value}‘";
+                        break;
+                    case FileNode _:
+                        if (LastParentBlockNode != null)
+                        {
+                            parentBlockName = "global scope";
+                        }
+                        break;
+                    default:
+                        throw new Exception();
+                }
+                
+                LastParentBlockNode = ancestor;
+            }
+
+            if (parentBlockName != String.Empty)
+            {
+                ErrorLogger.LogLine($"{FileNames[messageLocation.FileIndex]}: In {parentBlockName}:");
+            }
+            
             
             ErrorLogger.LogLine($"{FileNames[messageLocation.FileIndex]}:{messageLocation.Line}:{messageLocation.Column}: {annotationType}: {message}");
             ErrorLogger.LogLine(FilesContents[messageLocation.FileIndex][messageLocation.Line - 1]);
@@ -184,5 +225,43 @@ public class ErrorCollectionVisitor : AbstractSyntaxTreeBaseVisitor
             errorPointerLine += "^";
             return errorPointerLine;
         }
+        
+        
+        /*
+         *
+         *
+         if (displayExecBlock)
+            {
+                RuleContext context = parserContext.Parent;
+                while (ExecBlockName == null)
+                {
+                    switch (context)
+                    {
+                        case DaedalusParser.FunctionDefContext functionDefContext:
+                            ExecBlockName = functionDefContext.nameNode().GetText();
+                            ExecBlockType = "function";
+                            break;
+                        case DaedalusParser.InstanceDefContext instanceDefContext:
+                            ExecBlockName = instanceDefContext.nameNode().GetText();
+                            ExecBlockType = "instance";
+                            break;
+                        case DaedalusParser.PrototypeDefContext prototypeDefContext:
+                            ExecBlockName = prototypeDefContext.nameNode().GetText();
+                            ExecBlockType = "prototype";
+                            break;
+                        case DaedalusParser.ClassDefContext classDefContext:
+                            ExecBlockName = classDefContext.nameNode().GetText();
+                            ExecBlockType = "class";
+                            break;
+                    }
+
+                    context = context.Parent;
+                    if (context is DaedalusParser.DaedalusFileContext)
+                    {
+                        break;
+                    }
+                }
+            }
+         */
     }
 }

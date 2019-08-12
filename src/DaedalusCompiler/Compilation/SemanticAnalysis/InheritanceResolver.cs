@@ -70,7 +70,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             switch (parentReferenceNode.Symbol)
             {
                 case null:
-                    parentReferenceNode.Annotations.Add(new UndeclaredIdentifierAnnotation());
+                    parentReferenceNode.Annotations.Add(new UndeclaredIdentifierAnnotation(parentReferenceNode.Name));
                     break;
                 case SubclassSymbol parentSubclassSymbol:
                     subclassSymbol.InheritanceParentSymbol = parentSubclassSymbol;

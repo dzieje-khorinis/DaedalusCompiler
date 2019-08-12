@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -128,10 +129,26 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Annotations = new List<NodeAnnotation>();
             Location = location;
         }
-
-        public bool HasAnnotations()
+        
+        public ASTNode GetFirstSignificantAncestor()
         {
-            return Annotations.Count > 0;
+            ASTNode node = this;
+            while (node != null)
+            {
+                node = node.ParentNode;
+                switch (node)
+                {
+                    case PrototypeDefinitionNode prototypeDefinitionNode:
+                        return prototypeDefinitionNode;
+                    case InstanceDefinitionNode instanceDefinitionNode:
+                        return instanceDefinitionNode;
+                    case FunctionDefinitionNode functionDefinitionNode:
+                        return functionDefinitionNode;
+                    case FileNode fileNode:
+                        return fileNode;
+                }
+            }
+            throw new Exception();
         }
     }
     
@@ -405,6 +422,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             ExpressionNode arraySizeNode, List<ExpressionNode> elementNodes) : base(location, type, nameNode)
         {
             ArraySizeNode = arraySizeNode;
+            ArraySizeNode.ParentNode = this;
             
             foreach (var node in elementNodes)
             {
@@ -433,6 +451,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             ExpressionNode arraySizeNode) : base(location, type, nameNode)
         {
             ArraySizeNode = arraySizeNode;
+            ArraySizeNode.ParentNode = this;
         }
     }
     
@@ -454,6 +473,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             ExpressionNode arraySizeNode) : base(location, type, nameNode)
         {
             ArraySizeNode = arraySizeNode;
+            ArraySizeNode.ParentNode = this;
         }
     }
     public class ReturnStatementNode : StatementNode

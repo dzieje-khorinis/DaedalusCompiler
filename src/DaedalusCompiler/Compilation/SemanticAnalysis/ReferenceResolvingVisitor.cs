@@ -24,7 +24,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Symbol symbol = GetBaseReferenceSymbol(referenceNode);
             if (symbol == null)
             {
-                referenceNode.Annotations.Add(new UndeclaredIdentifierAnnotation());
+                referenceNode.Annotations.Add(new UndeclaredIdentifierAnnotation(referenceNode.Name));
                 return;
             }
 
@@ -60,7 +60,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                                     else
                                     {
                                         // CLASS X doesn't have attribute Y
-                                        attributeNode.Annotations.Add(new ClassDoesNotHaveAttributeAnnotation(classSymbol.Name));
+                                        attributeNode.Annotations.Add(new ClassDoesNotHaveAttributeAnnotation(symbol.Name, classSymbol.Name, attributeNode.Name));
                                         return;
                                     }
                                 }
@@ -94,7 +94,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
          private Symbol GetBaseReferenceSymbol(ReferenceNode referenceNode)
         {
-            ASTNode ancestor = GetFirstSignificantAncestor(referenceNode);
+            ASTNode ancestor = referenceNode.GetFirstSignificantAncestor();
             string referenceNameUpper = referenceNode.Name.ToUpper();
             NestableSymbol nestableSymbol;
 
@@ -142,26 +142,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
 
             return null;
-        }
-
-        private ASTNode GetFirstSignificantAncestor(ASTNode node)
-        {
-            while (node != null)
-            {
-                node = node.ParentNode;
-                switch (node)
-                {
-                    case PrototypeDefinitionNode prototypeDefinitionNode:
-                        return prototypeDefinitionNode;
-                    case InstanceDefinitionNode instanceDefinitionNode:
-                        return instanceDefinitionNode;
-                    case FunctionDefinitionNode functionDefinitionNode:
-                        return functionDefinitionNode;
-                    case FileNode fileNode:
-                        return fileNode;
-                }
-            }
-            throw new Exception();
         }
     }
 }

@@ -41,7 +41,7 @@ namespace DaedalusCompiler.Compilation
         }
 
 
-        public void CreateSymbolTable()
+        public void Run()
         {
             //Stopwatch timer = new Stopwatch();
             //timer.Start();
@@ -113,6 +113,9 @@ namespace DaedalusCompiler.Compilation
             
             ErrorCollectionVisitor errorCollectionVisitor = new ErrorCollectionVisitor(new StdErrorLogger(), _strictSyntax);
             errorCollectionVisitor.VisitTree(_abstractSyntaxTree);
+
+            ErrorsCount = errorCollectionVisitor.ErrorsCount;
+            WarningsCount = errorCollectionVisitor.WarningsCount;
         }
         
         public void EvaluateReferencesAndTypesAndArraySize()
