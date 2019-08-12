@@ -4,7 +4,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
     public abstract class AbstractSyntaxTreeBaseVisitor
     {
-        public void VisitTree(AbstractSyntaxTree tree)
+        public virtual void VisitTree(AbstractSyntaxTree tree)
         {
             foreach (var fileNode in tree.RootNodes)
             {

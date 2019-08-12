@@ -5,39 +5,63 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
     public abstract class NodeAnnotation
     {
-        
-
         public virtual string GetMessage()
         {
             return String.Empty;
         }
-
-        public virtual NodeLocation GetMessageLocation()
-        {
-            return null;
-        }
     }
 
-    public abstract class NodeAnnotationNoted : NodeAnnotation
+    
+    public interface INotedAnnotation
+    {
+        NodeLocation NoteLocation { get; set; }
+        string GetNote();
+    }
+    
+    
+    public abstract class ErrorAnnotation : NodeAnnotation
     {
         
-        private NodeLocation _noteLocation;
+    }
 
-        protected NodeAnnotationNoted(NodeLocation noteLocation)
+    public abstract class WarningAnnotation : NodeAnnotation
+    {
+        public const string Code = "WARNING";
+    }
+
+    public abstract class ErrorAnnotationNoted : ErrorAnnotation, INotedAnnotation
+    {
+        public NodeLocation NoteLocation { get; set; }
+
+        protected ErrorAnnotationNoted(NodeLocation noteLocation)
         {
-            _noteLocation = noteLocation;
+            NoteLocation = noteLocation;
         }
+        
         public virtual string GetNote()
         {
             return String.Empty;
         }
+    }
+
+
+    public abstract class WarningAnnotationNoted : WarningAnnotation, INotedAnnotation
+    {
+        public NodeLocation NoteLocation { get; set; }
         
-        public virtual NodeLocation GetNoteLocation()
+        protected WarningAnnotationNoted(NodeLocation noteLocation)
         {
-            return _noteLocation;
+            NoteLocation = noteLocation;
+        }
+        
+        public virtual string GetNote()
+        {
+            return String.Empty;
         }
     }
-   
+    
+    
+    
 
     public class IncompatibleTypesAnnotation : NodeAnnotation
     {
@@ -81,7 +105,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         
     }
-    public class RedefinedIdentifierAnnotation : NodeAnnotationNoted
+    public class RedefinedIdentifierAnnotation : ErrorAnnotationNoted
     {
         private readonly string _identifier;
 

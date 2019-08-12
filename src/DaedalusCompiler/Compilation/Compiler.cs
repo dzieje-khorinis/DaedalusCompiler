@@ -18,17 +18,18 @@ namespace DaedalusCompiler.Compilation
         //private readonly AssemblyBuilder _assemblyBuilder;
         private readonly OutputUnitsBuilder _ouBuilder;
         private readonly string _outputDirPath;
+        private readonly bool _strictSyntax;
         
 
         public Compiler(string outputDirPath="output", bool verbose=true, bool strictSyntax=false)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            //_assemblyBuilder = new AssemblyBuilder(verbose, strictSyntax);
             _ouBuilder = new OutputUnitsBuilder(verbose);
             _outputDirPath = outputDirPath;
+            _strictSyntax = strictSyntax;
         }
 
-        public static string[] GetWarningCodesToSuppress(string line)
+        public static HashSet<string> GetWarningCodesToSuppress(string line)
         {
             string ws = @"(?:[ \t])*";
             string newline = @"(?:\r\n?|\n)";
@@ -37,9 +38,9 @@ namespace DaedalusCompiler.Compilation
             MatchCollection matches = Regex.Matches(line, suppressWarningsPattern, options);
             foreach (Match match in matches)
             {
-                return match.Groups[1].Value.Split(" ").Where(s => !s.Equals(String.Empty)).ToArray();
+                return match.Groups[1].Value.Split(" ").Where(s => !s.Equals(String.Empty)).ToHashSet();
             }
-            return new string[]{};
+            return new HashSet<string>();
         }
         
         public string GetBuiltinsPath()
@@ -86,7 +87,7 @@ namespace DaedalusCompiler.Compilation
                 int externalFilesCount = 0;
                 List<string> FilesPaths = new List<string>();
                 List<string[]> FilesContents = new List<string[]>();
-                List<string[]> SuppressedWarningCodes = new List<string[]>();
+                List<HashSet<string>> SuppressedWarningCodes = new List<HashSet<string>>();
                 
                 if (File.Exists(runtimePath) && false)
                 {
@@ -180,14 +181,15 @@ namespace DaedalusCompiler.Compilation
 
                 
                 Console.WriteLine("parseTrees created");
-                SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(parseTrees, externalFilesCount, FilesPaths, FilesContents, SuppressedWarningCodes);
-                
+                SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(parseTrees, externalFilesCount, FilesPaths, FilesContents, SuppressedWarningCodes, _strictSyntax);
                 semanticAnalyzer.CreateSymbolTable();
                 
+                
+                /*
                 semanticAnalyzer.EvaluateReferencesAndTypesAndArraySize();
                 
                 semanticAnalyzer.DetectErrors();
-                
+                */
                 Console.WriteLine(parseTrees.Count);
                 
                 

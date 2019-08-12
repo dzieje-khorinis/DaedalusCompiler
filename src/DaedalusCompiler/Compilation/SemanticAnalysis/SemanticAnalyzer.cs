@@ -20,10 +20,18 @@ namespace DaedalusCompiler.Compilation
     {
         private AbstractSyntaxTree _abstractSyntaxTree;
         private Dictionary<string, Symbol> _symbolTable;
+        
+        public int ErrorsCount;
+        public int WarningsCount;
 
-        public SemanticAnalyzer(List<IParseTree> parseTrees, int externalFilesCount, List<string> filesPaths, List<string[]> filesContents, List<string[]> suppressedWarningCodes)
+        private bool _strictSyntax;
+
+        public SemanticAnalyzer(List<IParseTree> parseTrees, int externalFilesCount, List<string> filesPaths, List<string[]> filesContents, List<HashSet<string>> suppressedWarningCodes, bool strictSyntax)
         {
             _symbolTable = null;
+            ErrorsCount = 0;
+            WarningsCount = 0;
+            _strictSyntax = strictSyntax;
             
             Stopwatch timer = new Stopwatch();
             timer.Start();
@@ -103,7 +111,7 @@ namespace DaedalusCompiler.Compilation
             remainingAnnotationsAdditionVisitor.VisitTree(_abstractSyntaxTree);
             
             
-            ErrorCollectionVisitor errorCollectionVisitor = new ErrorCollectionVisitor(new StdErrorLogger(), _abstractSyntaxTree.FilesPaths);
+            ErrorCollectionVisitor errorCollectionVisitor = new ErrorCollectionVisitor(new StdErrorLogger(), _strictSyntax);
             errorCollectionVisitor.VisitTree(_abstractSyntaxTree);
         }
         
