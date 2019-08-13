@@ -6,21 +6,6 @@ using System.Linq;
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
     
-    /*
-    public abstract class CompilationMessage
-    {
-        public string Content;
-    }
-
-    public class CompilationWarning : CompilationMessage
-    {
-    }
-
-    public class CompilationError : CompilationMessage
-    {
-    }
-    */
-
     
 public class ErrorCollectionVisitor : AbstractSyntaxTreeBaseVisitor
     {
@@ -114,14 +99,14 @@ public class ErrorCollectionVisitor : AbstractSyntaxTreeBaseVisitor
 
         public bool IsAnnotationSuppressed(NodeAnnotation annotation, ASTNode node)
         {
-            if (annotation is WarningAnnotation warningAnnotation)
+            if (annotation is WarningAnnotation _ && annotation is IWithCode withCode)
             {
                 int fileIndex = node.Location.FileIndex;
                 string line = FilesContents[fileIndex][node.Location.Line - 1];
                 HashSet<string> suppressedLineWarningCodes = Compiler.GetWarningCodesToSuppress(line);
                 HashSet<string> suppressedFileWarningCodes = SuppressedWarningCodes[fileIndex];
                 HashSet<string> suppressedWarningCodes = suppressedLineWarningCodes.Union(suppressedFileWarningCodes).ToHashSet();
-                string code = annotation.GetType().GetField("Code").GetValue(null).ToString();
+                string code = withCode.Code;//annotation.GetType().GetField("Code").GetValue(null).ToString();
                 return suppressedWarningCodes.Contains(code);
             }
 
@@ -136,10 +121,19 @@ public class ErrorCollectionVisitor : AbstractSyntaxTreeBaseVisitor
                 ErrorsCount++;
                 annotationType = "error";
             }
-            else
+            else if (annotation is WarningAnnotation)
             {
                 WarningsCount++;
-                annotationType = "warning";
+                annotationType = $"warning";
+            }
+            else
+            {
+                throw new Exception();
+            }
+
+            if (annotation is IWithCode withCode)
+            {
+                annotationType = $"{annotationType} {withCode.Code}";
             }
             
             string message = annotation.GetMessage();
@@ -148,7 +142,16 @@ public class ErrorCollectionVisitor : AbstractSyntaxTreeBaseVisitor
                 message = annotation.GetType().ToString();
             }
             
-            NodeLocation messageLocation = node.Location;
+            NodeLocation messageLocation;
+            if (annotation is ILocatedAnnotation locatedAnnotation)
+            {
+                messageLocation = locatedAnnotation.Location;
+            }
+            else
+            {
+                messageLocation = node.Location;
+            }
+               
 
             if (FileAnnotationsCount == 0)
             {

@@ -27,7 +27,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     
     public class IntValue : NodeValue
     {
-        public long Value;
+        public readonly long Value;
         
         public IntValue(long value)
         {
@@ -100,7 +100,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             switch (oper)
             {
                 case UnaryOperator.Minus:
-                    return new IntValue(-intValue.Value);
+                    return new IntValue(checked(-intValue.Value));
                 case UnaryOperator.Plus:
                     return intValue;
                 case UnaryOperator.Not:
@@ -156,7 +156,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                             resultValue = EvaluateBinaryOperation(oper, leftIntValue, rightIntValue);
                             break;
                         case FloatValue rightFloatValue:
-                            resultValue = EvaluateBinaryOperation(oper, leftIntValue, rightFloatValue);
+                            resultValue = EvaluateBinaryOperation(oper, new FloatValue(leftIntValue.Value), rightFloatValue);
                             break;
                         case StringValue rightStringValue:
                             resultValue = EvaluateBinaryOperation(oper, leftIntValue, rightStringValue);
@@ -173,13 +173,14 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     switch (right)
                     {
                         case IntValue rightIntValue:
-                            resultValue = EvaluateBinaryOperation(oper, leftFloatValue, rightIntValue);
+                            resultValue = EvaluateBinaryOperation(oper, leftFloatValue, new FloatValue(rightIntValue.Value));
                             break;
                         case FloatValue rightFloatValue:
                             resultValue = EvaluateBinaryOperation(oper, leftFloatValue, rightFloatValue);
                             break;
                         case StringValue rightStringValue:
-                            resultValue = EvaluateBinaryOperation(oper, leftFloatValue, rightStringValue);
+                            throw new InvalidBinaryOperationException();
+                            //resultValue = EvaluateBinaryOperation(oper, leftFloatValue, rightStringValue);
                             break;
                         default:
                             throw new Exception();
@@ -196,7 +197,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                             resultValue = EvaluateBinaryOperation(oper, leftStringValue, rightIntValue);
                             break;
                         case FloatValue rightFloatValue:
-                            resultValue = EvaluateBinaryOperation(oper, leftStringValue, rightFloatValue);
+                            throw new InvalidBinaryOperationException();
+                            //resultValue = EvaluateBinaryOperation(oper, leftStringValue, rightFloatValue);
                             break;
                         case StringValue rightStringValue:
                             resultValue = EvaluateBinaryOperation(oper, leftStringValue, rightStringValue);
@@ -260,21 +262,21 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             switch (oper)
             {
                 case BinaryOperator.Mult:
-                    return new IntValue(left.Value * right.Value);
+                    return new IntValue(checked(left.Value * right.Value));
                 case BinaryOperator.Div:
                     return new IntValue(left.Value / right.Value);
                 case BinaryOperator.Modulo:
                     return new IntValue(left.Value % right.Value);
                 
                 case BinaryOperator.Add:
-                    return new IntValue(left.Value + right.Value);
+                    return new IntValue(checked(left.Value + right.Value));
                 case BinaryOperator.Sub:
-                    return new IntValue(left.Value - right.Value);
+                    return new IntValue(checked(left.Value - right.Value));
                 
                 case BinaryOperator.ShiftLeft:
-                    return new IntValue(left.Value << (int)right.Value);
+                    return new IntValue(checked(left.Value << (int)right.Value));
                 case BinaryOperator.ShiftRight:
-                    return new IntValue(left.Value << (int)right.Value);
+                    return new IntValue(checked(left.Value << (int)right.Value));
                 
                 case BinaryOperator.Less:
                     return new IntValue(left.Value < right.Value ? 1 : 0);
@@ -297,10 +299,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     return new IntValue(left.Value | right.Value);
                 
                 case BinaryOperator.LogAnd:
-                    return new IntValue((left.Value != 0 && right.Value != 0) ? 1 : 0);
+                    return new IntValue(left.Value != 0 && right.Value != 0 ? 1 : 0);
                 
                 case BinaryOperator.LogOr:
-                    return new IntValue((left.Value != 0 || right.Value != 0) ? 1 : 0);
+                    return new IntValue(left.Value != 0 || right.Value != 0 ? 1 : 0);
 
                 default:
                     throw new InvalidBinaryOperationException();

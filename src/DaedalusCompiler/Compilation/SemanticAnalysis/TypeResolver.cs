@@ -37,13 +37,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     }
                     else
                     {
-                        typedSymbolNode.Annotations.Add(new UnsupportedTypeAnnotation());
+                        typedSymbolNode.Annotations.Add(new UnsupportedTypeError());
                         return;
                     }
                 }
                 else
                 {
-                    typedSymbolNode.Annotations.Add(new UndefinedTypeAnnotation());
+                    typedSymbolNode.Annotations.Add(new UndefinedTypeError());
                     return;
                 }
             }
@@ -57,7 +57,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         case SymbolType.Class:
                         case SymbolType.Prototype:
                         case SymbolType.Func:
-                            typedSymbolNode.Annotations.Add(new UnsupportedTypeAnnotation());
+                            typedSymbolNode.Annotations.Add(new UnsupportedTypeError());
                             return;
                     }
 
@@ -70,7 +70,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         case SymbolType.Func:
                             break;
                         default:
-                            typedSymbolNode.Annotations.Add(new UnsupportedTypeAnnotation());
+                            typedSymbolNode.Annotations.Add(new UnsupportedTypeError());
                             return;
                     }
                     break;
@@ -80,7 +80,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         case SymbolType.Class:
                         case SymbolType.Prototype:
                         case SymbolType.Void:
-                            typedSymbolNode.Annotations.Add(new UnsupportedTypeAnnotation());
+                            typedSymbolNode.Annotations.Add(new UnsupportedTypeError());
                             return;
                     }
                     break;

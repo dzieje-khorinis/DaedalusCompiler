@@ -24,7 +24,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Symbol symbol = GetBaseReferenceSymbol(referenceNode);
             if (symbol == null)
             {
-                referenceNode.Annotations.Add(new UndeclaredIdentifierAnnotation(referenceNode.Name));
+                referenceNode.Annotations.Add(new UndeclaredIdentifierError(referenceNode.Name));
                 return;
             }
 
@@ -39,7 +39,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             {
                 if (arrayIndexNodeFound)
                 {
-                    partNode.Annotations.Add(new AccessToAttributeOfArrayElementNotSupportedAnnotation());
+                    partNode.Annotations.Add(new AccessToAttributeOfArrayElementNotSupportedError());
                     return;
                 }
                 
@@ -60,13 +60,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                                     else
                                     {
                                         // CLASS X doesn't have attribute Y
-                                        attributeNode.Annotations.Add(new ClassDoesNotHaveAttributeAnnotation(symbol.Name, classSymbol.Name, attributeNode.Name));
+                                        attributeNode.Annotations.Add(new ClassDoesNotHaveAttributeError(symbol.Name, classSymbol.Name, attributeNode.Name));
                                         return;
                                     }
                                 }
                                 break;
                             default:
-                                attributeNode.Annotations.Add(new AttributeOfNonInstanceAnnotation());
+                                attributeNode.Annotations.Add(new AttributeOfNonInstanceError());
                                 // error: cannot access attribute y of non instance object
                                 // x.y
                                 //   ^
@@ -79,7 +79,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         
                         if (!(symbol.Node is IArrayDeclarationNode))
                         {
-                            referenceNode.Annotations.Add(new ReferencedSymbolIsNotArrayAnnotation());
+                            referenceNode.Annotations.Add(new ReferencedSymbolIsNotArrayError());
                             return;
                         }
                         

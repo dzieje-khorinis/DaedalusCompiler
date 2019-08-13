@@ -45,7 +45,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             
             if (_resolvedSymbolsCurrentIteration.Contains(subclassSymbol))
             {
-                parentReferenceNode.Annotations.Add(new InfiniteReferenceLoopAnnotation());
+                parentReferenceNode.Annotations.Add(new InfiniteReferenceLoopError());
                 return null;
             }
 
@@ -61,7 +61,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             
             if (parentReferenceNode.PartNodes.Count > 0)
             {
-                parentReferenceNode.Annotations.Add(new NotClassOrPrototypeReferenceAnnotation());
+                parentReferenceNode.Annotations.Add(new NotClassOrPrototypeReferenceError());
                 return null;
             }
             
@@ -70,7 +70,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             switch (parentReferenceNode.Symbol)
             {
                 case null:
-                    parentReferenceNode.Annotations.Add(new UndeclaredIdentifierAnnotation(parentReferenceNode.Name));
+                    parentReferenceNode.Annotations.Add(new UndeclaredIdentifierError(parentReferenceNode.Name));
                     break;
                 case SubclassSymbol parentSubclassSymbol:
                     subclassSymbol.InheritanceParentSymbol = parentSubclassSymbol;
@@ -81,7 +81,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     subclassSymbol.BaseClassSymbol = classSymbol;
                     break;
                 default:
-                    parentReferenceNode.Annotations.Add(new NotClassOrPrototypeReferenceAnnotation());
+                    parentReferenceNode.Annotations.Add(new NotClassOrPrototypeReferenceError());
                     break;
             }
 

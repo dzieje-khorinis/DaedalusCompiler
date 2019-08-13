@@ -134,7 +134,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         //public List<ParameterSymbol> ParametersSymbols;
 
         public string TypeName { get; set; }
-        public SymbolType? BuiltinType { get; set; }
+        //public SymbolType? BuiltinType { get; set; }
         public Symbol ComplexType { get; set; }
 
         public FunctionSymbol(string typeName, string name, ASTNode node) : base(name, node)

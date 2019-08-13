@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.WebSockets;
+using System.Xml.Xsl;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
@@ -54,7 +56,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 PrintVisit(node, true);
                 if (_visitedNodesValuesCache[node] is UninitializedValue)
                 {
-                    node.Annotations.Add(new InfiniteReferenceLoopAnnotation());
+                    node.Annotations.Add(new InfiniteReferenceLoopError());
                     _visitedNodesValuesCache[node] = new UndefinedValue();
                     if (node is ReferenceNode referenceNode)
                     {
@@ -126,11 +128,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     }
                     else if (intValue.Value != node.ElementNodes.Count)
                     {
-                        node.ArraySizeNode.Annotations.Add(new InconsistentSizeAnnotation(node.NameNode.Value, (int) intValue.Value, node.ElementNodes.Count));
+                        node.ArraySizeNode.Annotations.Add(new InconsistentSizeError(node.NameNode.Value, (int) intValue.Value, node.ElementNodes.Count));
                     }
                     break;
                 default:
-                    node.ArraySizeNode.Annotations.Add(new UnsupportedTypeAnnotation());
+                    node.ArraySizeNode.Annotations.Add(new UnsupportedTypeError());
                     break;
             }
             
@@ -160,7 +162,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             CheckType(node.Symbol.BuiltinType, rightSideType, node.RightSideNode);
             return null;
         }
-
+        
 
         protected override NodeValue VisitArrayIndexNode(ArrayIndexNode arrayIndexNode)
         {
@@ -172,7 +174,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 case UndefinedValue _:
                     break;
                 default:
-                    arrayIndexNode.Annotations.Add(new ConstIntegerExpectedAnnotation());
+                    arrayIndexNode.Annotations.Add(new ConstIntegerExpectedError());
                     return new UndefinedValue();
             }
             
@@ -207,7 +209,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         case IntValue intValue:
                             if (intValue.Value >= constArrayDefinitionNode.ElementNodes.Count)
                             {
-                                referenceNode.Annotations.Add(new IndexOutOfRangeAnnotation());
+                                referenceNode.Annotations.Add(new IndexOutOfRangeError());
                                 return new UndefinedValue();
                             }
                             else if (intValue.Value > 255)
@@ -231,7 +233,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     return new FunctionValue(referenceNode.Symbol);
                 
                 default:
-                    referenceNode.Annotations.Add(new NotConstReferenceAnnotation());
+                    referenceNode.Annotations.Add(new NotConstReferenceError());
                     return new UndefinedValue();
             }
         }
@@ -240,6 +242,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         protected override NodeValue VisitUnaryExpression(UnaryExpressionNode node)
         {
             NodeValue expressionValue = Visit(node.ExpressionNode);
+
             if (expressionValue is UndefinedValue)
             {
                 return new UndefinedValue();
@@ -247,11 +250,21 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             
             try
             {
-                return ConstEvaluationHelper.EvaluateUnaryOperation(node.Operator, expressionValue);
+                NodeValue nodeValue = ConstEvaluationHelper.EvaluateUnaryOperation(node.Operator, expressionValue);
+                if (nodeValue is IntValue intValue)
+                {
+                    if (intValue.Value < Int32.MinValue || intValue.Value > Int32.MaxValue)
+                    {
+                        node.Annotations.Add(new ArithmeticOperationOverflowError(node.OperatorLocation));
+                        return new UndefinedValue();
+                    }
+                }
+                return nodeValue;
+                
             }
             catch (InvalidUnaryOperationException)
             {
-                node.Annotations.Add(new InvalidUnaryOperationAnnotation());
+                node.Annotations.Add(new InvalidUnaryOperationError());
                 return new UndefinedValue();
             }
         }
@@ -267,11 +280,25 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
             try
             {
-                return ConstEvaluationHelper.EvaluateBinaryOperation(node.Operator, leftNodeValue, rightNodeValue);
+                NodeValue nodeValue = ConstEvaluationHelper.EvaluateBinaryOperation(node.Operator, leftNodeValue, rightNodeValue);
+                if (nodeValue is IntValue intValue)
+                {
+                    if (intValue.Value < Int32.MinValue || intValue.Value > Int32.MaxValue)
+                    {
+                        node.Annotations.Add(new ArithmeticOperationOverflowError(node.OperatorLocation));
+                        return new UndefinedValue();
+                    }
+                }
+                return nodeValue;
             }
             catch (InvalidBinaryOperationException)
             {
-                node.Annotations.Add(new InvalidBinaryOperationAnnotation());
+                node.Annotations.Add(new InvalidBinaryOperationError());
+                return new UndefinedValue();
+            }
+            catch (OverflowException)
+            {
+                node.Annotations.Add(new ArithmeticOperationOverflowError(node.OperatorLocation));
                 return new UndefinedValue();
             }
         }
@@ -284,6 +311,29 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected override NodeValue VisitIntegerLiteral(IntegerLiteralNode node)
         {
+            long value = node.Value;
+            ASTNode annotateToNode = node;
+
+            if (node.ParentNode is UnaryExpressionNode unaryExpressionNode)
+            {
+                switch (unaryExpressionNode.Operator)
+                {
+                    case UnaryOperator.Minus:
+                        value = -value;
+                        annotateToNode = node.ParentNode;
+                        break;
+                    case UnaryOperator.Plus:
+                        annotateToNode = node.ParentNode;
+                        break;
+                }
+            }
+                
+            if (!node.EvaluatedCorrectly || value < Int32.MinValue || value > Int32.MaxValue)
+            {
+                annotateToNode.Annotations.Add(new IntegerLiteralTooLargeError());
+                return new UndefinedValue();
+            }
+
             return new IntValue(node.Value);
         }
 
@@ -291,8 +341,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             return new StringValue(node.Value);
         }
-        
-        
+
         private void CheckType(SymbolType expectedType, SymbolType actualType, ASTNode node)
         {
             switch (expectedType)
@@ -305,7 +354,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                             break;
                         
                         default:
-                            node.Annotations.Add(new IncompatibleTypesAnnotation(expectedType, actualType));
+                            node.Annotations.Add(new IncompatibleTypesError(expectedType, actualType));
                             break;
 
                     }
@@ -319,7 +368,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                             break;
                         
                         default:
-                            node.Annotations.Add(new IncompatibleTypesAnnotation(expectedType, actualType));
+                            node.Annotations.Add(new IncompatibleTypesError(expectedType, actualType));
                             break;
 
                     }
@@ -332,7 +381,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                             break;
                         
                         default:
-                            node.Annotations.Add(new IncompatibleTypesAnnotation(expectedType, actualType));
+                            node.Annotations.Add(new IncompatibleTypesError(expectedType, actualType));
                             break;
                     }
                     break;
@@ -345,7 +394,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                             break;
                         
                         default:
-                            node.Annotations.Add(new IncompatibleTypesAnnotation(expectedType, actualType));
+                            node.Annotations.Add(new IncompatibleTypesError(expectedType, actualType));
                             break;
                     }
                     break;

@@ -170,7 +170,23 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             if (SymbolTable.ContainsKey(symbol.Path))
             {
                 Symbol previousSymbol = SymbolTable[symbol.Path];
-                symbol.Node.Annotations.Add(new RedefinedIdentifierAnnotation(symbol.Name, previousSymbol.Node.Location));
+                
+                ASTNode node = symbol.Node;
+                NodeLocation location = node.Location;
+                if (node is DeclarationNode declarationNode)
+                {
+                    location = declarationNode.NameNode.Location;
+                }
+
+                ASTNode previousNode = previousSymbol.Node;
+                NodeLocation previousLocation = previousNode.Location;
+                if (previousNode is DeclarationNode previousDeclarationNode)
+                {
+                    previousLocation = previousDeclarationNode.NameNode.Location;
+                }
+
+                symbol.Node.Annotations.Add(new RedefinedIdentifierError(symbol.Name, previousLocation, location));
+
                 return;
             }
             

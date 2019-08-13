@@ -234,53 +234,53 @@ namespace DaedalusCompiler.Compilation
 		public override ASTNode VisitUnaryExpression([NotNull] DaedalusParser.UnaryExpressionContext context)
 		{
 			ExpressionNode expressionNode = (ExpressionNode) Visit(context.expression());
-			return new UnaryExpressionNode(GetLocation(context), GetUnaryOperator(context.oper.GetText()), expressionNode);
+			return new UnaryExpressionNode(GetLocation(context), GetUnaryOperator(context.oper.GetText()), GetLocation(context.oper), expressionNode);
 		}
 
 		public override ASTNode VisitBitMoveExpression([NotNull] DaedalusParser.BitMoveExpressionContext context)
 		{
-			return CreateBinaryExpressionNode(GetLocation(context), context.oper.GetText(), context.expression());
+			return CreateBinaryExpressionNode(GetLocation(context), context.oper, context.expression());
 		}
 
 		public override ASTNode VisitEqExpression([NotNull] DaedalusParser.EqExpressionContext context)
 		{
-			return CreateBinaryExpressionNode(GetLocation(context), context.oper.GetText(), context.expression());
+			return CreateBinaryExpressionNode(GetLocation(context), context.oper, context.expression());
 		}
 
 		public override ASTNode VisitAddExpression([NotNull] DaedalusParser.AddExpressionContext context)
 		{
-			return CreateBinaryExpressionNode(GetLocation(context), context.oper.GetText(), context.expression());
+			return CreateBinaryExpressionNode(GetLocation(context), context.oper, context.expression());
 		}
 
 		public override ASTNode VisitCompExpression([NotNull] DaedalusParser.CompExpressionContext context)
 		{
-			return CreateBinaryExpressionNode(GetLocation(context), context.oper.GetText(), context.expression());
+			return CreateBinaryExpressionNode(GetLocation(context), context.oper, context.expression());
 		}
 
 		public override ASTNode VisitLogOrExpression([NotNull] DaedalusParser.LogOrExpressionContext context)
 		{
-			return CreateBinaryExpressionNode(GetLocation(context), context.oper.GetText(), context.expression());
+			return CreateBinaryExpressionNode(GetLocation(context), context.oper, context.expression());
 		}
 
 		public override ASTNode VisitBinAndExpression([NotNull] DaedalusParser.BinAndExpressionContext context)
 		{
-			return CreateBinaryExpressionNode(GetLocation(context), context.oper.GetText(), context.expression());
+			return CreateBinaryExpressionNode(GetLocation(context), context.oper, context.expression());
 		}
 
 		public override ASTNode VisitBinOrExpression([NotNull] DaedalusParser.BinOrExpressionContext context)
 		{
-			return CreateBinaryExpressionNode(GetLocation(context), context.oper.GetText(), context.expression());
+			return CreateBinaryExpressionNode(GetLocation(context), context.oper, context.expression());
 		}
 
 		public override ASTNode VisitMultExpression([NotNull] DaedalusParser.MultExpressionContext context)
 		{
-			return CreateBinaryExpressionNode(GetLocation(context), context.oper.GetText(), context.expression());
+			return CreateBinaryExpressionNode(GetLocation(context), context.oper, context.expression());
 		}
 
 
 		public override ASTNode VisitLogAndExpression([NotNull] DaedalusParser.LogAndExpressionContext context)
 		{
-			return CreateBinaryExpressionNode(GetLocation(context), context.oper.GetText(), context.expression());
+			return CreateBinaryExpressionNode(GetLocation(context), context.oper, context.expression());
 		}
 
 
@@ -565,11 +565,13 @@ namespace DaedalusCompiler.Compilation
 			}
 		}
 		
-		private BinaryExpressionNode CreateBinaryExpressionNode(NodeLocation location, string oper, DaedalusParser.ExpressionContext[] expressionContexts)
+		private BinaryExpressionNode CreateBinaryExpressionNode(NodeLocation location, ParserRuleContext operatorContext, DaedalusParser.ExpressionContext[] expressionContexts)
 		{
+			string oper = operatorContext.GetText();
+			NodeLocation operatorLocation = GetLocation(operatorContext);
 			ExpressionNode leftSide = (ExpressionNode) Visit(expressionContexts[0]);
 			ExpressionNode rightSide = (ExpressionNode) Visit(expressionContexts[1]);
-			return new BinaryExpressionNode(location, GetBinaryOperator(oper), leftSide, rightSide );
+			return new BinaryExpressionNode(location, GetBinaryOperator(oper), operatorLocation, leftSide, rightSide );
 		}
 		
 		private NodeLocation GetLocation(ParserRuleContext context)

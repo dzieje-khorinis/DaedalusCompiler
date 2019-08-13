@@ -35,16 +35,62 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             base.Visit(node);
         }*/
 
+
+        protected override void VisitConstDefinition(ConstDefinitionNode node)
+        {
+        }
+
+        protected override void VisitConstArrayDefinition(ConstArrayDefinitionNode node)
+        {
+        }
+
+        protected override void Visit(ASTNode node)
+        {
+            switch (node)
+            {
+                case FunctionCallNode _:
+                    break;
+                case ExpressionNode _:
+                    if (!IsInsideStatement(node))
+                    {
+                        node.Annotations.Add(new SingleExpressionWarning());
+                    }
+
+                    break;
+            }
+            base.Visit(node);
+        }
+        
+        protected override void VisitFunctionCall(FunctionCallNode node)
+        {
+            
+        }
+
         protected override void VisitIntegerLiteral(IntegerLiteralNode node)
         {
-            if (node.EvaluatedCorrectly)
+            if (!node.EvaluatedCorrectly || node.Value < Int32.MinValue || node.Value > Int32.MaxValue)
             {
-                if (node.Value <= Int32.MaxValue && node.Value >= Int32.MinValue)
+                node.Annotations.Add(new IntegerLiteralTooLargeError());
+            }
+        }
+
+
+        private bool IsInsideStatement(ASTNode node)
+        {
+            while (node != null)
+            {
+                node = node.ParentNode;
+                switch (node)
                 {
-                    return;
+                    case FileNode _:
+                    case DeclarationNode _:
+                        return false;
+                    case StatementNode _:
+                        return true;
                 }
             }
-            node.Annotations.Add(new IntegerLiteralTooLargeError());
+            throw new Exception();
         }
+
     }
 }

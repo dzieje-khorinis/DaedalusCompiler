@@ -90,6 +90,8 @@ namespace DaedalusCompiler.Compilation
             // InvalidUnaryOperationAnnotation
             // InvalidBinaryOperationAnnotation
             // IncompatibleTypesAnnotation
+            // IntegerLiteralTooLargeError
+            // ArithmeticOperationOverflowAnnotation
             ConstEvaluationVisitor constEvaluationVisitor = new ConstEvaluationVisitor(_symbolTable);
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ConstDefinitionNodes);
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ArrayDeclarationNodes);

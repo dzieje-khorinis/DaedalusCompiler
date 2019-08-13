@@ -179,6 +179,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             TypeName = type.First().ToString().ToUpper() + type.Substring(1).ToLower(); //capitalized
             NameNode = nameNode;
+            NameNode.ParentNode = this;
             Symbol = null;
         }
     }
@@ -316,25 +317,28 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class UnaryExpressionNode : ExpressionNode
     {
         public UnaryOperator Operator;
+        public NodeLocation OperatorLocation;
         public ExpressionNode ExpressionNode;
 
-        public UnaryExpressionNode(NodeLocation location, UnaryOperator @operator, ExpressionNode expressionNode) : base(
+        public UnaryExpressionNode(NodeLocation location, UnaryOperator @operator, NodeLocation operatorLocation, ExpressionNode expressionNode) : base(
             location)
         {
             expressionNode.ParentNode = this;
             
             Operator = @operator;
             ExpressionNode = expressionNode;
+            OperatorLocation = operatorLocation;
         }
     }
 
     public class BinaryExpressionNode : ExpressionNode
     {
         public BinaryOperator Operator;
+        public NodeLocation OperatorLocation;
         public ExpressionNode LeftSideNode;
         public ExpressionNode RightSideNode;
 
-        public BinaryExpressionNode(NodeLocation location, BinaryOperator @operator, ExpressionNode leftSideNode,
+        public BinaryExpressionNode(NodeLocation location, BinaryOperator @operator, NodeLocation operatorLocation, ExpressionNode leftSideNode,
             ExpressionNode rightSideNode) : base(location)
         {
             leftSideNode.ParentNode = this;
@@ -343,6 +347,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Operator = @operator;
             LeftSideNode = leftSideNode;
             RightSideNode = rightSideNode;
+            OperatorLocation = operatorLocation;
         }
     }
 

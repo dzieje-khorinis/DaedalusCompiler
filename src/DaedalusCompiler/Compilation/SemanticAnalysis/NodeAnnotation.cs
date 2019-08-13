@@ -17,7 +17,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         NodeLocation NoteLocation { get; set; }
         string GetNote();
     }
-    
+
+    public interface ILocatedAnnotation
+    {
+        NodeLocation Location { get; set; }
+    }
     
     public abstract class ErrorAnnotation : NodeAnnotation
     {
@@ -60,23 +64,44 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
 
-    public class IncompatibleTypesAnnotation : NodeAnnotation
+    public interface IWithCode
+    {
+        string Code { get; set; }
+    }
+
+
+    public class SingleExpressionWarning : WarningAnnotation, IWithCode
+    {
+        public string Code { get; set; } = "W1";
+        public override string GetMessage()
+        {
+            return "usage of single-expression statement hack";
+        }
+    }
+    
+    
+    public class IncompatibleTypesError : ErrorAnnotation
     {
         public SymbolType ExpectedSymbolType;
         public SymbolType ActualSymbolType;
 
-        public IncompatibleTypesAnnotation(SymbolType expectedSymbolType, SymbolType actualSymbolType)
+        public IncompatibleTypesError(SymbolType expectedSymbolType, SymbolType actualSymbolType)
         {
             ExpectedSymbolType = expectedSymbolType;
             ActualSymbolType = actualSymbolType;
         }
+
+        public override string GetMessage()
+        {
+            return $"{ExpectedSymbolType} type expected (actual type: {ActualSymbolType})".ToLower();
+        }
     }
 
-    public class UndeclaredIdentifierAnnotation : ErrorAnnotation
+    public class UndeclaredIdentifierError : ErrorAnnotation
     {
         private readonly string _identifier;
 
-        public UndeclaredIdentifierAnnotation(string identifier)
+        public UndeclaredIdentifierError(string identifier)
         {
             _identifier = identifier;
         }
@@ -87,39 +112,41 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
 
-    public class IndexOutOfRangeAnnotation : NodeAnnotation
+    public class IndexOutOfRangeError : ErrorAnnotation
     {
     }
     
-    public class ConstIntegerExpectedAnnotation : NodeAnnotation
+    public class ConstIntegerExpectedError : ErrorAnnotation
     {
     }
 
 
-    public class NotConstReferenceAnnotation : NodeAnnotation
+    public class NotConstReferenceError : ErrorAnnotation
     {
     }
     
-    public class ReferencedSymbolIsNotArrayAnnotation : NodeAnnotation
+    public class ReferencedSymbolIsNotArrayError : ErrorAnnotation
     {
     }
 
-    public class NotClassOrPrototypeReferenceAnnotation : NodeAnnotation
+    public class NotClassOrPrototypeReferenceError : ErrorAnnotation
     {
         
     }
 
-    public class AttributeOfNonInstanceAnnotation : NodeAnnotation
+    public class AttributeOfNonInstanceError : ErrorAnnotation
     {
         
     }
-    public class RedefinedIdentifierAnnotation : ErrorAnnotationNoted
+    public class RedefinedIdentifierError : ErrorAnnotationNoted, ILocatedAnnotation
     {
         private readonly string _identifier;
+        public NodeLocation Location { get; set; }
 
-        public RedefinedIdentifierAnnotation(string identifier, NodeLocation noteLocation) : base(noteLocation)
+        public RedefinedIdentifierError(string identifier, NodeLocation noteLocation, NodeLocation location) : base(noteLocation)
         {
             _identifier = identifier;
+            Location = location;
         }
 
         public override string GetMessage()
@@ -131,32 +158,51 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             return "previous definition is here";
         }
+
+        
     }
 
-    public class InfiniteReferenceLoopAnnotation : NodeAnnotation
+    public class InfiniteReferenceLoopError : ErrorAnnotation
     {
     }
 
-    public class InvalidBinaryOperationAnnotation : NodeAnnotation
+    public class InvalidBinaryOperationError : ErrorAnnotation
     {
+    }
+
+    public class ArithmeticOperationOverflowError : ErrorAnnotation, ILocatedAnnotation
+    {
+        public NodeLocation Location { get; set; }
+
+        public ArithmeticOperationOverflowError(NodeLocation location)
+        {
+            Location = location;
+        }
+        
+        public override string GetMessage()
+        {
+            return "arithmetic operation resulted in an overflow";
+        }
+
+        
     }
     
-    public class InvalidUnaryOperationAnnotation : NodeAnnotation
+    public class InvalidUnaryOperationError : ErrorAnnotation
     {
     }
 
-    public class AccessToAttributeOfArrayElementNotSupportedAnnotation : NodeAnnotation
+    public class AccessToAttributeOfArrayElementNotSupportedError : ErrorAnnotation
     {
     }
 
 
-    public class InconsistentSizeAnnotation : ErrorAnnotation
+    public class InconsistentSizeError : ErrorAnnotation
     {
         private readonly string _identifier;
         private readonly int _declaredSize;
         private readonly int _elementsCount;
 
-        public InconsistentSizeAnnotation(string identifier, int declaredSize, int elementsCount)
+        public InconsistentSizeError(string identifier, int declaredSize, int elementsCount)
         {
             _declaredSize = declaredSize;
             _elementsCount = elementsCount;
@@ -188,33 +234,33 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public override string GetMessage()
         {
-            return "literal is too large to be represented in an integer type";
+            return "literal is too large to be represented in an integer type (min: -2147483648, max: 2147483647)";
         }
     }
+
+    public class UnsupportedArrayTypeError : ErrorAnnotation
+    {
+        
+    }
+
+    public class UnsupportedTypeError : ErrorAnnotation
+    {
+        
+    }
     
-    public class UnsupportedArrayTypeAnnotation : NodeAnnotation
-    {
-        
-    }
-
-    public class UnsupportedTypeAnnotation : NodeAnnotation
-    {
-        
-    }
-    
-    public class UndefinedTypeAnnotation : NodeAnnotation
+    public class UndefinedTypeError : ErrorAnnotation
     {
         
     }
 
 
-    public class ClassDoesNotHaveAttributeAnnotation : ErrorAnnotation
+    public class ClassDoesNotHaveAttributeError : ErrorAnnotation
     {
         private readonly string _objectName;
         private readonly string _className;
         private readonly string _attributeName;
 
-        public ClassDoesNotHaveAttributeAnnotation(string objectName, string className, string attributeName)
+        public ClassDoesNotHaveAttributeError(string objectName, string className, string attributeName)
         {
             _objectName = objectName;
             _className = className;
