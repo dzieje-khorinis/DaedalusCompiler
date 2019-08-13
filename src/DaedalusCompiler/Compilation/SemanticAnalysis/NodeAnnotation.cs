@@ -168,6 +168,29 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             return $"array ‘{_identifier}’ has inconsistent size (declared size: {_declaredSize}, elements count: {_elementsCount})";
         }
     }
+
+    public class ArraySizeEqualsZeroError : ErrorAnnotation
+    {
+        private readonly string _identifier;
+
+        public ArraySizeEqualsZeroError(string identifier)
+        {
+            _identifier = identifier;
+        }
+
+        public override string GetMessage()
+        {
+            return $"size of array ‘{_identifier}’ cannot equal zero";
+        }
+    }
+
+    public class IntegerLiteralTooLargeError : ErrorAnnotation
+    {
+        public override string GetMessage()
+        {
+            return "literal is too large to be represented in an integer type";
+        }
+    }
     
     public class UnsupportedArrayTypeAnnotation : NodeAnnotation
     {

@@ -21,10 +21,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         public void Resolve(ITypedSymbol typedSymbol)
         {
-            SymbolType? symbolType = ((Symbol)typedSymbol).BuiltinType;
+            SymbolType symbolType = ((Symbol)typedSymbol).BuiltinType;
             ASTNode typedSymbolNode = ((Symbol) typedSymbol).Node;
             
-            if (!symbolType.HasValue)
+            if (symbolType == SymbolType.Uninitialized)
             {
                 if (_symbolTable.ContainsKey(typedSymbol.TypeName))
                 {

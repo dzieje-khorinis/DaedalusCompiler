@@ -21,6 +21,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         private void PrintVisit(ASTNode node, bool cached=false)
         {
+            return;
             string message = node.GetType().ToString().Split(".").Last();
             switch (node)
             {
@@ -119,7 +120,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 case UndefinedValue _:
                     break;
                 case IntValue intValue:
-                    if (intValue.Value != node.ElementNodes.Count)
+                    if (intValue.Value == 0)
+                    {
+                        node.ArraySizeNode.Annotations.Add(new ArraySizeEqualsZeroError(node.NameNode.Value));
+                    }
+                    else if (intValue.Value != node.ElementNodes.Count)
                     {
                         node.ArraySizeNode.Annotations.Add(new InconsistentSizeAnnotation(node.NameNode.Value, (int) intValue.Value, node.ElementNodes.Count));
                     }
