@@ -43,27 +43,52 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         protected override void VisitConstArrayDefinition(ConstArrayDefinitionNode node)
         {
         }
-
-        protected override void Visit(ASTNode node)
-        {
-            switch (node)
-            {
-                case FunctionCallNode _:
-                    break;
-                case ExpressionNode _:
-                    if (!IsInsideStatement(node))
-                    {
-                        node.Annotations.Add(new SingleExpressionWarning());
-                    }
-
-                    break;
-            }
-            base.Visit(node);
-        }
         
-        protected override void VisitFunctionCall(FunctionCallNode node)
+
+        protected override void VisitPrototypeDefinition(PrototypeDefinitionNode node)
         {
-            
+            CheckStatementsForSingleExpressionHack(node.BodyNodes);
+            base.VisitPrototypeDefinition(node);
+        }
+
+        protected override void VisitInstanceDefinition(InstanceDefinitionNode node)
+        {
+            CheckStatementsForSingleExpressionHack(node.BodyNodes);
+            base.VisitInstanceDefinition(node);
+        }
+
+        protected override void VisitFunctionDefinition(FunctionDefinitionNode node)
+        {
+            CheckStatementsForSingleExpressionHack(node.BodyNodes);
+            base.VisitFunctionDefinition(node);
+        }
+
+        protected override void VisitIfStatement(IfStatementNode node)
+        {
+            CheckStatementsForSingleExpressionHack(node.ElseNodeBodyNodes);
+            base.VisitIfStatement(node);
+        }
+
+        protected override void VisitConditional(ConditionalNode node)
+        {
+            CheckStatementsForSingleExpressionHack(node.BodyNodes);
+            base.VisitConditional(node);
+        }
+
+        protected override void VisitBreakStatement(BreakStatementNode node)
+        {
+            if (!IsStatementInsideLoop(node))
+            {
+                node.Annotations.Add(new IterationStatementNotInLoopError("break"));
+            }
+        }
+
+        protected override void VisitContinueStatement(ContinueStatementNode node)
+        {
+            if (!IsStatementInsideLoop(node))
+            {
+                node.Annotations.Add(new IterationStatementNotInLoopError("continue"));
+            }
         }
 
         protected override void VisitIntegerLiteral(IntegerLiteralNode node)
@@ -74,23 +99,35 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
         }
 
+        private void CheckStatementsForSingleExpressionHack(List<StatementNode> statementNodes)
+        {
+            foreach (var statementNode in statementNodes)
+            {
+                switch (statementNode)
+                {
+                    case FunctionCallNode _:
+                        break;
+                    case ExpressionNode _:
+                        statementNode.Annotations.Add(new SingleExpressionWarning());
+                        break;
+                }
+            }
+        }
 
-        private bool IsInsideStatement(ASTNode node)
+        private bool IsStatementInsideLoop(ASTNode node)
         {
             while (node != null)
             {
                 node = node.ParentNode;
                 switch (node)
                 {
-                    case FileNode _:
-                    case DeclarationNode _:
-                        return false;
-                    case StatementNode _:
+                    case WhileStatementNode _:
                         return true;
+                    case FileNode _:
+                        return false;
                 }
             }
             throw new Exception();
         }
-
     }
 }

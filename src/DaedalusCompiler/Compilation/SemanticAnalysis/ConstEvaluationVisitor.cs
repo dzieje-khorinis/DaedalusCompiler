@@ -90,6 +90,25 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 return new UndefinedValue();
             }
             node.ArraySizeValue = Visit(node.ArraySizeNode);
+            
+            switch (node.ArraySizeValue)
+            {
+                case UndefinedValue _:
+                    break;
+                case IntValue intValue:
+                    if (intValue.Value == 0)
+                    {
+                        node.ArraySizeNode.Annotations.Add(new ArraySizeEqualsZeroError(node.NameNode.Value));
+                    }
+                    else if (intValue.Value > 4095)
+                    {
+                        node.ArraySizeNode.Annotations.Add(new TooBigArraySizeError());
+                    }
+                    break;
+                default:
+                    node.ArraySizeNode.Annotations.Add(new UnsupportedTypeError());
+                    break;
+            }
             return null;
         }
 
@@ -126,6 +145,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     {
                         node.ArraySizeNode.Annotations.Add(new ArraySizeEqualsZeroError(node.NameNode.Value));
                     }
+                    else if (intValue.Value > 4095)
+                    {
+                        node.ArraySizeNode.Annotations.Add(new TooBigArraySizeError());
+                    }
                     else if (intValue.Value != node.ElementNodes.Count)
                     {
                         node.ArraySizeNode.Annotations.Add(new InconsistentSizeError(node.NameNode.Value, (int) intValue.Value, node.ElementNodes.Count));
@@ -146,6 +169,25 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 return new UndefinedValue();
             }
             node.ArraySizeValue = Visit(node.ArraySizeNode);
+            
+            switch (node.ArraySizeValue)
+            {
+                case UndefinedValue _:
+                    break;
+                case IntValue intValue:
+                    if (intValue.Value == 0)
+                    {
+                        node.ArraySizeNode.Annotations.Add(new ArraySizeEqualsZeroError(node.NameNode.Value));
+                    }
+                    else if (intValue.Value > 4095)
+                    {
+                        node.ArraySizeNode.Annotations.Add(new TooBigArraySizeError());
+                    }
+                    break;
+                default:
+                    node.ArraySizeNode.Annotations.Add(new UnsupportedTypeError());
+                    break;
+            }
             return null;
         }
         
@@ -170,7 +212,27 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
             switch (arrayIndexNode.Value)
             {
-                case IntValue _:
+                case IntValue arrayIndexValue:
+                    ReferenceNode referenceNode = (ReferenceNode) arrayIndexNode.ParentNode;
+                    if (referenceNode.Symbol.Node is IArrayDeclarationNode arrayDeclarationNode)
+                    {
+                        Visit(referenceNode.Symbol.Node);
+                        if (arrayDeclarationNode.ArraySizeValue is IntValue arraySizeValue)
+                        {
+                            if (arrayIndexValue.Value >= arraySizeValue.Value)
+                            {
+                                arrayIndexNode.Annotations.Add(new IndexOutOfRangeError(arraySizeValue.Value));
+                                return new UndefinedValue();
+                            }
+
+                            if (arrayIndexValue.Value > 255)
+                            {
+                                arrayIndexNode.Annotations.Add(new TooBigArrayIndex());
+                                return new UndefinedValue();
+                            }
+                        }
+                    }
+                    break;
                 case UndefinedValue _:
                     break;
                 default:
@@ -178,6 +240,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     return new UndefinedValue();
             }
             
+
             return arrayIndexNode.Value;
         }
 
@@ -190,12 +253,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
             
             NodeValue arrayIndexValue = new IntValue(0);
+            //ArrayIndexNode arrayIndexNode = null;
+            
             foreach (var partNode in referenceNode.PartNodes)
             {
                 switch (partNode)
                 {
-                    case ArrayIndexNode arrayIndexNode:
-                        arrayIndexValue = Visit(arrayIndexNode);
+                    case ArrayIndexNode node:
+                        //arrayIndexNode = node;
+                        arrayIndexValue = Visit(node);
                         break;
                 }
             }
@@ -209,14 +275,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         case IntValue intValue:
                             if (intValue.Value >= constArrayDefinitionNode.ElementNodes.Count)
                             {
-                                referenceNode.Annotations.Add(new IndexOutOfRangeError());
+                                //arrayIndexNode?.Annotations.Add(new IndexOutOfRangeError());
                                 return new UndefinedValue();
                             }
-                            else if (intValue.Value > 255)
-                            {
-                                //referenceNode.Annotations.Add(new TooBigIndexValue());
-                                return new UndefinedValue();
-                            }
+                            
                             return Visit(constArrayDefinitionNode.ElementNodes[(int)intValue.Value]);
                         
                         case UndefinedValue _:

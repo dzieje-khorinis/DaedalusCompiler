@@ -190,7 +190,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             foreach (var node in nodes)
             {
-                Visit(node);
+                Visit((ASTNode)node);
             }
             return DefaultResult;
         }
@@ -248,8 +248,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
             return DefaultResult;
         }
-
-
+        
+        
+        /*
         public T Visit(IArrayDeclarationNode node)
         {
             switch (node)
@@ -267,7 +268,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
             return DefaultResult;
         }
-
+        */
+        
         public virtual T Visit(ASTNode node)
         {
             switch (node)

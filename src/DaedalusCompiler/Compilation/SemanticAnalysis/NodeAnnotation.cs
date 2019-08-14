@@ -114,6 +114,57 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class IndexOutOfRangeError : ErrorAnnotation
     {
+        private readonly long _arraySize;
+
+        public IndexOutOfRangeError(long arraySize)
+        {
+            _arraySize = arraySize;
+        }
+
+        public override string GetMessage()
+        {
+            return $"array index out of range (max index for this array is {_arraySize - 1})";
+        }
+    }
+
+    public class TooBigArrayIndex : ErrorAnnotation
+    {
+        public override string GetMessage()
+        {
+            return "too big array index (max: 255)";
+        }
+    }
+
+    public class KeywordUsedAsNameError : ErrorAnnotation, ILocatedAnnotation
+    {
+        public NodeLocation Location { get; set; }
+        private readonly string _identifier;
+
+        public KeywordUsedAsNameError(string identifier, NodeLocation location)
+        {
+            _identifier = identifier;
+            Location = location;
+        }
+
+        public override string GetMessage()
+        {
+            return $"‘{_identifier}’ is keyword and shouldn't be used as an identifier";
+        }
+    }
+
+    public class IterationStatementNotInLoopError : ErrorAnnotation
+    {
+        private readonly string _identifier;
+
+        public IterationStatementNotInLoopError(string identifier)
+        {
+            _identifier = identifier;
+        }
+
+        public override string GetMessage()
+        {
+            return $"‘{_identifier}’ statement not allowed outside of loop statement";
+        }
     }
     
     public class ConstIntegerExpectedError : ErrorAnnotation
@@ -131,7 +182,18 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class NotClassOrPrototypeReferenceError : ErrorAnnotation
     {
-        
+        public override string GetMessage()
+        {
+            return "not a valid class or prototype";
+        }
+    }
+
+    public class TooBigArraySizeError : ErrorAnnotation
+    {
+        public override string GetMessage()
+        {
+            return "too big array size (max: 4095)";
+        }
     }
 
     public class AttributeOfNonInstanceError : ErrorAnnotation

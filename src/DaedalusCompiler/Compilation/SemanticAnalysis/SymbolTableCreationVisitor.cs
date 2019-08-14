@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
@@ -188,6 +189,20 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 symbol.Node.Annotations.Add(new RedefinedIdentifierError(symbol.Name, previousLocation, location));
 
                 return;
+            }
+
+            string[] keywords = {"break", "continue", "while"};
+            if (keywords.Contains(symbol.Name.ToLower()))
+            {
+                if (symbol.Node is DeclarationNode declarationNode)
+                {
+                    symbol.Node.Annotations.Add(new KeywordUsedAsNameError(symbol.Name, declarationNode.NameNode.Location));
+                }
+                else
+                {
+                    throw new Exception();
+                }
+                
             }
             
             switch (symbol)
