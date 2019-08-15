@@ -88,21 +88,19 @@ namespace DaedalusCompiler.Compilation
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ConstDefinitionNodes);
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ArrayDeclarationNodes);
             constEvaluationVisitor.Visit(referenceResolvingVisitor.ArrayIndexNodes);
-
             
             
-            // TypeCheckingVisitor
+            TypeCheckingVisitor typeCheckingVisitor = new TypeCheckingVisitor();
+            typeCheckingVisitor.VisitTree(AbstractSyntaxTree);
             
             
-            //constEvaluationVisitor.VisitTree(_abstractSyntaxTree);
-            /*
-             *
-             * Dodaje pozostałe adnotacje
-             */
+            
             // Error o rozmiarze C_NPC (800), warningi o tym, ze nazwy uzywamy np. małymi, a zadeklaorwaliśy duzymi, albo, ze sa nieuzywane funkcje
             Console.WriteLine("---------");
             RemainingAnnotationsAdditionVisitor remainingAnnotationsAdditionVisitor = new RemainingAnnotationsAdditionVisitor();
             remainingAnnotationsAdditionVisitor.VisitTree(AbstractSyntaxTree);
+            
+            
             
             
         }

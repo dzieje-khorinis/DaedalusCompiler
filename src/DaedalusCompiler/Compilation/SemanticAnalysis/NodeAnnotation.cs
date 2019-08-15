@@ -105,48 +105,63 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     
     public class CannotInitializeConstWithValueOfDifferentType : ErrorAnnotation
     {
-        public readonly SymbolType ExpectedSymbolType;
-        public readonly SymbolType ActualSymbolType;
+        private readonly SymbolType _expectedSymbolType;
+        private readonly SymbolType _actualSymbolType;
 
         public CannotInitializeConstWithValueOfDifferentType(SymbolType expectedSymbolType, SymbolType actualSymbolType, NodeLocation pointerLocation, NodeLocation underlineLocation)
         {
             PointerLocation = pointerLocation;
             UnderlineLocations.Add(underlineLocation);
-            ExpectedSymbolType = expectedSymbolType;
-            ActualSymbolType = actualSymbolType;
+            _expectedSymbolType = expectedSymbolType;
+            _actualSymbolType = actualSymbolType;
         }
         
         public override string GetMessage()
         {
-            return $"cannot initialize a constant of type '{ExpectedSymbolType}' with an rvalue of type '{ActualSymbolType}'".ToLower();
-            /*
-             * source_file.cpp:8:9: error: cannot initialize a variable of type 'int' with an rvalue of type 'const char *'
-            int x = 2 + "he";
-                ^   ~~~~~~~~
-             */
+            return $"cannot initialize a constant of type '{_expectedSymbolType}' with an rvalue of type '{_actualSymbolType}'".ToLower();
         }
     }
 
     public class CannotInitializeArrayElementWithValueOfDifferentType : ErrorAnnotation
     {
-        public readonly SymbolType ExpectedSymbolType;
-        public readonly SymbolType ActualSymbolType;
+        private readonly SymbolType _expectedSymbolType;
+        private readonly SymbolType _actualSymbolType;
 
         public CannotInitializeArrayElementWithValueOfDifferentType(SymbolType expectedSymbolType, SymbolType actualSymbolType)
         {
-            ExpectedSymbolType = expectedSymbolType;
-            ActualSymbolType = actualSymbolType;
+            _expectedSymbolType = expectedSymbolType;
+            _actualSymbolType = actualSymbolType;
         }
         
         public override string GetMessage()
         {
-            return $"cannot initialize an array element of type '{ExpectedSymbolType}' with an rvalue of type '{ActualSymbolType}'".ToLower();
+            return $"cannot initialize an array element of type '{_expectedSymbolType}' with an rvalue of type '{_actualSymbolType}'".ToLower();
         }
-        /*
-         *
-         *int a[2] = {1, 2 + "he"};
-         *               ^~~~~~~~
-         */
+    }
+
+    public class ArgumentsCountDoesNotMatchError : ErrorAnnotationNoted
+    {
+        private readonly string _identifier;
+        private readonly int _parametersCount;
+        private readonly int _argumentsCount;
+
+        public ArgumentsCountDoesNotMatchError(string identifier, int parametersCount, int argumentsCount, NodeLocation noteLocation) : base(noteLocation)
+        {
+            _identifier = identifier;
+            _parametersCount = parametersCount;
+            _argumentsCount = argumentsCount;
+        }
+
+        public override string GetMessage()
+        {
+            return
+                $"too {(_parametersCount > _argumentsCount ? "few" : "many")} arguments to function call, expected {_parametersCount}, have {_argumentsCount}";
+        }
+
+        public override string GetNote()
+        {
+            return $"'{_identifier}' declared here";
+        }
     }
     
 
