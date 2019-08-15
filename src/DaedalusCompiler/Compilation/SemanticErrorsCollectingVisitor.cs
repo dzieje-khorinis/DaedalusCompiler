@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
@@ -151,11 +152,12 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
                 message = annotation.GetType().ToString();
             }
             
-            NodeLocation messageLocation = annotation.Location ?? node.Location;
+            NodeLocation pointerLocation = annotation.PointerLocation ?? node.Location;
+            List<NodeLocation> underlineLocations = annotation.UnderlineLocations ?? new List<NodeLocation>();
 
             if ((!_wasFilePathDisplayed && FilePathDisplayStatus == FilePathDisplayStatus.DisplayOncePerFile) || FilePathDisplayStatus == FilePathDisplayStatus.AlwaysDisplay)
             {
-                ErrorLogger.LogLine(FilesPaths[messageLocation.FileIndex]);
+                ErrorLogger.LogLine(FilesPaths[pointerLocation.FileIndex]);
             }
 
 
@@ -189,13 +191,13 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
 
             if (parentBlockName != String.Empty)
             {
-                ErrorLogger.LogLine($"{FileNames[messageLocation.FileIndex]}: In {parentBlockName}:");
+                ErrorLogger.LogLine($"{FileNames[pointerLocation.FileIndex]}: In {parentBlockName}:");
             }
             
             
-            ErrorLogger.LogLine($"{FileNames[messageLocation.FileIndex]}:{messageLocation.Line}:{messageLocation.Column}: {annotationType}: {message}");
-            ErrorLogger.LogLine(FilesContents[messageLocation.FileIndex][messageLocation.Line - 1]);
-            ErrorLogger.LogLine(GetErrorPointerLine(messageLocation));
+            ErrorLogger.LogLine($"{FileNames[pointerLocation.FileIndex]}:{pointerLocation.Line}:{pointerLocation.Column}: {annotationType}: {message}");
+            ErrorLogger.LogLine(FilesContents[pointerLocation.FileIndex][pointerLocation.Line - 1].Replace("\t", "    "));
+            ErrorLogger.LogLine(GetErrorPointerLine(pointerLocation, underlineLocations));
 
             if (annotation is INotedAnnotation annotationNoted)
             {
@@ -203,68 +205,161 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
                 NodeLocation noteLocation = annotationNoted.NoteLocation;
                 
                 ErrorLogger.LogLine($"{FileNames[noteLocation.FileIndex]}:{noteLocation.Line}:{noteLocation.Column}: note: {note}");
-                ErrorLogger.LogLine(FilesContents[noteLocation.FileIndex][noteLocation.Line - 1]);
-                ErrorLogger.LogLine(GetErrorPointerLine(noteLocation));
+                ErrorLogger.LogLine(FilesContents[noteLocation.FileIndex][noteLocation.Line - 1].Replace("\t", "    "));
+                ErrorLogger.LogLine(GetErrorPointerLine(noteLocation, new List<NodeLocation>()));
             }
         }
         
-        
-        private string GetErrorPointerLine(NodeLocation nodeLocation)
+        private string GetErrorPointerLine(NodeLocation pointerLocation, List<NodeLocation> locations)
         {
-            string line = CurrentFileNode.Content[nodeLocation.Line - 1];
+            List<UnderlineExactLineLocation> underlineExactLineLocations = CovertToUnderlineLineLocations(pointerLocation.Line, locations);
 
-            string errorPointerLine = "";
-            for (int i = 0; i < nodeLocation.Column; i++)
+            int endColumn = pointerLocation.Column + 1;
+            if (underlineExactLineLocations.Any())
             {
-                if (line[i] == '\t')
+                endColumn = Math.Max(endColumn, underlineExactLineLocations.Max(x => x.EndColumn));
+            }
+
+            string lineContent = CurrentFileNode.Content[pointerLocation.Line - 1];
+
+            string[] buffer = new string[endColumn];
+
+            for (int i = 0; i < endColumn; i++)
+            {
+                if (lineContent[i] == '\t')
                 {
-                    errorPointerLine += "\t";
+                    if (ShouldBeUnderlined(i, underlineExactLineLocations))
+                    {
+                        buffer[i] = "~~~~";
+                    }
+                    else
+                    {
+                        buffer[i] = "\t";
+                    }
                 }
                 else
                 {
-                    errorPointerLine += " ";
+                    if (ShouldBeUnderlined(i, underlineExactLineLocations))
+                    {
+                        buffer[i] = "~";
+                    }
+                    else
+                    {
+                        buffer[i] = " ";
+                    }
                 }
             }
-            errorPointerLine += "^";
-            return errorPointerLine;
+            buffer[pointerLocation.Column] = "^";
+            
+            return String.Join("", buffer);
+        }
+
+        private bool ShouldBeUnderlined(int column,  List<UnderlineExactLineLocation> underlineExactLineLocations)
+        {
+            foreach (var lineExactLocation in underlineExactLineLocations)
+            {
+                if (lineExactLocation.DoesCoverColumn(column))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
         
-        
-        /*
-         *
-         *
-         if (displayExecBlock)
-            {
-                RuleContext context = parserContext.Parent;
-                while (ExecBlockName == null)
-                {
-                    switch (context)
-                    {
-                        case DaedalusParser.FunctionDefContext functionDefContext:
-                            ExecBlockName = functionDefContext.nameNode().GetText();
-                            ExecBlockType = "function";
-                            break;
-                        case DaedalusParser.InstanceDefContext instanceDefContext:
-                            ExecBlockName = instanceDefContext.nameNode().GetText();
-                            ExecBlockType = "instance";
-                            break;
-                        case DaedalusParser.PrototypeDefContext prototypeDefContext:
-                            ExecBlockName = prototypeDefContext.nameNode().GetText();
-                            ExecBlockType = "prototype";
-                            break;
-                        case DaedalusParser.ClassDefContext classDefContext:
-                            ExecBlockName = classDefContext.nameNode().GetText();
-                            ExecBlockType = "class";
-                            break;
-                    }
+        private class UnderlineExactLineLocation
+        {
+            private readonly bool _isInCurrentLine;
+            private readonly int _startColumn;
+            public readonly int EndColumn;
 
-                    context = context.Parent;
-                    if (context is DaedalusParser.DaedalusFileContext)
-                    {
-                        break;
-                    }
+            public UnderlineExactLineLocation(bool isInCurrentLine, int startColumn, int endColumn)
+            {
+                _isInCurrentLine = isInCurrentLine;
+                _startColumn = startColumn;
+                EndColumn = endColumn;
+            }
+
+            public bool DoesCoverColumn(int column)
+            {
+                if (_isInCurrentLine && _startColumn <= column && column <= EndColumn)
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        private List<UnderlineExactLineLocation> CovertToUnderlineLineLocations(int line, List<NodeLocation> locations)
+        {
+            string lineContent = CurrentFileNode.Content[line - 1];
+            
+            int firstSignificantColumn = 0;
+            for (int i = 0; i < lineContent.Length; ++i)
+            {
+                if (!Char.IsWhiteSpace(lineContent[i]))
+                {
+                    firstSignificantColumn = i;
+                    break;
                 }
             }
-         */
+
+            int lastSignificantColumn = 0;
+            for (int i = lineContent.Length - 1; i >= 0; --i)
+            {
+                if (!Char.IsWhiteSpace(lineContent[i]))
+                {
+                    lastSignificantColumn = i;
+                    break;
+                }
+            }
+
+
+            List<UnderlineExactLineLocation> underlineLineLocations = new List<UnderlineExactLineLocation>();
+            
+            foreach (var location in locations)
+            {
+                bool isInCurrentLine = true;
+                int startColumn = 0;
+                int endColumn = 0;
+
+                if (location.Line == line)
+                {
+                    if (location.LinesCount == 1)
+                    {
+                        startColumn = location.Column;
+                        endColumn = location.Column + location.CharsCount;
+                    }
+                    else
+                    {
+                        startColumn = location.Column;
+                        endColumn = lastSignificantColumn;
+                    }
+                }
+                else if (location.Line < line && location.LinesCount > 1)
+                {
+                    if (location.Line + location.LinesCount == line)
+                    {
+                        startColumn = firstSignificantColumn;
+                        endColumn = location.EndColumn;
+                    }
+                    else if (location.Line + location.LinesCount > line)
+                    {
+                        startColumn = firstSignificantColumn;
+                        endColumn = lastSignificantColumn;
+                    }
+                }
+                else
+                {
+                    isInCurrentLine = false;
+                }
+                
+                
+                underlineLineLocations.Add(new UnderlineExactLineLocation(isInCurrentLine, startColumn, endColumn));
+            }
+
+            return underlineLineLocations;
+        }
+        
     }
 }

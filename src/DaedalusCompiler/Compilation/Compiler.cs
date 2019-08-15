@@ -380,7 +380,7 @@ namespace DaedalusCompiler.Compilation
 
         private string GetFileContent(string filePath)
         {
-            return File.ReadAllText(filePath, Encoding.GetEncoding(1250));
+            return File.ReadAllText(filePath, Encoding.GetEncoding(1250));//.Replace("\t", "    ");
         }
         
         public static DaedalusParser GetParserForText(string input)

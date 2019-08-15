@@ -62,6 +62,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public int Index;
         public int CharsCount;
         public int LinesCount;
+
+        public int EndColumn;
     }
 
     public class AbstractSyntaxTree

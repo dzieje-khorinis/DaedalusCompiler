@@ -1,15 +1,18 @@
 using System;
+using System.Collections.Generic;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
     public abstract class NodeAnnotation
     {
-        public NodeLocation Location;
-
+        public NodeLocation PointerLocation;
+        public List<NodeLocation> UnderlineLocations;
+        
         public NodeAnnotation()
         {
-            Location = null;
+            PointerLocation = null;
+            UnderlineLocations = new List<NodeLocation>();
         }
         
         public virtual string GetMessage()
@@ -98,6 +101,54 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             return $"{ExpectedSymbolType} type expected (actual type: {ActualSymbolType})".ToLower();
         }
     }
+    
+    
+    public class CannotInitializeConstWithValueOfDifferentType : ErrorAnnotation
+    {
+        public readonly SymbolType ExpectedSymbolType;
+        public readonly SymbolType ActualSymbolType;
+
+        public CannotInitializeConstWithValueOfDifferentType(SymbolType expectedSymbolType, SymbolType actualSymbolType, NodeLocation pointerLocation, NodeLocation underlineLocation)
+        {
+            PointerLocation = pointerLocation;
+            UnderlineLocations.Add(underlineLocation);
+            ExpectedSymbolType = expectedSymbolType;
+            ActualSymbolType = actualSymbolType;
+        }
+        
+        public override string GetMessage()
+        {
+            return $"cannot initialize a constant of type '{ExpectedSymbolType}' with an rvalue of type '{ActualSymbolType}'".ToLower();
+            /*
+             * source_file.cpp:8:9: error: cannot initialize a variable of type 'int' with an rvalue of type 'const char *'
+            int x = 2 + "he";
+                ^   ~~~~~~~~
+             */
+        }
+    }
+
+    public class CannotInitializeArrayElementWithValueOfDifferentType : ErrorAnnotation
+    {
+        public readonly SymbolType ExpectedSymbolType;
+        public readonly SymbolType ActualSymbolType;
+
+        public CannotInitializeArrayElementWithValueOfDifferentType(SymbolType expectedSymbolType, SymbolType actualSymbolType)
+        {
+            ExpectedSymbolType = expectedSymbolType;
+            ActualSymbolType = actualSymbolType;
+        }
+        
+        public override string GetMessage()
+        {
+            return $"cannot initialize an array element of type '{ExpectedSymbolType}' with an rvalue of type '{ActualSymbolType}'".ToLower();
+        }
+        /*
+         *
+         *int a[2] = {1, 2 + "he"};
+         *               ^~~~~~~~
+         */
+    }
+    
 
     public class UndeclaredIdentifierError : ErrorAnnotation
     {
@@ -141,10 +192,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         private readonly string _identifier;
 
-        public KeywordUsedAsNameError(string identifier, NodeLocation location)
+        public KeywordUsedAsNameError(string identifier, NodeLocation pointerLocation)
         {
             _identifier = identifier;
-            Location = location;
+            PointerLocation = pointerLocation;
         }
 
         public override string GetMessage()
@@ -205,10 +256,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         private readonly string _identifier;
 
-        public RedefinedIdentifierError(string identifier, NodeLocation noteLocation, NodeLocation location) : base(noteLocation)
+        public RedefinedIdentifierError(string identifier, NodeLocation noteLocation, NodeLocation pointerLocation) : base(noteLocation)
         {
             _identifier = identifier;
-            Location = location;
+            PointerLocation = pointerLocation;
         }
 
         public override string GetMessage()
@@ -232,11 +283,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
     }
 
+
+
     public class ArithmeticOperationOverflowError : ErrorAnnotation
     {
-        public ArithmeticOperationOverflowError(NodeLocation location)
+        public ArithmeticOperationOverflowError(NodeLocation pointerLocation)
         {
-            Location = location;
+            PointerLocation = pointerLocation;
         }
         
         public override string GetMessage()

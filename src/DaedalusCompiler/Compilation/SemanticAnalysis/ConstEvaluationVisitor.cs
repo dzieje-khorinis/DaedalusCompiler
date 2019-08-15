@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.WebSockets;
-using System.Xml.Xsl;
-using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
+    public class IncompatibleTypesException : Exception
+    {
+        
+    }
+    
     //evaluate const content, array elements, array index, array reference index 
     public class ConstEvaluationVisitor : AbstractSyntaxTreeBaseGenericVisitor<NodeValue>
     {
@@ -132,7 +134,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     continue;
                 }
                 SymbolType elementType = NodeValueToBuiltinType(elementValue);
-                CheckType(builtinType, elementType, elementNode);
+                CheckArrayElementType(builtinType, elementType, elementNode);
             }
 
 
@@ -200,8 +202,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 return null;
             }
             
-            SymbolType rightSideType = NodeValueToBuiltinType(node.RightSideValue);
-            CheckType(node.Symbol.BuiltinType, rightSideType, node.RightSideNode);
+            CheckValueType(node);
             return null;
         }
         
@@ -404,7 +405,38 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             return new StringValue(node.Value);
         }
 
-        private void CheckType(SymbolType expectedType, SymbolType actualType, ASTNode node)
+
+        private void CheckValueType(ConstDefinitionNode node) // SymbolType expectedType, SymbolType actualType, ASTNode node
+        {
+            SymbolType expectedType = node.Symbol.BuiltinType;
+            SymbolType actualType = NodeValueToBuiltinType(node.RightSideValue);
+            ASTNode rightSideNode = node.RightSideNode
+   ;         
+            try
+            {
+                CheckType(expectedType, actualType);
+            }
+            catch (IncompatibleTypesException)
+            {
+                rightSideNode.Annotations.Add(new CannotInitializeConstWithValueOfDifferentType(expectedType, actualType, node.NameNode.Location, rightSideNode.Location));
+            }
+
+            
+        }
+
+        private void CheckArrayElementType(SymbolType expectedType, SymbolType actualType, ASTNode node)
+        {
+            try
+            {
+                CheckType(expectedType, actualType);
+            }
+            catch (IncompatibleTypesException)
+            {
+                node.Annotations.Add(new CannotInitializeArrayElementWithValueOfDifferentType(expectedType, actualType));
+            }
+        }
+        
+        private void CheckType(SymbolType expectedType, SymbolType actualType)
         {
             switch (expectedType)
             {
@@ -416,9 +448,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                             break;
                         
                         default:
-                            node.Annotations.Add(new IncompatibleTypesError(expectedType, actualType));
-                            break;
-
+                            throw new IncompatibleTypesException();
                     }
                     break;
                 
@@ -430,8 +460,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                             break;
                         
                         default:
-                            node.Annotations.Add(new IncompatibleTypesError(expectedType, actualType));
-                            break;
+                            throw new IncompatibleTypesException();
 
                     }
                     break;
@@ -443,8 +472,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                             break;
                         
                         default:
-                            node.Annotations.Add(new IncompatibleTypesError(expectedType, actualType));
-                            break;
+                            throw new IncompatibleTypesException();
                     }
                     break;
                 
@@ -456,8 +484,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                             break;
                         
                         default:
-                            node.Annotations.Add(new IncompatibleTypesError(expectedType, actualType));
-                            break;
+                            throw new IncompatibleTypesException();
                     }
                     break;
 

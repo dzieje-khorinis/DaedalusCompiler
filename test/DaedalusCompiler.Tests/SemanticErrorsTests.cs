@@ -434,18 +434,18 @@ namespace DaedalusCompiler.Tests
             ";
 
             _expectedCompilationOutput = @"
-                test.d:2:14: error: int type expected (actual type: float)
+                test.d:2:10: error: cannot initialize a constant of type 'int' with an rvalue of type 'float'
                 const int b = 1.5; //error
-                              ^
-                test.d:4:14: error: int type expected (actual type: float)
+                          ^   ~~~
+                test.d:4:10: error: cannot initialize a constant of type 'int' with an rvalue of type 'float'
                 const int d = 2.5 + 3; //error
-                              ^
-                test.d:5:14: error: int type expected (actual type: float)
+                          ^   ~~~~~~~
+                test.d:5:10: error: cannot initialize a constant of type 'int' with an rvalue of type 'float'
                 const int e = 4 + 4.5; //error
-                              ^
-                test.d:6:14: error: int type expected (actual type: float)
+                          ^   ~~~~~~~
+                test.d:6:10: error: cannot initialize a constant of type 'int' with an rvalue of type 'float'
                 const int f = 5.5 + 5.5; //error
-                              ^
+                          ^   ~~~~~~~~~
                 ";
 
             AssertCompilationOutputMatch();

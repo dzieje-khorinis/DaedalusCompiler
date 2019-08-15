@@ -583,7 +583,9 @@ namespace DaedalusCompiler.Compilation
 				Column = context.Start.Column,
 				Index = context.Start.StartIndex,
 				LinesCount = context.Stop.Line - context.Start.Line + 1,
-				CharsCount = context.Stop.StopIndex - context.Start.StartIndex + 1
+				CharsCount = context.Stop.StopIndex - context.Start.StartIndex + 1,
+				
+				EndColumn = context.Stop.StopIndex,
 			};
 		}
     }
