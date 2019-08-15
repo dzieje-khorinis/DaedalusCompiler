@@ -1,4 +1,5 @@
-﻿using System;
+﻿/*
+using System;
 using System.Collections.Generic;
 using DaedalusCompiler.Compilation;
 using DaedalusCompiler.Dat;
@@ -5220,7 +5221,7 @@ namespace DaedalusCompiler.Tests
                 new Ret(),
             };
             AssertInstructionsMatch();
-            */
+            #1#
             
             _instructions = GetExecBlockInstructions("testFunc");
             _expectedInstructions = new List<AssemblyElement>
@@ -6071,3 +6072,4 @@ namespace DaedalusCompiler.Tests
         }
     }
 }
+*/

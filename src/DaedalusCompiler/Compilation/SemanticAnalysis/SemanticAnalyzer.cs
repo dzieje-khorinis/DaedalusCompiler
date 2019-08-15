@@ -18,24 +18,16 @@ namespace DaedalusCompiler.Compilation
 
     public class SemanticAnalyzer
     {
-        private AbstractSyntaxTree _abstractSyntaxTree;
+        public readonly AbstractSyntaxTree AbstractSyntaxTree;
         private Dictionary<string, Symbol> _symbolTable;
         
-        public int ErrorsCount;
-        public int WarningsCount;
-
-        private bool _strictSyntax;
-
-        public SemanticAnalyzer(List<IParseTree> parseTrees, int externalFilesCount, List<string> filesPaths, List<string[]> filesContents, List<HashSet<string>> suppressedWarningCodes, bool strictSyntax)
+        public SemanticAnalyzer(List<IParseTree> parseTrees, int externalFilesCount, List<string> filesPaths, List<string[]> filesContents, List<HashSet<string>> suppressedWarningCodes)
         {
             _symbolTable = null;
-            ErrorsCount = 0;
-            WarningsCount = 0;
-            _strictSyntax = strictSyntax;
-            
+
             Stopwatch timer = new Stopwatch();
             timer.Start();
-            _abstractSyntaxTree = new AbstractSyntaxTree(parseTrees, externalFilesCount, filesPaths, filesContents, suppressedWarningCodes);
+            AbstractSyntaxTree = new AbstractSyntaxTree(parseTrees, externalFilesCount, filesPaths, filesContents, suppressedWarningCodes);
             timer.Stop();
             Console.WriteLine($"AbstractSyntaxTree creation time: {timer.Elapsed}");
         }
@@ -55,7 +47,7 @@ namespace DaedalusCompiler.Compilation
             // annotates:
             // RedefinedIdentifierAnnotation
             SymbolTableCreationVisitor symbolTableCreationVisitor = new SymbolTableCreationVisitor();
-            symbolTableCreationVisitor.VisitTree(_abstractSyntaxTree);
+            symbolTableCreationVisitor.VisitTree(AbstractSyntaxTree);
             _symbolTable = symbolTableCreationVisitor.SymbolTable;
             
             // annotates:
@@ -78,7 +70,7 @@ namespace DaedalusCompiler.Compilation
             // ClassDoesNotHaveAttributeAnnotation
             // ReferencedSymbolIsNotArrayAnnotation
             ReferenceResolvingVisitor referenceResolvingVisitor = new ReferenceResolvingVisitor(_symbolTable);
-            referenceResolvingVisitor.Visit(_abstractSyntaxTree.ReferenceNodes);
+            referenceResolvingVisitor.Visit(AbstractSyntaxTree.ReferenceNodes);
             
             // annotates:
             // InfiniteReferenceLoopAnnotation
@@ -110,14 +102,9 @@ namespace DaedalusCompiler.Compilation
             // Error o rozmiarze C_NPC (800), warningi o tym, ze nazwy uzywamy np. małymi, a zadeklaorwaliśy duzymi, albo, ze sa nieuzywane funkcje
             Console.WriteLine("---------");
             RemainingAnnotationsAdditionVisitor remainingAnnotationsAdditionVisitor = new RemainingAnnotationsAdditionVisitor();
-            remainingAnnotationsAdditionVisitor.VisitTree(_abstractSyntaxTree);
+            remainingAnnotationsAdditionVisitor.VisitTree(AbstractSyntaxTree);
             
             
-            ErrorCollectionVisitor errorCollectionVisitor = new ErrorCollectionVisitor(new StdErrorLogger(), _strictSyntax);
-            errorCollectionVisitor.VisitTree(_abstractSyntaxTree);
-
-            ErrorsCount = errorCollectionVisitor.ErrorsCount;
-            WarningsCount = errorCollectionVisitor.WarningsCount;
         }
         
         public void EvaluateReferencesAndTypesAndArraySize()

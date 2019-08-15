@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using System.Linq;
 using System.Text;
 using DaedalusCompiler.Compilation;
@@ -48,4 +48,4 @@ namespace DaedalusCompiler.Tests
             Assert.Equal(4, datFile.Symbols.Count());
         }
     }
-}
+}*/

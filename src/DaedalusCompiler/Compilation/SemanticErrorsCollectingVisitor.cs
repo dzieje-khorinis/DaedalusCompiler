@@ -6,8 +6,14 @@ using System.Linq;
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
     
+public enum FilePathDisplayStatus
+{
+    NeverDisplay = 0,
+    AlwaysDisplay = 1,
+    DisplayOncePerFile = 2,
+}  
     
-public class ErrorCollectionVisitor : AbstractSyntaxTreeBaseVisitor
+public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
     {
         public FileNode CurrentFileNode;
         public ASTNode CurrentBlockNode; //function, instance, prototype, class
@@ -20,13 +26,14 @@ public class ErrorCollectionVisitor : AbstractSyntaxTreeBaseVisitor
 
         public int ErrorsCount;
         public int WarningsCount;
-
-        public int FileAnnotationsCount;
+        
         public ASTNode LastParentBlockNode;
-
+        public FilePathDisplayStatus FilePathDisplayStatus;
+        private bool _wasFilePathDisplayed;
+        
         private readonly bool _strictSyntax;
         
-        public ErrorCollectionVisitor(ErrorLogger errorLogger, bool strictSyntax)
+        public SemanticErrorsCollectingVisitor(ErrorLogger errorLogger, bool strictSyntax)
         {
             CurrentFileNode = null;
             ErrorLogger = errorLogger;
@@ -35,6 +42,8 @@ public class ErrorCollectionVisitor : AbstractSyntaxTreeBaseVisitor
 
             ErrorsCount = 0;
             WarningsCount = 0;
+
+            FilePathDisplayStatus = FilePathDisplayStatus.DisplayOncePerFile;
         }
 
 
@@ -60,7 +69,7 @@ public class ErrorCollectionVisitor : AbstractSyntaxTreeBaseVisitor
                     continue;
                 }
                 PrintAnnotation(annotation, node);
-                FileAnnotationsCount++;
+                _wasFilePathDisplayed = true;
             }
             base.Visit(node);
         }
@@ -68,7 +77,7 @@ public class ErrorCollectionVisitor : AbstractSyntaxTreeBaseVisitor
         protected override void VisitFile(FileNode node)
         {
             CurrentFileNode = node;
-            FileAnnotationsCount = 0;
+            _wasFilePathDisplayed = false;
             base.VisitFile(node);
         }
 
@@ -142,18 +151,9 @@ public class ErrorCollectionVisitor : AbstractSyntaxTreeBaseVisitor
                 message = annotation.GetType().ToString();
             }
             
-            NodeLocation messageLocation;
-            if (annotation is ILocatedAnnotation locatedAnnotation)
-            {
-                messageLocation = locatedAnnotation.Location;
-            }
-            else
-            {
-                messageLocation = node.Location;
-            }
-               
+            NodeLocation messageLocation = annotation.Location ?? node.Location;
 
-            if (FileAnnotationsCount == 0)
+            if ((!_wasFilePathDisplayed && FilePathDisplayStatus == FilePathDisplayStatus.DisplayOncePerFile) || FilePathDisplayStatus == FilePathDisplayStatus.AlwaysDisplay)
             {
                 ErrorLogger.LogLine(FilesPaths[messageLocation.FileIndex]);
             }
@@ -166,13 +166,13 @@ public class ErrorCollectionVisitor : AbstractSyntaxTreeBaseVisitor
                 switch (ancestor)
                 {
                     case PrototypeDefinitionNode prototypeDefinitionNode:
-                        parentBlockName = $"prototype ‘{prototypeDefinitionNode.NameNode.Value}‘";
+                        parentBlockName = $"prototype '{prototypeDefinitionNode.NameNode.Value}'";
                         break;
                     case InstanceDefinitionNode instanceDefinitionNode:
-                        parentBlockName = $"instance ‘{instanceDefinitionNode.NameNode.Value}‘";
+                        parentBlockName = $"instance '{instanceDefinitionNode.NameNode.Value}'";
                         break;
                     case FunctionDefinitionNode functionDefinitionNode:
-                        parentBlockName = $"function ‘{functionDefinitionNode.NameNode.Value}‘";
+                        parentBlockName = $"function '{functionDefinitionNode.NameNode.Value}'";
                         break;
                     case FileNode _:
                         if (LastParentBlockNode != null)

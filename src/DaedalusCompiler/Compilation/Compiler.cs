@@ -85,9 +85,9 @@ namespace DaedalusCompiler.Compilation
 
                 
                 int externalFilesCount = 0;
-                List<string> FilesPaths = new List<string>();
-                List<string[]> FilesContents = new List<string[]>();
-                List<HashSet<string>> SuppressedWarningCodes = new List<HashSet<string>>();
+                List<string> filesPaths = new List<string>();
+                List<string[]> filesContents = new List<string[]>();
+                List<HashSet<string>> suppressedWarningCodes = new List<HashSet<string>>();
                 
                 if (File.Exists(runtimePath) && false)
                 {
@@ -101,8 +101,8 @@ namespace DaedalusCompiler.Compilation
                     string fileContent = GetFileContent(runtimePath);
                     DaedalusParser parser = GetParserForText(fileContent);
                     
-                    FilesPaths.Add(runtimePath);
-                    FilesContents.Add(fileContent.Split(Environment.NewLine));
+                    filesPaths.Add(runtimePath);
+                    filesContents.Add(fileContent.Split(Environment.NewLine));
                     
                     parseTrees.Add(parser.daedalusFile());
                     
@@ -141,9 +141,9 @@ namespace DaedalusCompiler.Compilation
                     parseTrees.Add(parser.daedalusFile());
 
                     string[] fileContentLines = fileContent.Split(Environment.NewLine);
-                    FilesPaths.Add(paths[i]);
-                    FilesContents.Add(fileContentLines);
-                    SuppressedWarningCodes.Add(GetWarningCodesToSuppress(fileContentLines[0]));
+                    filesPaths.Add(paths[i]);
+                    filesContents.Add(fileContentLines);
+                    suppressedWarningCodes.Add(GetWarningCodesToSuppress(fileContentLines[0]));
                     
                     syntaxErrorsCount += syntaxErrorListener.ErrorsCount;
 
@@ -184,14 +184,17 @@ namespace DaedalusCompiler.Compilation
                 
                 Console.WriteLine("parseTrees created");
                 
-                SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(parseTrees, externalFilesCount, FilesPaths, FilesContents, SuppressedWarningCodes, _strictSyntax);
+                
+                SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(parseTrees, externalFilesCount, filesPaths, filesContents, suppressedWarningCodes);
                 semanticAnalyzer.Run();
                 
                 
                 
-                
-                int errorsCount = semanticAnalyzer.ErrorsCount;
-                int warningsCount = semanticAnalyzer.WarningsCount;
+                SemanticErrorsCollectingVisitor semanticErrorsCollectingVisitor = new SemanticErrorsCollectingVisitor(new StdErrorLogger(), _strictSyntax);
+                semanticErrorsCollectingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
+
+                int errorsCount = semanticErrorsCollectingVisitor.ErrorsCount;
+                int warningsCount =semanticErrorsCollectingVisitor.WarningsCount;
                 string error = errorsCount == 1 ? "error" : "errors";
                 string warning = warningsCount == 1 ? "warning" : "warnings";
 
@@ -380,7 +383,7 @@ namespace DaedalusCompiler.Compilation
             return File.ReadAllText(filePath, Encoding.GetEncoding(1250));
         }
         
-        private DaedalusParser GetParserForText(string input)
+        public static DaedalusParser GetParserForText(string input)
         {
             AntlrInputStream inputStream = new AntlrInputStream(input);
             DaedalusLexer lexer = new DaedalusLexer(inputStream);

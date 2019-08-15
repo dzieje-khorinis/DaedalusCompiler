@@ -1,4 +1,4 @@
-﻿using Antlr4.Runtime;
+﻿/*using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using DaedalusCompiler.Compilation;
 
@@ -16,4 +16,4 @@ namespace DaedalusCompiler.Tests
             ParseTreeWalker.Default.Walk(new DaedalusListener(assemblyBuilder, 0), parser.daedalusFile());
         }
     }
-}
+}*/

@@ -5,6 +5,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
     public abstract class NodeAnnotation
     {
+        public NodeLocation Location;
+
+        public NodeAnnotation()
+        {
+            Location = null;
+        }
+        
         public virtual string GetMessage()
         {
             return String.Empty;
@@ -18,11 +25,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         string GetNote();
     }
 
-    public interface ILocatedAnnotation
-    {
-        NodeLocation Location { get; set; }
-    }
-    
     public abstract class ErrorAnnotation : NodeAnnotation
     {
         
@@ -108,7 +110,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         public override string GetMessage()
         {
-            return $"‘{_identifier}’ undeclared";
+            return $"'{_identifier}' undeclared";
         }
     }
 
@@ -135,9 +137,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
 
-    public class KeywordUsedAsNameError : ErrorAnnotation, ILocatedAnnotation
+    public class KeywordUsedAsNameError : ErrorAnnotation
     {
-        public NodeLocation Location { get; set; }
         private readonly string _identifier;
 
         public KeywordUsedAsNameError(string identifier, NodeLocation location)
@@ -148,7 +149,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         public override string GetMessage()
         {
-            return $"‘{_identifier}’ is keyword and shouldn't be used as an identifier";
+            return $"'{_identifier}' is keyword and shouldn't be used as an identifier";
         }
     }
 
@@ -163,7 +164,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         public override string GetMessage()
         {
-            return $"‘{_identifier}’ statement not allowed outside of loop statement";
+            return $"'{_identifier}' statement not allowed outside of loop statement";
         }
     }
     
@@ -200,10 +201,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         
     }
-    public class RedefinedIdentifierError : ErrorAnnotationNoted, ILocatedAnnotation
+    public class RedefinedIdentifierError : ErrorAnnotationNoted
     {
         private readonly string _identifier;
-        public NodeLocation Location { get; set; }
 
         public RedefinedIdentifierError(string identifier, NodeLocation noteLocation, NodeLocation location) : base(noteLocation)
         {
@@ -213,7 +213,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         public override string GetMessage()
         {
-            return $"redefinition of ‘{_identifier}’";
+            return $"redefinition of '{_identifier}'";
         }
 
         public override string GetNote()
@@ -232,10 +232,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
     }
 
-    public class ArithmeticOperationOverflowError : ErrorAnnotation, ILocatedAnnotation
+    public class ArithmeticOperationOverflowError : ErrorAnnotation
     {
-        public NodeLocation Location { get; set; }
-
         public ArithmeticOperationOverflowError(NodeLocation location)
         {
             Location = location;
@@ -273,7 +271,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         public override string GetMessage()
         {
-            return $"array ‘{_identifier}’ has inconsistent size (declared size: {_declaredSize}, elements count: {_elementsCount})";
+            return $"array '{_identifier}' has inconsistent size (declared size: {_declaredSize}, elements count: {_elementsCount})";
         }
     }
 
@@ -288,7 +286,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         public override string GetMessage()
         {
-            return $"size of array ‘{_identifier}’ cannot equal zero";
+            return $"size of array '{_identifier}' cannot equal zero";
         }
     }
 
@@ -296,7 +294,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public override string GetMessage()
         {
-            return "literal is too large to be represented in an integer type (min: -2147483648, max: 2147483647)";
+            return "integer literal is too large to be represented in an integer type (min: -2147483648, max: 2147483647)";
         }
     }
 
@@ -331,7 +329,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         public override string GetMessage()
         {
-            return $"object ‘{_objectName}’ of type ‘{_className}’ has no member named ‘{_attributeName}’";
+            return $"object '{_objectName}' of type '{_className}' has no member named '{_attributeName}'";
         }
 
     }

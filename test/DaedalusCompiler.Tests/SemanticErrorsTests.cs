@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Antlr4.Runtime.Tree;
 using DaedalusCompiler.Compilation;
+using DaedalusCompiler.Compilation.SemanticAnalysis;
 using Xunit;
 
 
@@ -10,22 +12,8 @@ namespace DaedalusCompiler.Tests
 {
     public class SemanticErrorsTests
     {
-        private AssemblyBuilder _assemblyBuilder;
         private string _code;
-        private string _externalCode;
         private string _expectedCompilationOutput;
-
-        public SemanticErrorsTests()
-        {
-            ResetTestsConfiguration();
-        }
-
-        private void ResetTestsConfiguration()
-        {
-            _assemblyBuilder = new AssemblyBuilder();
-            _assemblyBuilder.ErrorFileContext.FilePath = "test.d";
-            _externalCode = String.Empty;
-        }
         
         private void ParseData()
         {
@@ -42,68 +30,14 @@ namespace DaedalusCompiler.Tests
                 compilationOutputLines[i] = compilationOutputLines[i].Substring(16);
             }
             _expectedCompilationOutput = string.Join(Environment.NewLine, compilationOutputLines);
-
-            _assemblyBuilder.ErrorFileContext.FileContentLines = _code.Split(Environment.NewLine);
-            _assemblyBuilder.ErrorFileContext.SuppressedWarningCodes = Compiler.GetWarningCodesToSuppress(
-                _assemblyBuilder.ErrorFileContext.FileContentLines[0]
-            );
-            if (_externalCode != string.Empty)
-            {
-                _assemblyBuilder.IsCurrentlyParsingExternals = true;
-                Utils.WalkSourceCode(_externalCode, _assemblyBuilder);
-                _assemblyBuilder.IsCurrentlyParsingExternals = false;
-            }
-
-            Utils.WalkSourceCode(_code, _assemblyBuilder);
-            _assemblyBuilder.Finish();
         }
 
-        private void AssertCompilationOutputMatch()
+        private void AssertCompilationOutputMatch(bool strictSyntax=false)
         {
             ParseData();
-            var logger = new StringBufforErrorLogger();
-            logger.LogLine("");
-
-            List<CompilationMessage> errors = new List<CompilationMessage>();
-            foreach (CompilationMessage error in _assemblyBuilder.Errors)
-            {
-                if (error is CompilationError)
-                {
-                    errors.Add(error);
-                }
-                else if (error is CompilationWarning compilationWarning)
-                {
-                    if (compilationWarning.IsSuppressed == false)
-                    {
-                        errors.Add(compilationWarning);
-                    }
-                }
-            }
-
-            if (errors.Any())
-            {
-                errors.Sort((x, y) => x.CompareTo(y));
-
-                string lastErrorBlockName = null;
-                foreach (CompilationMessage error in errors)
-                {
-                    if (lastErrorBlockName != error.ExecBlockName)
-                    {
-                        lastErrorBlockName = error.ExecBlockName;
-                        if (error.ExecBlockName == null)
-                        {
-                            logger.LogLine($"{error.FileName}: In global scope:");
-                        }
-                        else
-                        {
-                            logger.LogLine($"{error.FileName}: In {error.ExecBlockType} ‘{error.ExecBlockName}’:");
-                        }
-                        
-                    }
-                    
-                    error.Print(logger);
-                }
-            }
+            StringBufforErrorLogger logger = new StringBufforErrorLogger();
+            TestsHelper testsHelper = new TestsHelper(logger, strictSyntax);
+            testsHelper.RunCode(_code);
             Assert.Equal(_expectedCompilationOutput, logger.GetBuffor().Trim());
         }
 
@@ -118,23 +52,23 @@ namespace DaedalusCompiler.Tests
             ";
 
             _expectedCompilationOutput = @"
-                test.d: In function ‘testFunc’:
-                test.d:2:4: error: ‘x’ undeclared
+                test.d: In function 'testFunc':
+                test.d:2:4: error: 'x' undeclared
                     x = 5;
                     ^
-                test.d:3:4: error: ‘x’ undeclared
+                test.d:3:4: error: 'x' undeclared
                     x = a + b(c, d);
                     ^
-                test.d:3:8: error: ‘a’ undeclared
+                test.d:3:8: error: 'a' undeclared
                     x = a + b(c, d);
                         ^
-                test.d:3:12: error: ‘b’ undeclared
+                test.d:3:12: error: 'b' undeclared
                     x = a + b(c, d);
                             ^
-                test.d:3:14: error: ‘c’ undeclared
+                test.d:3:14: error: 'c' undeclared
                     x = a + b(c, d);
                               ^
-                test.d:3:17: error: ‘d’ undeclared
+                test.d:3:17: error: 'd' undeclared
                     x = a + b(c, d);
                                  ^
                 ";
@@ -148,18 +82,18 @@ namespace DaedalusCompiler.Tests
             _code = @"
                 class C_NPC { var int data [200]; };
                 instance self(C_NPC_MISSPELLED) {};
-                prototype OrcElite(Orc);
+                prototype OrcElite(Orc) {};
                 instance UrukHai(OrcElite);
             ";
 
             _expectedCompilationOutput = @"
-                test.d: In instance ‘self’:
-                test.d:2:14: error: ‘C_NPC_MISSPELLED’ undeclared
+                test.d: In instance 'self':
+                test.d:2:14: error: 'C_NPC_MISSPELLED' undeclared
                 instance self(C_NPC_MISSPELLED) {};
                               ^
-                test.d: In prototype ‘OrcElite’:
-                test.d:3:19: error: ‘Orc’ undeclared
-                prototype OrcElite(Orc);
+                test.d: In prototype 'OrcElite':
+                test.d:3:19: error: 'Orc' undeclared
+                prototype OrcElite(Orc) {};
                                    ^
                 ";
 
@@ -174,7 +108,7 @@ namespace DaedalusCompiler.Tests
             ";
 
             _expectedCompilationOutput = @"
-                test.d:1:14: error: ‘b’ undeclared
+                test.d:1:14: error: 'b' undeclared
                 const int a = b;
                               ^
                 ";
@@ -200,11 +134,11 @@ namespace DaedalusCompiler.Tests
             ";
 
             _expectedCompilationOutput = @"
-                test.d: In function ‘testFunc’:
-                test.d:8:4: error: ‘object self’ has no member named ‘x’
+                test.d: In function 'testFunc':
+                test.d:8:9: error: object 'self' of type 'C_NPC' has no member named 'x'
                     self.x = 5;
                          ^
-                test.d:10:4: error: ‘other’ undeclared
+                test.d:10:4: error: 'other' undeclared
                     other.y = 15;
                     ^
                 ";
@@ -234,15 +168,15 @@ namespace DaedalusCompiler.Tests
             ";
 
             _expectedCompilationOutput = @"
-                test.d:3:23: error: array ‘INVENTORY’ has inconsistent size (declared size: 2, elements count: 3)
+                test.d:3:23: error: array 'INVENTORY' has inconsistent size (declared size: 2, elements count: 3)
                 const string INVENTORY[INVENTORY_SIZE] =
                                        ^
-                test.d: In function ‘testFunc’:
-                test.d:11:28: error: array ‘LUCKY_NUMBERS’ has inconsistent size (declared size: 2, elements count: 3)
+                test.d: In function 'testFunc':
+                test.d:11:28: error: array 'LUCKY_NUMBERS' has inconsistent size (declared size: 2, elements count: 3)
                     const int LUCKY_NUMBERS[2] = {2, 4, 8};
                                             ^
                 test.d: In global scope:
-                test.d:14:19: error: array ‘NAMES’ has inconsistent size (declared size: 2, elements count: 3)
+                test.d:14:19: error: array 'NAMES' has inconsistent size (declared size: 2, elements count: 3)
                 const string NAMES[2] = {""DIEGO"", ""ROBERTO"", ""SANCHEZ""};
                                    ^
             ";
@@ -272,15 +206,15 @@ namespace DaedalusCompiler.Tests
             ";
 
             _expectedCompilationOutput = @"
-                test.d:3:23: error: array ‘INVENTORY’ has inconsistent size (declared size: 4, elements count: 3)
+                test.d:3:23: error: array 'INVENTORY' has inconsistent size (declared size: 4, elements count: 3)
                 const string INVENTORY[INVENTORY_SIZE] =
                                        ^
-                test.d: In function ‘testFunc’:
-                test.d:11:28: error: array ‘LUCKY_NUMBERS’ has inconsistent size (declared size: 4, elements count: 3)
+                test.d: In function 'testFunc':
+                test.d:11:28: error: array 'LUCKY_NUMBERS' has inconsistent size (declared size: 4, elements count: 3)
                     const int LUCKY_NUMBERS[4] = {2, 4, 8};
                                             ^
                 test.d: In global scope:
-                test.d:14:19: error: array ‘NAMES’ has inconsistent size (declared size: 4, elements count: 3)
+                test.d:14:19: error: array 'NAMES' has inconsistent size (declared size: 4, elements count: 3)
                 const string NAMES[4] = {""DIEGO"", ""ROBERTO"", ""SANCHEZ""};
                                    ^
             ";
@@ -311,15 +245,12 @@ namespace DaedalusCompiler.Tests
             ";
 
             _expectedCompilationOutput = @"
-                test.d:1:23: error: ‘INVENTORY_SIZE’ undeclared
-                const string INVENTORY[INVENTORY_SIZE] =
-                                       ^
-                test.d: In function ‘testFunc’:
-                test.d:13:28: error: array ‘LUCKY_NUMBERS’ has invalid size ‘0’
+                test.d: In function 'testFunc':
+                test.d:13:28: error: size of array 'LUCKY_NUMBERS' cannot equal zero
                     const int LUCKY_NUMBERS[NUMBERS_SIZE] = {2, 4, 8};
                                             ^
                 test.d: In global scope:
-                test.d:16:19: error: array ‘NAMES’ has invalid size ‘0’
+                test.d:16:19: error: size of array 'NAMES' cannot equal zero
                 const string NAMES[0] = {""DIEGO"", ""ROBERTO"", ""SANCHEZ""};
                                    ^
             ";
@@ -349,19 +280,19 @@ namespace DaedalusCompiler.Tests
             ";
 
             _expectedCompilationOutput = @"
-                test.d:3:33: error: integer literal is too large to be represented in an integer type
+                test.d:3:33: error: integer literal is too large to be represented in an integer type (min: -2147483648, max: 2147483647)
                 const int TOO_BIG_INT_POSITIVE = 2147483648;
                                                  ^
-                test.d:4:33: error: integer literal is too large to be represented in an integer type
+                test.d:4:33: error: integer literal is too large to be represented in an integer type (min: -2147483648, max: 2147483647)
                 const int TOO_BIG_INT_NEGATIVE = -2147483649;
                                                  ^
-                test.d: In function ‘testFunc’:
-                test.d:12:27: error: integer literal is too large to be represented in an integer type
+                test.d: In function 'testFunc':
+                test.d:12:27: error: integer literal is too large to be represented in an integer type (min: -2147483648, max: 2147483647)
                     too_big_int_positive = 2147483648;
                                            ^
-                test.d:14:27: error: integer literal is too large to be represented in an integer type
+                test.d:14:28: error: integer literal is too large to be represented in an integer type (min: -2147483648, max: 2147483647)
                     too_big_int_negative = -2147483648;
-                                           ^
+                                            ^
             ";
 
             AssertCompilationOutputMatch();
@@ -380,7 +311,7 @@ namespace DaedalusCompiler.Tests
             ";
 
             _expectedCompilationOutput = @"
-                test.d: In function ‘testFunc’:
+                test.d: In function 'testFunc':
                 test.d:4:4: warning W1: usage of single-expression statement hack
                     x;
                     ^
@@ -392,8 +323,6 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestSingleExpressionHackStrictMode()
         {
-            _assemblyBuilder.StrictSyntax = true;
-
             _code = @"
                 func void testFunc() {
                     var int x;
@@ -404,13 +333,13 @@ namespace DaedalusCompiler.Tests
             ";
 
             _expectedCompilationOutput = @"
-                test.d: In function ‘testFunc’:
+                test.d: In function 'testFunc':
                 test.d:4:4: error W1: usage of single-expression statement hack
                     x;
                     ^
             ";
 
-            AssertCompilationOutputMatch();
+            AssertCompilationOutputMatch(true);
         }
         
         [Fact]
@@ -464,7 +393,7 @@ namespace DaedalusCompiler.Tests
             ";
 
             _expectedCompilationOutput = @"
-                test.d: In function ‘secondFunc’:
+                test.d: In function 'secondFunc':
                 test.d:4:4: error: too few arguments to function call, expected 1, have 0
                     testFunc();
                     ^
@@ -505,33 +434,18 @@ namespace DaedalusCompiler.Tests
             ";
 
             _expectedCompilationOutput = @"
-                test.d:2:14: error: unable to evaluate const value
+                test.d:2:14: error: int type expected (actual type: float)
                 const int b = 1.5; //error
                               ^
-                test.d:4:14: error: unable to evaluate const value
+                test.d:4:14: error: int type expected (actual type: float)
                 const int d = 2.5 + 3; //error
                               ^
-                test.d:5:14: error: unable to evaluate const value
+                test.d:5:14: error: int type expected (actual type: float)
                 const int e = 4 + 4.5; //error
                               ^
-                test.d:6:14: error: unable to evaluate const value
+                test.d:6:14: error: int type expected (actual type: float)
                 const int f = 5.5 + 5.5; //error
                               ^
-                test.d:10:16: error: unable to evaluate const value
-                const float i = 2 + 2; //error
-                                ^
-                test.d:11:16: error: unable to evaluate const value
-                const float j = 2.5 + 3; //error
-                                ^
-                test.d:12:16: error: unable to evaluate const value
-                const float k = 4 + 4.5; //error
-                                ^
-                test.d:13:16: error: unable to evaluate const value
-                const float l = 5.5 + 5.5; //error
-                                ^
-                test.d:16:17: error: unable to evaluate const value
-                const string n = ""ha"" + ""ha""; //error
-                                 ^
                 ";
 
             AssertCompilationOutputMatch();
@@ -561,7 +475,7 @@ namespace DaedalusCompiler.Tests
                       ^
                 ";
             AssertCompilationOutputMatch();
-            ResetTestsConfiguration();
+            ////ResetTestsConfiguration();
 
             _code = @"
                 func void __func() {};
@@ -585,7 +499,7 @@ namespace DaedalusCompiler.Tests
                 ";
 
             AssertCompilationOutputMatch();
-            ResetTestsConfiguration();
+            //ResetTestsConfiguration();
             
             _code = @"
                 class C_NPC { var int data [200]; };
@@ -610,7 +524,7 @@ namespace DaedalusCompiler.Tests
                 ";
 
             AssertCompilationOutputMatch();
-            ResetTestsConfiguration();
+            //ResetTestsConfiguration();
             
             _code = @"
                 class C_NPC { var int data [200]; };
@@ -635,7 +549,7 @@ namespace DaedalusCompiler.Tests
                 ";
 
             AssertCompilationOutputMatch();
-            ResetTestsConfiguration();
+            //ResetTestsConfiguration();
             
             _code = @"
                 class C_NPC { var int data [200]; };
@@ -660,7 +574,7 @@ namespace DaedalusCompiler.Tests
                 ";
 
             AssertCompilationOutputMatch();
-            ResetTestsConfiguration();
+            //ResetTestsConfiguration();
             
             _code = @"
                 class C_NPC { var int data [200]; };
@@ -685,7 +599,7 @@ namespace DaedalusCompiler.Tests
                 ";
 
             AssertCompilationOutputMatch();
-            ResetTestsConfiguration();
+            //ResetTestsConfiguration();
             
             _code = @"
                 const int constIntArr[2] = {0, 1};
@@ -709,7 +623,7 @@ namespace DaedalusCompiler.Tests
                 ";
 
             AssertCompilationOutputMatch();
-            ResetTestsConfiguration();
+            //ResetTestsConfiguration();
             
             _code = @"
                 var float varFloat;
@@ -770,7 +684,7 @@ namespace DaedalusCompiler.Tests
             ";
 
             _expectedCompilationOutput = @"
-                test.d: In function ‘firstFunc’:
+                test.d: In function 'firstFunc':
                 test.d:15:12: error: redefinition of 'a'
                     var int a;
                             ^
@@ -827,14 +741,15 @@ namespace DaedalusCompiler.Tests
             ";
 
             _expectedCompilationOutput = @"
+                test.d: In instance 'WRONG1':
                 test.d:4:16: error: not a valid class or prototype
                 instance WRONG1(myFunc);
                                 ^
-                test.d: In instance ‘WRONG2’:
+                test.d: In instance 'WRONG2':
                 test.d:5:16: error: not a valid class or prototype
                 instance WRONG2(myFunc) {};
                                 ^
-                test.d: In prototype ‘WRONG3’:
+                test.d: In prototype 'WRONG3':
                 test.d:6:17: error: not a valid class or prototype
                 prototype WRONG3(myFunc) {};
                                  ^
@@ -859,7 +774,7 @@ namespace DaedalusCompiler.Tests
                 test.d:2:10: error: too big array size (max: 4095)
                 var int b[4096];
                           ^
-                test.d: In function ‘myFunc’:
+                test.d: In function 'myFunc':
                 test.d:4:44: error: too big array size (max: 4095)
                 func void myFunc(var int c[4095], var int d[4096]) {
                                                             ^
@@ -891,7 +806,7 @@ namespace DaedalusCompiler.Tests
                 test.d:5:10: error: too big array size (max: 4095)
                 var int b[WRONG_SIZE];
                           ^
-                test.d: In function ‘myFunc’:
+                test.d: In function 'myFunc':
                 test.d:7:47: error: too big array size (max: 4095)
                 func void myFunc(var int c[OK_SIZE], var int d[WRONG_SIZE]) {
                                                                ^
@@ -922,7 +837,7 @@ namespace DaedalusCompiler.Tests
             ";
 
             _expectedCompilationOutput = @"
-                test.d: In function ‘myFunc’:
+                test.d: In function 'myFunc':
                 test.d:7:10: error: array index out of range (max index for this array is 1)
                     x = a[2];
                           ^
@@ -959,7 +874,7 @@ namespace DaedalusCompiler.Tests
             ";
 
             _expectedCompilationOutput = @"
-                test.d: In function ‘myFunc’:
+                test.d: In function 'myFunc':
                 test.d:14:19: error: array index out of range (max index for this array is 7)
                     self.attribute[BAD_INDEX] = 200;
                                    ^
@@ -992,7 +907,7 @@ namespace DaedalusCompiler.Tests
             ";
 
             _expectedCompilationOutput = @"
-                test.d: In function ‘myFunc’:
+                test.d: In function 'myFunc':
                 test.d:12:10: error: array index out of range (max index for this array is 1)
                     x = a[TWO];
                           ^
@@ -1024,7 +939,7 @@ namespace DaedalusCompiler.Tests
             ";
 
             _expectedCompilationOutput = @"
-                test.d: In function ‘myFunc’:
+                test.d: In function 'myFunc':
                 test.d:6:10: error: array index out of range (max index for this array is 1)
                     x = a[255];
                           ^
@@ -1060,7 +975,7 @@ namespace DaedalusCompiler.Tests
             ";
 
             _expectedCompilationOutput = @"
-                test.d: In function ‘myFunc’:
+                test.d: In function 'myFunc':
                 test.d:9:10: error: array index out of range (max index for this array is 1)
                     x = a[INDEX1];
                           ^
@@ -1124,11 +1039,11 @@ namespace DaedalusCompiler.Tests
                 test.d:1:10: error: 'break' is keyword and shouldn't be used as an identifier
                 const int break = 1;
                           ^
-                test.d: In function ‘testFunc’:
-                test.d:4:4: error: 'break' statement not in loop statement
+                test.d: In function 'testFunc':
+                test.d:4:4: error: 'break' statement not allowed outside of loop statement
                     break;
                     ^
-                test.d:5:4: error: 'continue' statement not in loop statement
+                test.d:5:4: error: 'continue' statement not allowed outside of loop statement
                     continue;
                     ^
             ";

@@ -21,24 +21,24 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     }
 
     public class StringBufforErrorLogger : ErrorLogger
-    {
-        private string buffor;
+    {   
+        private string _buffor = "";
 
         public override void LogLine(string message)
         {
-            if (buffor == null)
+            if (_buffor == null)
             {
-                buffor = message;
+                _buffor = message;
             }
             else
             {
-                buffor = $"{buffor}{Environment.NewLine}{message}";
+                _buffor = $"{_buffor}{Environment.NewLine}{message}";
             }
         }
 
         public string GetBuffor()
         {
-            return buffor;
+            return _buffor;
         }
     }
 }
