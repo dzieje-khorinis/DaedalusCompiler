@@ -127,8 +127,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         private readonly SymbolType _expectedSymbolType;
         private readonly SymbolType _actualSymbolType;
 
-        public CannotInitializeArrayElementWithValueOfDifferentType(SymbolType expectedSymbolType, SymbolType actualSymbolType)
+        public CannotInitializeArrayElementWithValueOfDifferentType(NodeLocation pointerLocation, SymbolType expectedSymbolType, SymbolType actualSymbolType)
         {
+            PointerLocation = pointerLocation;
+            UnderlineLocations.Add(pointerLocation);
             _expectedSymbolType = expectedSymbolType;
             _actualSymbolType = actualSymbolType;
         }
@@ -184,9 +186,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         private readonly string _identifier;
 
-        public UnknownTypeNameError(string identifier)
+        public UnknownTypeNameError(string identifier, NodeLocation pointerLocation)
         {
             _identifier = identifier;
+            PointerLocation = pointerLocation;
         }
 
         public override string GetMessage()
@@ -194,7 +197,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             return $"unknown type name '{_identifier}'";
         }
     }
-    
     
 
     public class IndexOutOfRangeError : ErrorAnnotation
@@ -385,22 +387,38 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class UnsupportedArrayTypeError : ErrorAnnotation
     {
-        
+        public UnsupportedArrayTypeError(NodeLocation pointerLocation)
+        {
+            PointerLocation = pointerLocation;
+        }
+        public override string GetMessage()
+        {
+            return "unsupported array type";
+        }
     }
     
     public class UnsupportedFunctionTypeError : ErrorAnnotation
     {
-        
+        public UnsupportedFunctionTypeError(NodeLocation pointerLocation)
+        {
+            PointerLocation = pointerLocation;
+        }
+        public override string GetMessage()
+        {
+            return "unsupported function return type";
+        }
     }
 
     public class UnsupportedTypeError : ErrorAnnotation
     {
-        
-    }
-    
-    public class UndefinedTypeError : ErrorAnnotation
-    {
-        
+        public UnsupportedTypeError(NodeLocation pointerLocation)
+        {
+            PointerLocation = pointerLocation;
+        }
+        public override string GetMessage()
+        {
+            return "unsupported type";
+        }
     }
 
 

@@ -21,17 +21,16 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         public void Resolve(ITypedSymbol typedSymbol)
         {
-            SymbolType symbolBuiltinType = ((Symbol)typedSymbol).BuiltinType;
-            ASTNode typedSymbolNode = ((Symbol) typedSymbol).Node;
+            Symbol symbol = (Symbol) typedSymbol;
+            
+            SymbolType symbolBuiltinType = symbol.BuiltinType;
+            ASTNode typedSymbolNode = symbol.Node;
+            
+            CustomTypeDeclarationNode customTypeDeclarationNode = (CustomTypeDeclarationNode) typedSymbolNode;
             
             if (symbolBuiltinType == SymbolType.Uninitialized) // symbolType isn't one of the simple builtin types
             {
-                CustomTypeDeclarationNode customTypeDeclarationNode = (CustomTypeDeclarationNode) typedSymbolNode;
-
-
-                Symbol symbol = ReferenceResolvingVisitor.GetBaseReferenceSymbol(_symbolTable, customTypeDeclarationNode);
-                /*
-                // TODO use GetBaseReferenceSymbol if you want to differentiate between NotAClassError and UnknownTypeNameError
+                // TODO think of: differentiate NotAClassError and UnknownTypeNameError
                 if (_symbolTable.ContainsKey(typedSymbol.TypeName))
                 {
                     Symbol typeSymbol = _symbolTable[typedSymbol.TypeName];
@@ -43,28 +42,31 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     }
                     else
                     {
-                        customTypeDeclarationNode.TypeNameNode.Annotations.Add(new UnknownTypeNameError(customTypeDeclarationNode.TypeNameNode.Value));
+                        typedSymbolNode.Annotations.Add(new UnknownTypeNameError(customTypeDeclarationNode.TypeNameNode.Value, customTypeDeclarationNode.TypeNameNode.Location));
                         return;
                     }
                 }
                 else
                 {
-                    customTypeDeclarationNode.TypeNameNode.Annotations.Add(new UnknownTypeNameError(customTypeDeclarationNode.TypeNameNode.Value));
+                    typedSymbolNode.Annotations.Add(new UnknownTypeNameError(customTypeDeclarationNode.TypeNameNode.Value, customTypeDeclarationNode.TypeNameNode.Location));
                     return;
                 }
-                */
+
             }
-            
+
             
             switch (typedSymbol)
             {
                 case FunctionSymbol _:
+                    //FunctionDefinitionNode functionDefinitionNode = (FunctionDefinitionNode) typedSymbolNode;
+                    
                     switch (symbolBuiltinType)
                     {
                         case SymbolType.Class:
                         case SymbolType.Prototype:
                         case SymbolType.Func:
-                            typedSymbolNode.Annotations.Add(new UnsupportedFunctionTypeError());
+                            symbol.BuiltinType = SymbolType.Uninitialized;
+                            typedSymbolNode.Annotations.Add(new UnsupportedFunctionTypeError(customTypeDeclarationNode.TypeNameNode.Location));
                             return;
                     }
 
@@ -77,7 +79,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         case SymbolType.Func:
                             break;
                         default:
-                            typedSymbolNode.Annotations.Add(new UnsupportedArrayTypeError());
+                            symbol.BuiltinType = SymbolType.Uninitialized;
+                            typedSymbolNode.Annotations.Add(new UnsupportedArrayTypeError(customTypeDeclarationNode.TypeNameNode.Location));
                             return;
                     }
                     break;
@@ -87,7 +90,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         case SymbolType.Class:
                         case SymbolType.Prototype:
                         case SymbolType.Void:
-                            typedSymbolNode.Annotations.Add(new UnsupportedTypeError());
+                            symbol.BuiltinType = SymbolType.Uninitialized;
+                            typedSymbolNode.Annotations.Add(new UnsupportedTypeError(customTypeDeclarationNode.TypeNameNode.Location));
                             return;
                     }
                     break;

@@ -53,7 +53,6 @@ namespace DaedalusCompiler.Compilation
             
             // annotates:
             // UnknownTypeNameError
-            // UndefinedTypeError
             // UnsupportedTypeError
             // UnsupportedArrayTypeError
             // UnsupportedFunctionTypeError

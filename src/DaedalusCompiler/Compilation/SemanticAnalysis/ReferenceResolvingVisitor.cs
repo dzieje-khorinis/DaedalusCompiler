@@ -21,7 +21,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         protected override void VisitReference(ReferenceNode referenceNode)
         {
 
-            Symbol symbol = GetBaseReferenceSymbol(_symbolTable, referenceNode);
+            Symbol symbol = GetBaseReferenceSymbol(referenceNode);
             if (symbol == null)
             {
                 referenceNode.Annotations.Add(new UndeclaredIdentifierError(referenceNode.Name));
@@ -92,7 +92,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             referenceNode.Symbol = symbol;
         }
         
-        public static Symbol GetBaseReferenceSymbol(Dictionary <string, Symbol> symbolTable, ReferenceNode referenceNode)
+        private Symbol GetBaseReferenceSymbol(ReferenceNode referenceNode)
         {
             ASTNode ancestor = referenceNode.GetFirstSignificantAncestor();
             string referenceNameUpper = referenceNode.Name.ToUpper();
@@ -136,9 +136,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     throw new Exception();
             }
             
-            if (symbolTable.ContainsKey(referenceNameUpper))
+            if (_symbolTable.ContainsKey(referenceNameUpper))
             {
-                return symbolTable[referenceNameUpper];
+                return _symbolTable[referenceNameUpper];
             }
 
             return null;

@@ -108,7 +108,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     }
                     break;
                 default:
-                    node.ArraySizeNode.Annotations.Add(new UnsupportedTypeError());
+                    node.ArraySizeNode.Annotations.Add(new UnsupportedTypeError(null));
                     break;
             }
             return null;
@@ -157,7 +157,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     }
                     break;
                 default:
-                    node.ArraySizeNode.Annotations.Add(new UnsupportedTypeError());
+                    node.ArraySizeNode.Annotations.Add(new UnsupportedTypeError(null));
                     break;
             }
             
@@ -187,7 +187,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     }
                     break;
                 default:
-                    node.ArraySizeNode.Annotations.Add(new UnsupportedTypeError());
+                    node.ArraySizeNode.Annotations.Add(new UnsupportedTypeError(null));
                     break;
             }
             return null;
@@ -432,7 +432,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
             catch (IncompatibleTypesException)
             {
-                node.Annotations.Add(new CannotInitializeArrayElementWithValueOfDifferentType(expectedType, actualType));
+                node.Annotations.Add(new CannotInitializeArrayElementWithValueOfDifferentType(node.Location, expectedType, actualType));
             }
         }
         
@@ -481,6 +481,18 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     switch (actualType)
                     {
                         case SymbolType.Func:
+                            break;
+                        
+                        default:
+                            throw new IncompatibleTypesException();
+                    }
+                    break;
+                
+                case SymbolType.Instance:
+
+                    switch (actualType)
+                    {
+                        case SymbolType.Instance:
                             break;
                         
                         default:
