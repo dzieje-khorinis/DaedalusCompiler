@@ -79,7 +79,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         
                         if (!(symbol.Node is IArrayDeclarationNode))
                         {
-                            referenceNode.Annotations.Add(new ReferencedSymbolIsNotArrayError());
+                            referenceNode.Annotations.Add(new ReferencedSymbolIsNotArrayError(referenceNode.Name));
                             return;
                         }
                         

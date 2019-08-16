@@ -264,6 +264,17 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     
     public class ReferencedSymbolIsNotArrayError : ErrorAnnotation
     {
+        private readonly string _identifier;
+
+        public ReferencedSymbolIsNotArrayError(string identifier)
+        {
+            _identifier = identifier;
+        }
+
+        public override string GetMessage()
+        {
+            return $"cannot access array element because '{_identifier}' is not an array";
+        }
     }
 
     public class NotClassOrPrototypeReferenceError : ErrorAnnotation
@@ -311,6 +322,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class InfiniteReferenceLoopError : ErrorAnnotation
     {
+        public override string GetMessage()
+        {
+            return "circular inheritance dependency detected";
+        }
     }
 
     public class InvalidBinaryOperationError : ErrorAnnotation
@@ -340,6 +355,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class AccessToAttributeOfArrayElementNotSupportedError : ErrorAnnotation
     {
+        public override string GetMessage()
+        {
+            return "access to attribute of array element not supported";
+        }
     }
 
 

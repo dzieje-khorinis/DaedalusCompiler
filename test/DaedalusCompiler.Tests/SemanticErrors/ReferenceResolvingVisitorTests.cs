@@ -5,6 +5,49 @@ namespace DaedalusCompiler.Tests.SemanticErrors
     public class ReferenceResolvingVisitorTests : BaseSemanticErrorsTests
     {
         [Fact]
+        public void TestAccessToAttributeOfArrayElement()
+        {
+            Code = @"
+                func void myFunc() {
+                    const int x[2] = {1, 2};
+                    const int y = x[0].attr;
+                    const int z = y[1].attr;
+                    const int q = xxx[2].attr;
+                    
+                    var int a[2];
+                    var int b;
+                    b = a[0].attr;
+                    b = b[1].attr;
+                    b = xxx[2].attr;
+                }
+            ";
+
+            ExpectedCompilationOutput = @"
+                test.d: In function 'myFunc':
+                test.d:3:23: error: access to attribute of array element not supported
+                    const int y = x[0].attr;
+                                       ^
+                test.d:4:18: error: cannot access array element because 'y' is not an array
+                    const int z = y[1].attr;
+                                  ^
+                test.d:5:18: error: 'xxx' undeclared
+                    const int q = xxx[2].attr;
+                                  ^
+                test.d:9:13: error: access to attribute of array element not supported
+                    b = a[0].attr;
+                             ^
+                test.d:10:8: error: cannot access array element because 'b' is not an array
+                    b = b[1].attr;
+                        ^
+                test.d:11:8: error: 'xxx' undeclared
+                    b = xxx[2].attr;
+                        ^
+                ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
         public void TestUndeclaredIdentifierInsideFunctionDef()
         {
             Code = @"

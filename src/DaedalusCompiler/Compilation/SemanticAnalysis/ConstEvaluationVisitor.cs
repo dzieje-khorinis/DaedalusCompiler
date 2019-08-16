@@ -215,6 +215,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             {
                 case IntValue arrayIndexValue:
                     ReferenceNode referenceNode = (ReferenceNode) arrayIndexNode.ParentNode;
+                    if (referenceNode.Symbol == null)
+                    {
+                        break;
+                    }
+                    
                     if (referenceNode.Symbol.Node is IArrayDeclarationNode arrayDeclarationNode)
                     {
                         Visit(referenceNode.Symbol.Node);

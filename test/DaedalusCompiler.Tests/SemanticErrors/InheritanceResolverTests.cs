@@ -5,6 +5,25 @@ namespace DaedalusCompiler.Tests.SemanticErrors
     public class InheritanceResolverTests : BaseSemanticErrorsTests
     {
         [Fact]
+        public void TestInfiniteReferenceLoop()
+        {
+            Code = @"
+                instance a(b) {};
+                instance b(a) {};
+            ";
+
+            ExpectedCompilationOutput = @"
+                test.d: In instance 'a':
+                test.d:1:11: error: circular inheritance dependency detected
+                instance a(b) {};
+                           ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        
+        [Fact]
         public void TestUndeclaredIdentifierInheritance()
         {
             Code = @"

@@ -6,7 +6,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
     public class InheritanceResolver
     {
-        private HashSet<Symbol> _resolvedSymbols;
+        private readonly HashSet<Symbol> _resolvedSymbols;
         private HashSet<Symbol> _resolvedSymbolsCurrentIteration;
 
         private readonly Dictionary <string, Symbol> _symbolTable;
@@ -37,8 +37,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
             return _symbolTable[symbolName];
         }
-        
-        public Symbol Resolve(SubclassSymbol subclassSymbol)
+
+        private Symbol Resolve(SubclassSymbol subclassSymbol)
         {
             SubclassNode symbolNode = (SubclassNode) subclassSymbol.Node;
             InheritanceParentReferenceNode parentReferenceNode = symbolNode.InheritanceParentReferenceNode;
@@ -57,10 +57,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             _resolvedSymbolsCurrentIteration.Add(subclassSymbol);
             _resolvedSymbols.Add(subclassSymbol);
             
-            
-            
             if (parentReferenceNode.PartNodes.Count > 0)
             {
+                // TODO it's impossible scenario for current grammar
                 parentReferenceNode.Annotations.Add(new NotClassOrPrototypeReferenceError());
                 return null;
             }

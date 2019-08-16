@@ -306,32 +306,5 @@ namespace DaedalusCompiler.Tests.SemanticErrors
             AssertCompilationOutputMatch();
         }
 
-        [Fact]
-        public void TestIterationStatementNotInLoop()
-        {
-            Code = @"
-                const int break = 1;
-                
-                func void testFunc() {
-                    break;
-                    continue;
-                };
-            ";
-
-            ExpectedCompilationOutput = @"
-                test.d:1:10: error: 'break' is keyword and shouldn't be used as an identifier
-                const int break = 1;
-                          ^
-                test.d: In function 'testFunc':
-                test.d:4:4: error: 'break' statement not allowed outside of loop statement
-                    break;
-                    ^
-                test.d:5:4: error: 'continue' statement not allowed outside of loop statement
-                    continue;
-                    ^
-            ";
-
-            AssertCompilationOutputMatch();
-        }
     }
 }
