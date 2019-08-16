@@ -21,11 +21,17 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         public void Resolve(ITypedSymbol typedSymbol)
         {
-            SymbolType symbolType = ((Symbol)typedSymbol).BuiltinType;
+            SymbolType symbolBuiltinType = ((Symbol)typedSymbol).BuiltinType;
             ASTNode typedSymbolNode = ((Symbol) typedSymbol).Node;
             
-            if (symbolType == SymbolType.Uninitialized)
+            if (symbolBuiltinType == SymbolType.Uninitialized) // symbolType isn't one of the simple builtin types
             {
+                CustomTypeDeclarationNode customTypeDeclarationNode = (CustomTypeDeclarationNode) typedSymbolNode;
+
+
+                Symbol symbol = ReferenceResolvingVisitor.GetBaseReferenceSymbol(_symbolTable, customTypeDeclarationNode);
+                /*
+                // TODO use GetBaseReferenceSymbol if you want to differentiate between NotAClassError and UnknownTypeNameError
                 if (_symbolTable.ContainsKey(typedSymbol.TypeName))
                 {
                     Symbol typeSymbol = _symbolTable[typedSymbol.TypeName];
@@ -33,26 +39,27 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     if (typeSymbol is ClassSymbol)
                     {
                         typedSymbol.ComplexType = typeSymbol;
-                        symbolType = SymbolType.Instance;    
+                        symbolBuiltinType = SymbolType.Instance;    
                     }
                     else
                     {
-                        typedSymbolNode.Annotations.Add(new UnsupportedTypeError());
+                        customTypeDeclarationNode.TypeNameNode.Annotations.Add(new UnknownTypeNameError(customTypeDeclarationNode.TypeNameNode.Value));
                         return;
                     }
                 }
                 else
                 {
-                    typedSymbolNode.Annotations.Add(new UndeclaredIdentifierError());
+                    customTypeDeclarationNode.TypeNameNode.Annotations.Add(new UnknownTypeNameError(customTypeDeclarationNode.TypeNameNode.Value));
                     return;
                 }
+                */
             }
             
             
             switch (typedSymbol)
             {
                 case FunctionSymbol _:
-                    switch (symbolType)
+                    switch (symbolBuiltinType)
                     {
                         case SymbolType.Class:
                         case SymbolType.Prototype:
@@ -63,7 +70,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
                     break;
                 case IArraySymbol _:
-                    switch (symbolType)
+                    switch (symbolBuiltinType)
                     {
                         case SymbolType.Int:
                         case SymbolType.String:
@@ -75,7 +82,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     }
                     break;
                 case NestableSymbol _:
-                    switch (symbolType)
+                    switch (symbolBuiltinType)
                     {
                         case SymbolType.Class:
                         case SymbolType.Prototype:

@@ -24,6 +24,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected virtual void VisitFunctionDefinition(FunctionDefinitionNode node)
         {
+            Visit(node.TypeNameNode);
             Visit(node.NameNode);
             Visit(node.ParameterNodes);
             Visit(node.BodyNodes);
@@ -73,12 +74,14 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected virtual void VisitConstDefinition(ConstDefinitionNode node)
         {
+            Visit(node.TypeNameNode);
             Visit(node.NameNode);
             Visit(node.RightSideNode);
         }
 
         protected virtual void VisitConstArrayDefinition(ConstArrayDefinitionNode node)
         {
+            Visit(node.TypeNameNode);
             Visit(node.NameNode);
             Visit(node.ArraySizeNode);
             Visit(node.ElementNodes);
@@ -86,22 +89,26 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected virtual void VisitVarDeclaration(VarDeclarationNode node)
         {
+            Visit(node.TypeNameNode);
             Visit(node.NameNode);
         }
 
         protected virtual void VisitVarArrayDeclaration(VarArrayDeclarationNode node)
         {
+            Visit(node.TypeNameNode);
             Visit(node.NameNode);
             Visit(node.ArraySizeNode);
         }
         
         protected virtual void VisitParameterDeclaration(ParameterDeclarationNode node)
         {
+            Visit(node.TypeNameNode);
             Visit(node.NameNode);
         }
 
         protected virtual void VisitParameterArrayDeclaration(ParameterArrayDeclarationNode node)
         {
+            Visit(node.TypeNameNode);
             Visit(node.NameNode);
             Visit(node.ArraySizeNode);
         }

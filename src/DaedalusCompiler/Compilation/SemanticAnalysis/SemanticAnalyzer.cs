@@ -52,6 +52,7 @@ namespace DaedalusCompiler.Compilation
             _symbolTable = symbolTableCreationVisitor.SymbolTable;
             
             // annotates:
+            // UnknownTypeNameError
             // UndefinedTypeError
             // UnsupportedTypeError
             // UnsupportedArrayTypeError

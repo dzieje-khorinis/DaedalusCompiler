@@ -487,7 +487,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                             throw new IncompatibleTypesException();
                     }
                     break;
-
+                
+                case SymbolType.Uninitialized:
+                    break;
+                
                 default:
                     throw new Exception();
             }

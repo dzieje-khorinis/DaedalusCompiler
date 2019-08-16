@@ -49,7 +49,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         protected override void VisitFunctionDefinition(FunctionDefinitionNode functionDefinitionNode)
         {
             string functionName = functionDefinitionNode.NameNode.Value;
-            string returnTypeName = functionDefinitionNode.TypeName;
+            string returnTypeName = functionDefinitionNode.TypeNameCapitalized;
             
             FunctionSymbol functionSymbol = new FunctionSymbol(returnTypeName, functionName, functionDefinitionNode);
             AddSymbol(functionSymbol);
@@ -117,7 +117,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             {
                 FunctionSymbol functionSymbol = (FunctionSymbol) functionDefinitionNode.Symbol;
                 string parameterName = parameterDeclarationNode.NameNode.Value;
-                string parameterTypeName = parameterDeclarationNode.TypeName;
+                string parameterTypeName = parameterDeclarationNode.TypeNameCapitalized;
 
                 ParameterSymbol parameterSymbol;
                 if (_isInExternal)
@@ -145,7 +145,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         private void BuildConst(ConstDefinitionNode constDefinitionNode, bool buildArray=false)
         {
             string constName = constDefinitionNode.NameNode.Value;
-            string constTypeName = constDefinitionNode.TypeName;
+            string constTypeName = constDefinitionNode.TypeNameCapitalized;
 
             BlockSymbol parentBlockSymbol = GetParentBlockSymbol(constDefinitionNode);
             ConstSymbol constSymbol = buildArray ? new ConstArraySymbol(parentBlockSymbol, constTypeName, constName, constDefinitionNode) : new ConstSymbol(parentBlockSymbol, constTypeName, constName, constDefinitionNode);
@@ -156,7 +156,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         private void BuildVar(VarDeclarationNode varDeclarationNode, bool buildArray=false)
         {
             string varName = varDeclarationNode.NameNode.Value;
-            string varTypeName = varDeclarationNode.TypeName;
+            string varTypeName = varDeclarationNode.TypeNameCapitalized;
 
             BlockSymbol parentBlockSymbol = GetParentBlockSymbol(varDeclarationNode);
             VarSymbol varSymbol = buildArray ? new VarArraySymbol(parentBlockSymbol, varTypeName, varName, varDeclarationNode) : new VarSymbol(parentBlockSymbol, varTypeName, varName, varDeclarationNode);

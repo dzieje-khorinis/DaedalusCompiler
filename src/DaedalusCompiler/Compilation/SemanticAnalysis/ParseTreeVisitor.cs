@@ -53,7 +53,7 @@ namespace DaedalusCompiler.Compilation
 
 	    public override ASTNode VisitFunctionDef([NotNull] DaedalusParser.FunctionDefContext context)
 	    {
-		    string type = context.dataType().GetText();
+		    NameNode typeNameNode = new NameNode(GetLocation(context.dataType()),context.dataType().GetText());
 		    NameNode nameNode = new NameNode(GetLocation(context.nameNode()),context.nameNode().GetText());
 
 		    List<ParameterDeclarationNode> varDeclarationNodes = new List<ParameterDeclarationNode>();
@@ -64,7 +64,7 @@ namespace DaedalusCompiler.Compilation
 
 			List<StatementNode> statementNodes = GetStatementNodes(context.statementBlock());
 			
-			return new FunctionDefinitionNode(GetLocation(context), type, nameNode, varDeclarationNodes, statementNodes);
+			return new FunctionDefinitionNode(GetLocation(context), typeNameNode, nameNode, varDeclarationNodes, statementNodes);
 	    }
 
 		public override ASTNode VisitConstDef([NotNull] DaedalusParser.ConstDefContext context)
@@ -126,16 +126,16 @@ namespace DaedalusCompiler.Compilation
 		public override ASTNode VisitParameterDecl([NotNull] DaedalusParser.ParameterDeclContext context)
 		{
 			NodeLocation location = GetLocation(context);
-			string type = context.dataType().GetText();
-			NameNode name = new NameNode(GetLocation(context.nameNode()),context.nameNode().GetText());
+			NameNode typeNameNode = new NameNode(GetLocation(context.dataType()),context.dataType().GetText());
+			NameNode nameNode = new NameNode(GetLocation(context.nameNode()),context.nameNode().GetText());
 			if (context.arraySize() != null)
 			{
 				var arraySize = (ExpressionNode) VisitArraySize(context.arraySize());
-				ParameterArrayDeclarationNode parameterArrayDeclarationNode = new ParameterArrayDeclarationNode(location, type, name, arraySize);
+				ParameterArrayDeclarationNode parameterArrayDeclarationNode = new ParameterArrayDeclarationNode(location, typeNameNode, nameNode, arraySize);
 				ArrayDeclarationNodes.Add(parameterArrayDeclarationNode);
 				return parameterArrayDeclarationNode;
 			}
-			return new ParameterDeclarationNode(location, type, name);
+			return new ParameterDeclarationNode(location, typeNameNode, nameNode);
 		}
 
 		public override ASTNode VisitStatement([NotNull] DaedalusParser.StatementContext context)
@@ -393,7 +393,7 @@ namespace DaedalusCompiler.Compilation
 		
 		private ConstDefinitionsTemporaryNode GetConstDefinitionsTemporaryNode(DaedalusParser.ConstDefContext constDefContext)
 		{
-			string type = constDefContext.dataType().GetText();
+			NameNode typeNameNode = new NameNode(GetLocation(constDefContext.dataType()),constDefContext.dataType().GetText());
 			
 			List<DeclarationNode> constDefinitionNodes = new List<DeclarationNode>();
 
@@ -405,7 +405,7 @@ namespace DaedalusCompiler.Compilation
 					NameNode nameNode = new NameNode(GetLocation(nameNodeContext), nameNodeContext.GetText());
 					ExpressionNode rightSideNode = (ExpressionNode) Visit(constValueDefContext.constValueAssignment().expression());
 					ConstDefinitionNode constDefinitionNode = new ConstDefinitionNode(GetLocation(constValueDefContext),
-						type, nameNode, rightSideNode);
+						typeNameNode, nameNode, rightSideNode);
 					ConstDefinitionNodes.Add(constDefinitionNode);
 					constDefinitionNodes.Add(constDefinitionNode);
 				}
@@ -422,7 +422,7 @@ namespace DaedalusCompiler.Compilation
 					}
 
 					ConstArrayDefinitionNode constArrayDefinitionNode =
-						new ConstArrayDefinitionNode(GetLocation(nameNodeContext), type, nameNode, arraySizeNode,
+						new ConstArrayDefinitionNode(GetLocation(nameNodeContext), typeNameNode, nameNode, arraySizeNode,
 							elementNodes);
 					ArrayDeclarationNodes.Add(constArrayDefinitionNode);
 					constDefinitionNodes.Add(constArrayDefinitionNode);
@@ -434,7 +434,7 @@ namespace DaedalusCompiler.Compilation
 		
 		private VarDeclarationsTemporaryNode GetVarDeclarationsTemporaryNode(DaedalusParser.VarDeclContext varDeclContext)
 		{
-			string type = varDeclContext.dataType().GetText();
+			NameNode typeNameNode = new NameNode(GetLocation(varDeclContext.dataType()),varDeclContext.dataType().GetText());
 			
 			List<DeclarationNode> varDeclarationNodes = new List<DeclarationNode>();
 			foreach (IParseTree childContext in varDeclContext.children)
@@ -443,7 +443,7 @@ namespace DaedalusCompiler.Compilation
 				{
 					DaedalusParser.NameNodeContext nameNodeContext = varValueDeclContext.nameNode();
 					NameNode nameNode = new NameNode(GetLocation(nameNodeContext), nameNodeContext.GetText());
-					varDeclarationNodes.Add(new VarDeclarationNode(GetLocation(varValueDeclContext), type, nameNode));
+					varDeclarationNodes.Add(new VarDeclarationNode(GetLocation(varValueDeclContext), typeNameNode, nameNode));
 				}
 				else if (childContext is DaedalusParser.VarArrayDeclContext varArrayDeclContext)
 				{	
@@ -451,7 +451,7 @@ namespace DaedalusCompiler.Compilation
 					NameNode nameNode = new NameNode(GetLocation(nameNodeContext), nameNodeContext.GetText());
 					ExpressionNode arraySizeNode = (ExpressionNode) VisitArraySize(varArrayDeclContext.arraySize());
 					VarArrayDeclarationNode varArrayDeclarationNode =
-						new VarArrayDeclarationNode(GetLocation(nameNodeContext), type, nameNode, arraySizeNode);
+						new VarArrayDeclarationNode(GetLocation(nameNodeContext), typeNameNode, nameNode, arraySizeNode);
 					ArrayDeclarationNodes.Add(varArrayDeclarationNode);
 					varDeclarationNodes.Add(varArrayDeclarationNode);
 				}

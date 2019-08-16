@@ -172,17 +172,27 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public abstract class DeclarationNode : StatementNode
     {
-        public string TypeName;
-        public NameNode NameNode;
+        public readonly string TypeNameCapitalized;
+        public readonly NameNode NameNode;
 
         public Symbol Symbol;
 
-        protected DeclarationNode(NodeLocation location, string type, NameNode nameNode) : base(location)
+        protected DeclarationNode(NodeLocation location, string typeName, NameNode nameNode) : base(location)
         {
-            TypeName = type.First().ToString().ToUpper() + type.Substring(1).ToLower(); //capitalized
+            TypeNameCapitalized = typeName.First().ToString().ToUpper() + typeName.Substring(1).ToLower(); //capitalized
             NameNode = nameNode;
             NameNode.ParentNode = this;
             Symbol = null;
+        }
+    }
+
+    public abstract class CustomTypeDeclarationNode : DeclarationNode
+    {
+        public readonly NameNode TypeNameNode;
+        protected CustomTypeDeclarationNode(NodeLocation location, NameNode typeNameNode, NameNode nameNode) : base(location, typeNameNode.Value, nameNode)
+        {
+            TypeNameNode = typeNameNode;
+            TypeNameNode.ParentNode = this;
         }
     }
 
@@ -260,13 +270,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
 
-    public class FunctionDefinitionNode : DeclarationNode
+    public class FunctionDefinitionNode : CustomTypeDeclarationNode
     {
         public readonly List<ParameterDeclarationNode> ParameterNodes;
         public readonly List<StatementNode> BodyNodes;
 
-        public FunctionDefinitionNode(NodeLocation location, string type, NameNode nameNode,
-            List<ParameterDeclarationNode> parameterNodes, List<StatementNode> bodyNodes) : base(location, type, nameNode)
+        public FunctionDefinitionNode(NodeLocation location, NameNode typeNameNode, NameNode nameNode,
+            List<ParameterDeclarationNode> parameterNodes, List<StatementNode> bodyNodes) : base(location, typeNameNode, nameNode)
         {
             foreach (var node in parameterNodes)
             {
@@ -405,15 +415,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public ExpressionNode RightSideNode;
         public NodeValue RightSideValue;
 
-        public ConstDefinitionNode(NodeLocation location, string type, NameNode nameNode,
-            ExpressionNode rightSideNode) : base(location, type, nameNode)
+        public ConstDefinitionNode(NodeLocation location, NameNode typeNameNode, NameNode nameNode,
+            ExpressionNode rightSideNode) : base(location, typeNameNode, nameNode)
         {
             rightSideNode.ParentNode = this;
             
             RightSideNode = rightSideNode;
         }
 
-        protected ConstDefinitionNode(NodeLocation location, string type, NameNode nameNode) : base(location, type, nameNode)
+        protected ConstDefinitionNode(NodeLocation location, NameNode typeNameNode, NameNode nameNode) : base(location, typeNameNode, nameNode)
         {
         }
     }
@@ -425,8 +435,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public ExpressionNode ArraySizeNode { get; set; }
         public NodeValue ArraySizeValue { get; set; }
         
-        public ConstArrayDefinitionNode(NodeLocation location, string type, NameNode nameNode,
-            ExpressionNode arraySizeNode, List<ExpressionNode> elementNodes) : base(location, type, nameNode)
+        public ConstArrayDefinitionNode(NodeLocation location, NameNode typeNameNode, NameNode nameNode,
+            ExpressionNode arraySizeNode, List<ExpressionNode> elementNodes) : base(location, typeNameNode, nameNode)
         {
             ArraySizeNode = arraySizeNode;
             ArraySizeNode.ParentNode = this;
@@ -441,9 +451,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
 
-    public class VarDeclarationNode : DeclarationNode
+    public class VarDeclarationNode : CustomTypeDeclarationNode
     {
-        public VarDeclarationNode(NodeLocation location, string type, NameNode nameNode) : base(location, type,
+        public VarDeclarationNode(NodeLocation location, NameNode typeNameNode, NameNode nameNode) : base(location, typeNameNode,
             nameNode)
         {
         }
@@ -454,8 +464,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public ExpressionNode ArraySizeNode { get; set; }
         public NodeValue ArraySizeValue { get; set; }
         
-        public VarArrayDeclarationNode(NodeLocation location, string type, NameNode nameNode,
-            ExpressionNode arraySizeNode) : base(location, type, nameNode)
+        public VarArrayDeclarationNode(NodeLocation location, NameNode typeNameNode, NameNode nameNode,
+            ExpressionNode arraySizeNode) : base(location, typeNameNode, nameNode)
         {
             ArraySizeNode = arraySizeNode;
             ArraySizeNode.ParentNode = this;
@@ -466,7 +476,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         //public new FunctionDefinitionNode Parent { get; set; }
         
-        public ParameterDeclarationNode(NodeLocation location, string type, NameNode nameNode) : base(location, type,
+        public ParameterDeclarationNode(NodeLocation location, NameNode typeNameNode, NameNode nameNode) : base(location, typeNameNode,
             nameNode)
         {
         }
@@ -476,8 +486,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public ExpressionNode ArraySizeNode { get; set; }
         public NodeValue ArraySizeValue { get; set; }
-        public ParameterArrayDeclarationNode(NodeLocation location, string type, NameNode nameNode,
-            ExpressionNode arraySizeNode) : base(location, type, nameNode)
+        public ParameterArrayDeclarationNode(NodeLocation location, NameNode typeNameNode, NameNode nameNode,
+            ExpressionNode arraySizeNode) : base(location, typeNameNode, nameNode)
         {
             ArraySizeNode = arraySizeNode;
             ArraySizeNode.ParentNode = this;

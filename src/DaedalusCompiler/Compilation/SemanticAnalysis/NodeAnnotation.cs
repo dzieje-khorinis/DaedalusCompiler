@@ -179,6 +179,23 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             return $"'{_identifier}' undeclared";
         }
     }
+    
+    public class UnknownTypeNameError : ErrorAnnotation
+    {
+        private readonly string _identifier;
+
+        public UnknownTypeNameError(string identifier)
+        {
+            _identifier = identifier;
+        }
+
+        public override string GetMessage()
+        {
+            return $"unknown type name '{_identifier}'";
+        }
+    }
+    
+    
 
     public class IndexOutOfRangeError : ErrorAnnotation
     {
