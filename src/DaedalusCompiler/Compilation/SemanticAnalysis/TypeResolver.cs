@@ -43,7 +43,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 }
                 else
                 {
-                    typedSymbolNode.Annotations.Add(new UndefinedTypeError());
+                    typedSymbolNode.Annotations.Add(new UndeclaredIdentifierError());
                     return;
                 }
             }
@@ -57,7 +57,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         case SymbolType.Class:
                         case SymbolType.Prototype:
                         case SymbolType.Func:
-                            typedSymbolNode.Annotations.Add(new UnsupportedTypeError());
+                            typedSymbolNode.Annotations.Add(new UnsupportedFunctionTypeError());
                             return;
                     }
 
@@ -70,7 +70,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         case SymbolType.Func:
                             break;
                         default:
-                            typedSymbolNode.Annotations.Add(new UnsupportedTypeError());
+                            typedSymbolNode.Annotations.Add(new UnsupportedArrayTypeError());
                             return;
                     }
                     break;

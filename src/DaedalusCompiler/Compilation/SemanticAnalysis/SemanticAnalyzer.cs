@@ -45,58 +45,68 @@ namespace DaedalusCompiler.Compilation
             
             
             // annotates:
-            // RedefinedIdentifierAnnotation
+            // RedefinedIdentifierError
+            // KeywordUsedAsNameError
             SymbolTableCreationVisitor symbolTableCreationVisitor = new SymbolTableCreationVisitor();
             symbolTableCreationVisitor.VisitTree(AbstractSyntaxTree);
             _symbolTable = symbolTableCreationVisitor.SymbolTable;
             
             // annotates:
-            // UnsupportedTypeAnnotation
-            // UndefinedTypeAnnotation
-            // UnsupportedArrayTypeAnnotation
+            // UndefinedTypeError
+            // UnsupportedTypeError
+            // UnsupportedArrayTypeError
+            // UnsupportedFunctionTypeError
             TypeResolver typeResolver = new TypeResolver(_symbolTable);
             typeResolver.Resolve(symbolTableCreationVisitor.TypedSymbols);
             
-            // NotClassOrPrototypeReferenceAnnotation
-            // UndeclaredIdentifierAnnotation
-            // InfiniteReferenceLoopAnnotation
+            // NotClassOrPrototypeReferenceError
+            // UndeclaredIdentifierError
+            // InfiniteReferenceLoopError
             InheritanceResolver inheritanceResolver = new InheritanceResolver(_symbolTable);
             inheritanceResolver.Resolve(symbolTableCreationVisitor.SubclassSymbols);
             
             // annotates:
-            // UndeclaredIdentifierAnnotation
-            // AccessToAttributeOfArrayElementNotSupportedAnnotation
-            // AttributeOfNonInstanceAnnotation
-            // ClassDoesNotHaveAttributeAnnotation
-            // ReferencedSymbolIsNotArrayAnnotation
+            // UndeclaredIdentifierError
+            // AccessToAttributeOfArrayElementNotSupportedError
+            // AttributeOfNonInstanceError
+            // ClassDoesNotHaveAttributeError
+            // ReferencedSymbolIsNotArrayError
             ReferenceResolvingVisitor referenceResolvingVisitor = new ReferenceResolvingVisitor(_symbolTable);
             referenceResolvingVisitor.Visit(AbstractSyntaxTree.ReferenceNodes);
             
             // annotates:
-            // InfiniteReferenceLoopAnnotation
-            // InconsistentSizeAnnotation
-            // UnsupportedTypeAnnotation
-            // ConstIntegerExpectedAnnotation
-            // IndexOutOfRangeAnnotation
-            // NotConstReferenceAnnotation
-            // InvalidUnaryOperationAnnotation
-            // InvalidBinaryOperationAnnotation
-            // IncompatibleTypesAnnotation
+            // InfiniteReferenceLoopError
+            // ArraySizeEqualsZeroError
+            // TooBigArraySizeError
+            // UnsupportedTypeError
+            // InconsistentSizeError
+            // IndexOutOfRangeError
+            // TooBigArrayIndex
+            // ConstIntegerExpectedError
+            // NotConstReferenceError
+            // ArithmeticOperationOverflowError
+            // InvalidUnaryOperationError
+            // InvalidBinaryOperationError
             // IntegerLiteralTooLargeError
-            // ArithmeticOperationOverflowAnnotation
+            // CannotInitializeConstWithValueOfDifferentType
+            // CannotInitializeArrayElementWithValueOfDifferentType
             ConstEvaluationVisitor constEvaluationVisitor = new ConstEvaluationVisitor(_symbolTable);
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ConstDefinitionNodes);
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ArrayDeclarationNodes);
             constEvaluationVisitor.Visit(referenceResolvingVisitor.ArrayIndexNodes);
             
-            
+            // annotates:
+            // ArgumentsCountDoesNotMatchError
             TypeCheckingVisitor typeCheckingVisitor = new TypeCheckingVisitor();
             typeCheckingVisitor.VisitTree(AbstractSyntaxTree);
             
             
             
             // Error o rozmiarze C_NPC (800), warningi o tym, ze nazwy uzywamy np. małymi, a zadeklaorwaliśy duzymi, albo, ze sa nieuzywane funkcje
-            Console.WriteLine("---------");
+            // annotates:
+            // IterationStatementNotInLoopError
+            // IntegerLiteralTooLargeError
+            // SingleExpressionWarning
             RemainingAnnotationsAdditionVisitor remainingAnnotationsAdditionVisitor = new RemainingAnnotationsAdditionVisitor();
             remainingAnnotationsAdditionVisitor.VisitTree(AbstractSyntaxTree);
             

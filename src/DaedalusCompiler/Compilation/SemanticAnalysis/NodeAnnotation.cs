@@ -370,6 +370,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         
     }
+    
+    public class UnsupportedFunctionTypeError : ErrorAnnotation
+    {
+        
+    }
 
     public class UnsupportedTypeError : ErrorAnnotation
     {

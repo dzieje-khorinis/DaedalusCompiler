@@ -16,8 +16,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     node.Annotations.Add(new ArgumentsCountDoesNotMatchError(identifier, parametersCount, argumentsCount, functionDefinitionNode.NameNode.Location));
                 }
             }
-            
-            
 
             base.VisitFunctionCall(node);
         }

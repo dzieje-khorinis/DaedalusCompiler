@@ -234,7 +234,7 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
                     }
                     else
                     {
-                        buffer[i] = "\t";
+                        buffer[i] = "    ";
                     }
                 }
                 else
