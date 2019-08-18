@@ -34,6 +34,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
 
             bool arrayIndexNodeFound = false;
+
+
+            string symbolLocalPath = referenceNode.Name;
             
             foreach (ReferencePartNode partNode in referenceNode.PartNodes)
             {
@@ -47,29 +50,46 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 {
                     case AttributeNode attributeNode:
 
+
+                        NestableSymbol nestableSymbol;
                         switch (symbol)
                         {
                             case InstanceSymbol instanceSymbol:
-                                ClassSymbol classSymbol = instanceSymbol.BaseClassSymbol;
-                                if (classSymbol != null)
+                                ClassSymbol baseClassSymbol = instanceSymbol.BaseClassSymbol;
+                                if (baseClassSymbol != null)
                                 {
-                                    if (classSymbol.BodySymbols.TryGetValue(attributeNode.Name.ToUpper(), out NestableSymbol nestableSymbol))
+                                    if (baseClassSymbol.BodySymbols.TryGetValue(attributeNode.Name.ToUpper(), out nestableSymbol))
                                     {
                                         symbol = nestableSymbol;
+                                        symbolLocalPath = $"{symbolLocalPath}.{attributeNode.Name}";
                                     }
                                     else
                                     {
-                                        // CLASS X doesn't have attribute Y
-                                        attributeNode.Annotations.Add(new ClassDoesNotHaveAttributeError(symbol.Name, classSymbol.Name, attributeNode.Name));
+                                        attributeNode.Annotations.Add(new ClassDoesNotHaveAttributeError(symbolLocalPath, baseClassSymbol.Name, attributeNode.Name));
                                         return;
                                     }
                                 }
                                 break;
+                            
+                            case VarSymbol varSymbol:
+                                if (varSymbol.ComplexType is ClassSymbol classSymbol)
+                                {
+                                    if (classSymbol.BodySymbols.TryGetValue(attributeNode.Name.ToUpper(), out nestableSymbol))
+                                    {
+                                        symbol = nestableSymbol;
+                                        symbolLocalPath = $"{symbolLocalPath}.{attributeNode.Name}";
+                                    }
+                                    else
+                                    {
+                                        attributeNode.Annotations.Add(new ClassDoesNotHaveAttributeError(symbolLocalPath, classSymbol.Name, attributeNode.Name));
+                                        return;
+                                    }
+                                }
+                                break;
+                            
+                            
                             default:
-                                attributeNode.Annotations.Add(new AttributeOfNonInstanceError());
-                                // error: cannot access attribute y of non instance object
-                                // x.y
-                                //   ^
+                                attributeNode.Annotations.Add(new AttributeOfNonInstanceError(attributeNode.Name, referenceNode.Name));
                                 return;
                         }
                         break;

@@ -260,6 +260,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class NotConstReferenceError : ErrorAnnotation
     {
+        public override string GetMessage()
+        {
+            return "const reference required here";
+        }
     }
     
     public class ReferencedSymbolIsNotArrayError : ErrorAnnotation
@@ -295,7 +299,19 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class AttributeOfNonInstanceError : ErrorAnnotation
     {
-        
+        private readonly string _identifier;
+        private readonly string _objectIdentifier;
+
+        public AttributeOfNonInstanceError(string identifier, string objectIdentifier)
+        {
+            _identifier = identifier;
+            _objectIdentifier = objectIdentifier;
+        }
+
+        public override string GetMessage()
+        {
+            return $"cannot access attribute '{_identifier}' because '{_objectIdentifier}' is not an instance of a class";
+        }
     }
     public class RedefinedIdentifierError : ErrorAnnotationNoted
     {
