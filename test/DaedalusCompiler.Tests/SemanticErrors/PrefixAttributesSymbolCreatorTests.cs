@@ -45,6 +45,13 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:4:8: error: unknown type name 'Blah'
                     var Blah uruk;
                         ^
+                test.d: In function 'myFunc':
+                test.d:28:18: error: cannot access attribute 'b' because 'Dog1.uruk' is not an instance of a class
+                    x = Dog1.uruk.b;
+                                  ^
+                test.d:29:18: error: cannot access attribute 'b' because 'Dog2.uruk' is not an instance of a class
+                    x = Dog2.uruk.b;
+                                  ^
                 ";
             AssertCompilationOutputMatch();
         }

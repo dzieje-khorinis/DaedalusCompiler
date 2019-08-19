@@ -107,22 +107,71 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 };
                 
                 instance self(C_NPC) {};
+                var C_NPC victim;
                 
                 func void testFunc() {
                     self.x = 5;
                     self.y = 10;
                     other.y = 15;
+                    victim.x = 20;
+                    victim.y = 25;
                 };
             ";
 
             ExpectedCompilationOutput = @"
                 test.d: In function 'testFunc':
-                test.d:8:9: error: object 'self' of type 'C_NPC' has no member named 'x'
+                test.d:9:9: error: object 'self' of type 'C_NPC' has no member named 'x'
                     self.x = 5;
                          ^
-                test.d:10:4: error: 'other' undeclared
+                test.d:11:4: error: 'other' undeclared
                     other.y = 15;
                     ^
+                test.d:12:11: error: object 'victim' of type 'C_NPC' has no member named 'x'
+                    victim.x = 20;
+                           ^
+                ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        
+        [Fact]
+        public void TestAttributeOfNonInstance()
+        {
+            Code = @"
+                prototype Proto(X) {};
+                
+                func void testFunc() {
+                    var int x;
+                    var int y;
+                    x = y.attr;
+                    y.attr = x;
+                    
+                    x = Proto.a;
+                    x = Proto;
+                    
+                    x = NonExistant.a;
+                };
+            ";
+
+            ExpectedCompilationOutput = @"
+                test.d: In prototype 'Proto':
+                test.d:1:16: error: 'X' undeclared
+                prototype Proto(X) {};
+                                ^
+                test.d: In function 'testFunc':
+                test.d:6:10: error: cannot access attribute 'attr' because 'y' is not an instance of a class
+                    x = y.attr;
+                          ^
+                test.d:7:6: error: cannot access attribute 'attr' because 'y' is not an instance of a class
+                    y.attr = x;
+                      ^
+                test.d:9:14: error: cannot access attribute 'a' because 'Proto' is not an instance of a class
+                    x = Proto.a;
+                              ^
+                test.d:12:8: error: 'NonExistant' undeclared
+                    x = NonExistant.a;
+                        ^
                 ";
 
             AssertCompilationOutputMatch();

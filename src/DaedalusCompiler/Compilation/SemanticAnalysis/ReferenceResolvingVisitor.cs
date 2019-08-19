@@ -81,15 +81,19 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                                     }
                                     else
                                     {
-                                        attributeNode.Annotations.Add(new ClassDoesNotHaveAttributeError(symbolLocalPath, classSymbol.Name, attributeNode.Name));
+                                        attributeNode.Annotations.Add(new ClassDoesNotHaveAttributeError(symbolLocalPath, classSymbol.Name, attributeNode.Name)); //TODO test
                                         return;
                                     }
+                                }
+                                else
+                                {
+                                    attributeNode.Annotations.Add(new AttributeOfNonInstanceError(attributeNode.Name, symbolLocalPath));
                                 }
                                 break;
                             
                             
                             default:
-                                attributeNode.Annotations.Add(new AttributeOfNonInstanceError(attributeNode.Name, referenceNode.Name));
+                                attributeNode.Annotations.Add(new AttributeOfNonInstanceError(attributeNode.Name, symbolLocalPath));
                                 return;
                         }
                         break;
