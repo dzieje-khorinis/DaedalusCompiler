@@ -351,6 +351,14 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             return "circular attribute reference dependency detected";
         }
     }
+    
+    public class InfiniteConstReferenceLoopError : ErrorAnnotation
+    {
+        public override string GetMessage()
+        {
+            return "circular const reference dependency detected";
+        }
+    }
 
     public class InvalidBinaryOperationError : ErrorAnnotation
     {

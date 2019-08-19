@@ -58,7 +58,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 PrintVisit(node, true);
                 if (_visitedNodesValuesCache[node] is UninitializedValue)
                 {
-                    node.Annotations.Add(new InfiniteInheritanceReferenceLoopError());
+                    node.Annotations.Add(new InfiniteConstReferenceLoopError());
                     _visitedNodesValuesCache[node] = new UndefinedValue();
                     if (node is ReferenceNode referenceNode)
                     {
@@ -104,7 +104,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     }
                     else if (intValue.Value > 4095)
                     {
-                        node.ArraySizeNode.Annotations.Add(new TooBigArraySizeError());
+                        node.ArraySizeNode.Annotations.Add(new TooBigArraySizeError());//+
                     }
                     break;
                 default:
@@ -145,7 +145,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 case IntValue intValue:
                     if (intValue.Value == 0)
                     {
-                        node.ArraySizeNode.Annotations.Add(new ArraySizeEqualsZeroError(node.NameNode.Value));
+                        node.ArraySizeNode.Annotations.Add(new ArraySizeEqualsZeroError(node.NameNode.Value));//+
                     }
                     else if (intValue.Value > 4095)
                     {
@@ -153,7 +153,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     }
                     else if (intValue.Value != node.ElementNodes.Count)
                     {
-                        node.ArraySizeNode.Annotations.Add(new InconsistentSizeError(node.NameNode.Value, (int) intValue.Value, node.ElementNodes.Count));
+                        node.ArraySizeNode.Annotations.Add(new InconsistentSizeError(node.NameNode.Value, (int) intValue.Value, node.ElementNodes.Count));//+
                     }
                     break;
                 default:
@@ -183,7 +183,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     }
                     else if (intValue.Value > 4095)
                     {
-                        node.ArraySizeNode.Annotations.Add(new TooBigArraySizeError());
+                        node.ArraySizeNode.Annotations.Add(new TooBigArraySizeError());//+
                     }
                     break;
                 default:
@@ -227,13 +227,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         {
                             if (arrayIndexValue.Value >= arraySizeValue.Value)
                             {
-                                arrayIndexNode.Annotations.Add(new IndexOutOfRangeError(arraySizeValue.Value));
+                                arrayIndexNode.Annotations.Add(new IndexOutOfRangeError(arraySizeValue.Value));//+
                                 return new UndefinedValue();
                             }
 
                             if (arrayIndexValue.Value > 255)
                             {
-                                arrayIndexNode.Annotations.Add(new TooBigArrayIndex());
+                                arrayIndexNode.Annotations.Add(new TooBigArrayIndex());//+
                                 return new UndefinedValue();
                             }
                         }
@@ -398,7 +398,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 
             if (!node.EvaluatedCorrectly || value < Int32.MinValue || value > Int32.MaxValue)
             {
-                annotateToNode.Annotations.Add(new IntegerLiteralTooLargeError());
+                annotateToNode.Annotations.Add(new IntegerLiteralTooLargeError());//+
                 return new UndefinedValue();
             }
 
@@ -423,7 +423,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
             catch (IncompatibleTypesException)
             {
-                rightSideNode.Annotations.Add(new CannotInitializeConstWithValueOfDifferentType(expectedType, actualType, node.NameNode.Location, rightSideNode.Location));
+                rightSideNode.Annotations.Add(new CannotInitializeConstWithValueOfDifferentType(expectedType, actualType, node.NameNode.Location, rightSideNode.Location));//+
             }
 
             

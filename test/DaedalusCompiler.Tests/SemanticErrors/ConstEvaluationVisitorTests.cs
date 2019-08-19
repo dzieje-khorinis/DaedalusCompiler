@@ -427,5 +427,30 @@ namespace DaedalusCompiler.Tests.SemanticErrors
 
             AssertCompilationOutputMatch();
         }
+        
+        
+        
+        [Fact]
+        public void TestInfiniteConstReferenceLoop()
+        {
+            Code = @"
+                const int x = y;
+                const int y = x;
+                
+                const int a[2] = {2, b};
+                const int b = a[1];
+            ";
+
+            ExpectedCompilationOutput = @"
+                test.d:1:14: error: circular const reference dependency detected
+                const int x = y;
+                              ^
+                test.d:5:14: error: circular const reference dependency detected
+                const int b = a[1];
+                              ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
     }
 }
