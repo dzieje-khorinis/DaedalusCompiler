@@ -58,7 +58,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 PrintVisit(node, true);
                 if (_visitedNodesValuesCache[node] is UninitializedValue)
                 {
-                    node.Annotations.Add(new InfiniteReferenceLoopError());
+                    node.Annotations.Add(new InfiniteInheritanceReferenceLoopError());
                     _visitedNodesValuesCache[node] = new UndefinedValue();
                     if (node is ReferenceNode referenceNode)
                     {

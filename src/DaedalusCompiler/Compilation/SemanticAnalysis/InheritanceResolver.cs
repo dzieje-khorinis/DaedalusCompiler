@@ -45,7 +45,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             
             if (_resolvedSymbolsCurrentIteration.Contains(subclassSymbol))
             {
-                parentReferenceNode.Annotations.Add(new InfiniteReferenceLoopError());
+                parentReferenceNode.Annotations.Add(new InfiniteInheritanceReferenceLoopError());
                 return null;
             }
 

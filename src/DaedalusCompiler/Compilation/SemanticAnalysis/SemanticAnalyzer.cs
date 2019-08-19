@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
+using System.Numerics;
 using Antlr4.Runtime.Tree;
 using DaedalusCompiler.Compilation.SemanticAnalysis;
 using DaedalusCompiler.Dat;
@@ -44,14 +45,12 @@ namespace DaedalusCompiler.Compilation
             //_symbolTable = visitor.SymbolTable;
             
             
-            // annotates:
             // RedefinedIdentifierError
             // KeywordUsedAsNameError
             SymbolTableCreationVisitor symbolTableCreationVisitor = new SymbolTableCreationVisitor();
             symbolTableCreationVisitor.VisitTree(AbstractSyntaxTree);
             _symbolTable = symbolTableCreationVisitor.SymbolTable;
             
-            // annotates:
             // UnknownTypeNameError
             // UnsupportedTypeError
             // UnsupportedArrayTypeError
@@ -64,8 +63,11 @@ namespace DaedalusCompiler.Compilation
             // InfiniteReferenceLoopError
             InheritanceResolver inheritanceResolver = new InheritanceResolver(_symbolTable);
             inheritanceResolver.Resolve(symbolTableCreationVisitor.SubclassSymbols);
-            
-            // annotates:
+
+            // InfiniteAttributeReferenceLoopError
+            PrefixAttributesSymbolCreator prefixAttributesSymbolCreator = new PrefixAttributesSymbolCreator(_symbolTable);
+            prefixAttributesSymbolCreator.Scan(symbolTableCreationVisitor.ClassSymbols);
+
             // UndeclaredIdentifierError
             // AccessToAttributeOfArrayElementNotSupportedError
             // AttributeOfNonInstanceError
@@ -74,7 +76,6 @@ namespace DaedalusCompiler.Compilation
             ReferenceResolvingVisitor referenceResolvingVisitor = new ReferenceResolvingVisitor(_symbolTable);
             referenceResolvingVisitor.Visit(AbstractSyntaxTree.ReferenceNodes);
             
-            // annotates:
             // InfiniteReferenceLoopError
             // ArraySizeEqualsZeroError
             // TooBigArraySizeError
@@ -94,14 +95,13 @@ namespace DaedalusCompiler.Compilation
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ConstDefinitionNodes);
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ArrayDeclarationNodes);
             constEvaluationVisitor.Visit(referenceResolvingVisitor.ArrayIndexNodes);
-            
-            // annotates:
+
             // ArgumentsCountDoesNotMatchError
             TypeCheckingVisitor typeCheckingVisitor = new TypeCheckingVisitor();
             typeCheckingVisitor.VisitTree(AbstractSyntaxTree);
             
             
-            
+            // 
             // Error o rozmiarze C_NPC (800), warningi o tym, ze nazwy uzywamy np. małymi, a zadeklaorwaliśy duzymi, albo, ze sa nieuzywane funkcje
             // annotates:
             // IterationStatementNotInLoopError
@@ -122,6 +122,7 @@ namespace DaedalusCompiler.Compilation
             
             /*
              Steps:
+             ALLOW VARIABLES OF THE SAME NAME AS CLASSES???
              1. Add types?
              2. Resolve references?
              
@@ -147,10 +148,13 @@ namespace DaedalusCompiler.Compilation
         public void DetectErrors()
         {
             /*
+             suppress and enable warnings 
+             
              New errors:
                 * typechecking
                 * C_NPC size has to be 800 bytes if declared
              New warnings:
+                * usage without assignment
                 * used name isn't exacly the same as declared (match-case)
                 * function / class /prototype isn't used
              

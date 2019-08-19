@@ -32,6 +32,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public abstract class Symbol
     {
         public int Index;
+        public int SubIndex; // only used by prefix attributes
         public string Name;
         public string Path;
         public ASTNode Node;
@@ -41,6 +42,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         protected Symbol(string name, ASTNode node)
         {
             Index = -1;
+            SubIndex = -1;
             Name = name;
             Path = name.ToUpper();
             Node = node;
@@ -76,17 +78,23 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             {
                 BodySymbols[name] = nestableSymbol;
             }
+            else
+            {
+                throw new Exception();
+            }
         }
 
-        public NestableSymbol GetBodySymbolByName(string name)
+        public void RemoveBodySymbol(NestableSymbol nestableSymbol)
         {
-            name = name.ToUpper();
+            string name = nestableSymbol.Name.ToUpper();
             if (BodySymbols.ContainsKey(name))
             {
-                return BodySymbols[name.ToUpper()];
+                BodySymbols.Remove(name);
             }
-
-            return null;
+            else
+            {
+                throw new Exception();
+            }
         }
     }
     
@@ -106,7 +114,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             if (parentBlockSymbol != null)
             {
                 Path = $"{parentBlockSymbol.Name}.{name}".ToUpper();
-                parentBlockSymbol.AddBodySymbol(this);
+                if (!parentBlockSymbol.BodySymbols.ContainsKey(name.ToUpper()))
+                {
+                    parentBlockSymbol.AddBodySymbol(this);
+                }
+                
             }
         }
     }

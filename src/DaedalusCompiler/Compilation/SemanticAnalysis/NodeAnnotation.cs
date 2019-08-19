@@ -336,11 +336,19 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
     }
 
-    public class InfiniteReferenceLoopError : ErrorAnnotation
+    public class InfiniteInheritanceReferenceLoopError : ErrorAnnotation
     {
         public override string GetMessage()
         {
             return "circular inheritance dependency detected";
+        }
+    }
+    
+    public class InfiniteAttributeReferenceLoopError : ErrorAnnotation
+    {
+        public override string GetMessage()
+        {
+            return "circular attribute reference dependency detected";
         }
     }
 

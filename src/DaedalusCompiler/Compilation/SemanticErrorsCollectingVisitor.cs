@@ -176,6 +176,9 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
                     case FunctionDefinitionNode functionDefinitionNode:
                         parentBlockName = $"function '{functionDefinitionNode.NameNode.Value}'";
                         break;
+                    case ClassDefinitionNode classDefinitionNode:
+                        parentBlockName = $"class '{classDefinitionNode.NameNode.Value}'";
+                        break;
                     case FileNode _:
                         if (LastParentBlockNode != null)
                         {

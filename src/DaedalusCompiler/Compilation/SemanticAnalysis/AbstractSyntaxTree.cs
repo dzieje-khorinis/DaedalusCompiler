@@ -146,6 +146,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         return instanceDefinitionNode;
                     case FunctionDefinitionNode functionDefinitionNode:
                         return functionDefinitionNode;
+                    case ClassDefinitionNode classDefinitionNode:
+                        return classDefinitionNode;
                     case FileNode fileNode:
                         return fileNode;
                 }
@@ -366,7 +368,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class ClassDefinitionNode : InheritanceNode
     {
-        public List<DeclarationNode> AttributeNodes;
+        public readonly List<DeclarationNode> AttributeNodes;
 
         public ClassDefinitionNode(NodeLocation location, NameNode nameNode, List<DeclarationNode> attributeNodes) :
             base(location, "class", nameNode)
