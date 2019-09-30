@@ -101,8 +101,6 @@ namespace DaedalusCompiler.Compilation
             TypeCheckingVisitor typeCheckingVisitor = new TypeCheckingVisitor();
             typeCheckingVisitor.VisitTree(AbstractSyntaxTree);
             
-            
-            // 
             // Error o rozmiarze C_NPC (800), warningi o tym, ze nazwy uzywamy np. małymi, a zadeklaorwaliśy duzymi, albo, ze sa nieuzywane funkcje
             // annotates:
             // IterationStatementNotInLoopError
@@ -110,10 +108,6 @@ namespace DaedalusCompiler.Compilation
             // SingleExpressionWarning
             RemainingAnnotationsAdditionVisitor remainingAnnotationsAdditionVisitor = new RemainingAnnotationsAdditionVisitor();
             remainingAnnotationsAdditionVisitor.VisitTree(AbstractSyntaxTree);
-            
-            
-            
-            
         }
         
         public void EvaluateReferencesAndTypesAndArraySize()

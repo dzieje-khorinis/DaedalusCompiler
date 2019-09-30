@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
@@ -73,14 +72,47 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         string Code { get; set; }
     }
-
-
+    
     public class SingleExpressionWarning : WarningAnnotation, IWithCode
     {
         public string Code { get; set; } = "W1";
         public override string GetMessage()
         {
             return "usage of single-expression statement hack";
+        }
+    }
+    
+    public class NamesNotMatchingCaseWiseWarning : WarningAnnotationNoted, IWithCode
+    {
+        private readonly string _declaredName;
+        private readonly string _usedName;
+        
+        public string Code { get; set; } = "W2";
+
+        public NamesNotMatchingCaseWiseWarning(NodeLocation noteLocation, string declaredName, string usedName) : base(noteLocation)
+        {
+            _declaredName = declaredName;
+            _usedName = usedName;
+        }
+        public override string GetMessage()
+        {
+            return $"name '{_usedName}' doesn't match declared name '{_declaredName}' case wise";
+        }
+        
+        public override string GetNote()
+        {
+            return $"'{_declaredName}' declared here";
+        }
+    }
+    
+    public class UnusedSymbolWarning : WarningAnnotation, IWithCode
+    {
+        public static string WCode = "W3";
+        public string Code { get; set; } = WCode;
+        
+        public override string GetMessage()
+        {
+            return "unused symbol";
         }
     }
     

@@ -32,6 +32,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             {
                 return;
             }
+            
+            if (referenceNode.Name != symbol.Name)
+            {
+                DeclarationNode declarationNode = (DeclarationNode) symbol.Node;
+                referenceNode.Annotations.Add(new NamesNotMatchingCaseWiseWarning(declarationNode.NameNode.Location, symbol.Name, referenceNode.Name));
+            }
 
             bool arrayIndexNodeFound = false;
 
@@ -114,6 +120,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 }
             }
             referenceNode.Symbol = symbol;
+            
+            //NamesNotMatchingCaseWiseWarning
+            //referenceNode.Name
         }
         
         private Symbol GetBaseReferenceSymbol(ReferenceNode referenceNode)

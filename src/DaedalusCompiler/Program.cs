@@ -4,6 +4,7 @@ using DaedalusCompiler.Dat;
 using DaedalusCompiler.Compilation;
 using System.Diagnostics;
 using System.IO;
+using DaedalusCompiler.Compilation.SemanticAnalysis;
 
 namespace DaedalusCompiler
 {
@@ -40,6 +41,7 @@ namespace DaedalusCompiler
             var strict = false;
             var getVersion = false;
             bool suppressModeOn = false;
+            bool detectUnused = false;
             string filePath = String.Empty;
             HashSet<string> suppressCodes = new HashSet<string>();
 
@@ -50,6 +52,7 @@ namespace DaedalusCompiler
                 { "gen-ou", v => generateOutputUnits = true },
                 { "verbose", v => verbose = true },
                 { "strict", v => strict = true },
+                { "detect-unused", v => detectUnused = true },
                 { "suppress", v => suppressModeOn = true },
                 { "version|v", v => getVersion = true  },
                 { "<>", v =>
@@ -65,6 +68,11 @@ namespace DaedalusCompiler
                     }
                 },
             };
+
+            if (!detectUnused)
+            {
+                suppressCodes.Add(UnusedSymbolWarning.WCode);
+            }
             
             try {
                 optionSet.Parse (args);

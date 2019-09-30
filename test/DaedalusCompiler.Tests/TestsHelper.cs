@@ -45,7 +45,7 @@ namespace DaedalusCompiler.Tests
             SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(parseTrees, 0, filesPaths, filesContents, suppressedWarningCodes);
             semanticAnalyzer.Run();
             
-            SemanticErrorsCollectingVisitor semanticErrorsCollectingVisitor = new SemanticErrorsCollectingVisitor(_errorLogger, _strictSyntax);
+            SemanticErrorsCollectingVisitor semanticErrorsCollectingVisitor = new SemanticErrorsCollectingVisitor(_errorLogger, _strictSyntax, new HashSet<string>());
             semanticErrorsCollectingVisitor.FilePathDisplayStatus = FilePathDisplayStatus.NeverDisplay;
             semanticErrorsCollectingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
         }

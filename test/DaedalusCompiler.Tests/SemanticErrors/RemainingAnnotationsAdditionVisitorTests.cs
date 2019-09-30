@@ -112,5 +112,29 @@ namespace DaedalusCompiler.Tests.SemanticErrors
 
             AssertCompilationOutputMatch();
         }
+
+        [Fact]
+        public void TestIntegerLiteralTooLarge()
+        {
+            Code = @"
+                func void testFunc() {
+                    var int x;
+                    x = 2147483648;
+                    x = 214748364821474836482147483648214748364821474836482147483648;
+                };
+            ";
+            
+            ExpectedCompilationOutput = @"
+                test.d: In function 'testFunc':
+                test.d:3:8: error: integer literal is too large to be represented in an integer type (min: -2147483648, max: 2147483647)
+                    x = 2147483648;
+                        ^
+                test.d:4:8: error: integer literal is too large to be represented in an integer type (min: -2147483648, max: 2147483647)
+                    x = 214748364821474836482147483648214748364821474836482147483648;
+                        ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
     }
 }
