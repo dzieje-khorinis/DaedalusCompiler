@@ -262,7 +262,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public override string GetMessage()
         {
-            return "const reference required here";
+            return "const reference required";
         }
     }
     

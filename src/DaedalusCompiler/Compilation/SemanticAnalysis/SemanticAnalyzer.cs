@@ -76,7 +76,7 @@ namespace DaedalusCompiler.Compilation
             ReferenceResolvingVisitor referenceResolvingVisitor = new ReferenceResolvingVisitor(_symbolTable);
             referenceResolvingVisitor.Visit(AbstractSyntaxTree.ReferenceNodes);
             
-            // InfiniteReferenceLoopError
+            // InfiniteConstReferenceLoopError
             // ArraySizeEqualsZeroError
             // TooBigArraySizeError
             // UnsupportedTypeError

@@ -13,9 +13,17 @@ namespace DaedalusCompiler.Tests.SemanticErrors
         private void ParseData()
         {
             string[] codeLines = Code.Trim().Split(Environment.NewLine);
+
             for (int i = 1; i < codeLines.Length; ++i)
             {
-                codeLines[i] = codeLines[i].Substring(16);
+                if (codeLines[i].Length > 16)
+                {
+                    codeLines[i] = codeLines[i].Substring(16);
+                }
+                else
+                {
+                    codeLines[i] = "";
+                }
             }
             Code = string.Join(Environment.NewLine, codeLines);
 

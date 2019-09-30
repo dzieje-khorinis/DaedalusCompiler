@@ -80,21 +80,22 @@ namespace DaedalusCompiler.Tests.SemanticErrors
         }
         
         [Fact]
-        public void TestInvalidConstArraySizeElements()
+        public void TestArraySizeEqualsZero()
         {
             Code = @"
                 const string INVENTORY[INVENTORY_SIZE] =
                 {
                     ""SWORD"",
                     ""BOW"",
-                    ""AXE""	
+                    ""AXE"" 
                 };
-                
+
                 const int INVENTORY_SIZE = 3;
                 
                 const int NUMBERS_SIZE = 0;
                 
-                func void testFunc() {
+                func void testFunc(var int a[NUMBERS_SIZE]) {
+                    var int b[NUMBERS_SIZE];
                     const int LUCKY_NUMBERS[NUMBERS_SIZE] = {2, 4, 8};
                 };
                 
@@ -103,14 +104,20 @@ namespace DaedalusCompiler.Tests.SemanticErrors
 
             ExpectedCompilationOutput = @"
                 test.d: In function 'testFunc':
-                test.d:13:28: error: size of array 'LUCKY_NUMBERS' cannot equal zero
+                test.d:12:29: error: size of array 'a' cannot equal zero
+                func void testFunc(var int a[NUMBERS_SIZE]) {
+                                             ^
+                test.d:13:14: error: size of array 'b' cannot equal zero
+                    var int b[NUMBERS_SIZE];
+                              ^
+                test.d:14:28: error: size of array 'LUCKY_NUMBERS' cannot equal zero
                     const int LUCKY_NUMBERS[NUMBERS_SIZE] = {2, 4, 8};
                                             ^
                 test.d: In global scope:
-                test.d:16:19: error: size of array 'NAMES' cannot equal zero
+                test.d:17:19: error: size of array 'NAMES' cannot equal zero
                 const string NAMES[0] = {""DIEGO"", ""ROBERTO"", ""SANCHEZ""};
                                    ^
-            ";
+                ";
 
             AssertCompilationOutputMatch();
         }
@@ -434,23 +441,73 @@ namespace DaedalusCompiler.Tests.SemanticErrors
         public void TestInfiniteConstReferenceLoop()
         {
             Code = @"
-                const int x = y;
-                const int y = x;
+                const int a = b;
+                const int b = a;
                 
-                const int a[2] = {2, b};
-                const int b = a[1];
+                const int c[2] = {2, d};
+                const int d = c[1];
+                
+                const int e[f] = {1, 2};
+                const int f = e[1];
+                
+                var int g[2];
+                const int h[g[3]] = {2, g[1]};
+                
+                var int i;
+                const int j[i] = {i, 3};
+                
+                const int k[l[1]] = {1, 2};
+                const int l[k[1]] = {3, 4};
             ";
 
             ExpectedCompilationOutput = @"
                 test.d:1:14: error: circular const reference dependency detected
-                const int x = y;
+                const int a = b;
                               ^
                 test.d:5:14: error: circular const reference dependency detected
-                const int b = a[1];
+                const int d = c[1];
                               ^
+                test.d:8:14: error: circular const reference dependency detected
+                const int f = e[1];
+                              ^
+                test.d:11:12: error: const reference required
+                const int h[g[3]] = {2, g[1]};
+                            ^
+                test.d:11:24: error: const reference required
+                const int h[g[3]] = {2, g[1]};
+                                        ^
+                test.d:14:12: error: const reference required
+                const int j[i] = {i, 3};
+                            ^
+                test.d:14:18: error: const reference required
+                const int j[i] = {i, 3};
+                                  ^
+                test.d:16:12: error: circular const reference dependency detected
+                const int k[l[1]] = {1, 2};
+                            ^
             ";
 
             AssertCompilationOutputMatch();
         }
     }
 }
+
+/*
+
+// InfiniteConstReferenceLoopError :)
+// ArraySizeEqualsZeroError
+// TooBigArraySizeError
+// UnsupportedTypeError
+// InconsistentSizeError
+// IndexOutOfRangeError
+// TooBigArrayIndex
+// ConstIntegerExpectedError
+// NotConstReferenceError
+// ArithmeticOperationOverflowError
+// InvalidUnaryOperationError
+// InvalidBinaryOperationError
+// IntegerLiteralTooLargeError
+// CannotInitializeConstWithValueOfDifferentType
+// CannotInitializeArrayElementWithValueOfDifferentType
+
+*/

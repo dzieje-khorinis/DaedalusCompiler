@@ -14,6 +14,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         private readonly Dictionary <string, Symbol> _symbolTable;
         private readonly Dictionary<ASTNode, NodeValue> _visitedNodesValuesCache;
+        
 
 
         public ConstEvaluationVisitor(Dictionary <string, Symbol> symbolTable)
@@ -209,6 +210,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected override NodeValue VisitArrayIndexNode(ArrayIndexNode arrayIndexNode)
         {
+            if (arrayIndexNode.ParentNode.Annotations.Count > 0)
+            {
+                return null;
+            }
+
             arrayIndexNode.Value = Visit(arrayIndexNode.ExpressionNode);
 
             switch (arrayIndexNode.Value)
@@ -222,8 +228,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     
                     if (referenceNode.Symbol.Node is IArrayDeclarationNode arrayDeclarationNode)
                     {
-                        Visit(referenceNode.Symbol.Node);
-                        if (arrayDeclarationNode.ArraySizeValue is IntValue arraySizeValue)
+                        NodeValue arraySizeNodeValue = Visit(arrayDeclarationNode.ArraySizeNode);
+                        if (arraySizeNodeValue is IntValue arraySizeValue)
                         {
                             if (arrayIndexValue.Value >= arraySizeValue.Value)
                             {
@@ -236,6 +242,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                                 arrayIndexNode.Annotations.Add(new TooBigArrayIndex());//+
                                 return new UndefinedValue();
                             }
+                        }
+                        else
+                        {
+                            return new UndefinedValue();
                         }
                     }
                     break;
@@ -258,23 +268,25 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
 
             
-            NodeValue arrayIndexValue = new IntValue(0);
-            //ArrayIndexNode arrayIndexNode = null;
             
-            foreach (var partNode in referenceNode.PartNodes)
-            {
-                switch (partNode)
-                {
-                    case ArrayIndexNode node:
-                        //arrayIndexNode = node;
-                        arrayIndexValue = Visit(node);
-                        break;
-                }
-            }
             
             switch (referenceNode.Symbol.Node)
             {
                 case ConstArrayDefinitionNode constArrayDefinitionNode:
+                    
+                    NodeValue arrayIndexValue = new IntValue(0);
+                    //ArrayIndexNode arrayIndexNode = null;
+            
+                    foreach (var partNode in referenceNode.PartNodes)
+                    {
+                        switch (partNode)
+                        {
+                            case ArrayIndexNode node:
+                                //arrayIndexNode = node;
+                                arrayIndexValue = Visit(node);
+                                break;
+                        }
+                    }
                     
                     switch (arrayIndexValue)
                     {
