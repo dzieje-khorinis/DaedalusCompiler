@@ -176,5 +176,60 @@ namespace DaedalusCompiler.Tests.SemanticErrors
 
             AssertCompilationOutputMatch();
         }
+
+
+        [Fact]
+        public void TestNamesNotMatchingCaseWise()
+        {
+            Code = @"
+                const int x = 2;
+                const int y = X + 1;
+
+                func void test() {};
+
+                func void testFunc() {
+                    tesT();
+                    var int a;
+                    var int b;
+                    A = B + X;
+                };
+            ";
+
+            ExpectedCompilationOutput = @"
+                test.d:2:14: warning W2: name 'X' doesn't match declared name 'x' case wise
+                const int y = X + 1;
+                              ^
+                test.d:1:10: note: 'x' declared here
+                const int x = 2;
+                          ^
+                test.d: In function 'testFunc':
+                test.d:7:4: warning W2: name 'tesT' doesn't match declared name 'test' case wise
+                    tesT();
+                    ^
+                test.d:4:10: note: 'test' declared here
+                func void test() {};
+                          ^
+                test.d:10:4: warning W2: name 'A' doesn't match declared name 'a' case wise
+                    A = B + X;
+                    ^
+                test.d:8:12: note: 'a' declared here
+                    var int a;
+                            ^
+                test.d:10:8: warning W2: name 'B' doesn't match declared name 'b' case wise
+                    A = B + X;
+                        ^
+                test.d:9:12: note: 'b' declared here
+                    var int b;
+                            ^
+                test.d:10:12: warning W2: name 'X' doesn't match declared name 'x' case wise
+                    A = B + X;
+                            ^
+                test.d:1:10: note: 'x' declared here
+                const int x = 2;
+                          ^
+                ";
+
+            AssertCompilationOutputMatch();
+        }
     }
 }
