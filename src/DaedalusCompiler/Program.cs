@@ -68,11 +68,6 @@ namespace DaedalusCompiler
                     }
                 },
             };
-
-            if (!detectUnused)
-            {
-                suppressCodes.Add(UnusedSymbolWarning.WCode);
-            }
             
             try {
                 optionSet.Parse (args);
@@ -80,6 +75,11 @@ namespace DaedalusCompiler
             catch (NDesk.Options.OptionException e) {
                 Console.WriteLine (e.Message);
                 return;
+            }
+            
+            if (!detectUnused)
+            {
+                suppressCodes.Add(UnusedSymbolWarning.WCode);
             }
 
             if (getVersion)

@@ -5,14 +5,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
     public class DeclarationUsagesChecker
     {
-        
-        
         public void Check(List<DeclarationNode> declarationNodes)
         {
             foreach (DeclarationNode declarationNode in declarationNodes)
             {
                 if (declarationNode.Usages.Count == 0)
                 {
+                    // TODO check if it's Daedalus builtin
                     declarationNode.NameNode.Annotations.Add(new UnusedSymbolWarning());
                     continue;
                 }
@@ -44,8 +43,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         node.Annotations.Add(new NamesNotMatchingCaseWiseWarning(declarationNode.NameNode.Location, declaredName, usedName));
                     }
                 }
-                
-                
             }
         }
     }
