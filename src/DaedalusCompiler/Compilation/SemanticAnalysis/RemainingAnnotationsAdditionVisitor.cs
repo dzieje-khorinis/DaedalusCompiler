@@ -5,8 +5,16 @@ using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
+
     public class RemainingAnnotationsAdditionVisitor : AbstractSyntaxTreeBaseVisitor
     {
+        private static readonly Dictionary<string, long> Class2RequiredSize = new Dictionary<string, long>
+        {
+            {"C_NPC", 800},
+            {"C_INFO", 48},
+            {"C_ITEMREACT", 28},
+        };
+        
         /*
         protected override void Visit(ASTNode node)
         {
@@ -34,6 +42,42 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
             base.Visit(node);
         }*/
+
+        protected override void VisitClassDefinition(ClassDefinitionNode node)
+        {
+            string classNameUpper = node.NameNode.Value.ToUpper();
+            if (!Class2RequiredSize.ContainsKey(classNameUpper))
+            {
+                return;
+            }
+            
+            long size = 0;
+            long requiredSize = Class2RequiredSize[classNameUpper];
+            foreach (DeclarationNode attributeNode in node.AttributeNodes)
+            {
+                if (attributeNode is VarArrayDeclarationNode varArrayDeclarationNode)
+                {
+                    NodeValue arraySizeValue = varArrayDeclarationNode.ArraySizeValue;
+                    if (arraySizeValue is IntValue intValue)
+                    {
+                        size += (attributeNode.Symbol.BuiltinType == SymbolType.String ? 20 : 4) * intValue.Value;
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    size += (attributeNode.Symbol.BuiltinType == SymbolType.String ? 20 : 4);
+                }
+            }
+
+            if (size != requiredSize)
+            {
+                node.Annotations.Add(new WrongClassSizeError(node.NameNode.Location, node.NameNode.Value, size, requiredSize));
+            }
+        }
 
         protected override void VisitConstDefinition(ConstDefinitionNode node)
         {

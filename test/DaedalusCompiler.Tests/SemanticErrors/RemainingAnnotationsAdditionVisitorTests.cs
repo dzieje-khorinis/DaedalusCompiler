@@ -136,5 +136,29 @@ namespace DaedalusCompiler.Tests.SemanticErrors
 
             AssertCompilationOutputMatch();
         }
+
+        [Fact]
+        public void TestWrongClassSize()
+        {
+            Code = @"
+                class C_NPC { };
+                class C_INFO { };
+                class C_ITEMREACT { };
+            ";
+            
+            ExpectedCompilationOutput = @"
+                test.d:1:6: error: size of class 'C_NPC' must be 800 bytes (currently it's 0 bytes)
+                class C_NPC { };
+                      ^
+                test.d:2:6: error: size of class 'C_INFO' must be 48 bytes (currently it's 0 bytes)
+                class C_INFO { };
+                      ^
+                test.d:3:6: error: size of class 'C_ITEMREACT' must be 28 bytes (currently it's 0 bytes)
+                class C_ITEMREACT { };
+                      ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
     }
 }

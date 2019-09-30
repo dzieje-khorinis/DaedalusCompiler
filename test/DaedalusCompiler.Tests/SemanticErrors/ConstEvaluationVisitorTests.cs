@@ -305,12 +305,12 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 const int GOOD_INDEX = 7;
                 const int BAD_INDEX = 8;
                 
-                class C_NPC
+                class NPC
                 {
                     var int attribute[8];
                 };
                 
-                instance self(C_NPC) {};
+                instance self(NPC) {};
                 
                 func void myFunc()
                 {

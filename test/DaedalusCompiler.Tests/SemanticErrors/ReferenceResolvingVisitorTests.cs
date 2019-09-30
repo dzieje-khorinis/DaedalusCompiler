@@ -102,12 +102,12 @@ namespace DaedalusCompiler.Tests.SemanticErrors
         public void TestAttributeNotFound()
         {
             Code = @"
-                class C_NPC {
+                class NPC {
                     var int y;
                 };
                 
-                instance self(C_NPC) {};
-                var C_NPC victim;
+                instance self(NPC) {};
+                var NPC victim;
                 
                 func void testFunc() {
                     self.x = 5;
@@ -120,13 +120,13 @@ namespace DaedalusCompiler.Tests.SemanticErrors
 
             ExpectedCompilationOutput = @"
                 test.d: In function 'testFunc':
-                test.d:9:9: error: object 'self' of type 'C_NPC' has no member named 'x'
+                test.d:9:9: error: object 'self' of type 'NPC' has no member named 'x'
                     self.x = 5;
                          ^
                 test.d:11:4: error: 'other' undeclared
                     other.y = 15;
                     ^
-                test.d:12:11: error: object 'victim' of type 'C_NPC' has no member named 'x'
+                test.d:12:11: error: object 'victim' of type 'NPC' has no member named 'x'
                     victim.x = 20;
                            ^
                 ";

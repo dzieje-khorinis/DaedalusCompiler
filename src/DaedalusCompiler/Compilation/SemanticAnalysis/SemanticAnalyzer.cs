@@ -111,55 +111,9 @@ namespace DaedalusCompiler.Compilation
             // IterationStatementNotInLoopError
             // IntegerLiteralTooLargeError
             // SingleExpressionWarning
+            // WrongClassSizeError
             RemainingAnnotationsAdditionVisitor remainingAnnotationsAdditionVisitor = new RemainingAnnotationsAdditionVisitor();
             remainingAnnotationsAdditionVisitor.VisitTree(AbstractSyntaxTree);
         }
-        
-        public void EvaluateReferencesAndTypesAndArraySize()
-        {
-           
-            
-            
-            /*
-             Steps:
-             ALLOW VARIABLES OF THE SAME NAME AS CLASSES???
-             1. Add types?
-             2. Resolve references?
-             
-             3. Evaluate constants content
-             4. Evaluate array Sizes
-             5. Evaluate const arrays elements
-             
-             6. For every variable and parameter that is not classVar and has complex type, set ParentInde
-             
-             
-             
-             Calculate DatSymbol properties:
-             
-             Array: ArrayLength - must be const
-             Const: Content
-             * For every local and global const and var (not class attributes) if it has Class as Type,
-             set ParentIndex to that Class. 
-             
-             Evaluate references.
-             */
-        }
-
-        public void DetectErrors()
-        {
-            /*
-             suppress and enable warnings 
-             
-             New errors:
-                * typechecking
-                * C_NPC size has to be 800 bytes if declared
-             New warnings:
-                * usage without assignment
-                * used name isn't exacly the same as declared (match-case)
-                * function / class /prototype isn't used
-             
-             */
-        }
-        
     }
 }

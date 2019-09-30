@@ -214,6 +214,26 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
     
+    public class WrongClassSizeError : ErrorAnnotation
+    {
+        private readonly string _identifier;
+        private readonly long _currentSize;
+        private readonly long _requiredSize;
+
+        public WrongClassSizeError(NodeLocation pointerLocation, string identifier, long currentSize, long requiredSize)
+        {
+            PointerLocation = pointerLocation;
+            _identifier = identifier;
+            _currentSize = currentSize;
+            _requiredSize = requiredSize;
+        }
+
+        public override string GetMessage()
+        {
+            return $"size of class '{_identifier}' must be {_requiredSize} bytes (currently it's {_currentSize} bytes)";
+        }
+    }
+    
     public class UnknownTypeNameError : ErrorAnnotation
     {
         private readonly string _identifier;
