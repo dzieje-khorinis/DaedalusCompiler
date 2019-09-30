@@ -285,7 +285,7 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
 
             public bool DoesCoverColumn(int column)
             {
-                if (_isInCurrentLine && _startColumn <= column && column <= EndColumn)
+                if (_isInCurrentLine && _startColumn <= column && column < EndColumn)
                 {
                     return true;
                 }

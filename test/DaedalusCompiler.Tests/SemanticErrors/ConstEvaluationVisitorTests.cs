@@ -489,25 +489,320 @@ namespace DaedalusCompiler.Tests.SemanticErrors
 
             AssertCompilationOutputMatch();
         }
+        
+        [Fact]
+        public void TestArraySizeNotConstInteger()
+        {
+            Code = @"
+                const string name = ""TEST"";
+                const float height = 2.55;
+
+                const int a[name] = {1, 2};
+                var int b[name];
+
+                func void test(var int c[name], var int d[height]) {
+                    const int e[height] = {3, 4, 5};
+                    var int f[height];
+                }
+            ";
+
+            ExpectedCompilationOutput = @"
+                test.d:4:12: error: array size must be of const integer type
+                const int a[name] = {1, 2};
+                            ^
+                test.d:5:10: error: array size must be of const integer type
+                var int b[name];
+                          ^
+                test.d: In function 'test':
+                test.d:7:25: error: array size must be of const integer type
+                func void test(var int c[name], var int d[height]) {
+                                         ^
+                test.d:7:42: error: array size must be of const integer type
+                func void test(var int c[name], var int d[height]) {
+                                                          ^
+                test.d:8:16: error: array size must be of const integer type
+                    const int e[height] = {3, 4, 5};
+                                ^
+                test.d:9:14: error: array size must be of const integer type
+                    var int f[height];
+                              ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+
+        [Fact]
+        public void TestArrayIndexNotConstInteger()
+        {
+            Code = @"
+                const int INDEX1 = 0;
+                const float INDEX2 = 1.1;
+                const string INDEX3 = ""two"";
+
+                const int a[2] = {1, 2};
+                var int b[2];
+
+                func void test(var int c[2]) {
+                    const int d[2] = {3, 4};
+                    var int e[2];
+
+                    var int x;
+                    x = a[INDEX1];
+                    x = a[INDEX2];
+                    x = a[INDEX3];
+
+                    x = b[INDEX1];
+                    x = b[INDEX2];
+                    x = b[INDEX3];
+
+                    x = c[INDEX1];
+                    x = c[INDEX2];
+                    x = c[INDEX3];
+
+                    x = d[INDEX1];
+                    x = d[INDEX2];
+                    x = d[INDEX3];
+
+                    x = e[INDEX1];
+                    x = e[INDEX2];
+                    x = e[INDEX3];
+                }
+            ";
+
+            ExpectedCompilationOutput = @"
+                test.d: In function 'test':
+                test.d:14:10: error: array index must be of const integer type
+                    x = a[INDEX2];
+                          ^
+                test.d:15:10: error: array index must be of const integer type
+                    x = a[INDEX3];
+                          ^
+                test.d:18:10: error: array index must be of const integer type
+                    x = b[INDEX2];
+                          ^
+                test.d:19:10: error: array index must be of const integer type
+                    x = b[INDEX3];
+                          ^
+                test.d:22:10: error: array index must be of const integer type
+                    x = c[INDEX2];
+                          ^
+                test.d:23:10: error: array index must be of const integer type
+                    x = c[INDEX3];
+                          ^
+                test.d:26:10: error: array index must be of const integer type
+                    x = d[INDEX2];
+                          ^
+                test.d:27:10: error: array index must be of const integer type
+                    x = d[INDEX3];
+                          ^
+                test.d:30:10: error: array index must be of const integer type
+                    x = e[INDEX2];
+                          ^
+                test.d:31:10: error: array index must be of const integer type
+                    x = e[INDEX3];
+                          ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
+        public void TestNotConstReference()
+        {
+            Code = @"
+                const int a = 1;
+                var int b;
+                const int c = a + b;
+
+                func void testFunc() {
+                    const int d = 2;
+                    var int e;
+                    const int f = e + d;
+                }
+            ";
+
+            ExpectedCompilationOutput = @"
+                test.d:3:18: error: const reference required
+                const int c = a + b;
+                                  ^
+                test.d: In function 'testFunc':
+                test.d:8:18: error: const reference required
+                    const int f = e + d;
+                                  ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
+        public void TestArithmeticOperationOverflow()
+        {
+            Code = @"
+                const int a = 2147483648;
+                const int b = --2147483648;
+                const int c = 2147483647 + 1;
+                const int d = 2147483647 * 2147483647;
+            ";
+
+            ExpectedCompilationOutput = @"
+                test.d:1:14: error: integer literal is too large to be represented in an integer type (min: -2147483648, max: 2147483647)
+                const int a = 2147483648;
+                              ^
+                test.d:2:14: error: arithmetic operation resulted in an overflow
+                const int b = --2147483648;
+                              ^
+                test.d:3:25: error: arithmetic operation resulted in an overflow
+                const int c = 2147483647 + 1;
+                                         ^
+                test.d:4:25: error: arithmetic operation resulted in an overflow
+                const int d = 2147483647 * 2147483647;
+                                         ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
+        public void TestDivideByZero()
+        {
+            Code = @"
+                const int a = 5 / 0;
+                const int b = 5 % 0;
+                const int c = 5.0 / 0;
+                const int d = 5.0 / 0.0;
+            ";
+
+            ExpectedCompilationOutput = @"
+                test.d:1:16: error: cannot divide by zero
+                const int a = 5 / 0;
+                                ^ ~
+                test.d:2:16: error: cannot divide by zero
+                const int b = 5 % 0;
+                                ^ ~
+                test.d:3:18: error: cannot divide by zero
+                const int c = 5.0 / 0;
+                                  ^ ~
+                test.d:4:18: error: cannot divide by zero
+                const int d = 5.0 / 0.0;
+                                  ^ ~~~
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
+        public void TestInvalidUnaryOperation()
+        {
+            Code = @"
+                const int a = -""name"";
+                const int b = ~2.5;
+            ";
+
+            ExpectedCompilationOutput = @"
+                test.d:1:14: error: invalid unary operation
+                const int a = -""name"";
+                              ^
+                test.d:2:14: error: invalid unary operation
+                const int b = ~2.5;
+                              ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
+        public void TestInvalidBinaryOperation()
+        {
+            Code = @"
+                const string a = 2 * ""name"";
+                const string b = 2.5 * ""name"";
+                const string c = ""name"" * 2.5;
+                const string d = ""name"" + ""na"";
+                const string e = ""name"" - ""na"";
+            ";
+
+            ExpectedCompilationOutput = @"
+                test.d:2:21: error: invalid binary operation
+                const string b = 2.5 * ""name"";
+                                 ~~~ ^ ~~~~~~
+                test.d:3:24: error: invalid binary operation
+                const string c = ""name"" * 2.5;
+                                 ~~~~~~ ^ ~~~
+                test.d:5:24: error: invalid binary operation
+                const string e = ""name"" - ""na"";
+                                 ~~~~~~ ^ ~~~~
+                ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
+        public void TestIfCannotInitializeConstWithValueOfDifferentType()
+        {
+            Code = @"
+                const int a = 2.5;
+                const float b = ""two"";
+                const string c = 2;
+            ";
+
+            ExpectedCompilationOutput = @"
+                test.d:1:10: error: cannot initialize a constant of type 'int' with an rvalue of type 'float'
+                const int a = 2.5;
+                          ^   ~~~
+                test.d:2:12: error: cannot initialize a constant of type 'float' with an rvalue of type 'string'
+                const float b = ""two"";
+                            ^   ~~~~~
+                test.d:3:13: error: cannot initialize a constant of type 'string' with an rvalue of type 'int'
+                const string c = 2;
+                             ^   ~
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        [Fact]
+        public void TestIfCannotInitializeArrayElementWithValueOfDifferentType()
+        {
+            Code = @"
+                const int a[3] = {0, ""zero"", 0.5};
+                const float b[3] = {1, ""one"", 1.5};
+                const string c[3] = {2, ""two"", 2.5};
+            ";
+
+            ExpectedCompilationOutput = @"
+                test.d:1:21: error: cannot initialize an array element of type 'int' with an rvalue of type 'string'
+                const int a[3] = {0, ""zero"", 0.5};
+                                     ^~~~~~
+                test.d:1:29: error: cannot initialize an array element of type 'int' with an rvalue of type 'float'
+                const int a[3] = {0, ""zero"", 0.5};
+                                             ^~~
+                test.d:2:6: error: unsupported array type
+                const float b[3] = {1, ""one"", 1.5};
+                      ^
+                test.d:3:21: error: cannot initialize an array element of type 'string' with an rvalue of type 'int'
+                const string c[3] = {2, ""two"", 2.5};
+                                     ^
+                test.d:3:31: error: cannot initialize an array element of type 'string' with an rvalue of type 'float'
+                const string c[3] = {2, ""two"", 2.5};
+                                               ^~~
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
+        public void TEMPLATE()
+        {
+            Code = @"
+
+            ";
+
+            ExpectedCompilationOutput = @"
+
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+
+        
     }
 }
-
-/*
-
-// InfiniteConstReferenceLoopError :)
-// ArraySizeEqualsZeroError
-// TooBigArraySizeError
-// UnsupportedTypeError
-// InconsistentSizeError
-// IndexOutOfRangeError
-// TooBigArrayIndex
-// ConstIntegerExpectedError
-// NotConstReferenceError
-// ArithmeticOperationOverflowError
-// InvalidUnaryOperationError
-// InvalidBinaryOperationError
-// IntegerLiteralTooLargeError
-// CannotInitializeConstWithValueOfDifferentType
-// CannotInitializeArrayElementWithValueOfDifferentType
-
-*/

@@ -103,12 +103,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     }
     
     
-    public class CannotInitializeConstWithValueOfDifferentType : ErrorAnnotation
+    public class CannotInitializeConstWithValueOfDifferentTypeError : ErrorAnnotation
     {
         private readonly SymbolType _expectedSymbolType;
         private readonly SymbolType _actualSymbolType;
 
-        public CannotInitializeConstWithValueOfDifferentType(SymbolType expectedSymbolType, SymbolType actualSymbolType, NodeLocation pointerLocation, NodeLocation underlineLocation)
+        public CannotInitializeConstWithValueOfDifferentTypeError(SymbolType expectedSymbolType, SymbolType actualSymbolType, NodeLocation pointerLocation, NodeLocation underlineLocation)
         {
             PointerLocation = pointerLocation;
             UnderlineLocations.Add(underlineLocation);
@@ -122,12 +122,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
 
-    public class CannotInitializeArrayElementWithValueOfDifferentType : ErrorAnnotation
+    public class CannotInitializeArrayElementWithValueOfDifferentTypeError : ErrorAnnotation
     {
         private readonly SymbolType _expectedSymbolType;
         private readonly SymbolType _actualSymbolType;
 
-        public CannotInitializeArrayElementWithValueOfDifferentType(NodeLocation pointerLocation, SymbolType expectedSymbolType, SymbolType actualSymbolType)
+        public CannotInitializeArrayElementWithValueOfDifferentTypeError(NodeLocation pointerLocation, SymbolType expectedSymbolType, SymbolType actualSymbolType)
         {
             PointerLocation = pointerLocation;
             UnderlineLocations.Add(pointerLocation);
@@ -252,17 +252,28 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             return $"'{_identifier}' statement not allowed outside of loop statement";
         }
     }
-    
-    public class ConstIntegerExpectedError : ErrorAnnotation
-    {
-    }
-
 
     public class NotConstReferenceError : ErrorAnnotation
     {
         public override string GetMessage()
         {
             return "const reference required";
+        }
+    }
+    
+    public class ArraySizeNotConstIntegerError : ErrorAnnotation
+    {
+        public override string GetMessage()
+        {
+            return "array size must be of const integer type";
+        }
+    }
+    
+    public class ArrayIndexNotConstIntegerError : ErrorAnnotation
+    {
+        public override string GetMessage()
+        {
+            return "array index must be of const integer type";
         }
     }
     
@@ -362,6 +373,17 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class InvalidBinaryOperationError : ErrorAnnotation
     {
+        public InvalidBinaryOperationError(NodeLocation pointerLocation, NodeLocation leftLocation, NodeLocation rightLocation)
+        {
+            PointerLocation = pointerLocation;
+            UnderlineLocations.Add(leftLocation);
+            UnderlineLocations.Add(rightLocation);
+        }
+        
+        public override string GetMessage()
+        {
+            return "invalid binary operation";
+        }
     }
 
 
@@ -377,12 +399,29 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             return "arithmetic operation resulted in an overflow";
         }
-
+    }
+    
+    
+    public class DivideByZeroError : ErrorAnnotation
+    {
         
+        public DivideByZeroError(NodeLocation pointerLocation, NodeLocation underlineLocation)
+        {
+            PointerLocation = pointerLocation;
+            UnderlineLocations.Add(underlineLocation);
+        }
+        public override string GetMessage()
+        {
+            return "cannot divide by zero";
+        }
     }
     
     public class InvalidUnaryOperationError : ErrorAnnotation
     {
+        public override string GetMessage()
+        {
+            return "invalid unary operation";
+        }
     }
 
     public class AccessToAttributeOfArrayElementNotSupportedError : ErrorAnnotation
@@ -394,13 +433,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     }
 
 
-    public class InconsistentSizeError : ErrorAnnotation
+    public class InconsistentConstArraySizeError : ErrorAnnotation
     {
         private readonly string _identifier;
         private readonly int _declaredSize;
         private readonly int _elementsCount;
 
-        public InconsistentSizeError(string identifier, int declaredSize, int elementsCount)
+        public InconsistentConstArraySizeError(string identifier, int declaredSize, int elementsCount)
         {
             _declaredSize = declaredSize;
             _elementsCount = elementsCount;
@@ -471,6 +510,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             return "unsupported type";
         }
     }
+    
+    
 
 
     public class ClassDoesNotHaveAttributeError : ErrorAnnotation

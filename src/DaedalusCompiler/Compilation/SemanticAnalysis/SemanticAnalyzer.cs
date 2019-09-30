@@ -79,18 +79,19 @@ namespace DaedalusCompiler.Compilation
             // InfiniteConstReferenceLoopError
             // ArraySizeEqualsZeroError
             // TooBigArraySizeError
-            // UnsupportedTypeError
-            // InconsistentSizeError
+            // ArraySizeNotConstIntegerError
+            // InconsistentConstArraySizeError
             // IndexOutOfRangeError
             // TooBigArrayIndex
             // ConstIntegerExpectedError
-            // NotConstReferenceError
+            // ArrayIndexNotConstIntegerError
             // ArithmeticOperationOverflowError
+            // DivideByZeroError
             // InvalidUnaryOperationError
             // InvalidBinaryOperationError
             // IntegerLiteralTooLargeError
-            // CannotInitializeConstWithValueOfDifferentType
-            // CannotInitializeArrayElementWithValueOfDifferentType
+            // CannotInitializeConstWithValueOfDifferentTypeError
+            // CannotInitializeArrayElementWithValueOfDifferentTypeError
             ConstEvaluationVisitor constEvaluationVisitor = new ConstEvaluationVisitor(_symbolTable);
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ConstDefinitionNodes);
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ArrayDeclarationNodes);

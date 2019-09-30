@@ -109,7 +109,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     }
                     break;
                 default:
-                    node.ArraySizeNode.Annotations.Add(new UnsupportedTypeError(null));
+                    node.ArraySizeNode.Annotations.Add(new ArraySizeNotConstIntegerError());
                     break;
             }
             return null;
@@ -154,11 +154,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     }
                     else if (intValue.Value != node.ElementNodes.Count)
                     {
-                        node.ArraySizeNode.Annotations.Add(new InconsistentSizeError(node.NameNode.Value, (int) intValue.Value, node.ElementNodes.Count));//+
+                        node.ArraySizeNode.Annotations.Add(new InconsistentConstArraySizeError(node.NameNode.Value, (int) intValue.Value, node.ElementNodes.Count));//+
                     }
                     break;
                 default:
-                    node.ArraySizeNode.Annotations.Add(new UnsupportedTypeError(null));
+                    node.ArraySizeNode.Annotations.Add(new ArraySizeNotConstIntegerError());
                     break;
             }
             
@@ -188,7 +188,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     }
                     break;
                 default:
-                    node.ArraySizeNode.Annotations.Add(new UnsupportedTypeError(null));
+                    node.ArraySizeNode.Annotations.Add(new ArraySizeNotConstIntegerError());
                     break;
             }
             return null;
@@ -252,7 +252,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 case UndefinedValue _:
                     break;
                 default:
-                    arrayIndexNode.Annotations.Add(new ConstIntegerExpectedError());
+                    arrayIndexNode.Annotations.Add(new ArrayIndexNotConstIntegerError());
                     return new UndefinedValue();
             }
             
@@ -267,9 +267,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 return new UndefinedValue();
             }
 
-            
-            
-            
             switch (referenceNode.Symbol.Node)
             {
                 case ConstArrayDefinitionNode constArrayDefinitionNode:
@@ -360,7 +357,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
             try
             {
-                NodeValue nodeValue = ConstEvaluationHelper.EvaluateBinaryOperation(node.Operator, leftNodeValue, rightNodeValue);
+                NodeValue nodeValue =
+                    ConstEvaluationHelper.EvaluateBinaryOperation(node.Operator, leftNodeValue, rightNodeValue);
                 if (nodeValue is IntValue intValue)
                 {
                     if (intValue.Value < Int32.MinValue || intValue.Value > Int32.MaxValue)
@@ -369,11 +367,17 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         return new UndefinedValue();
                     }
                 }
+
                 return nodeValue;
             }
             catch (InvalidBinaryOperationException)
             {
-                node.Annotations.Add(new InvalidBinaryOperationError());
+                node.Annotations.Add(new InvalidBinaryOperationError(node.OperatorLocation, node.LeftSideNode.Location, node.RightSideNode.Location));
+                return new UndefinedValue();
+            }
+            catch (DivideByZeroException)
+            {
+                node.Annotations.Add(new DivideByZeroError(node.OperatorLocation, node.RightSideNode.Location));
                 return new UndefinedValue();
             }
             catch (OverflowException)
@@ -435,7 +439,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
             catch (IncompatibleTypesException)
             {
-                rightSideNode.Annotations.Add(new CannotInitializeConstWithValueOfDifferentType(expectedType, actualType, node.NameNode.Location, rightSideNode.Location));//+
+                rightSideNode.Annotations.Add(new CannotInitializeConstWithValueOfDifferentTypeError(expectedType, actualType, node.NameNode.Location, rightSideNode.Location));//+
             }
 
             
@@ -449,7 +453,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
             catch (IncompatibleTypesException)
             {
-                node.Annotations.Add(new CannotInitializeArrayElementWithValueOfDifferentType(node.Location, expectedType, actualType));
+                node.Annotations.Add(new CannotInitializeArrayElementWithValueOfDifferentTypeError(node.Location, expectedType, actualType));
             }
         }
         

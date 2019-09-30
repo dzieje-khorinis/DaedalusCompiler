@@ -77,7 +77,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public static NodeValue EvaluateUnaryOperation(UnaryOperator oper, NodeValue value)
         {
             Console.WriteLine("UnaryOperator oper, NodeValue value");
-            if (value is UndefinedValue || value is StringValue)
+            if (value is UndefinedValue) //  || value is StringValue
             {
                 return new UndefinedValue();
             }
@@ -109,7 +109,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     return new IntValue(~intValue.Value);
                 
                 default:
-                    throw new InvalidUnaryOperationException();
+                    throw new Exception();
             }
         }
         
@@ -305,7 +305,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     return new IntValue(left.Value != 0 || right.Value != 0 ? 1 : 0);
 
                 default:
-                    throw new InvalidBinaryOperationException();
+                    throw new Exception();
             }
         }
 
@@ -317,8 +317,16 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 case BinaryOperator.Mult:
                     return new FloatValue(left.Value * right.Value);
                 case BinaryOperator.Div:
+                    if (right.Value == 0)
+                    {
+                        throw new DivideByZeroException();
+                    }
                     return new FloatValue(left.Value / right.Value);
                 case BinaryOperator.Modulo:
+                    if (right.Value == 0)
+                    {
+                        throw new DivideByZeroException();
+                    }
                     return new FloatValue(left.Value % right.Value);
                 
                 case BinaryOperator.Add:
@@ -347,7 +355,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     return new FloatValue((left.Value != 0 || right.Value != 0) ? 1 : 0);
                 
                 default:
-                    throw new InvalidBinaryOperationException();
+                    throw new Exception();
             }
         }
     }
