@@ -24,7 +24,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Symbol symbol = (Symbol) typedSymbol;
             
             SymbolType symbolBuiltinType = symbol.BuiltinType;
-            ASTNode typedSymbolNode = symbol.Node;
+            //ASTNode typedSymbolNode = symbol.Node;
+            DeclarationNode typedSymbolNode = (DeclarationNode) symbol.Node;
             
             CustomTypeDeclarationNode customTypeDeclarationNode = (CustomTypeDeclarationNode) typedSymbolNode;
             
@@ -38,7 +39,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     if (typeSymbol is ClassSymbol)
                     {
                         typedSymbol.ComplexType = typeSymbol;
-                        symbolBuiltinType = SymbolType.Instance;    
+                        symbolBuiltinType = SymbolType.Instance;
+                        
+                        
+                        if (customTypeDeclarationNode.TypeNameNode.Value != typeSymbol.Name)
+                        {
+                            DeclarationNode declarationNode = (DeclarationNode) typeSymbol.Node;
+                            customTypeDeclarationNode.TypeNameNode.Annotations.Add(new NamesNotMatchingCaseWiseWarning(declarationNode.NameNode.Location, typeSymbol.Name, customTypeDeclarationNode.TypeNameNode.Value));
+                        }
+
                     }
                     else
                     {
@@ -54,7 +63,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
             }
 
-            
             switch (typedSymbol)
             {
                 case FunctionSymbol _:

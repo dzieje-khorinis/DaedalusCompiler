@@ -17,7 +17,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             _symbolTable = symbolTable;
             ArrayIndexNodes = new List<ArrayIndexNode>();
         }
-
+        
+        
         protected override void VisitReference(ReferenceNode referenceNode)
         {
 
@@ -68,6 +69,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                                     {
                                         symbol = nestableSymbol;
                                         symbolLocalPath = $"{symbolLocalPath}.{attributeNode.Name}";
+                                        
+                                        if (attributeNode.Name != symbol.Name)
+                                        {
+                                            DeclarationNode declarationNode = (DeclarationNode) symbol.Node;
+                                            attributeNode.Annotations.Add(new NamesNotMatchingCaseWiseWarning(declarationNode.NameNode.Location, symbol.Name, attributeNode.Name));
+                                        }
                                     }
                                     else
                                     {
@@ -84,6 +91,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                                     {
                                         symbol = nestableSymbol;
                                         symbolLocalPath = $"{symbolLocalPath}.{attributeNode.Name}";
+                                        
+                                        if (attributeNode.Name != symbol.Name)
+                                        {
+                                            DeclarationNode declarationNode = (DeclarationNode) symbol.Node;
+                                            attributeNode.Annotations.Add(new NamesNotMatchingCaseWiseWarning(declarationNode.NameNode.Location, symbol.Name, attributeNode.Name));
+                                        }
                                     }
                                     else
                                     {

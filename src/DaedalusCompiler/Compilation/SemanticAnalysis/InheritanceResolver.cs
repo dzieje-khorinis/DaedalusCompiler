@@ -65,7 +65,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
             
             parentReferenceNode.Symbol = GetSymbol(parentReferenceNode.Name);
-
+            
             switch (parentReferenceNode.Symbol)
             {
                 case null:
@@ -84,7 +84,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     break;
             }
 
-
+            if (parentReferenceNode.Symbol != null)
+            {
+                if (parentReferenceNode.Name != parentReferenceNode.Symbol.Name)
+                {
+                    DeclarationNode declarationNode = (DeclarationNode) parentReferenceNode.Symbol.Node;
+                    parentReferenceNode.Annotations.Add(new NamesNotMatchingCaseWiseWarning(declarationNode.NameNode.Location, parentReferenceNode.Symbol.Name, parentReferenceNode.Name));
+                }
+            }
+            
             return subclassSymbol.BaseClassSymbol;
         }
     }
