@@ -33,12 +33,14 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
         private bool _wasFilePathDisplayed;
         
         private readonly bool _strictSyntax;
+        private HashSet<string> _globallySuppressedCodes;
         
-        public SemanticErrorsCollectingVisitor(ErrorLogger errorLogger, bool strictSyntax)
+        public SemanticErrorsCollectingVisitor(ErrorLogger errorLogger, bool strictSyntax, HashSet<string> globallySuppressedCodes)
         {
             CurrentFileNode = null;
             ErrorLogger = errorLogger;
             _strictSyntax = strictSyntax;
+            _globallySuppressedCodes = globallySuppressedCodes;
             LastParentBlockNode = null;
 
             ErrorsCount = 0;
@@ -115,7 +117,7 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
                 string line = FilesContents[fileIndex][node.Location.Line - 1];
                 HashSet<string> suppressedLineWarningCodes = Compiler.GetWarningCodesToSuppress(line);
                 HashSet<string> suppressedFileWarningCodes = SuppressedWarningCodes[fileIndex];
-                HashSet<string> suppressedWarningCodes = suppressedLineWarningCodes.Union(suppressedFileWarningCodes).ToHashSet();
+                HashSet<string> suppressedWarningCodes = suppressedLineWarningCodes.Union(suppressedFileWarningCodes).Union(_globallySuppressedCodes).ToHashSet();
                 string code = withCode.Code;//annotation.GetType().GetField("Code").GetValue(null).ToString();
                 return suppressedWarningCodes.Contains(code);
             }

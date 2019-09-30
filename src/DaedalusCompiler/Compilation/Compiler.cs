@@ -19,14 +19,16 @@ namespace DaedalusCompiler.Compilation
         private readonly OutputUnitsBuilder _ouBuilder;
         private readonly string _outputDirPath;
         private readonly bool _strictSyntax;
+        private readonly HashSet<string> _globallySuppressedCodes;
         
 
-        public Compiler(string outputDirPath="output", bool verbose=true, bool strictSyntax=false)
+        public Compiler(string outputDirPath, bool verbose, bool strictSyntax, HashSet<string> globallySuppressedCodes)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             _ouBuilder = new OutputUnitsBuilder(verbose);
             _outputDirPath = outputDirPath;
             _strictSyntax = strictSyntax;
+            _globallySuppressedCodes = globallySuppressedCodes;
         }
 
         public static HashSet<string> GetWarningCodesToSuppress(string line)
@@ -190,7 +192,11 @@ namespace DaedalusCompiler.Compilation
                 
                 
                 
-                SemanticErrorsCollectingVisitor semanticErrorsCollectingVisitor = new SemanticErrorsCollectingVisitor(new StdErrorLogger(), _strictSyntax);
+                SemanticErrorsCollectingVisitor semanticErrorsCollectingVisitor = new SemanticErrorsCollectingVisitor(
+                    new StdErrorLogger(),
+                    _strictSyntax,
+                    _globallySuppressedCodes);
+                    
                 semanticErrorsCollectingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
 
                 int errorsCount = semanticErrorsCollectingVisitor.ErrorsCount;
