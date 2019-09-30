@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using DaedalusCompiler.Compilation.SemanticAnalysis;
 using Xunit;
 
@@ -9,7 +10,6 @@ namespace DaedalusCompiler.Tests.SemanticErrors
     {
         protected string Code;
         protected string ExpectedCompilationOutput;
-        
         private void ParseData()
         {
             string[] codeLines = Code.Trim().Split(Environment.NewLine);
@@ -35,11 +35,11 @@ namespace DaedalusCompiler.Tests.SemanticErrors
             ExpectedCompilationOutput = string.Join(Environment.NewLine, compilationOutputLines);
         }
         
-        protected void AssertCompilationOutputMatch(bool strictSyntax=false)
+        protected void AssertCompilationOutputMatch(bool strictSyntax=false, bool detectUnused=false)
         {
             ParseData();
             StringBufforErrorLogger logger = new StringBufforErrorLogger();
-            TestsHelper testsHelper = new TestsHelper(logger, strictSyntax);
+            TestsHelper testsHelper = new TestsHelper(logger, strictSyntax, detectUnused);
             testsHelper.RunCode(Code);
             Assert.Equal(ExpectedCompilationOutput, logger.GetBuffor().Trim());
         }

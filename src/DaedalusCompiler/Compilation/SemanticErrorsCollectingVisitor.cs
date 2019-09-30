@@ -117,7 +117,11 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
                 string line = FilesContents[fileIndex][node.Location.Line - 1];
                 HashSet<string> suppressedLineWarningCodes = Compiler.GetWarningCodesToSuppress(line);
                 HashSet<string> suppressedFileWarningCodes = SuppressedWarningCodes[fileIndex];
-                HashSet<string> suppressedWarningCodes = suppressedLineWarningCodes.Union(suppressedFileWarningCodes).Union(_globallySuppressedCodes).ToHashSet();
+                HashSet<string> suppressedWarningCodes = suppressedLineWarningCodes.Union(suppressedFileWarningCodes).ToHashSet();
+                if (_globallySuppressedCodes != null)
+                {
+                    suppressedWarningCodes.UnionWith(_globallySuppressedCodes);
+                }
                 string code = withCode.Code;//annotation.GetType().GetField("Code").GetValue(null).ToString();
                 return suppressedWarningCodes.Contains(code);
             }

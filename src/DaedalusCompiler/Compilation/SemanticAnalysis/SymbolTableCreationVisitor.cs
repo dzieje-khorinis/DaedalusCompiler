@@ -15,11 +15,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public readonly List<ConstDefinitionNode> ConstDefinitionNodes;
         public readonly List<IArrayDeclarationNode> ArrayDeclarationNodes;
         
-        
         public readonly List<ITypedSymbol> TypedSymbols;
         public readonly List<SubclassSymbol> SubclassSymbols;
         public readonly List<ClassSymbol> ClassSymbols;
-
+        
+        public readonly List<DeclarationNode> DeclarationNodes;
+        
         public SymbolTableCreationVisitor()
         {
             SymbolTable = new Dictionary<string, Symbol>();
@@ -32,6 +33,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             TypedSymbols = new List<ITypedSymbol>();
             SubclassSymbols = new List<SubclassSymbol>();
             ClassSymbols = new List<ClassSymbol>();
+            
+            DeclarationNodes = new List<DeclarationNode>();
         }
 
         protected override void VisitFile(FileNode node)
@@ -225,6 +228,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             {
                 case DeclarationNode declarationNode:
                     declarationNode.Symbol = symbol;
+                    DeclarationNodes.Add(declarationNode);
                     break;
                 case ReferenceNode referenceNode:
                     referenceNode.Symbol = symbol;

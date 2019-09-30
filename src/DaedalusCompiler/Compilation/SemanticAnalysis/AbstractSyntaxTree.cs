@@ -176,6 +176,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public readonly string TypeNameCapitalized;
         public readonly NameNode NameNode;
+        public readonly List<ASTNode> Usages; //ReferenceNode, AttributeNode(ReferencePartNode), CustomTypeDeclarationNode // TODO maybe NameNode only?
 
         public Symbol Symbol;
 
@@ -185,6 +186,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             NameNode = nameNode;
             NameNode.ParentNode = this;
             Symbol = null;
+            Usages = new List<ASTNode>();
         }
     }
 

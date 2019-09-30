@@ -41,12 +41,17 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         typedSymbol.ComplexType = typeSymbol;
                         symbolBuiltinType = SymbolType.Instance;
                         
-                        
+                             
+                        DeclarationNode declarationNode = (DeclarationNode) typeSymbol.Node;
+                        declarationNode.Usages.Add(customTypeDeclarationNode.TypeNameNode);
+                             
+                        /*
                         if (customTypeDeclarationNode.TypeNameNode.Value != typeSymbol.Name)
                         {
                             DeclarationNode declarationNode = (DeclarationNode) typeSymbol.Node;
                             customTypeDeclarationNode.TypeNameNode.Annotations.Add(new NamesNotMatchingCaseWiseWarning(declarationNode.NameNode.Location, typeSymbol.Name, customTypeDeclarationNode.TypeNameNode.Value));
                         }
+                        */
 
                     }
                     else

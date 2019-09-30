@@ -86,11 +86,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
             if (parentReferenceNode.Symbol != null)
             {
+                DeclarationNode declarationNode = (DeclarationNode) parentReferenceNode.Symbol.Node;
+                declarationNode.Usages.Add(parentReferenceNode);
+                /*
                 if (parentReferenceNode.Name != parentReferenceNode.Symbol.Name)
                 {
-                    DeclarationNode declarationNode = (DeclarationNode) parentReferenceNode.Symbol.Node;
+                    
                     parentReferenceNode.Annotations.Add(new NamesNotMatchingCaseWiseWarning(declarationNode.NameNode.Location, parentReferenceNode.Symbol.Name, parentReferenceNode.Name));
                 }
+                */
             }
             
             return subclassSymbol.BaseClassSymbol;

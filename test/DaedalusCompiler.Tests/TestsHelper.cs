@@ -11,11 +11,20 @@ namespace DaedalusCompiler.Tests
         public int SyntaxErrorsCount;
         private readonly ErrorLogger _errorLogger;
         private readonly bool _strictSyntax;
+        private readonly bool _detectUnused;
+        private readonly HashSet<string> _globallySuppressedCodes;
 
-        public TestsHelper(ErrorLogger errorLogger, bool strictSyntax)
+        public TestsHelper(ErrorLogger errorLogger, bool strictSyntax, bool detectUnused)
         {
             _errorLogger = errorLogger;
             _strictSyntax = strictSyntax;
+            _detectUnused = detectUnused;
+            _globallySuppressedCodes = new HashSet<string>();
+
+            if (!_detectUnused)
+            {
+                _globallySuppressedCodes.Add(UnusedSymbolWarning.WCode);
+            }
         }
 
         public void RunCode(string code)
@@ -45,7 +54,7 @@ namespace DaedalusCompiler.Tests
             SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(parseTrees, 0, filesPaths, filesContents, suppressedWarningCodes);
             semanticAnalyzer.Run();
             
-            SemanticErrorsCollectingVisitor semanticErrorsCollectingVisitor = new SemanticErrorsCollectingVisitor(_errorLogger, _strictSyntax, new HashSet<string>());
+            SemanticErrorsCollectingVisitor semanticErrorsCollectingVisitor = new SemanticErrorsCollectingVisitor(_errorLogger, _strictSyntax, _globallySuppressedCodes);
             semanticErrorsCollectingVisitor.FilePathDisplayStatus = FilePathDisplayStatus.NeverDisplay;
             semanticErrorsCollectingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
         }

@@ -101,6 +101,11 @@ namespace DaedalusCompiler.Compilation
             TypeCheckingVisitor typeCheckingVisitor = new TypeCheckingVisitor();
             typeCheckingVisitor.VisitTree(AbstractSyntaxTree);
             
+            
+            DeclarationUsagesChecker declarationUsagesChecker = new DeclarationUsagesChecker();
+            declarationUsagesChecker.Check(symbolTableCreationVisitor.DeclarationNodes);
+            
+            
             // Error o rozmiarze C_NPC (800), warningi o tym, ze nazwy uzywamy np. małymi, a zadeklaorwaliśy duzymi, albo, ze sa nieuzywane funkcje
             // annotates:
             // IterationStatementNotInLoopError

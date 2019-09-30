@@ -33,12 +33,19 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             {
                 return;
             }
+
+            DeclarationNode declarationNode;
             
+            declarationNode = (DeclarationNode) symbol.Node;
+            declarationNode.Usages.Add(referenceNode);
+
+            /*
             if (referenceNode.Name != symbol.Name)
             {
                 DeclarationNode declarationNode = (DeclarationNode) symbol.Node;
                 referenceNode.Annotations.Add(new NamesNotMatchingCaseWiseWarning(declarationNode.NameNode.Location, symbol.Name, referenceNode.Name));
             }
+            */
 
             bool arrayIndexNodeFound = false;
 
@@ -70,11 +77,16 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                                         symbol = nestableSymbol;
                                         symbolLocalPath = $"{symbolLocalPath}.{attributeNode.Name}";
                                         
+                                        declarationNode = (DeclarationNode) symbol.Node;
+                                        declarationNode.Usages.Add(attributeNode);
+                                        
+                                        /*
                                         if (attributeNode.Name != symbol.Name)
                                         {
                                             DeclarationNode declarationNode = (DeclarationNode) symbol.Node;
                                             attributeNode.Annotations.Add(new NamesNotMatchingCaseWiseWarning(declarationNode.NameNode.Location, symbol.Name, attributeNode.Name));
                                         }
+                                        */
                                     }
                                     else
                                     {
@@ -92,11 +104,16 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                                         symbol = nestableSymbol;
                                         symbolLocalPath = $"{symbolLocalPath}.{attributeNode.Name}";
                                         
+                                        declarationNode = (DeclarationNode) symbol.Node;
+                                        declarationNode.Usages.Add(attributeNode);
+                                        
+                                        /*
                                         if (attributeNode.Name != symbol.Name)
                                         {
                                             DeclarationNode declarationNode = (DeclarationNode) symbol.Node;
                                             attributeNode.Annotations.Add(new NamesNotMatchingCaseWiseWarning(declarationNode.NameNode.Location, symbol.Name, attributeNode.Name));
                                         }
+                                        */
                                     }
                                     else
                                     {

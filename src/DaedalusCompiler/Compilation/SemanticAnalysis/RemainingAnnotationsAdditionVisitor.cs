@@ -35,7 +35,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             base.Visit(node);
         }*/
 
-
         protected override void VisitConstDefinition(ConstDefinitionNode node)
         {
         }

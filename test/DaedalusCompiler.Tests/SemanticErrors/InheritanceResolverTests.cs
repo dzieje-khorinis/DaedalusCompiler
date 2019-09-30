@@ -83,35 +83,5 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 ";
             AssertCompilationOutputMatch();
         }
-        
-        
-        [Fact]
-        public void TestNamesNotMatchingCaseWise()
-        {
-            Code = @"
-                class NPC {
-                    var int str;
-                }
-                instance HERO1(NPC);
-                instance HERO2(npc);
-                instance HERO3(NPC2);
-            ";
-
-            ExpectedCompilationOutput = @"
-                test.d: In instance 'HERO2':
-                test.d:5:15: warning W2: name 'npc' doesn't match declared name 'NPC' case wise
-                instance HERO2(npc);
-                               ^
-                test.d:1:6: note: 'NPC' declared here
-                class NPC {
-                      ^
-                test.d: In instance 'HERO3':
-                test.d:6:15: error: 'NPC2' undeclared
-                instance HERO3(NPC2);
-                               ^
-                ";
-
-            AssertCompilationOutputMatch();
-        }
     }
 }
