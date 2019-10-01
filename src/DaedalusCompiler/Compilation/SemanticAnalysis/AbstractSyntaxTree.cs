@@ -125,6 +125,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         public readonly List<NodeAnnotation> Annotations; //warnings & errors
         public ASTNode ParentNode { get; set; }
+        
+        //public ASTNode ParentBlockNode { get; set; }
 
         protected ASTNode(NodeLocation location)
         {
@@ -132,7 +134,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Location = location;
         }
         
-        public ASTNode GetFirstSignificantAncestor()
+        public ASTNode GetFirstSignificantAncestorNode()
         {
             ASTNode node = this;
             while (node != null)
@@ -628,6 +630,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     class AttributeNode : ReferencePartNode
     {
         public string Name;
+        public Symbol Symbol;
         
         public AttributeNode(string name, NodeLocation location) : base(location)
         {
@@ -654,10 +657,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public List<ReferencePartNode> PartNodes;
 
         public Symbol Symbol; // TODO filled in ???
+        public Symbol BaseSymbol; // if for example we have a.b.c, base symbol is a, and symbol is c
+        
 
         public ReferenceNode(string name, List<ReferencePartNode> partNodes, NodeLocation location) : base(location)
         {
             Symbol = null;
+            BaseSymbol = null;
             Name = name;
             PartNodes = partNodes;
 

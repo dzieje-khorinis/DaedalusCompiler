@@ -116,7 +116,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
     
-    public class ConstValueChangedWarning : WarningAnnotation
+    public class ConstValueChangedWarning : WarningAnnotation, IWithCode
     {
         public string Code { get; set; } = "W4";
         
@@ -133,13 +133,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
     
-    public class UsageOfNonInitializedVariableWarning : WarningAnnotation
+    public class UsageOfNonInitializedVariableWarning : WarningAnnotation, IWithCode
     {
         public string Code { get; set; } = "W5";
         
         public override string GetMessage()
         {
-            return $"'usage of non initialized variable";
+            return $"usage of non initialized variable";
         }
     }
 

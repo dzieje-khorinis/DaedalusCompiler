@@ -168,7 +168,7 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
 
 
             string parentBlockName = String.Empty;
-            ASTNode ancestor = node.GetFirstSignificantAncestor();
+            ASTNode ancestor = node.GetFirstSignificantAncestorNode();
             if (ancestor != LastParentBlockNode)
             {
                 switch (ancestor)

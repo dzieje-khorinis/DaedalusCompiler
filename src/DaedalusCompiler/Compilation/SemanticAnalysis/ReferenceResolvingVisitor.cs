@@ -23,6 +23,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
 
             Symbol symbol = GetBaseReferenceSymbol(referenceNode);
+            referenceNode.BaseSymbol = symbol;
             if (symbol == null)
             {
                 referenceNode.Annotations.Add(new UndeclaredIdentifierError(referenceNode.Name));
@@ -76,23 +77,21 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                                     {
                                         symbol = nestableSymbol;
                                         symbolLocalPath = $"{symbolLocalPath}.{attributeNode.Name}";
+                                        attributeNode.Symbol = symbol;
                                         
                                         declarationNode = (DeclarationNode) symbol.Node;
                                         declarationNode.Usages.Add(attributeNode);
                                         
-                                        /*
-                                        if (attributeNode.Name != symbol.Name)
-                                        {
-                                            DeclarationNode declarationNode = (DeclarationNode) symbol.Node;
-                                            attributeNode.Annotations.Add(new NamesNotMatchingCaseWiseWarning(declarationNode.NameNode.Location, symbol.Name, attributeNode.Name));
-                                        }
-                                        */
                                     }
                                     else
                                     {
                                         attributeNode.Annotations.Add(new ClassDoesNotHaveAttributeError(symbolLocalPath, baseClassSymbol.Name, attributeNode.Name));
                                         return;
                                     }
+                                }
+                                else
+                                {
+                                    // TODO shouldn't we annotate something here?
                                 }
                                 break;
                             
@@ -103,17 +102,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                                     {
                                         symbol = nestableSymbol;
                                         symbolLocalPath = $"{symbolLocalPath}.{attributeNode.Name}";
+                                        attributeNode.Symbol = symbol;
                                         
                                         declarationNode = (DeclarationNode) symbol.Node;
                                         declarationNode.Usages.Add(attributeNode);
-                                        
-                                        /*
-                                        if (attributeNode.Name != symbol.Name)
-                                        {
-                                            DeclarationNode declarationNode = (DeclarationNode) symbol.Node;
-                                            attributeNode.Annotations.Add(new NamesNotMatchingCaseWiseWarning(declarationNode.NameNode.Location, symbol.Name, attributeNode.Name));
-                                        }
-                                        */
                                     }
                                     else
                                     {
@@ -157,7 +149,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         private Symbol GetBaseReferenceSymbol(ReferenceNode referenceNode)
         {
-            ASTNode ancestor = referenceNode.GetFirstSignificantAncestor();
+            ASTNode ancestor = referenceNode.GetFirstSignificantAncestorNode();
             string referenceNameUpper = referenceNode.Name.ToUpper();
             NestableSymbol nestableSymbol;
 
@@ -166,7 +158,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 case SubclassNode subclassNode: // Instance/Prototype
                     
                     // look for local variable
-                    SubclassSymbol subclassSymbol = (PrototypeSymbol) subclassNode.Symbol;
+                    SubclassSymbol subclassSymbol = (SubclassSymbol) subclassNode.Symbol;
                     if (subclassSymbol.BodySymbols.TryGetValue(referenceNameUpper, out nestableSymbol))
                     {
                         return nestableSymbol;

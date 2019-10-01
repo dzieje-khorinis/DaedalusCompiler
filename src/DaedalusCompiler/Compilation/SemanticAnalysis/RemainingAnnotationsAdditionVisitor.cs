@@ -1,14 +1,26 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using DaedalusCompiler.Dat;
+using Antlr4.Runtime.Misc;
+
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
+    class SymbolUsage
+    {
+        public string Path;
+        public ASTNode Node;
+        
+        public SymbolUsage(ASTNode node, string path)
+        {
+            Node = node;
+            Path = path;
+        }
+    }
 
+    
     public class RemainingAnnotationsAdditionVisitor : AbstractSyntaxTreeBaseVisitor
     {
-        private readonly HashSet<Symbol> _initializedVariables;
+        private readonly HashSet<string> _initializedSymbolsPaths;
         
         private static readonly Dictionary<string, long> Class2RequiredSize = new Dictionary<string, long>
         {
@@ -19,7 +31,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         public RemainingAnnotationsAdditionVisitor()
         {
-            _initializedVariables = new HashSet<Symbol>();
+            _initializedSymbolsPaths = new HashSet<string>();
         }
 
         /*
@@ -59,30 +71,189 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
             base.VisitCompoundAssignment(node);
         }
+        
+        /*
+        private List<SymbolUsage> GetSymbolUsagesFromReference(ReferenceNode referenceNode)
+        {
+            List<SymbolUsage> symbolUsages = new List<SymbolUsage>();    
+            
+            Symbol symbol = referenceNode.BaseSymbol;
+            if (symbol == null)
+            {
+                return null;
+            }
+            
+            
+            string symbolLocalPath = referenceNode.Name;
+            SymbolUsage symbolUsage = new SymbolUsage(referenceNode, symbolLocalPath.ToUpper());
 
+            bool arrayIndexNodeFound = false;
+
+
+            foreach (ReferencePartNode partNode in referenceNode.PartNodes)
+            {
+                symbolUsages.Add(symbolUsage);
+
+                if (arrayIndexNodeFound)
+                {
+                    break;
+                }
+
+                if (partNode is AttributeNode attributeNode)
+                {
+                    symbol = attributeNode.Symbol;
+                    if (symbol == null)
+                    {
+                        break;
+                    }
+                    symbolLocalPath = $"{symbolLocalPath}.{attributeNode.Name}";
+                    symbolUsage = new SymbolUsage(attributeNode, symbolLocalPath.ToUpper());
+                    symbolUsages.Add(symbolUsage);
+                }
+                else if (partNode is ArrayIndexNode arrayIndexNode)
+                {
+                    arrayIndexNodeFound = true;
+                        
+                    if (!(symbol.Node is IArrayDeclarationNode))
+                    {
+                        break;
+                    }
+
+                    NodeValue nodeValue = arrayIndexNode.Value;
+                    if (nodeValue is IntValue intValue)
+                    {
+                        symbolLocalPath = $"{symbolLocalPath}[{(int) intValue.Value}]";
+                        symbolUsage.Path = symbolLocalPath;
+                    }
+                    else
+                    {
+                        symbolUsage = null;
+                        break;
+                    }
+                }
+            }
+            
+            if (symbolUsage != null)
+            {
+                symbolUsages.Add(symbolUsage);
+            }
+        
+            
+            
+            return symbolUsages;
+        }
+        */
+        
+        /*
+        private string GetInitializedSymbolPathFromReference(ReferenceNode referenceNode)
+        {
+            Symbol symbol = referenceNode.BaseSymbol;
+            if (symbol == null)
+            {
+                return null;
+            }
+            
+            string symbolLocalPath = referenceNode.Name;
+            ASTNode ancestorNode = referenceNode.GetFirstSignificantAncestorNode();
+            switch (ancestorNode)
+            {
+                case PrototypeDefinitionNode prototypeDefinitionNode:
+                    break;
+                case InstanceDefinitionNode instanceDefinitionNode:
+                    break;
+                case FunctionDefinitionNode functionDefinitionNode:
+                    break;
+            }
+            
+            
+
+            bool arrayIndexNodeFound = false;
+            
+            foreach (ReferencePartNode partNode in referenceNode.PartNodes)
+            {
+                if (arrayIndexNodeFound)
+                {
+                    return null;
+                }
+                
+                switch (partNode)
+                {
+                    case AttributeNode attributeNode:
+                        symbol = attributeNode.Symbol;
+                        if (symbol == null)
+                        {
+                            return null;
+                        }
+                        symbolLocalPath = $"{symbolLocalPath}.{attributeNode.Name}";
+                        break;
+                    
+                    case ArrayIndexNode arrayIndexNode:
+                        arrayIndexNodeFound = true;
+                        
+                        if (!(symbol.Node is IArrayDeclarationNode))
+                        {
+                            return null;
+                        }
+
+                        NodeValue nodeValue = arrayIndexNode.Value;
+                        switch (nodeValue)
+                        {
+                            case IntValue intValue:
+                                symbolLocalPath = $"{symbolLocalPath}[{(int) intValue.Value}]";
+                                break;
+                            default:
+                                return null;
+                        }
+                        
+                        break;
+                    default:
+                        throw new Exception();
+                }
+            }
+
+            return symbolLocalPath.ToUpper();
+        }
+        
+        
+        */
         
         protected override void VisitAssignment(AssignmentNode node)
         {
-            if (node.LeftSideNode.Symbol?.Node is ConstDefinitionNode)
+            ReferenceNode referenceNode = node.LeftSideNode;
+            Symbol symbol = referenceNode.Symbol;
+            
+            if (symbol?.Node is ConstDefinitionNode)
             {
-                node.Annotations.Add(new ConstValueChangedWarning(node.LeftSideNode.Name));
-            }
-            else if (node.LeftSideNode.Symbol?.Node is VarDeclarationNode)
+                node.Annotations.Add(new ConstValueChangedWarning(referenceNode.Name));
+            } 
+            
+            if (symbol?.Node is VarDeclarationNode)
             {
-                _initializedVariables.Add(node.LeftSideNode.Symbol);
+                //string symbolPath = GetInitializedSymbolPathFromReference(referenceNode);
+                //_initializedSymbolsPaths.Add(symbolPath);
             }
             base.VisitAssignment(node);
         }
 
         protected override void VisitReference(ReferenceNode referenceNode)
         {
-            if (referenceNode.Symbol?.Node is VarDeclarationNode)
+            /*
+            List<SymbolUsage> symbolUsages = GetSymbolUsagesFromReference(referenceNode);
+            if (symbolUsages == null)
             {
-                if (!_initializedVariables.Contains(referenceNode.Symbol))
+                return;
+            }
+            
+            foreach (SymbolUsage symbolUsage in symbolUsages)
+            {
+                string symbolPath = symbolUsage.Path;
+                if (!_initializedSymbolsPaths.Contains(symbolPath))
                 {
-                    //referenceNode.Annotations.Add(new UsageOfNonInitializedVariableWarning());
+                    symbolUsage.Node.Annotations.Add(new UsageOfNonInitializedVariableWarning());
                 }
             }
+            */
+            base.VisitReference(referenceNode);
         }
 
 
