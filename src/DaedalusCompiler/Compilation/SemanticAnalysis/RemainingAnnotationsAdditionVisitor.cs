@@ -8,13 +8,20 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class RemainingAnnotationsAdditionVisitor : AbstractSyntaxTreeBaseVisitor
     {
+        private readonly HashSet<Symbol> _initializedVariables;
+        
         private static readonly Dictionary<string, long> Class2RequiredSize = new Dictionary<string, long>
         {
             {"C_NPC", 800},
             {"C_INFO", 48},
             {"C_ITEMREACT", 28},
         };
-        
+
+        public RemainingAnnotationsAdditionVisitor()
+        {
+            _initializedVariables = new HashSet<Symbol>();
+        }
+
         /*
         protected override void Visit(ASTNode node)
         {
@@ -42,6 +49,42 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
             base.Visit(node);
         }*/
+
+        
+        protected override void VisitCompoundAssignment(CompoundAssignmentNode node)
+        {
+            if (node.LeftSideNode.Symbol?.Node is ConstDefinitionNode)
+            {
+                node.Annotations.Add(new ConstValueChangedWarning(node.LeftSideNode.Name));
+            }
+            base.VisitCompoundAssignment(node);
+        }
+
+        
+        protected override void VisitAssignment(AssignmentNode node)
+        {
+            if (node.LeftSideNode.Symbol?.Node is ConstDefinitionNode)
+            {
+                node.Annotations.Add(new ConstValueChangedWarning(node.LeftSideNode.Name));
+            }
+            else if (node.LeftSideNode.Symbol?.Node is VarDeclarationNode)
+            {
+                _initializedVariables.Add(node.LeftSideNode.Symbol);
+            }
+            base.VisitAssignment(node);
+        }
+
+        protected override void VisitReference(ReferenceNode referenceNode)
+        {
+            if (referenceNode.Symbol?.Node is VarDeclarationNode)
+            {
+                if (!_initializedVariables.Contains(referenceNode.Symbol))
+                {
+                    //referenceNode.Annotations.Add(new UsageOfNonInitializedVariableWarning());
+                }
+            }
+        }
+
 
         protected override void VisitClassDefinition(ClassDefinitionNode node)
         {

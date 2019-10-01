@@ -101,19 +101,43 @@ namespace DaedalusCompiler.Compilation
             TypeCheckingVisitor typeCheckingVisitor = new TypeCheckingVisitor();
             typeCheckingVisitor.VisitTree(AbstractSyntaxTree);
             
-            
+            // UnusedSymbolWarning
+            // NamesNotMatchingCaseWiseWarning
             DeclarationUsagesChecker declarationUsagesChecker = new DeclarationUsagesChecker();
             declarationUsagesChecker.Check(symbolTableCreationVisitor.DeclarationNodes);
             
-            
-            // Error o rozmiarze C_NPC (800), warningi o tym, ze nazwy uzywamy np. małymi, a zadeklaorwaliśy duzymi, albo, ze sa nieuzywane funkcje
             // annotates:
             // IterationStatementNotInLoopError
             // IntegerLiteralTooLargeError
             // SingleExpressionWarning
             // WrongClassSizeError
+            // ConstValueChangedWarning
+            // UsageOfNonInitializedVariableWarning
             RemainingAnnotationsAdditionVisitor remainingAnnotationsAdditionVisitor = new RemainingAnnotationsAdditionVisitor();
             remainingAnnotationsAdditionVisitor.VisitTree(AbstractSyntaxTree);
+            
+            // TODO
+            // add warning when somebody changes const, since it's possible but it's value isntr stored in savefiles (look daedalus compiler planned features docs)
+            // add warning if function doesn't return anything but it's type isn't void. Also check if all paths return
+            
+            // extern keyword
+            // inline keyword and inline comment for backwards compability
+            // tenary operator
+            // for and foreach loops
+            // methods in classes
+            // boolean
+            // make builting symbols list
+            // make unused symbols
+            // assignment on var declaration (inside functions)
+            // let grammar allow const not to have assignment and detect that error in semantic analysis
+            // add documentation: why created, differences to original compiler, tutorial, transpiler, all supported errors
+            // dynamic array accesss (with custom assembly) if > 255
+            // check if there are always true / always false blocks (unreachable code)
+            // check if there is code after return
+            // make casting possible
+            // add float arithmetics
+            // make ou files be generated using hidden channel, not regexes (it may be fast)
+            // translation strings, t"Hello world", also think about different way of writing dialogs (not in comments)
         }
     }
 }

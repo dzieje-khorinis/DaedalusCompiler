@@ -160,5 +160,43 @@ namespace DaedalusCompiler.Tests.SemanticErrors
 
             AssertCompilationOutputMatch();
         }
+
+        [Fact]
+        public void TestConstValueChanged()
+        {
+            Code = @"
+                const int tab[2] = {1, 2};
+                const int x = 1;
+                func void testFunc() {
+                    const int y = 2;
+                    x = 3;
+                    x += 1;
+                    y = 4;
+                    y *= 2;
+                    tab[1] = 3;
+                };
+            ";
+            
+            ExpectedCompilationOutput = @"
+                test.d: In function 'testFunc':
+                test.d:5:4: warning: 'x' is a const and shouldn't have its value changed
+                    x = 3;
+                    ^
+                test.d:6:4: warning: 'x' is a const and shouldn't have its value changed
+                    x += 1;
+                    ^
+                test.d:7:4: warning: 'y' is a const and shouldn't have its value changed
+                    y = 4;
+                    ^
+                test.d:8:4: warning: 'y' is a const and shouldn't have its value changed
+                    y *= 2;
+                    ^
+                test.d:9:4: warning: 'tab' is a const and shouldn't have its value changed
+                    tab[1] = 3;
+                    ^
+            ";
+
+            AssertCompilationOutputMatch();
+        }
     }
 }

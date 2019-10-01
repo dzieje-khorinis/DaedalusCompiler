@@ -116,6 +116,34 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
     
+    public class ConstValueChangedWarning : WarningAnnotation
+    {
+        public string Code { get; set; } = "W4";
+        
+        private readonly string _identifier;
+        
+        public ConstValueChangedWarning(string identifier)
+        {
+            _identifier = identifier;
+        }
+        
+        public override string GetMessage()
+        {
+            return $"'{_identifier}' is a const and shouldn't have its value changed";
+        }
+    }
+    
+    public class UsageOfNonInitializedVariableWarning : WarningAnnotation
+    {
+        public string Code { get; set; } = "W5";
+        
+        public override string GetMessage()
+        {
+            return $"'usage of non initialized variable";
+        }
+    }
+
+    
     
     public class IncompatibleTypesError : ErrorAnnotation
     {
@@ -213,6 +241,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             return $"'{_identifier}' undeclared";
         }
     }
+    
     
     public class WrongClassSizeError : ErrorAnnotation
     {
