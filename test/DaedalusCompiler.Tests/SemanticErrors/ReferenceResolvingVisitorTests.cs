@@ -139,6 +139,8 @@ namespace DaedalusCompiler.Tests.SemanticErrors
         public void TestAttributeOfNonInstance()
         {
             Code = @"
+                //! suppress: W5
+
                 prototype Proto(X) {};
                 
                 func void testFunc() {
@@ -156,20 +158,20 @@ namespace DaedalusCompiler.Tests.SemanticErrors
 
             ExpectedCompilationOutput = @"
                 test.d: In prototype 'Proto':
-                test.d:1:16: error: 'X' undeclared
+                test.d:3:16: error: 'X' undeclared
                 prototype Proto(X) {};
                                 ^
                 test.d: In function 'testFunc':
-                test.d:6:10: error: cannot access attribute 'attr' because 'y' is not an instance of a class
+                test.d:8:10: error: cannot access attribute 'attr' because 'y' is not an instance of a class
                     x = y.attr;
                           ^
-                test.d:7:6: error: cannot access attribute 'attr' because 'y' is not an instance of a class
+                test.d:9:6: error: cannot access attribute 'attr' because 'y' is not an instance of a class
                     y.attr = x;
                       ^
-                test.d:9:14: error: cannot access attribute 'a' because 'Proto' is not an instance of a class
+                test.d:11:14: error: cannot access attribute 'a' because 'Proto' is not an instance of a class
                     x = Proto.a;
                               ^
-                test.d:12:8: error: 'NonExistant' undeclared
+                test.d:14:8: error: 'NonExistant' undeclared
                     x = NonExistant.a;
                         ^
                 ";

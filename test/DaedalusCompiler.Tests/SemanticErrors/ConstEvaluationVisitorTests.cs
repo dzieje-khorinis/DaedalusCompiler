@@ -277,8 +277,8 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                     x = a[2];
                     x = b[2];
                     x = b[3];
-                    x = c[3];
-                    x = c[4];
+                    x = c[3]; //! suppress: W5
+                    x = c[4]; //! suppress: W5
                 };
             ";
 
@@ -291,7 +291,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                     x = b[3];
                           ^
                 test.d:11:10: error: array index out of range (max index for this array is 3)
-                    x = c[4];
+                    x = c[4]; //! suppress: W5
                           ^
             ";
 
@@ -347,8 +347,8 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                     x = a[TWO];
                     x = b[TWO];
                     x = b[THREE];
-                    x = c[THREE];
-                    x = c[FOUR];
+                    x = c[THREE]; //! suppress: W5
+                    x = c[FOUR]; //! suppress: W5
                 };
             ";
 
@@ -361,7 +361,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                     x = b[THREE];
                           ^
                 test.d:16:10: error: array index out of range (max index for this array is 3)
-                    x = c[FOUR];
+                    x = c[FOUR]; //! suppress: W5
                           ^
             ";
 
@@ -563,7 +563,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                     x = d[INDEX2];
                     x = d[INDEX3];
 
-                    x = e[INDEX1];
+                    x = e[INDEX1];  //! suppress: W5
                     x = e[INDEX2];
                     x = e[INDEX3];
                 }

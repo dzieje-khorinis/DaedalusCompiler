@@ -29,23 +29,33 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     
     public class UninitializedSymbolUsageDetectionVisitor : AbstractSyntaxTreeBaseVisitor
     {
-        private readonly Dictionary<SubclassNode, HashSet<string>> _node2initializedAttributesPaths;
-        private readonly Dictionary<DeclarationNode, HashSet<string>> _node2initializedLocalsPaths;
+        private readonly Dictionary<SubclassNode, HashSet<string>> _node2InitializedAttributesPaths;
         
         private HashSet<string> _initializedAttributesPaths;
         private HashSet<string> _initializedLocalsPaths;
 
         private BlockSymbol _currentBlockSymbol;
+
+        private HashSet<ASTNode> _visitedNodes;
         
         public UninitializedSymbolUsageDetectionVisitor()
         {
-            _node2initializedAttributesPaths = new Dictionary<SubclassNode, HashSet<string>>();
-            _node2initializedLocalsPaths = new Dictionary<DeclarationNode, HashSet<string>>();
+            _node2InitializedAttributesPaths = new Dictionary<SubclassNode, HashSet<string>>();
             _initializedAttributesPaths = null;
             _initializedLocalsPaths = null;
             _currentBlockSymbol = null;
+            
+            _visitedNodes = new HashSet<ASTNode>();
         }
-        
+
+        protected override void Visit(ASTNode node)
+        {
+            if (!_visitedNodes.Contains(node))
+            {
+                _visitedNodes.Add(node);
+                base.Visit(node);
+            }
+        }
 
         private HashSet<string> GetInitializedAttributesPaths(SubclassNode initialSubclassNode)
         {
@@ -54,7 +64,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             ASTNode node = initialSubclassNode;
             while (node is SubclassNode subclassNode)
             {
-                initializedAttributesPaths.UnionWith(_node2initializedAttributesPaths[subclassNode]);
+                initializedAttributesPaths.UnionWith(_node2InitializedAttributesPaths[subclassNode]);
                 SubclassSymbol subclassSymbol = (SubclassSymbol) subclassNode.Symbol;
                 node = subclassSymbol.InheritanceParentSymbol.Node;
             }
@@ -109,13 +119,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         protected override void VisitAssignment(AssignmentNode node)
         {
+            Visit(node.RightSideNode);
+            
             ReferenceNode referenceNode = node.LeftSideNode;
             NestableSymbol nestableSymbol = (NestableSymbol) referenceNode.Symbol;
 
             switch (nestableSymbol?.Node)
             {
                 case ConstDefinitionNode _:
-                case PrototypeDefinitionNode _:
+                case ParameterDeclarationNode _:
                     break;
                 case VarDeclarationNode _:
 
@@ -145,23 +157,19 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         if (baseSymbol.ParentBlockSymbol == currentSubclassSymbol.BaseClassSymbol)
                         {
                             _initializedAttributesPaths.Add(relativePath);
+                            break;
                         }
                     }
-                    else if (_currentBlockSymbol is FunctionSymbol)
+
+                    if (nestableSymbol.ParentBlockSymbol == _currentBlockSymbol)
                     {
-                        if (nestableSymbol.ParentBlockSymbol == _currentBlockSymbol)
-                        {
-                            _initializedLocalsPaths.Add(relativePath);
-                        }
+                        _initializedLocalsPaths.Add(relativePath);
                     }
-                    else
-                    {
-                        throw new Exception();
-                    }
+                    
                     break;
             }
             
-            base.VisitAssignment(node);
+            Visit(node.LeftSideNode);
         }
 
         protected override void VisitReference(ReferenceNode referenceNode)
@@ -170,7 +178,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             switch (nestableSymbol?.Node)
             {
                 case ConstDefinitionNode _:
-                case PrototypeDefinitionNode _:
+                case ParameterDeclarationNode _:
                     break;
                 case VarDeclarationNode _:
                     
@@ -203,28 +211,21 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                                     referenceData.BaseName, referenceData.Index, true));
                             }
                             
+                            break;
+                        }
+                    }
 
-                        }
-                    }
-                    else if (_currentBlockSymbol is FunctionSymbol)
+                    if (nestableSymbol.ParentBlockSymbol == _currentBlockSymbol)
                     {
-                        if (nestableSymbol.ParentBlockSymbol == _currentBlockSymbol)
+                        if (!_initializedLocalsPaths.Contains(referenceData.PreDotPath))
                         {
-                            if (!_initializedLocalsPaths.Contains(referenceData.PreDotPath))
-                            {
-                                referenceNode.Annotations.Add(new UsageOfNonInitializedVariableWarning(
-                                    referenceData.BaseName, referenceData.Index,false));
-                            }
+                            referenceNode.Annotations.Add(new UsageOfNonInitializedVariableWarning(
+                                referenceData.BaseName, referenceData.Index,false));
                         }
                     }
-                    else
-                    {
-                        throw new Exception();
-                    }
+
                     break;
             }
-            
-            
             
             base.VisitReference(referenceNode);
         }
@@ -236,26 +237,35 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected override void VisitPrototypeDefinition(PrototypeDefinitionNode node)
         {
+            PrototypeSymbol symbol = (PrototypeSymbol) node.Symbol;
+            if (symbol?.InheritanceParentSymbol?.Node != null)
+            {
+                Visit(symbol.InheritanceParentSymbol.Node);
+            }
+            
+
             _initializedAttributesPaths = new HashSet<string>();
             _initializedLocalsPaths = new HashSet<string>();
-            _node2initializedAttributesPaths[node] = _initializedAttributesPaths;
-            _node2initializedLocalsPaths[node] = _initializedLocalsPaths;
+            _node2InitializedAttributesPaths[node] = _initializedAttributesPaths;
             
-            _currentBlockSymbol = (BlockSymbol) node.Symbol;
-            
+            _currentBlockSymbol = symbol;
             base.VisitPrototypeDefinition(node);
-            
             _currentBlockSymbol = null;
         }
 
         protected override void VisitInstanceDefinition(InstanceDefinitionNode node)
         {
+            InstanceSymbol symbol = (InstanceSymbol) node.Symbol;
+            if (symbol?.InheritanceParentSymbol?.Node != null)
+            {
+                Visit(symbol.InheritanceParentSymbol.Node);
+            }
+            
             _initializedAttributesPaths = new HashSet<string>();
             _initializedLocalsPaths = new HashSet<string>();
-            _node2initializedAttributesPaths[node] = _initializedAttributesPaths;
-            _node2initializedLocalsPaths[node] = _initializedLocalsPaths;
-            
-            _currentBlockSymbol = (BlockSymbol) node.Symbol;
+            _node2InitializedAttributesPaths[node] = _initializedAttributesPaths;
+
+            _currentBlockSymbol = symbol;
             base.VisitInstanceDefinition(node);
             _currentBlockSymbol = null;
         }
@@ -263,8 +273,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         protected override void VisitFunctionDefinition(FunctionDefinitionNode node)
         {
             _initializedLocalsPaths = new HashSet<string>();
-            _node2initializedLocalsPaths[node] = _initializedLocalsPaths;
-            
+
             _currentBlockSymbol = (BlockSymbol) node.Symbol;
             base.VisitFunctionDefinition(node);
             _currentBlockSymbol = null;

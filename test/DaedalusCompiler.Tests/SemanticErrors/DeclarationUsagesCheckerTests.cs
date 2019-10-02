@@ -58,6 +58,8 @@ namespace DaedalusCompiler.Tests.SemanticErrors
 
 
             Code = @"
+                //! suppress: W5
+
                 class NPC {
                     var int str;
                 }
@@ -80,59 +82,59 @@ namespace DaedalusCompiler.Tests.SemanticErrors
             ";
 
             ExpectedCompilationOutput = @"
-                test.d:8:14: warning W2: name 'X' doesn't match declared name 'x' case wise
+                test.d:10:14: warning W2: name 'X' doesn't match declared name 'x' case wise
                 const int y = X + 1;
                               ^
-                test.d:7:10: note: 'x' declared here
+                test.d:9:10: note: 'x' declared here
                 const int x = 2;
                           ^
                 test.d: In function 'testFunc':
-                test.d:13:4: warning W2: name 'tesT' doesn't match declared name 'test' case wise
+                test.d:15:4: warning W2: name 'tesT' doesn't match declared name 'test' case wise
                     tesT();
                     ^
-                test.d:10:10: note: 'test' declared here
+                test.d:12:10: note: 'test' declared here
                 func void test() {};
                           ^
-                test.d:16:4: warning W2: name 'A' doesn't match declared name 'a' case wise
+                test.d:18:4: warning W2: name 'A' doesn't match declared name 'a' case wise
                     A = B + X;
                     ^
-                test.d:14:12: note: 'a' declared here
+                test.d:16:12: note: 'a' declared here
                     var int a;
                             ^
-                test.d:16:8: warning W2: name 'B' doesn't match declared name 'b' case wise
+                test.d:18:8: warning W2: name 'B' doesn't match declared name 'b' case wise
                     A = B + X;
                         ^
-                test.d:15:12: note: 'b' declared here
+                test.d:17:12: note: 'b' declared here
                     var int b;
                             ^
-                test.d:16:12: warning W2: name 'X' doesn't match declared name 'x' case wise
+                test.d:18:12: warning W2: name 'X' doesn't match declared name 'x' case wise
                     A = B + X;
                             ^
-                test.d:7:10: note: 'x' declared here
+                test.d:9:10: note: 'x' declared here
                 const int x = 2;
                           ^
-                test.d:17:8: warning W2: name 'hero' doesn't match declared name 'HERO' case wise
+                test.d:19:8: warning W2: name 'hero' doesn't match declared name 'HERO' case wise
                     b = hero.str + HERO.STR;
                         ^
-                test.d:4:9: note: 'HERO' declared here
+                test.d:6:9: note: 'HERO' declared here
                 instance HERO(NPC);
                          ^
-                test.d:17:24: warning W2: name 'STR' doesn't match declared name 'str' case wise
+                test.d:19:24: warning W2: name 'STR' doesn't match declared name 'str' case wise
                     b = hero.str + HERO.STR;
                                         ^
-                test.d:2:12: note: 'str' declared here
+                test.d:4:12: note: 'str' declared here
                     var int str;
                             ^
-                test.d:18:14: warning W2: name 'STR' doesn't match declared name 'str' case wise
+                test.d:20:14: warning W2: name 'STR' doesn't match declared name 'str' case wise
                     b = enemy.STR + ENEMY.str;
                               ^
-                test.d:2:12: note: 'str' declared here
+                test.d:4:12: note: 'str' declared here
                     var int str;
                             ^
-                test.d:18:20: warning W2: name 'ENEMY' doesn't match declared name 'enemy' case wise
+                test.d:20:20: warning W2: name 'ENEMY' doesn't match declared name 'enemy' case wise
                     b = enemy.STR + ENEMY.str;
                                     ^
-                test.d:5:8: note: 'enemy' declared here
+                test.d:7:8: note: 'enemy' declared here
                 var NPC enemy;
                         ^
                 ";

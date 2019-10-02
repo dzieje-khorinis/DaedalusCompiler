@@ -166,7 +166,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 arrayElementText = $"element (index '{_index}') of array ";
             }
 
-            return $"usage of non-initialized {typeOfVariable} {arrayElementText}'{_identifier}'";
+            return $"usage of non-initialized {arrayElementText}{typeOfVariable} '{_identifier}'";
         }
     }
 
