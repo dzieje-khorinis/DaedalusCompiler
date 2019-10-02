@@ -1,23 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Antlr4.Runtime.Misc;
 
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
-    class SymbolUsage
-    {
-        public string Path;
-        public ASTNode Node;
-        
-        public SymbolUsage(ASTNode node, string path)
-        {
-            Node = node;
-            Path = path;
-        }
-    }
-
-    
     public class RemainingAnnotationsAdditionVisitor : AbstractSyntaxTreeBaseVisitor
     {
         private readonly HashSet<string> _initializedSymbolsPaths;
@@ -29,40 +15,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             {"C_ITEMREACT", 28},
         };
 
-        public RemainingAnnotationsAdditionVisitor()
-        {
-            _initializedSymbolsPaths = new HashSet<string>();
-        }
-
-        /*
-        protected override void Visit(ASTNode node)
-        {
-            if (node.Annotations.Count > 0)
-            {
-                string message = node.GetType().ToString().Split(".").Last();
-                switch (node)
-                {
-                    case ConstDefinitionNode constDefinitionNode:
-                        message = $"{message} {constDefinitionNode.NameNode.Value}";
-                        break;
-                    case ReferenceNode referenceNode:
-                        message = $"{message} {referenceNode.Name}";
-                        break;
-                    case AttributeNode attributeNode:
-                        message = $"{message} {attributeNode.Name}";
-                        break;
-                }
-
-                Console.WriteLine($"{message}");
-                foreach (var annotation in node.Annotations)
-                {
-                    Console.WriteLine(annotation.GetType());
-                }
-            }
-            base.Visit(node);
-        }*/
-
-        
         protected override void VisitCompoundAssignment(CompoundAssignmentNode node)
         {
             if (node.LeftSideNode.Symbol?.Node is ConstDefinitionNode)
@@ -71,152 +23,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
             base.VisitCompoundAssignment(node);
         }
-        
-        /*
-        private List<SymbolUsage> GetSymbolUsagesFromReference(ReferenceNode referenceNode)
-        {
-            List<SymbolUsage> symbolUsages = new List<SymbolUsage>();    
-            
-            Symbol symbol = referenceNode.BaseSymbol;
-            if (symbol == null)
-            {
-                return null;
-            }
-            
-            
-            string symbolLocalPath = referenceNode.Name;
-            SymbolUsage symbolUsage = new SymbolUsage(referenceNode, symbolLocalPath.ToUpper());
 
-            bool arrayIndexNodeFound = false;
-
-
-            foreach (ReferencePartNode partNode in referenceNode.PartNodes)
-            {
-                symbolUsages.Add(symbolUsage);
-
-                if (arrayIndexNodeFound)
-                {
-                    break;
-                }
-
-                if (partNode is AttributeNode attributeNode)
-                {
-                    symbol = attributeNode.Symbol;
-                    if (symbol == null)
-                    {
-                        break;
-                    }
-                    symbolLocalPath = $"{symbolLocalPath}.{attributeNode.Name}";
-                    symbolUsage = new SymbolUsage(attributeNode, symbolLocalPath.ToUpper());
-                    symbolUsages.Add(symbolUsage);
-                }
-                else if (partNode is ArrayIndexNode arrayIndexNode)
-                {
-                    arrayIndexNodeFound = true;
-                        
-                    if (!(symbol.Node is IArrayDeclarationNode))
-                    {
-                        break;
-                    }
-
-                    NodeValue nodeValue = arrayIndexNode.Value;
-                    if (nodeValue is IntValue intValue)
-                    {
-                        symbolLocalPath = $"{symbolLocalPath}[{(int) intValue.Value}]";
-                        symbolUsage.Path = symbolLocalPath;
-                    }
-                    else
-                    {
-                        symbolUsage = null;
-                        break;
-                    }
-                }
-            }
-            
-            if (symbolUsage != null)
-            {
-                symbolUsages.Add(symbolUsage);
-            }
-        
-            
-            
-            return symbolUsages;
-        }
-        */
-        
-        /*
-        private string GetInitializedSymbolPathFromReference(ReferenceNode referenceNode)
-        {
-            Symbol symbol = referenceNode.BaseSymbol;
-            if (symbol == null)
-            {
-                return null;
-            }
-            
-            string symbolLocalPath = referenceNode.Name;
-            ASTNode ancestorNode = referenceNode.GetFirstSignificantAncestorNode();
-            switch (ancestorNode)
-            {
-                case PrototypeDefinitionNode prototypeDefinitionNode:
-                    break;
-                case InstanceDefinitionNode instanceDefinitionNode:
-                    break;
-                case FunctionDefinitionNode functionDefinitionNode:
-                    break;
-            }
-            
-            
-
-            bool arrayIndexNodeFound = false;
-            
-            foreach (ReferencePartNode partNode in referenceNode.PartNodes)
-            {
-                if (arrayIndexNodeFound)
-                {
-                    return null;
-                }
-                
-                switch (partNode)
-                {
-                    case AttributeNode attributeNode:
-                        symbol = attributeNode.Symbol;
-                        if (symbol == null)
-                        {
-                            return null;
-                        }
-                        symbolLocalPath = $"{symbolLocalPath}.{attributeNode.Name}";
-                        break;
-                    
-                    case ArrayIndexNode arrayIndexNode:
-                        arrayIndexNodeFound = true;
-                        
-                        if (!(symbol.Node is IArrayDeclarationNode))
-                        {
-                            return null;
-                        }
-
-                        NodeValue nodeValue = arrayIndexNode.Value;
-                        switch (nodeValue)
-                        {
-                            case IntValue intValue:
-                                symbolLocalPath = $"{symbolLocalPath}[{(int) intValue.Value}]";
-                                break;
-                            default:
-                                return null;
-                        }
-                        
-                        break;
-                    default:
-                        throw new Exception();
-                }
-            }
-
-            return symbolLocalPath.ToUpper();
-        }
-        
-        
-        */
-        
         protected override void VisitAssignment(AssignmentNode node)
         {
             ReferenceNode referenceNode = node.LeftSideNode;
@@ -227,36 +34,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 node.Annotations.Add(new ConstValueChangedWarning(referenceNode.Name));
             } 
             
-            if (symbol?.Node is VarDeclarationNode)
-            {
-                //string symbolPath = GetInitializedSymbolPathFromReference(referenceNode);
-                //_initializedSymbolsPaths.Add(symbolPath);
-            }
             base.VisitAssignment(node);
         }
-
-        protected override void VisitReference(ReferenceNode referenceNode)
-        {
-            /*
-            List<SymbolUsage> symbolUsages = GetSymbolUsagesFromReference(referenceNode);
-            if (symbolUsages == null)
-            {
-                return;
-            }
-            
-            foreach (SymbolUsage symbolUsage in symbolUsages)
-            {
-                string symbolPath = symbolUsage.Path;
-                if (!_initializedSymbolsPaths.Contains(symbolPath))
-                {
-                    symbolUsage.Node.Annotations.Add(new UsageOfNonInitializedVariableWarning());
-                }
-            }
-            */
-            base.VisitReference(referenceNode);
-        }
-
-
         protected override void VisitClassDefinition(ClassDefinitionNode node)
         {
             string classNameUpper = node.NameNode.Value.ToUpper();
@@ -293,13 +72,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
         }
 
-        protected override void VisitConstDefinition(ConstDefinitionNode node)
-        {
-        }
+        protected override void VisitConstDefinition(ConstDefinitionNode node) { }
 
-        protected override void VisitConstArrayDefinition(ConstArrayDefinitionNode node)
-        {
-        }
+        protected override void VisitConstArrayDefinition(ConstArrayDefinitionNode node) { }
         
 
         protected override void VisitPrototypeDefinition(PrototypeDefinitionNode node)

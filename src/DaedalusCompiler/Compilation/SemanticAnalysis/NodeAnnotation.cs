@@ -135,11 +135,38 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     
     public class UsageOfNonInitializedVariableWarning : WarningAnnotation, IWithCode
     {
+        /*
+         * - use of non-initialized local variables
+         * - use of non-initialized class attributes in prototype / instance
+         */
         public string Code { get; set; } = "W5";
-        
+
+        private string _identifier;
+        private long _index;
+        private bool _isAttribute;
+
+        public UsageOfNonInitializedVariableWarning(string identifier, long index, bool isAttribute)
+        {
+            _identifier = identifier;
+            _index = index;
+            _isAttribute = isAttribute;
+        }
+
         public override string GetMessage()
         {
-            return $"usage of non initialized variable";
+            string typeOfVariable = "variable";
+            if (_isAttribute)
+            {
+                typeOfVariable = "attribute";
+            }
+
+            string arrayElementText = "";
+            if (_index != -1)
+            {
+                arrayElementText = $"element (index '{_index}') of array ";
+            }
+
+            return $"usage of non-initialized {typeOfVariable} {arrayElementText}'{_identifier}'";
         }
     }
 

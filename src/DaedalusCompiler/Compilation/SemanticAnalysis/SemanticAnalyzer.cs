@@ -106,6 +106,9 @@ namespace DaedalusCompiler.Compilation
             DeclarationUsagesChecker declarationUsagesChecker = new DeclarationUsagesChecker();
             declarationUsagesChecker.Check(symbolTableCreationVisitor.DeclarationNodes);
             
+            UninitializedSymbolUsageDetectionVisitor uninitializedSymbolUsageDetectionVisitor = new UninitializedSymbolUsageDetectionVisitor();
+            uninitializedSymbolUsageDetectionVisitor.VisitTree(AbstractSyntaxTree);
+            
             // annotates:
             // IterationStatementNotInLoopError
             // IntegerLiteralTooLargeError
@@ -117,11 +120,14 @@ namespace DaedalusCompiler.Compilation
             remainingAnnotationsAdditionVisitor.VisitTree(AbstractSyntaxTree);
             
             // TODO
+            // write to srderr instead of stdout
+            // add warning if if-statement condition is always true or always false (it may be HARD)
             // add warning accessing array without square brackets
             // addd warning code is after return
             // add warning when somebody changes const, since it's possible but it's value isntr stored in savefiles (look daedalus compiler planned features docs)
             // add warning if function doesn't return anything but it's type isn't void. Also check if all paths return
             
+            // doc: we have hoisting, when original compiler only have hoisting when there is global variable with same name
             // extern keyword
             // inline keyword and inline comment for backwards compability
             // tenary operator
