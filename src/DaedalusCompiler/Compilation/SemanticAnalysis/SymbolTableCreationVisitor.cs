@@ -16,6 +16,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public readonly List<IArrayDeclarationNode> ArrayDeclarationNodes;
         
         public readonly List<ITypedSymbol> TypedSymbols;
+        public readonly List<FunctionSymbol> FunctionSymbols;
         public readonly List<SubclassSymbol> SubclassSymbols;
         public readonly List<ClassSymbol> ClassSymbols;
         
@@ -31,6 +32,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             ConstDefinitionNodes = new List<ConstDefinitionNode>();
             ArrayDeclarationNodes = new List<IArrayDeclarationNode>();
             TypedSymbols = new List<ITypedSymbol>();
+            FunctionSymbols = new List<FunctionSymbol>();
             SubclassSymbols = new List<SubclassSymbol>();
             ClassSymbols = new List<ClassSymbol>();
             
@@ -215,6 +217,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 case ITypedSymbol typedSymbol:
                     TypedSymbols.Add(typedSymbol);
                     break;
+                /*
+                case FunctionSymbol functionSymbol:
+                    FunctionSymbols.Add(functionSymbol);
+                    break;
+                */
                 case SubclassSymbol subclassSymbol:
                     SubclassSymbols.Add(subclassSymbol);
                     break;

@@ -57,6 +57,7 @@ namespace DaedalusCompiler.Compilation
             // UnsupportedFunctionTypeError
             TypeResolver typeResolver = new TypeResolver(_symbolTable);
             typeResolver.Resolve(symbolTableCreationVisitor.TypedSymbols);
+            //typeResolver.Resolve(symbolTableCreationVisitor.FunctionSymbols);
             
             // NotClassOrPrototypeReferenceError
             // UndeclaredIdentifierError
@@ -98,7 +99,7 @@ namespace DaedalusCompiler.Compilation
             constEvaluationVisitor.Visit(referenceResolvingVisitor.ArrayIndexNodes);
 
             // ArgumentsCountDoesNotMatchError
-            TypeCheckingVisitor typeCheckingVisitor = new TypeCheckingVisitor();
+            TypeCheckingVisitor typeCheckingVisitor = new TypeCheckingVisitor(_symbolTable);
             typeCheckingVisitor.VisitTree(AbstractSyntaxTree);
             
             // UnusedSymbolWarning
@@ -120,11 +121,11 @@ namespace DaedalusCompiler.Compilation
             remainingAnnotationsAdditionVisitor.VisitTree(AbstractSyntaxTree);
             
             // TODO
+            // moze wypierdolić nofunc i zostawic tylko null, ktore bedzie mozna wpisywac tylko do zmiennych typy klasowego i funkcyjnego?
             // write to srderr instead of stdout
             // add warning if if-statement condition is always true or always false (it may be HARD)
             // add warning accessing array without square brackets
             // addd warning code is after return
-            // add warning when somebody changes const, since it's possible but it's value isntr stored in savefiles (look daedalus compiler planned features docs)
             // add warning if function doesn't return anything but it's type isn't void. Also check if all paths return
             
             // doc: we have hoisting, when original compiler only have hoisting when there is global variable with same name

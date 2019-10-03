@@ -36,7 +36,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         private BlockSymbol _currentBlockSymbol;
 
-        private HashSet<ASTNode> _visitedNodes;
+        private readonly HashSet<ASTNode> _visitedNodes;
         
         public UninitializedSymbolUsageDetectionVisitor()
         {

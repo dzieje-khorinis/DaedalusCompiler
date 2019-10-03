@@ -27,8 +27,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         Func = 5,
         Prototype = 6,
         Instance = 7,
+        Undefined = 8,
     }
 
+    
     public abstract class Symbol
     {
         public int Index;
@@ -38,6 +40,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public ASTNode Node;
 
         public SymbolType BuiltinType;
+        
 
         protected Symbol(string name, ASTNode node)
         {
@@ -149,9 +152,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         //public SymbolType? BuiltinType { get; set; }
         public Symbol ComplexType { get; set; }
 
+        //public SymbolType ReturnBuiltinType;
+        //public Symbol ReturnComplexType;
+
         public FunctionSymbol(string typeName, string name, ASTNode node) : base(name, node)
         {
             TypeName = typeName.ToUpper();
+            //BuiltinType = SymbolType.Func;
+            //ReturnBuiltinType = GetBuiltinType(TypeName);
+            //ReturnComplexType = null;
             BuiltinType = GetBuiltinType(TypeName);
             ComplexType = null;
         }
@@ -182,6 +191,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public ClassSymbol(string name, ASTNode node) : base(name, node)
         {
+            BuiltinType = SymbolType.Class;
         }
     }
 
@@ -189,6 +199,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public PrototypeSymbol(string name, ASTNode node) : base(name, node)
         {
+            BuiltinType = SymbolType.Prototype;
         }
     }
 
@@ -196,6 +207,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public InstanceSymbol(string name, ASTNode node) : base(name, node)
         {
+            BuiltinType = SymbolType.Instance;
         }
     }
 

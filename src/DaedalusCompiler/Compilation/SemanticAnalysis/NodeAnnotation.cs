@@ -523,6 +523,21 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             return "cannot divide by zero";
         }
     }
+
+    public class InvalidArgumentTypeToUnaryExpressionError : ErrorAnnotation
+    {
+        private readonly string _typeName;
+
+        public InvalidArgumentTypeToUnaryExpressionError(string typeName)
+        {
+            _typeName = typeName;
+        }
+
+        public override string GetMessage()
+        {
+            return $"invalid argument type '{_typeName}' to unary expression";
+        }
+    }
     
     public class InvalidUnaryOperationError : ErrorAnnotation
     {

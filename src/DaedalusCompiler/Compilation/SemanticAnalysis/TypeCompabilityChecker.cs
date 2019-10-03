@@ -1,4 +1,5 @@
 ﻿
+using DaedalusCompiler.Compilation.SemanticAnalysis;
 using DaedalusCompiler.Dat;
 
 
@@ -15,7 +16,7 @@ namespace DaedalusCompiler.Compilation
     public class Data
     {
         public DataCategory Category;
-        public DatSymbolType Type;
+        public SymbolType Type;
     }
     
     public enum DataCategory
@@ -36,17 +37,17 @@ namespace DaedalusCompiler.Compilation
     
     public class TypeCompabilityChecker
     {
-        public Compability GetReturnCompability(DatSymbolType functionType, Data returned)
+        public Compability GetReturnCompability(SymbolType functionType, Data returned)
         {
             switch (functionType)
             {
-                case DatSymbolType.Int:
-                    if (returned.Type == DatSymbolType.Int)
+                case SymbolType.Int:
+                    if (returned.Type == SymbolType.Int)
                     {
                         return Compability.Full;
                     }
 
-                    if (returned.Type == DatSymbolType.Instance && returned.Category == DataCategory.Variable)
+                    if (returned.Type == SymbolType.Instance && returned.Category == DataCategory.Variable)
                     {
                         // TODO, check if this is worth supporting
                         return Compability.Full;
@@ -54,8 +55,8 @@ namespace DaedalusCompiler.Compilation
 
                     break;
                 
-                case DatSymbolType.String:
-                    if (returned.Type == DatSymbolType.String)
+                case SymbolType.String:
+                    if (returned.Type == SymbolType.String)
                     {
                         return Compability.Full;
                     }
@@ -66,17 +67,17 @@ namespace DaedalusCompiler.Compilation
             return Compability.None;
         }
 
-        public Compability GetAssignmentCompability(DatSymbolType lValueType, Data rValue)
+        public Compability GetAssignmentCompability(SymbolType lValueType, Data rValue)
         {
             switch (lValueType)
             {
-                case DatSymbolType.Int:
-                    if (rValue.Type == DatSymbolType.Int)
+                case SymbolType.Int:
+                    if (rValue.Type == SymbolType.Int)
                     {
                         return Compability.Full;
                     }
                     
-                    if (rValue.Type == DatSymbolType.Instance && rValue.Category == DataCategory.Variable)
+                    if (rValue.Type == SymbolType.Instance && rValue.Category == DataCategory.Variable)
                     {
                         // TODO, check if this is worth supporting
                         return Compability.Full;
@@ -84,16 +85,16 @@ namespace DaedalusCompiler.Compilation
                     
                     break;
                 
-                case DatSymbolType.Float:
+                case SymbolType.Float:
                     
-                    if (rValue.Type == DatSymbolType.Int && rValue.Category == DataCategory.Literal)
+                    if (rValue.Type == SymbolType.Int && rValue.Category == DataCategory.Literal)
                     {
                         // var float x;
                         // x = 2; // 2 can be counted as IntegerLiteral or FloatLiteral
                         return Compability.Full;
                     }
 
-                    if (rValue.Type == DatSymbolType.Float)
+                    if (rValue.Type == SymbolType.Float)
                     {
                         if (rValue.Category == DataCategory.Literal || rValue.Category == DataCategory.FunctionInvocation)
                         {
@@ -103,29 +104,29 @@ namespace DaedalusCompiler.Compilation
                     
                     break;
 
-                case DatSymbolType.String:
-                    if (rValue.Type == DatSymbolType.String)
+                case SymbolType.String:
+                    if (rValue.Type == SymbolType.String)
                     {
                         return Compability.Full;
                     }
                     
                     break;
 
-                case DatSymbolType.Instance:
-                    if (rValue.Type == DatSymbolType.Instance && rValue.Category == DataCategory.FunctionInvocation)
+                case SymbolType.Instance:
+                    if (rValue.Type == SymbolType.Instance && rValue.Category == DataCategory.FunctionInvocation)
                     {
                         return Compability.Full;
                     }
 
                     break;
 
-                case DatSymbolType.Func:
-                    if (rValue.Type == DatSymbolType.Func && rValue.Category == DataCategory.Variable)
+                case SymbolType.Func:
+                    if (rValue.Type == SymbolType.Func && rValue.Category == DataCategory.Variable)
                     {
                         return Compability.Full;
                     }
 
-                    if (rValue.Type == DatSymbolType.Instance && rValue.Category == DataCategory.Variable)
+                    if (rValue.Type == SymbolType.Instance && rValue.Category == DataCategory.Variable)
                     {
                         return Compability.Full;
                     }
@@ -136,86 +137,79 @@ namespace DaedalusCompiler.Compilation
             return Compability.None;
         }
         
-        public Compability GetArgumentCompability(DatSymbolType parameterType, Data argument)
+        public bool IsArgumentTypeCompatible(SymbolType parameterType, Data argument)
         {
             switch (parameterType)
             {
-                case DatSymbolType.Int:
-                    if (argument.Type == DatSymbolType.Int)
+                case SymbolType.Int:
+                    if (argument.Type == SymbolType.Int || argument.Type == SymbolType.Instance)
                     {
-                        return Compability.Full;
-                    }
-
-                    if (argument.Type == DatSymbolType.Instance && argument.Category == DataCategory.Variable)
-                    {
-                        // TODO, check if this is worth supporting
-                        return Compability.Full;
+                        // TODO think about giving warning if somebody passes instance to int argument
+                        return true;
                     }
                     break;
                 
-                case DatSymbolType.Float:
+                case SymbolType.Float:
                     
-                    if (argument.Type == DatSymbolType.Int && argument.Category == DataCategory.Literal)
+                    if (argument.Type == SymbolType.Int && argument.Category == DataCategory.Literal)
                     {
-                        // var float x;
-                        // x = 2; // 2 can be counted as IntegerLiteral or FloatLiteral
-                        return Compability.Full;
+                        return true;
                     }
 
-                    if (argument.Type == DatSymbolType.Float)
+                    if (argument.Type == SymbolType.Float)
                     {
                         if (argument.Category == DataCategory.Literal || argument.Category == DataCategory.Variable)
                         {
-                            return Compability.Full;
+                            return true;
                         }
                     }
                     
                     break;
                 
-                case DatSymbolType.String:
-                    if (argument.Type == DatSymbolType.String)
+                case SymbolType.String:
+                    if (argument.Type == SymbolType.String)
                     {
-                        return Compability.Full;
+                        return true;
                     }
                     
                     break;
                 
-                case DatSymbolType.Instance:
-                    if (argument.Type == DatSymbolType.Instance && argument.Category == DataCategory.Variable)
+                case SymbolType.Instance:
+                    if (argument.Type == SymbolType.Instance && argument.Category == DataCategory.Variable)
                     {
-                        return Compability.Full;
+                        return true;
                     }
 
                     break;
                     
-                case DatSymbolType.Func:
-                    if (argument.Type == DatSymbolType.Func && argument.Category == DataCategory.Variable)
+                case SymbolType.Func:
+                    if (argument.Type == SymbolType.Func && argument.Category == DataCategory.Variable)
                     {
-                        return Compability.Full;
+                        return true;
                     }
 
-                    if (argument.Type == DatSymbolType.Instance && argument.Category == DataCategory.Variable)
+                    if (argument.Type == SymbolType.Instance && argument.Category == DataCategory.Variable)
                     {
-                        return Compability.Full;
+                        return true;
                     }
 
                     break;
             }
-            
-            return Compability.None;
+
+            return false;
         }
         
-        public Compability GetCompoundAssignmentCompability(DatSymbolType lValueType, Data rValue)
+        public Compability GetCompoundAssignmentCompability(SymbolType lValueType, Data rValue)
         {
             switch (lValueType)
             {
-                case DatSymbolType.Int:
-                    if (rValue.Type == DatSymbolType.Int)
+                case SymbolType.Int:
+                    if (rValue.Type == SymbolType.Int)
                     {
                         return Compability.Full;
                     }
                     
-                    if (rValue.Type == DatSymbolType.Instance && rValue.Category == DataCategory.Variable)
+                    if (rValue.Type == SymbolType.Instance && rValue.Category == DataCategory.Variable)
                     {
                         // TODO, check if this is worth supporting
                         return Compability.Full;
@@ -228,18 +222,18 @@ namespace DaedalusCompiler.Compilation
         }
         
         
-        public Compability GetOperationCompability(DatSymbolType lValueType, Data rValue)
+        public Compability GetOperationCompability(SymbolType lValueType, Data rValue)
         {
             switch (lValueType)
             {
-                case DatSymbolType.Int:
-                case DatSymbolType.Instance:
-                    if (rValue.Type == DatSymbolType.Int)
+                case SymbolType.Int:
+                case SymbolType.Instance:
+                    if (rValue.Type == SymbolType.Int)
                     {
                         return Compability.Full;
                     }
                     
-                    if (rValue.Type == DatSymbolType.Instance && rValue.Category == DataCategory.Variable)
+                    if (rValue.Type == SymbolType.Instance && rValue.Category == DataCategory.Variable)
                     {
                         // TODO, check if this is worth supporting
                         return Compability.Full;

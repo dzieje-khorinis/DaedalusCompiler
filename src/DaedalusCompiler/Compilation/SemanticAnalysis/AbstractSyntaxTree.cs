@@ -167,10 +167,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     
     public abstract class ExpressionNode : StatementNode
     {
-        public DatSymbolType BuiltinType;
+        public SymbolType BuiltinType;
+        public Symbol ComplexType;
         protected ExpressionNode(NodeLocation location) : base(location)
         {
-            BuiltinType = DatSymbolType.Undefined;
+            BuiltinType = SymbolType.Uninitialized;
+            ComplexType = null;
         }
     }
 
@@ -195,6 +197,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public abstract class CustomTypeDeclarationNode : DeclarationNode
     {
         public readonly NameNode TypeNameNode;
+
         protected CustomTypeDeclarationNode(NodeLocation location, NameNode typeNameNode, NameNode nameNode) : base(location, typeNameNode.Value, nameNode)
         {
             TypeNameNode = typeNameNode;
