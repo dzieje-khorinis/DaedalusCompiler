@@ -144,6 +144,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             _isInsideFloatExpression = false;
             
             /*
+             * IncompatibleTypeAssignmentError
              * TODO check assignment types compability
              */
         }
@@ -173,6 +174,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Visit(node.RightSideNode);
             
             /*
+             * InvalidOperandsToBinaryExpressionError
              * TODO check assignment types compability
              */
         }

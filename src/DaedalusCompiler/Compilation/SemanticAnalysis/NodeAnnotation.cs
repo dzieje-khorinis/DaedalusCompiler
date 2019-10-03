@@ -575,6 +575,40 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             return "unsupported operation";
         }
     }
+    
+
+    
+    public class IncompatibleTypeAssignmentError : ErrorAnnotation
+    {
+        private readonly string _leftTypeName;
+        private readonly string _rightTypeName;
+        public IncompatibleTypeAssignmentError(NodeLocation pointerLocation, string leftTypeName, string rightTypeName)
+        {
+            _leftTypeName = leftTypeName;
+            _rightTypeName = rightTypeName;
+            PointerLocation = pointerLocation;
+        }
+        public override string GetMessage()
+        {
+            return $"assigning to '{_leftTypeName}' from incompatible type '{_rightTypeName}'";
+        }
+    }
+
+    public class InvalidOperandsToBinaryExpressionError : ErrorAnnotation
+    {
+        private readonly string _leftTypeName;
+        private readonly string _rightTypeName;
+        public InvalidOperandsToBinaryExpressionError(NodeLocation pointerLocation, string leftTypeName, string rightTypeName)
+        {
+            _leftTypeName = leftTypeName;
+            _rightTypeName = rightTypeName;
+            PointerLocation = pointerLocation;
+        }
+        public override string GetMessage()
+        {
+            return $"invalid operands to binary expression ('{_leftTypeName}' and '{_rightTypeName}')";
+        }
+    }
 
     
     public class InvalidUnaryOperationError : ErrorAnnotation
