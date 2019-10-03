@@ -502,6 +502,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                     ORC += 3;
                     BOB += 4;
                     firstFunc += 5;
+                    b -= ""Jan"";
                     b += "" "" + ""Kowalski"";
                 };
             ";
@@ -523,6 +524,9 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:18:14: error: unsupported operation
                     firstFunc += 5;
                               ^
+                test.d:19:6: error: unsupported operation
+                    b -= ""Jan"";
+                      ^
             ";
 
             AssertCompilationOutputMatch();
