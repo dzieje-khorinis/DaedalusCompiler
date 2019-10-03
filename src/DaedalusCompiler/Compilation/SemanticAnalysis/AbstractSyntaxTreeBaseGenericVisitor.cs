@@ -133,7 +133,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Visit(node.ArraySizeNode);
             return DefaultResult;
         }
-        protected virtual T VisitReturnStatement(ReturnStatementNode node) { return DefaultResult; }
+
+        protected virtual T VisitReturnStatement(ReturnStatementNode node)
+        {
+            if (node.ExpressionNode != null)
+            {
+                Visit(node.ExpressionNode);
+            }
+            return DefaultResult;
+        }
         protected virtual T VisitBreakStatement(BreakStatementNode node) { return DefaultResult; }
         protected virtual T VisitContinueStatement(ContinueStatementNode node) { return DefaultResult; }
 

@@ -166,9 +166,9 @@ namespace DaedalusCompiler.Compilation
 			
 			if (oper == "=")
 			{
-				return new AssignmentNode(GetLocation(context), referenceNode, expressionNode);
+				return new AssignmentNode(GetLocation(context), GetLocation(context.assignmentOperator()), referenceNode, expressionNode);
 			}
-			return new CompoundAssignmentNode(GetLocation(context), GetCompoundAssignmentOperator(oper), referenceNode, expressionNode);
+			return new CompoundAssignmentNode(GetLocation(context), GetCompoundAssignmentOperator(oper), GetLocation(context.assignmentOperator()), referenceNode, expressionNode);
 		}
 		
 		public override ASTNode VisitElseIfBlock([NotNull] DaedalusParser.ElseIfBlockContext context)
@@ -213,7 +213,12 @@ namespace DaedalusCompiler.Compilation
 		
 		public override ASTNode VisitReturnStatement([NotNull] DaedalusParser.ReturnStatementContext context)
 		{
-			return new ReturnStatementNode(GetLocation(context));
+			ExpressionNode expressionNode = null;
+			if (context.expression() != null)
+			{
+				expressionNode = (ExpressionNode) Visit(context.expression());
+			}
+			return new ReturnStatementNode(GetLocation(context), expressionNode);
 		}
 
 		public override ASTNode VisitBreakStatement([NotNull] DaedalusParser.BreakStatementContext context)

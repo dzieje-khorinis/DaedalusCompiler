@@ -171,6 +171,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             
             Visit(node.LeftSideNode);
         }
+        
+        //maybe collect float expressions?
 
         protected override void VisitReference(ReferenceNode referenceNode)
         {

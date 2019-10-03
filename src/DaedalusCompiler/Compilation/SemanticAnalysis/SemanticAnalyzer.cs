@@ -128,6 +128,7 @@ namespace DaedalusCompiler.Compilation
             // addd warning code is after return
             // add warning if function doesn't return anything but it's type isn't void. Also check if all paths return
             
+            // test ingame (zSpy print) return float / float assignment / float argument (func call, literal, variable), 
             // doc: we have hoisting, when original compiler only have hoisting when there is global variable with same name
             // extern keyword
             // inline keyword and inline comment for backwards compability

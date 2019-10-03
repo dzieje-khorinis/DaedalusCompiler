@@ -21,12 +21,16 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class TypeCheckingVisitor : AbstractSyntaxTreeBaseVisitor
     {
         private readonly Dictionary <string, Symbol> _symbolTable;
+
+        private int _floatExpressionDepth;
+        private bool _isInsideFloatExpression;
         
         /*
          * arguments vs parameters types
          * operations types
          * assignment / compound assignment type
          * return type
+         * ONLY FLOAT/INTEGER LITERALS ALLOWED INSIDE FLOAT EXPRESSIONS
          */
         //private Dictionary<ASTNode, SymbolType>
         private readonly HashSet<ASTNode> _visitedNodes;
@@ -35,6 +39,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             _symbolTable = symbolTable;
             _visitedNodes = new HashSet<ASTNode>();
+            //_floatExpressionDepth = 0;
+            //_isInsideFloatExpression = false;
         }
 
         
@@ -96,17 +102,81 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 {
                     ParameterDeclarationNode parameterNode = parameterNodes[i];
                     SymbolTypePair parameterType = GetSymbolTypePairFromSymbol(parameterNode.Symbol);
-                    
                     ExpressionNode argumentNode = argumentNodes[i];
+
+                    if (parameterType.BuiltinType == SymbolType.Float)
+                    {
+                        _isInsideFloatExpression = true;
+                    }
                     Visit(argumentNode);
+                    _isInsideFloatExpression = false;
+                    
                     SymbolTypePair argumentType = GetSymbolTypePairFromExpressionNode(argumentNode);
                     
                     Console.Write("x");
                 }
             }
         }
-        
-        
+
+        protected override void VisitReturnStatement(ReturnStatementNode node)
+        {
+            ASTNode parentBlockNode = node.GetFirstSignificantAncestorNode();
+            if (parentBlockNode is FunctionDefinitionNode functionDefinitionNode)
+            {
+                if (functionDefinitionNode.Symbol.BuiltinType == SymbolType.Float)
+                {
+                    _isInsideFloatExpression = true;
+                }
+            }
+            base.VisitReturnStatement(node);
+            _isInsideFloatExpression = false;
+        }
+
+        protected override void VisitAssignment(AssignmentNode node)
+        {
+            Visit(node.LeftSideNode);
+
+            if (node.LeftSideNode.BuiltinType == SymbolType.Float)
+            {
+                _isInsideFloatExpression = true;
+            }
+            Visit(node.RightSideNode);
+            _isInsideFloatExpression = false;
+            
+            /*
+             * TODO check assignment types compability
+             */
+        }
+
+        protected override void VisitCompoundAssignment(CompoundAssignmentNode node)
+        {
+            Visit(node.LeftSideNode);
+            switch (node.LeftSideNode.BuiltinType)
+            {
+                case SymbolType.Float:
+                    node.Annotations.Add(new FloatDoesntSupportCompoundAssignments(node.OperatorLocation));
+                    return;
+                case SymbolType.Class:
+                case SymbolType.Prototype:    
+                case SymbolType.Instance:
+                case SymbolType.Func:
+                    node.Annotations.Add(new UnsupportedOperationError(node.OperatorLocation));
+                    return;
+                case SymbolType.String:
+                    if (node.Operator != CompoundAssignmentOperator.Add || !_symbolTable.ContainsKey("CONCATSTRINGS")) {
+                        node.Annotations.Add(new UnsupportedOperationError(node.OperatorLocation));
+                        return;
+                    }
+                    break;
+            }
+            
+            Visit(node.RightSideNode);
+            
+            /*
+             * TODO check assignment types compability
+             */
+        }
+
         protected override void VisitUnaryExpression(UnaryExpressionNode node)
         {
             base.VisitUnaryExpression(node);
@@ -148,6 +218,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected override void VisitBinaryExpression(BinaryExpressionNode node)
         {
+            if (_isInsideFloatExpression)
+            {
+                node.Annotations.Add(new BinaryOperationsNotAllowedInsideFloatExpression(node.OperatorLocation));
+                return;
+            }
+            
             base.VisitBinaryExpression(node);
 
             /*
@@ -186,7 +262,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                             {
                                 case BinaryOperator.Equal:
                                     // it will be ignorecase since HLP_StrCmp is ignorecase
-                                    if (_symbolTable.ContainsKey("HLP_StrCmp"))
+                                    if (_symbolTable.ContainsKey("HLP_STRCMP"))
                                     {
                                         node.BuiltinType = SymbolType.Int;
                                     }
@@ -197,7 +273,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                                     }
                                     break;
                                 case BinaryOperator.Add:
-                                    if (_symbolTable.ContainsKey("ConcatStrings"))
+                                    if (_symbolTable.ContainsKey("CONCATSTRINGS"))
                                     {
                                         node.BuiltinType = SymbolType.String;
                                     }
@@ -241,7 +317,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
                     switch (node.RightSideNode.BuiltinType)
                     {
-                        //  TODO allow str * int, ConcatStrings required, loop used
+                        //  TODO allow str * int, CONCATSTRINGS required, loop used
                         case SymbolType.Uninitialized:
                         case SymbolType.Undefined:
                             node.BuiltinType = SymbolType.Undefined;
@@ -263,7 +339,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                                     }
                                     break;
                                 case BinaryOperator.Add:
-                                    if (_symbolTable.ContainsKey("ConcatStrings"))
+                                    if (_symbolTable.ContainsKey("CONCATSTRINGS"))
                                     {
                                         node.BuiltinType = SymbolType.String;
                                     }

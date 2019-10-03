@@ -303,15 +303,18 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class AssignmentNode : StatementNode
     {
+        public NodeLocation OperatorLocation;
+        
         public ReferenceNode LeftSideNode;
         public ExpressionNode RightSideNode;
 
-        public AssignmentNode(NodeLocation location, ReferenceNode leftSideNode, ExpressionNode rightSideNode) :
+        public AssignmentNode(NodeLocation location, NodeLocation operatorLocation, ReferenceNode leftSideNode, ExpressionNode rightSideNode) :
             base(location)
         {
             leftSideNode.ParentNode = this;
             rightSideNode.ParentNode = this;
-            
+
+            OperatorLocation = operatorLocation;
             LeftSideNode = leftSideNode;
             RightSideNode = rightSideNode;
         }
@@ -320,16 +323,18 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class CompoundAssignmentNode : StatementNode
     {
         public CompoundAssignmentOperator Operator;
+        public NodeLocation OperatorLocation;
         public ReferenceNode LeftSideNode;
         public ExpressionNode RightSideNode;
 
-        public CompoundAssignmentNode(NodeLocation location, CompoundAssignmentOperator @operator, ReferenceNode leftSideNode,
+        public CompoundAssignmentNode(NodeLocation location, CompoundAssignmentOperator @operator, NodeLocation operatorLocation, ReferenceNode leftSideNode,
             ExpressionNode rightSideNode) : base(location)
         {
             leftSideNode.ParentNode = this;
             rightSideNode.ParentNode = this;
             
             Operator = @operator;
+            OperatorLocation = operatorLocation;
             LeftSideNode = leftSideNode;
             RightSideNode = rightSideNode;
         }
@@ -504,8 +509,16 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     }
     public class ReturnStatementNode : StatementNode
     {
-        public ReturnStatementNode(NodeLocation location) : base(location)
+        public readonly ExpressionNode ExpressionNode;
+
+        public ReturnStatementNode(NodeLocation location, ExpressionNode expressionNode) : base(location)
         {
+            ExpressionNode = expressionNode;
+            if (ExpressionNode != null)
+            {
+                ExpressionNode.ParentNode = this;
+            }
+            
         }
     }
 

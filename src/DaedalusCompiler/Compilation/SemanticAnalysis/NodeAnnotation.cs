@@ -530,7 +530,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         public InvalidArgumentTypeToUnaryExpressionError(string typeName)
         {
-            _typeName = typeName;
+            _typeName = typeName.ToLower();
         }
 
         public override string GetMessage()
@@ -538,6 +538,44 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             return $"invalid argument type '{_typeName}' to unary expression";
         }
     }
+    
+    public class BinaryOperationsNotAllowedInsideFloatExpression : ErrorAnnotation
+    {
+        public BinaryOperationsNotAllowedInsideFloatExpression(NodeLocation pointerLocation)
+        {
+            PointerLocation = pointerLocation;
+        }
+        public override string GetMessage()
+        {
+            return "binary operations not allowed inside 'float' expression";
+        }
+    }
+    
+    
+    public class FloatDoesntSupportCompoundAssignments : ErrorAnnotation
+    {
+        public FloatDoesntSupportCompoundAssignments(NodeLocation pointerLocation)
+        {
+            PointerLocation = pointerLocation;
+        }
+        public override string GetMessage()
+        {
+            return "'float' type doesn't have support for compound assignments";
+        }
+    }
+    
+    public class UnsupportedOperationError : ErrorAnnotation
+    {
+        public UnsupportedOperationError(NodeLocation pointerLocation)
+        {
+            PointerLocation = pointerLocation;
+        }
+        public override string GetMessage()
+        {
+            return "unsupported operation";
+        }
+    }
+
     
     public class InvalidUnaryOperationError : ErrorAnnotation
     {

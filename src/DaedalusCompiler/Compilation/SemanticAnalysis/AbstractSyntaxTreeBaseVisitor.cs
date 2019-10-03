@@ -112,7 +112,14 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Visit(node.NameNode);
             Visit(node.ArraySizeNode);
         }
-        protected virtual void VisitReturnStatement(ReturnStatementNode node) {}
+
+        protected virtual void VisitReturnStatement(ReturnStatementNode node)
+        {
+            if (node.ExpressionNode != null)
+            {
+                Visit(node.ExpressionNode);
+            }
+        }
         protected virtual void VisitBreakStatement(BreakStatementNode node) {}
         protected virtual void VisitContinueStatement(ContinueStatementNode node) {}
 
