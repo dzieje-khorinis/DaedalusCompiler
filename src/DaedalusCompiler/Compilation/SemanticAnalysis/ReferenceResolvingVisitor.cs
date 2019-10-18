@@ -49,7 +49,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             */
 
             bool arrayIndexNodeFound = false;
-
+            ArrayIndexNode firstArrayIndexNode = null;
 
             string symbolLocalPath = referenceNode.Name;
             
@@ -128,6 +128,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     
                     case ArrayIndexNode arrayIndexNode:
                         arrayIndexNodeFound = true;
+                        firstArrayIndexNode = arrayIndexNode;
                         
                         if (!(symbol.Node is IArrayDeclarationNode))
                         {
@@ -142,7 +143,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 }
             }
             referenceNode.Symbol = symbol;
-            
+            referenceNode.IndexNode = firstArrayIndexNode;
+
             //NamesNotMatchingCaseWiseWarning
             //referenceNode.Name
         }

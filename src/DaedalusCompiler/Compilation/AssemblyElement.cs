@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using DaedalusCompiler.Compilation.SemanticAnalysis;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
@@ -24,9 +25,9 @@ namespace DaedalusCompiler.Compilation
 
     public class SymbolInstruction : AssemblyInstruction
     {
-        public readonly DatSymbol Symbol;
+        public readonly Symbol Symbol;
 
-        protected SymbolInstruction(DatSymbol symbol)
+        protected SymbolInstruction(Symbol symbol)
         {
             Symbol = symbol;
         }
@@ -83,7 +84,7 @@ namespace DaedalusCompiler.Compilation
 
     public class PushVar : SymbolInstruction
     {
-        public PushVar(DatSymbol symbol) : base(symbol)
+        public PushVar(Symbol symbol) : base(symbol)
         {
         }
     }
@@ -92,7 +93,7 @@ namespace DaedalusCompiler.Compilation
     {
         public readonly int Index;
 
-        public PushArrayVar(DatSymbol symbol, int index) : base(symbol)
+        public PushArrayVar(Symbol symbol, int index) : base(symbol)
         {
             Index = index;
         }
@@ -100,14 +101,14 @@ namespace DaedalusCompiler.Compilation
 
     public class PushInstance : SymbolInstruction
     {
-        public PushInstance(DatSymbol symbol) : base(symbol)
+        public PushInstance(Symbol symbol) : base(symbol)
         {
         }
     }
 
     public class SetInstance : SymbolInstruction
     {
-        public SetInstance(DatSymbol symbol) : base(symbol)
+        public SetInstance(Symbol symbol) : base(symbol)
         {
         }
     }
@@ -155,14 +156,14 @@ namespace DaedalusCompiler.Compilation
 
     public class Call : SymbolInstruction
     {
-        public Call(DatSymbol symbol) : base(symbol)
+        public Call(Symbol symbol) : base(symbol)
         {
         }
     }
 
     public class CallExternal : SymbolInstruction
     {
-        public CallExternal(DatSymbol symbol) : base(symbol)
+        public CallExternal(Symbol symbol) : base(symbol)
         {
         }
     }

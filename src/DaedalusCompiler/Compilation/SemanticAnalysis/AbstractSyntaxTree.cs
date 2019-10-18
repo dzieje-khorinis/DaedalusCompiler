@@ -570,6 +570,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             {
                 node.ParentNode = this;
             }
+            
             foreach (var node in elseNodeBodyNodes)
             {
                 node.ParentNode = this;
@@ -674,6 +675,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         public Symbol Symbol; // TODO filled in ???
         public Symbol BaseSymbol; // if for example we have a.b.c, base symbol is a, and symbol is c
+        public ArrayIndexNode IndexNode;
         
 
         public ReferenceNode(string name, List<ReferencePartNode> partNodes, NodeLocation location) : base(location)
@@ -682,6 +684,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             BaseSymbol = null;
             Name = name;
             PartNodes = partNodes;
+            IndexNode = null;
 
             foreach (var partNode in partNodes)
             {

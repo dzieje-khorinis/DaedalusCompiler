@@ -40,6 +40,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public ASTNode Node;
 
         public SymbolType BuiltinType;
+
+
+        // DatSymbol properties
+        public object[] Content;
         
 
         protected Symbol(string name, ASTNode node)
@@ -50,6 +54,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Path = name.ToUpper();
             Node = node;
             BuiltinType = SymbolType.Uninitialized;
+
+            Content = null;
         }
         
         public static SymbolType GetBuiltinType(string typeName)
@@ -68,10 +74,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public abstract class BlockSymbol : Symbol
     {
         public readonly Dictionary<string, NestableSymbol> BodySymbols;
+        public readonly List<AssemblyElement> Instructions;
 
         protected BlockSymbol(string name, ASTNode node) : base(name, node)
         {
             BodySymbols = new Dictionary<string, NestableSymbol>();
+            Instructions = new List<AssemblyElement>();
         }
 
         public void AddBodySymbol(NestableSymbol nestableSymbol)
@@ -237,7 +245,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class ConstArraySymbol : ConstSymbol, IArraySymbol
     {
         public int Size { get; set; }
-
+        
+        
 
         public ConstArraySymbol(BlockSymbol parentBlockSymbol, string typeName, string name, ASTNode node) : base(parentBlockSymbol, typeName, name, node)
         {

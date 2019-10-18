@@ -116,7 +116,16 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
                 int fileIndex = node.Location.FileIndex;
                 string line = FilesContents[fileIndex][node.Location.Line - 1];
                 HashSet<string> suppressedLineWarningCodes = Compiler.GetWarningCodesToSuppress(line);
-                HashSet<string> suppressedFileWarningCodes = SuppressedWarningCodes[fileIndex];
+                HashSet<string> suppressedFileWarningCodes = null;
+                try
+                {
+                    suppressedFileWarningCodes = SuppressedWarningCodes[fileIndex];
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    Console.Write("dupa");
+                }
+                 
                 HashSet<string> suppressedWarningCodes = suppressedLineWarningCodes.Union(suppressedFileWarningCodes).ToHashSet();
                 if (_globallySuppressedCodes != null)
                 {

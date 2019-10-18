@@ -14,6 +14,7 @@ namespace DaedalusCompiler.Tests
         public void TestWhileLoop()
         {
             _code = @"
+            _code = @"
                 func void firstFunc() {
                     var int x;
                     x = 0;

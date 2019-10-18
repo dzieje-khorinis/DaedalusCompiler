@@ -91,50 +91,38 @@ namespace DaedalusCompiler.Compilation
                 List<string[]> filesContents = new List<string[]>();
                 List<HashSet<string>> suppressedWarningCodes = new List<HashSet<string>>();
                 
-                if (File.Exists(runtimePath) && false)
+                int syntaxErrorsCount = 0;
+                
+                if (File.Exists(runtimePath) && false)  //&& false
                 {
                     externalFilesCount++;
                     
                     if (verbose) Console.WriteLine($"[0/{paths.Length}]Parsing runtime: {runtimePath}");
                     
-                    
-                    //DaedalusParser parser = GetParserForScriptsFile(runtimePath);
-                    
                     string fileContent = GetFileContent(runtimePath);
                     DaedalusParser parser = GetParserForText(fileContent);
                     
-                    filesPaths.Add(runtimePath);
-                    filesContents.Add(fileContent.Split(Environment.NewLine));
-                    
+                    SyntaxErrorListener syntaxErrorListener = new SyntaxErrorListener();
+                    parser.AddErrorListener(syntaxErrorListener);
                     parseTrees.Add(parser.daedalusFile());
                     
+                    string[] fileContentLines = fileContent.Split(Environment.NewLine);
+                    filesPaths.Add(runtimePath);
+                    filesContents.Add(fileContentLines);
+                    suppressedWarningCodes.Add(GetWarningCodesToSuppress(fileContentLines[0]));
                     
-
-                    /*
-                    _assemblyBuilder.IsCurrentlyParsingExternals = true;
-                    
-                    string fileContent = GetFileContent(runtimePath);
-                    DaedalusParser parser = GetParserForText(fileContent);
-
-                    _assemblyBuilder.ErrorFileContext.FileContentLines = fileContent.Split(Environment.NewLine);
-                    _assemblyBuilder.ErrorFileContext.FilePath = runtimePath;
-                    _assemblyBuilder.ErrorFileContext.FileIndex = -1;
-                    
-                    ParseTreeWalker.Default.Walk(new DaedalusListener(_assemblyBuilder, 0), parser.daedalusFile());
-                    _assemblyBuilder.IsCurrentlyParsingExternals = false;
-                    */
+                    syntaxErrorsCount += syntaxErrorListener.ErrorsCount;
                 }
                 else
                 {
                     Console.WriteLine($"Runtime {runtimePath} doesn't exist.");
                 }
 
-                int syntaxErrorsCount = 0;
+                
                 for (int i = 0; i < paths.Length; i++)
                 {
                     if (verbose) Console.WriteLine($"[{i + 1}/{paths.Length}]Parsing: {paths[i]}");
-
-                    //DaedalusParser parser = GetParserForScriptsFile(paths[i]);
+                    
                     string fileContent = GetFileContent(paths[i]);
                     DaedalusParser parser = GetParserForText(fileContent);
                     
@@ -148,30 +136,6 @@ namespace DaedalusCompiler.Compilation
                     suppressedWarningCodes.Add(GetWarningCodesToSuppress(fileContentLines[0]));
                     
                     syntaxErrorsCount += syntaxErrorListener.ErrorsCount;
-
-
-
-                    /*
-                    string fileContent = GetFileContent(paths[i]);
-                    DaedalusParser parser = GetParserForText(fileContent);
-                    //parser.RemoveErrorListeners(); // TODO uncomment this line once SyntaxErrorListener is fully implemented
-                    SyntaxErrorListener syntaxErrorListener = new SyntaxErrorListener();
-                    parser.AddErrorListener(syntaxErrorListener);
-
-                    _assemblyBuilder.ErrorFileContext.FileContentLines = fileContent.Split(Environment.NewLine);
-                    _assemblyBuilder.ErrorFileContext.FilePath = paths[i];
-                    _assemblyBuilder.ErrorFileContext.FileIndex = i;
-                    _assemblyBuilder.ErrorFileContext.SuppressedWarningCodes = Compiler.GetWarningCodesToSuppress(
-                        _assemblyBuilder.ErrorFileContext.FileContentLines[0]
-                    );
-                    ParseTreeWalker.Default.Walk(new DaedalusListener(_assemblyBuilder, i), parser.daedalusFile());
-                    syntaxErrorsCount += syntaxErrorListener.ErrorsCount;
-                    
-                    if (generateOutputUnits && syntaxErrorListener.ErrorsCount == 0)
-                    {
-                        _ouBuilder.ParseText(fileContent);
-                    }
-                    */
                 }
                 
                 
@@ -221,6 +185,10 @@ namespace DaedalusCompiler.Compilation
                 {
                     logger.LogLine($"{warningsCount} {warning} generated.");
                 }
+                
+
+                AssemblyBuildingVisitor assemblyBuildingVisitor = new AssemblyBuildingVisitor(semanticAnalyzer.SymbolTable);
+                assemblyBuildingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
                 
                 Console.WriteLine($"parseTrees.Count: {parseTrees.Count}");
                 return true;

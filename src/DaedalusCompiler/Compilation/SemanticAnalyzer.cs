@@ -20,11 +20,11 @@ namespace DaedalusCompiler.Compilation
     public class SemanticAnalyzer
     {
         public readonly AbstractSyntaxTree AbstractSyntaxTree;
-        private Dictionary<string, Symbol> _symbolTable;
+        public Dictionary<string, Symbol> SymbolTable;
         
         public SemanticAnalyzer(List<IParseTree> parseTrees, int externalFilesCount, List<string> filesPaths, List<string[]> filesContents, List<HashSet<string>> suppressedWarningCodes)
         {
-            _symbolTable = null;
+            SymbolTable = null;
 
             Stopwatch timer = new Stopwatch();
             timer.Start();
@@ -49,24 +49,24 @@ namespace DaedalusCompiler.Compilation
             // KeywordUsedAsNameError
             SymbolTableCreationVisitor symbolTableCreationVisitor = new SymbolTableCreationVisitor();
             symbolTableCreationVisitor.VisitTree(AbstractSyntaxTree);
-            _symbolTable = symbolTableCreationVisitor.SymbolTable;
+            SymbolTable = symbolTableCreationVisitor.SymbolTable;
             
             // UnknownTypeNameError
             // UnsupportedTypeError
             // UnsupportedArrayTypeError
             // UnsupportedFunctionTypeError
-            TypeResolver typeResolver = new TypeResolver(_symbolTable);
+            TypeResolver typeResolver = new TypeResolver(SymbolTable);
             typeResolver.Resolve(symbolTableCreationVisitor.TypedSymbols);
             //typeResolver.Resolve(symbolTableCreationVisitor.FunctionSymbols);
             
             // NotClassOrPrototypeReferenceError
             // UndeclaredIdentifierError
             // InfiniteReferenceLoopError
-            InheritanceResolver inheritanceResolver = new InheritanceResolver(_symbolTable);
+            InheritanceResolver inheritanceResolver = new InheritanceResolver(SymbolTable);
             inheritanceResolver.Resolve(symbolTableCreationVisitor.SubclassSymbols);
 
             // InfiniteAttributeReferenceLoopError
-            PrefixAttributesSymbolCreator prefixAttributesSymbolCreator = new PrefixAttributesSymbolCreator(_symbolTable);
+            PrefixAttributesSymbolCreator prefixAttributesSymbolCreator = new PrefixAttributesSymbolCreator(SymbolTable);
             prefixAttributesSymbolCreator.Scan(symbolTableCreationVisitor.ClassSymbols);
 
             // UndeclaredIdentifierError
@@ -74,7 +74,7 @@ namespace DaedalusCompiler.Compilation
             // AttributeOfNonInstanceError
             // ClassDoesNotHaveAttributeError
             // ReferencedSymbolIsNotArrayError
-            ReferenceResolvingVisitor referenceResolvingVisitor = new ReferenceResolvingVisitor(_symbolTable);
+            ReferenceResolvingVisitor referenceResolvingVisitor = new ReferenceResolvingVisitor(SymbolTable);
             referenceResolvingVisitor.Visit(AbstractSyntaxTree.ReferenceNodes);
             
             // InfiniteConstReferenceLoopError
@@ -93,13 +93,13 @@ namespace DaedalusCompiler.Compilation
             // IntegerLiteralTooLargeError
             // CannotInitializeConstWithValueOfDifferentTypeError
             // CannotInitializeArrayElementWithValueOfDifferentTypeError
-            ConstEvaluationVisitor constEvaluationVisitor = new ConstEvaluationVisitor(_symbolTable);
+            ConstEvaluationVisitor constEvaluationVisitor = new ConstEvaluationVisitor(SymbolTable);
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ConstDefinitionNodes);
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ArrayDeclarationNodes);
             constEvaluationVisitor.Visit(referenceResolvingVisitor.ArrayIndexNodes);
 
             // ArgumentsCountDoesNotMatchError
-            TypeCheckingVisitor typeCheckingVisitor = new TypeCheckingVisitor(_symbolTable);
+            TypeCheckingVisitor typeCheckingVisitor = new TypeCheckingVisitor(SymbolTable);
             typeCheckingVisitor.VisitTree(AbstractSyntaxTree);
             
             // UnusedSymbolWarning
