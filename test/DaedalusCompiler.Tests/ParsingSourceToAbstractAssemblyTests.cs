@@ -1,7 +1,7 @@
-﻿/*
-using System;
+﻿using System;
 using System.Collections.Generic;
 using DaedalusCompiler.Compilation;
+using DaedalusCompiler.Compilation.SemanticAnalysis;
 using DaedalusCompiler.Dat;
 using Xunit;
 
@@ -9,188 +9,7 @@ using Xunit;
 namespace DaedalusCompiler.Tests
 {
 
-    public class ParsingSourceToAbstractAssemblyTestsBase
-    {
-        protected readonly AssemblyBuilder _assemblyBuilder;
-        protected string _code;
-        protected string _externalCode;
-        protected List<AssemblyElement> _instructions;
-        protected List<AssemblyElement> _expectedInstructions;
-        protected List<DatSymbol> _expectedSymbols;
-        protected bool _parsed;
-
-        public ParsingSourceToAbstractAssemblyTestsBase()
-        {
-            _assemblyBuilder = new AssemblyBuilder();
-            _instructions = new List<AssemblyElement>();
-            _expectedInstructions = new List<AssemblyElement>();
-            _expectedSymbols = new List<DatSymbol>();
-            _parsed = false;
-            _externalCode = String.Empty;
-        }
-
-        protected int RefIndex(string symbolName)
-        {
-            DatSymbol symbol = _assemblyBuilder.ResolveSymbol(symbolName);
-            return symbol.Index;
-        }
-        
-        protected DatSymbol Ref(string symbolName)
-        {
-            _assemblyBuilder.ActiveExecBlock = null;
-            return _assemblyBuilder.ResolveSymbol(symbolName);
-        }
-
-        protected List<AssemblyElement> GetExecBlockInstructions(string execBlockName)
-        {
-            if (!_parsed)
-            {
-                ParseData();
-            }
-
-            List<AssemblyElement> instructions = new List<AssemblyElement>();
-
-            bool alreadyFound = false;
-            foreach (BaseExecBlockContext execBlock in _assemblyBuilder.ExecBlocks)
-            {
-                DatSymbol testedSymbol = execBlock.GetSymbol();
-                if (execBlock is SharedExecBlockContext sharedExecBlockContext)
-                {
-                    foreach (DatSymbol symbol in sharedExecBlockContext.Symbols)
-                    {
-                        if (symbol.Name.ToUpper() == execBlockName.ToUpper())
-                        {
-                            testedSymbol = symbol;
-                            break;
-                        }
-                    }
-                }
-                
-                if (testedSymbol.Name.ToUpper() == execBlockName.ToUpper())
-                {
-                    instructions.AddRange(execBlock.Body);
-                    _assemblyBuilder.ActiveExecBlock = execBlock;
-                    alreadyFound = true;
-                }
-                else if (alreadyFound)
-                {
-                    break;
-                }
-            }
-
-            if (alreadyFound == false )
-            {
-                throw new KeyNotFoundException();
-            }
-
-            return instructions;
-        }
-
-        protected void ParseData()
-        {
-            _parsed = true;
-            
-            if (_externalCode != string.Empty)
-            {
-                _assemblyBuilder.IsCurrentlyParsingExternals = true;
-                _assemblyBuilder.ErrorFileContext.FileContentLines = _externalCode.Split(Environment.NewLine);
-                Utils.WalkSourceCode(_externalCode, _assemblyBuilder);
-                _assemblyBuilder.IsCurrentlyParsingExternals = false;
-            }
-
-            _assemblyBuilder.ErrorFileContext.FileContentLines = _code.Split(Environment.NewLine);
-            _assemblyBuilder.ErrorFileContext.SuppressedWarningCodes = Compiler.GetWarningCodesToSuppress(
-                _assemblyBuilder.ErrorFileContext.FileContentLines[0]
-            );
-            Utils.WalkSourceCode(_code, _assemblyBuilder);
-            _assemblyBuilder.Finish();
-        }
-
-        protected void AssertRefContentEqual(string symbolName, object expectedValue)
-        {
-            if (expectedValue == null) throw new ArgumentNullException(nameof(expectedValue));
-            Assert.Equal(expectedValue, Ref(symbolName).Content[0]);
-        }
-
-        protected void AssertInstructionsMatch()
-        {
-            for (var index = 0; index < _expectedInstructions.Count; index++)
-            {
-                var instruction = _instructions[index];
-                var expectedInstruction = _expectedInstructions[index];
-                CompareInstructions(expectedInstruction, instruction);
-            }
-        }
-
-        protected void AssertSymbolsMatch()
-        {
-            Assert.Equal(_expectedSymbols.Count, _assemblyBuilder.Symbols.Count);
-            for (var index = 0; index < _expectedSymbols.Count; index++)
-            {
-                var symbol = _assemblyBuilder.Symbols[index];
-                var expectedSymbol = _expectedSymbols[index];
-                Assert.Equal(index, symbol.Index);
-                Assert.Equal(expectedSymbol, symbol);
-            }
-        }
-
-
-        protected void CompareInstructions(AssemblyElement expectedInstruction, AssemblyElement instruction)
-        {
-            if (expectedInstruction == null) throw new ArgumentNullException(nameof(expectedInstruction));
-            Assert.Equal(expectedInstruction.GetType(), instruction.GetType());
-            switch (instruction)
-            {
-                case PushArrayVar pushArrVarInstruction:
-                {
-                    Assert.Equal(
-                        ((SymbolInstruction) expectedInstruction).Symbol.Index,
-                        ((SymbolInstruction) instruction).Symbol.Index
-                    );
-                    Assert.Equal(
-                        ((PushArrayVar) expectedInstruction).Index,
-                        pushArrVarInstruction.Index
-                    );
-                    break;
-                }
-                
-                case ValueInstruction valueInstruction:
-                {
-                    Assert.Equal(
-                        ((PushInt) expectedInstruction).Value,
-                        valueInstruction.Value
-                    );
-                    break;
-                }
-
-                case SymbolInstruction _:
-                    Assert.Equal(
-                        ((SymbolInstruction) expectedInstruction).Symbol.Index,
-                        ((SymbolInstruction) instruction).Symbol.Index
-                    );
-                    break;
-                
-                case AssemblyLabel assemblyLabelInstruction:
-                {
-                    Assert.Equal(
-                        ((AssemblyLabel) expectedInstruction).Label,
-                        assemblyLabelInstruction.Label
-                    );
-                    break;
-                }
-
-                case JumpIfToLabel _:
-                case JumpToLabel _:
-                {
-                    var jumpInstruction = (JumpToLabel) instruction;
-                    Assert.Equal(
-                        ((JumpToLabel) expectedInstruction).Label,
-                        jumpInstruction.Label);
-                    break;
-                }
-            }
-        }
-    }
+    
     
     public class ParsingSourceToAbstractAssemblyTests : ParsingSourceToAbstractAssemblyTestsBase
     {
@@ -235,7 +54,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("x"),
                 Ref("testFunc"),
@@ -296,7 +115,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("x"),
                 Ref("testFunc"),
@@ -351,7 +170,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("x"),
                 Ref("testFunc"),
@@ -422,7 +241,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("HLP_GetNpc"),
                 Ref("HLP_GetNpc.par0"),
@@ -680,7 +499,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("C_NPC"),
                 Ref("C_NPC.data"),
@@ -904,7 +723,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("testFunc"),
                 Ref("testFunc.varfloat"),
@@ -1099,7 +918,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("C_NPC"),
                 Ref("C_NPC.varfloat"),
@@ -1237,7 +1056,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("a"),
                 Ref("b"),
@@ -1298,7 +1117,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("a"),
                 Ref("b"),
@@ -1357,7 +1176,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("a"),
                 Ref("b"),
@@ -1520,7 +1339,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("a"),
                 Ref("b"),
@@ -1578,7 +1397,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("a"),
                 Ref("b"),
@@ -1655,7 +1474,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("a"),
                 Ref("b"),
@@ -1718,7 +1537,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("a"),
                 Ref("b"),
@@ -1787,7 +1606,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("otherFunc"),
                 Ref("otherFunc.a"),
@@ -1850,7 +1669,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("x"),
                 Ref("tab"),
@@ -1916,7 +1735,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("TAB_SIZE"),
                 Ref("INDEX_ZERO"),
@@ -1985,7 +1804,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("TAB_SIZE"),
                 Ref("x"),
@@ -2057,7 +1876,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("attrs_count"),
                 Ref("testFunc"),
@@ -2166,7 +1985,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("x"),
                 Ref("testFunc"),
@@ -2213,7 +2032,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("person"),
                 Ref("person.age"),
@@ -2260,7 +2079,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("person"),
                 Ref("person.age"),
@@ -2307,7 +2126,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("person"),
                 Ref("person.age"),
@@ -2372,7 +2191,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("a"),
                 Ref("b"),
@@ -2475,7 +2294,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("Person"),
                 Ref("Person.age"),
@@ -2553,7 +2372,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("Person"),
                 Ref("Person.age"),
@@ -2678,7 +2497,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("x"),
                 Ref("otherFunc"),
@@ -2841,7 +2660,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("hyzio"),
                 Ref("dyzio"),
@@ -2920,7 +2739,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("a"),
                 Ref("testFunc"),
@@ -2964,7 +2783,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("testFunc"),
                 Ref("testFunc.x"),
@@ -3008,7 +2827,7 @@ namespace DaedalusCompiler.Tests
             AssertInstructionsMatch();
 
             
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("firstFunc"),
                 Ref("firstFunc.par"),
@@ -3094,7 +2913,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("NPC_IsDead"),
                 Ref("NPC_IsDead.par0"),
@@ -3228,7 +3047,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
             
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("C_NPC"),
                 Ref("C_NPC.varfloat"),
@@ -3292,7 +3111,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("a"),
                 Ref("testFunc"),
@@ -3355,7 +3174,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("a"),
                 Ref("testFunc"),
@@ -3514,7 +3333,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("person"),
                 Ref("person.age"),
@@ -3824,7 +3643,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
             
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref($"{prefix}instance_help"),
                 Ref("WLD_DetectPlayer"),
@@ -4039,7 +3858,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
             
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("parfloat"),
                 Ref("parfloat.par"),
@@ -4139,7 +3958,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
             
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("WLD_DetectPlayer"),
                 Ref("WLD_DetectPlayer.par0"),
@@ -4234,7 +4053,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("person"),
                 Ref("person.age"),
@@ -4484,7 +4303,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
             
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("C_NPC"),
                 Ref("C_NPC.varfloat"),
@@ -4531,7 +4350,7 @@ namespace DaedalusCompiler.Tests
             ";
             ParseData();
             
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("intFunc"),
                 Ref("intFunc.par"),
@@ -4584,7 +4403,7 @@ namespace DaedalusCompiler.Tests
             AssertInstructionsMatch();
             
             
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("IntToFloat"),
                 Ref("IntToFloat.par0"),
@@ -4949,7 +4768,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
             
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("NPC_IsPlayer"),
                 Ref("NPC_IsPlayer.par0"),
@@ -5067,7 +4886,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("person"),
                 Ref("person.age"),
@@ -5142,7 +4961,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("NPC_HasNews"),
                 Ref("NPC_HasNews.par0"),
@@ -5206,7 +5025,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
             
-            /* TODO not working but probably never happens in Gothic code
+            // TODO not working but probably never happens in Gothic code
             _instructions = GetExecBlockInstructions("secondFunc");
             _expectedInstructions = new List<AssemblyElement>
             {
@@ -5221,8 +5040,7 @@ namespace DaedalusCompiler.Tests
                 new Ret(),
             };
             AssertInstructionsMatch();
-            #1#
-            
+
             _instructions = GetExecBlockInstructions("testFunc");
             _expectedInstructions = new List<AssemblyElement>
             {
@@ -5254,7 +5072,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("person"),
                 Ref("person.age"),
@@ -5320,7 +5138,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("testFunc"),
                 Ref("testFunc.e"),
@@ -5446,7 +5264,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("intFunc"),
                 Ref("intFunc.par"),
@@ -5519,7 +5337,7 @@ namespace DaedalusCompiler.Tests
             AssertInstructionsMatch();
             
             
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("person"),
                 Ref("person.age"),
@@ -5602,7 +5420,7 @@ namespace DaedalusCompiler.Tests
             AssertInstructionsMatch();
             
             
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("NPC_HasItems"),
                 Ref("NPC_HasItems.par0"),
@@ -5689,7 +5507,7 @@ namespace DaedalusCompiler.Tests
             AssertInstructionsMatch();
             
             
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref($"{prefix}instance_help"),
                 Ref("Info_AddChoice"),
@@ -5771,7 +5589,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
  
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("testFunc"),
             };
@@ -5835,7 +5653,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("Person"),
                 Ref("Person.age"),
@@ -5883,7 +5701,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("Person"),
                 Ref("Person.age"),
@@ -5925,7 +5743,7 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("testFunc"),
                 Ref("testFunc.x"),
@@ -6003,7 +5821,7 @@ namespace DaedalusCompiler.Tests
             AssertInstructionsMatch();
 
             
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("C_NPC"),
                 Ref("C_NPC.data"),
@@ -6060,7 +5878,7 @@ namespace DaedalusCompiler.Tests
             AssertInstructionsMatch();
 
 
-            _expectedSymbols = new List<DatSymbol>
+            _expectedSymbols = new List<Symbol>
             {
                 Ref("testFunc"),
                 Ref("testFunc.a"),
@@ -6072,4 +5890,3 @@ namespace DaedalusCompiler.Tests
         }
     }
 }
-*/

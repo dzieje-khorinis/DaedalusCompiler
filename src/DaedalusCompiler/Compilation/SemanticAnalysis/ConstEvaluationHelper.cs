@@ -25,9 +25,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
     }
     
+    
+    
+    
+    
     public class IntValue : NodeValue
     {
-        public readonly long Value;
+        public new readonly long Value;
         
         public IntValue(long value)
         {
@@ -37,7 +41,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     
     public class FloatValue : NodeValue
     {
-        public float Value;
+        public new float Value;
         
         public FloatValue(float value)
         {
@@ -52,7 +56,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class StringValue : NodeValue
     {
-        public string Value;
+        public new string Value;
         
         public StringValue(string value)
         {
@@ -62,7 +66,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class FunctionValue : NodeValue
     {
-        public Symbol Value;
+        public new Symbol Value;
 
         public FunctionValue(Symbol value)
         {

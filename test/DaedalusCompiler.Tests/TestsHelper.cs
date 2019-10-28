@@ -110,6 +110,9 @@ namespace DaedalusCompiler.Tests
             }
                 
 
+            SymbolUpdatingVisitor symbolUpdatingVisitor = new SymbolUpdatingVisitor();
+            symbolUpdatingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
+            
             AssemblyBuildingVisitor assemblyBuildingVisitor = new AssemblyBuildingVisitor(semanticAnalyzer.SymbolTable);
             assemblyBuildingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
         }

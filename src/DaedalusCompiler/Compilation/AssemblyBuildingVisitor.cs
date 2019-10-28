@@ -37,6 +37,26 @@ namespace DaedalusCompiler.Compilation
             _symbolTable = symbolTable;
             _labelManager = new LabelManager();
         }
+        
+        
+        private AssemblyElement GetAssignInstruction(Symbol symbol)
+        {
+            switch (symbol.BuiltinType)
+            {
+                case SymbolType.Int:
+                    return new Assign();
+                case SymbolType.String:
+                    return new AssignString();
+                case SymbolType.Func:
+                    return new AssignFunc();
+                case SymbolType.Float:
+                    return new AssignFloat();
+                case SymbolType.Instance:
+                case SymbolType.Class:
+                    return new AssignInstance();
+            }
+            throw new Exception();
+        }
 
 
         protected override List<AssemblyElement> VisitFunctionDefinition(FunctionDefinitionNode node)
@@ -242,7 +262,7 @@ namespace DaedalusCompiler.Compilation
             return new List<AssemblyElement>
             {
                 new PushVar(node.Symbol),
-                new Assign()
+                GetAssignInstruction(node.Symbol),
             };
         }
 
@@ -292,7 +312,7 @@ namespace DaedalusCompiler.Compilation
             List<AssemblyElement> instructions = new List<AssemblyElement>();
             instructions.AddRange(Visit(node.RightSideNode));
             instructions.AddRange(Visit(node.LeftSideNode));
-            instructions.Add(new Assign());
+            instructions.Add(GetAssignInstruction(node.LeftSideNode.Symbol));
             return instructions;
         }
 
@@ -411,7 +431,16 @@ namespace DaedalusCompiler.Compilation
 
         protected override List<AssemblyElement> VisitReturnStatement(ReturnStatementNode node)
         {
-            return new List<AssemblyElement>{ new Ret() };
+            List<AssemblyElement> instructions = new List<AssemblyElement>();
+
+            if (node.ExpressionNode != null)
+            {
+                instructions.AddRange(Visit(node.ExpressionNode));
+            }
+            
+            instructions.Add(new Ret());
+            
+            return instructions;
         }
 
         protected override List<AssemblyElement> VisitBreakStatement(BreakStatementNode node)

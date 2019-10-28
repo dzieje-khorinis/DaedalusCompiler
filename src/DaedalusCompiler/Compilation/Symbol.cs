@@ -289,10 +289,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     
     public class StringConstSymbol : Symbol
     {
-        public string Content;
+        //public string Content;
         public StringConstSymbol(string content, string name, ASTNode node) : base(name, node)
         {
-            Content = content;
+            Content = new object[]{content};
         }
     }
 }

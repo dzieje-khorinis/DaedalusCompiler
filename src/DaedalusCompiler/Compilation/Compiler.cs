@@ -186,6 +186,8 @@ namespace DaedalusCompiler.Compilation
                     logger.LogLine($"{warningsCount} {warning} generated.");
                 }
                 
+                SymbolUpdatingVisitor symbolUpdatingVisitor = new SymbolUpdatingVisitor();
+                symbolUpdatingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
 
                 AssemblyBuildingVisitor assemblyBuildingVisitor = new AssemblyBuildingVisitor(semanticAnalyzer.SymbolTable);
                 assemblyBuildingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);

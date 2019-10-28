@@ -8,6 +8,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class SymbolTableCreationVisitor : AbstractSyntaxTreeBaseVisitor
     {
         public readonly Dictionary <string, Symbol> SymbolTable;
+        private readonly List<Symbol> _stringConstSymbols;
+        
         private bool _isInExternal;
         private int _nextSymbolIndex;
         private int _nextStringSymbolNumber;
@@ -25,6 +27,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public SymbolTableCreationVisitor()
         {
             SymbolTable = new Dictionary<string, Symbol>();
+            _stringConstSymbols = new List<Symbol>();
+            
             _isInExternal = false;
             _nextSymbolIndex = 0;
             _nextStringSymbolNumber = 10000;
@@ -37,6 +41,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             ClassSymbols = new List<ClassSymbol>();
             
             DeclarationNodes = new List<DeclarationNode>();
+        }
+
+        public override void VisitTree(AbstractSyntaxTree tree)
+        {
+            base.VisitTree(tree);
+            foreach (Symbol symbol in _stringConstSymbols)
+            {
+                AddSymbol(symbol);
+            }
         }
 
         protected override void VisitFile(FileNode node)
@@ -85,7 +98,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             string name = $"{(char)255}{_nextStringSymbolNumber++}";
             string value = stringLiteralNode.Value;
             StringConstSymbol stringConstSymbol = new StringConstSymbol(value, name, stringLiteralNode);
-            AddSymbol(stringConstSymbol);
+            _stringConstSymbols.Add(stringConstSymbol);
         }
 
         protected override void VisitConstDefinition(ConstDefinitionNode constDefinitionNode)
