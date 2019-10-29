@@ -43,6 +43,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:8:4: warning W5: usage of non-initialized attribute 'dog'
                     dog.x -= 6;
                     ^
+                3 warnings generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -97,6 +98,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:28:4: warning W5: usage of non-initialized attribute 'c'
                     c /= 3;
                     ^
+                3 warnings generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -152,6 +154,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:30:4: warning W5: usage of non-initialized element (index '2') of array attribute 'tab'
                     tab[2] /= 3;
                     ^
+                3 warnings generated.
             ";
 
             AssertCompilationOutputMatch();

@@ -26,6 +26,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:1:6: note: previous definition is here
                 class __class {};
                       ^
+                2 errors generated.
                 ";
             AssertCompilationOutputMatch();
             
@@ -49,6 +50,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:1:10: note: previous definition is here
                 func void __func() {};
                           ^
+                2 errors generated.
                 ";
 
             AssertCompilationOutputMatch();
@@ -74,6 +76,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:2:9: note: previous definition is here
                 instance __instanceDecl(C_NPC);
                          ^
+                2 errors generated.
                 ";
 
             AssertCompilationOutputMatch();
@@ -268,6 +271,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:13:13: note: previous definition is here
                     var func e;
                              ^
+                5 errors generated.
                 ";
             AssertCompilationOutputMatch();
         }
@@ -301,6 +305,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:4:10: error: 'while' is keyword and shouldn't be used as an identifier
                 func void while() {};
                           ^
+                3 errors generated.
             ";
 
             AssertCompilationOutputMatch();

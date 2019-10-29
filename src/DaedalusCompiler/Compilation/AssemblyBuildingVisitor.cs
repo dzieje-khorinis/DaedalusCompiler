@@ -37,7 +37,7 @@ namespace DaedalusCompiler.Compilation
             switch (labelType)
             {
                 case LabelType.ElseIfBlockStart:
-                    label = $"else_if_{_nextElseIfLabelSubIndex++}";
+                    label = $"else_if_{++_nextElseIfLabelSubIndex}";
                     break;
                 case LabelType.ElseBlockStart:
                     label = "else";
@@ -341,11 +341,34 @@ namespace DaedalusCompiler.Compilation
                 index = (int) ((IntValue) referenceNode.IndexNode.Value).Value;
             }
 
+
+            List<AssemblyElement> instructions = new List<AssemblyElement>();
+            
+            if (referenceNode.BaseSymbol != referenceNode.Symbol)
+            {
+                instructions.Add(new SetInstance(referenceNode.BaseSymbol));
+            }
+            
             if (index > 0)
             {
-                return new List<AssemblyElement> { new PushArrayVar(referenceNode.Symbol, index) };
+                instructions.Add(new PushArrayVar(referenceNode.Symbol, index));
             }
-
+            else if (referenceNode.CastToInt)
+            {
+                instructions.Add(new PushInt(referenceNode.Symbol.Index));
+            }
+            else if (referenceNode.Symbol.BuiltinType == SymbolType.Instance)
+            {
+                instructions.Add(new PushInstance(referenceNode.Symbol));
+            }
+            else
+            {
+                instructions.Add(new PushVar(referenceNode.Symbol));
+            }
+            
+            return instructions;
+            
+            
 
             /*
              
@@ -409,22 +432,6 @@ namespace DaedalusCompiler.Compilation
              
                           
              */
-            
-            AssemblyInstruction pushInstruction;
-            if (referenceNode.CastToInt)
-            {
-                pushInstruction = new PushInt(referenceNode.Symbol.Index);
-            }
-            else if (referenceNode.Symbol.BuiltinType == SymbolType.Instance)
-            {
-                pushInstruction = new PushInstance(referenceNode.Symbol);
-            }
-            else
-            {
-                pushInstruction = new PushVar(referenceNode.Symbol);
-            }
-            
-            return new List<AssemblyElement> { pushInstruction };
         }
 
         protected override List<AssemblyElement> VisitIntegerLiteral(IntegerLiteralNode node)

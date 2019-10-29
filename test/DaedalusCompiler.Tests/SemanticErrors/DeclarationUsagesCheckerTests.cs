@@ -26,6 +26,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:6:4: error: unknown type name 'NPC2'
                 var NPC2 HERO3;
                     ^
+                1 error, 1 warning generated.
                 ";
 
             AssertCompilationOutputMatch();
@@ -52,6 +53,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:6:15: error: 'NPC2' undeclared
                 instance HERO3(NPC2);
                                ^
+                1 error, 1 warning generated.
                 ";
 
             AssertCompilationOutputMatch();
@@ -137,6 +139,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:7:8: note: 'enemy' declared here
                 var NPC enemy;
                         ^
+                9 warnings generated.
                 ";
 
             AssertCompilationOutputMatch();

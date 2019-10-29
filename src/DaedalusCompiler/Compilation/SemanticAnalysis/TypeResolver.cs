@@ -91,6 +91,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         case SymbolType.Int:
                         case SymbolType.String:
                         case SymbolType.Func:
+                        case SymbolType.Float: // very limited type
                             break;
                         default:
                             symbol.BuiltinType = SymbolType.Uninitialized;

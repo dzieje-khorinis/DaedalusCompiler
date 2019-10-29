@@ -42,6 +42,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:11:8: error: 'xxx' undeclared
                     b = xxx[2].attr;
                         ^
+                6 errors generated.
                 ";
 
             AssertCompilationOutputMatch();
@@ -77,6 +78,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:3:17: error: 'd' undeclared
                     x = a + b(c, d);
                                  ^
+                6 errors generated.
                 ";
 
             AssertCompilationOutputMatch();
@@ -93,6 +95,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:1:14: error: 'b' undeclared
                 const int a = b;
                               ^
+                1 error generated.
                 ";
 
             AssertCompilationOutputMatch();
@@ -129,6 +132,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:12:11: error: object 'victim' of type 'NPC' has no member named 'x'
                     victim.x = 20;
                            ^
+                3 errors generated.
                 ";
 
             AssertCompilationOutputMatch();
@@ -174,6 +178,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:14:8: error: 'NonExistant' undeclared
                     x = NonExistant.a;
                         ^
+                5 errors generated.
                 ";
 
             AssertCompilationOutputMatch();

@@ -66,16 +66,16 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     case AttributeNode attributeNode:
 
 
-                        NestableSymbol nestableSymbol;
+                        NestableSymbol resultNestableSymbol;
                         switch (symbol)
                         {
                             case InstanceSymbol instanceSymbol:
                                 ClassSymbol baseClassSymbol = instanceSymbol.BaseClassSymbol;
                                 if (baseClassSymbol != null)
                                 {
-                                    if (baseClassSymbol.BodySymbols.TryGetValue(attributeNode.Name.ToUpper(), out nestableSymbol))
+                                    if (baseClassSymbol.BodySymbols.TryGetValue(attributeNode.Name.ToUpper(), out resultNestableSymbol))
                                     {
-                                        symbol = nestableSymbol;
+                                        symbol = resultNestableSymbol;
                                         symbolLocalPath = $"{symbolLocalPath}.{attributeNode.Name}";
                                         attributeNode.Symbol = symbol;
                                         
@@ -95,12 +95,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                                 }
                                 break;
                             
-                            case VarSymbol varSymbol:
-                                if (varSymbol.ComplexType is ClassSymbol classSymbol)
+                            case NestableSymbol nestableSymbol:
+                                if (nestableSymbol.ComplexType is ClassSymbol classSymbol)
                                 {
-                                    if (classSymbol.BodySymbols.TryGetValue(attributeNode.Name.ToUpper(), out nestableSymbol))
+                                    if (classSymbol.BodySymbols.TryGetValue(attributeNode.Name.ToUpper(), out resultNestableSymbol))
                                     {
-                                        symbol = nestableSymbol;
+                                        symbol = resultNestableSymbol;
                                         symbolLocalPath = $"{symbolLocalPath}.{attributeNode.Name}";
                                         attributeNode.Symbol = symbol;
                                         
@@ -186,6 +186,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         return nestableSymbol;
                     }
                     break;
+                
+                case ClassDefinitionNode _:
                 case FileNode _:
                     break;
                 

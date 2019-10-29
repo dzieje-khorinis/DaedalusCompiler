@@ -21,6 +21,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:4:4: warning W1: usage of single-expression statement hack
                     x;
                     ^
+                1 warning generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -43,6 +44,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:4:4: error W1: usage of single-expression statement hack
                     x;
                     ^
+                1 error generated.
             ";
 
             AssertCompilationOutputMatch(true);
@@ -108,6 +110,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:5:4: error: 'continue' statement not allowed outside of loop statement
                     continue;
                     ^
+                3 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -132,6 +135,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:4:8: error: integer literal is too large to be represented in an integer type (min: -2147483648, max: 2147483647)
                     x = 214748364821474836482147483648214748364821474836482147483648;
                         ^
+                2 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -156,6 +160,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:3:6: error: size of class 'C_ITEMREACT' must be 28 bytes (currently it's 0 bytes)
                 class C_ITEMREACT { };
                       ^
+                3 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -194,6 +199,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:9:4: warning W4: 'tab' is a const and shouldn't have its value changed
                     tab[1] = 3;
                     ^
+                5 warnings generated.
             ";
 
             AssertCompilationOutputMatch();

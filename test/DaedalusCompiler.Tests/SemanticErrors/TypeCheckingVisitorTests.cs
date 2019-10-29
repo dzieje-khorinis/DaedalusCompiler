@@ -32,6 +32,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:1:9: note: 'testFunc' declared here
                 func int testFunc(var int a) {};
                          ^
+                2 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -411,6 +412,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:161:11: error: invalid argument type 'float' to unary expression
                     return ~b;
                            ^
+                68 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -474,6 +476,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:20:15: error: binary operations not allowed inside 'float' expression
                     parFloat(a + a);
                                ^
+                9 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -527,6 +530,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:19:6: error: unsupported operation
                     b -= ""Jan"";
                       ^
+                6 errors generated.
             ";
 
             AssertCompilationOutputMatch();

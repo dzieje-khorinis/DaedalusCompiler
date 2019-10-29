@@ -52,6 +52,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:29:18: error: cannot access attribute 'b' because 'Dog2.uruk' is not an instance of a class
                     x = Dog2.uruk.b;
                                   ^
+                3 errors generated.
                 ";
             AssertCompilationOutputMatch();
         }
@@ -101,6 +102,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:29:20: error: object 'Dog2.person' of type 'Human' has no member named 'c'
                     x = Dog2.person.c;
                                     ^
+                2 errors generated.
                 ";
             AssertCompilationOutputMatch();
         }

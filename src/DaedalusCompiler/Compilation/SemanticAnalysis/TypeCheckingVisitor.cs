@@ -27,7 +27,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         
         
-        private bool _isInsideConditional;
+        private bool _isInsideCondition;
 
         private Stack<SymbolTypePair> _currentExpressionTypes; //return/assignment/parameter
         
@@ -49,7 +49,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             //_floatExpressionDepth = 0;
             //_isInsideFloatExpression = false;
 
-            _isInsideConditional = false;
+            //_isInsideCondition = false;
             _currentExpressionTypes = new Stack<SymbolTypePair>();
         }
 
@@ -61,6 +61,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         private SymbolTypePair GetSymbolTypePairFromSymbol(Symbol symbol)
         {
+            if (symbol == null)
+            {
+                return null;
+            }
+            
+            
             if (symbol is NestableSymbol nestableSymbol)
             {
                 return new SymbolTypePair(nestableSymbol.BuiltinType, nestableSymbol.ComplexType);
@@ -116,17 +122,19 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     SymbolTypePair parameterType = GetSymbolTypePairFromSymbol(parameterNode.Symbol);
                     ExpressionNode argumentNode = argumentNodes[i];
 
+                    /*
                     if (parameterType.BuiltinType == SymbolType.Float)
                     {
                         _isInsideFloatExpression = true;
                     }
+                    */
 
                     _currentExpressionTypes.Push(parameterType);
                     Visit(argumentNode);
                     _currentExpressionTypes.Pop();
                     
                     
-                    _isInsideFloatExpression = false;
+                    //_isInsideFloatExpression = false;
                     
                     SymbolTypePair argumentType = GetSymbolTypePairFromExpressionNode(argumentNode);
                     
@@ -255,11 +263,24 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected override void VisitBinaryExpression(BinaryExpressionNode node)
         {
+            if (_currentExpressionTypes.Count > 0)
+            {
+                SymbolTypePair currentExpressionType = _currentExpressionTypes.Peek();
+                    
+                SymbolType asType = currentExpressionType.BuiltinType;
+                if (asType == SymbolType.Float)
+                {
+                    node.Annotations.Add(new BinaryOperationsNotAllowedInsideFloatExpression(node.OperatorLocation));
+                }
+            }
+            
+            /*
             if (_isInsideFloatExpression)
             {
                 node.Annotations.Add(new BinaryOperationsNotAllowedInsideFloatExpression(node.OperatorLocation));
                 return;
             }
+            */
             
             base.VisitBinaryExpression(node);
 
@@ -427,14 +448,14 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     SymbolTypePair currentExpressionType = _currentExpressionTypes.Peek();
                     
                     SymbolType asType = currentExpressionType.BuiltinType;
-                    if (asType == SymbolType.Func || (asType == SymbolType.Int && symbol.BuiltinType != SymbolType.Int)) // || _isInsideConditional but not always
+                    if (asType == SymbolType.Func || (asType == SymbolType.Int && symbol.BuiltinType != SymbolType.Int))
                     {
                         referenceNode.CastToInt = true;
                     }
                 }
                 else
                 {
-                    if (_isInsideConditional)
+                    if (_isInsideCondition && symbol.BuiltinType != SymbolType.Int)
                     {
                         referenceNode.CastToInt = true;
                     }
@@ -510,9 +531,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected override void VisitConditional(ConditionalNode node)
         {
-            _isInsideConditional = true;
-            base.VisitConditional(node);
-            _isInsideConditional = false;
+            _isInsideCondition = true;
+            Visit(node.ConditionNode);
+            _isInsideCondition = false;
+            Visit(node.BodyNodes);
         }
     }
 }

@@ -17,6 +17,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:1:11: error: circular inheritance dependency detected
                 instance a(b) {};
                            ^
+                1 error generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -42,6 +43,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:3:19: error: 'Orc' undeclared
                 prototype OrcElite(Orc) {};
                                    ^
+                2 errors generated.
                 ";
 
             AssertCompilationOutputMatch();
@@ -80,6 +82,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:6:17: error: not a valid class or prototype
                 prototype WRONG3(myFunc) {};
                                  ^
+                3 errors generated.
                 ";
             AssertCompilationOutputMatch();
         }

@@ -36,6 +36,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:14:19: error: array 'NAMES' has inconsistent size (declared size: 2, elements count: 3)
                 const string NAMES[2] = {""DIEGO"", ""ROBERTO"", ""SANCHEZ""};
                                    ^
+                3 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -74,6 +75,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:14:19: error: array 'NAMES' has inconsistent size (declared size: 4, elements count: 3)
                 const string NAMES[4] = {""DIEGO"", ""ROBERTO"", ""SANCHEZ""};
                                    ^
+                3 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -117,6 +119,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:17:19: error: size of array 'NAMES' cannot equal zero
                 const string NAMES[0] = {""DIEGO"", ""ROBERTO"", ""SANCHEZ""};
                                    ^
+                4 errors generated.
                 ";
 
             AssertCompilationOutputMatch();
@@ -157,6 +160,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:14:28: error: integer literal is too large to be represented in an integer type (min: -2147483648, max: 2147483647)
                     too_big_int_negative = -2147483648;
                                             ^
+                4 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -197,6 +201,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:6:10: error: cannot initialize a constant of type 'int' with an rvalue of type 'float'
                 const int f = 5.5 + 5.5; //error
                           ^   ~~~~~~~~~
+                4 errors generated.
                 ";
 
             AssertCompilationOutputMatch();
@@ -226,6 +231,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:6:14: error: too big array size (max: 4095)
                     var int f[4096];
                               ^
+                3 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -258,6 +264,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:9:14: error: too big array size (max: 4095)
                     var int f[WRONG_SIZE];
                               ^
+                3 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -293,6 +300,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:11:10: error: array index out of range (max index for this array is 3)
                     x = c[4]; //! suppress: W5
                           ^
+                3 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -324,6 +332,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:14:19: error: array index out of range (max index for this array is 7)
                     self.attribute[BAD_INDEX] = 200;
                                    ^
+                1 error generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -363,6 +372,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:16:10: error: array index out of range (max index for this array is 3)
                     x = c[FOUR]; //! suppress: W5
                           ^
+                3 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -395,6 +405,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:9:10: error: too big array index (max: 255)
                     x = b[256];
                           ^
+                3 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -430,6 +441,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:12:10: error: too big array index (max: 255)
                     x = b[INDEX2];
                           ^
+                3 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -485,6 +497,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:16:12: error: circular const reference dependency detected
                 const int k[l[1]] = {1, 2};
                             ^
+                8 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -526,6 +539,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:9:14: error: array size must be of const integer type
                     var int f[height];
                               ^
+                6 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -601,6 +615,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:31:10: error: array index must be of const integer type
                     x = e[INDEX3];
                           ^
+                10 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -629,6 +644,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:8:18: error: const reference required
                     const int f = e + d;
                                   ^
+                2 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -657,6 +673,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:4:25: error: arithmetic operation resulted in an overflow
                 const int d = 2147483647 * 2147483647;
                                          ^
+                4 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -685,6 +702,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:4:18: error: cannot divide by zero
                 const int d = 5.0 / 0.0;
                                   ^ ~~~
+                4 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -705,6 +723,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:2:14: error: invalid unary operation
                 const int b = ~2.5;
                               ^
+                2 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -731,6 +750,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:5:24: error: invalid binary operation
                 const string e = ""name"" - ""na"";
                                  ~~~~~~ ^ ~~~~
+                3 errors generated.
                 ";
 
             AssertCompilationOutputMatch();
@@ -755,6 +775,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:3:13: error: cannot initialize a constant of type 'string' with an rvalue of type 'int'
                 const string c = 2;
                              ^   ~
+                3 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -776,15 +797,16 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:1:29: error: cannot initialize an array element of type 'int' with an rvalue of type 'float'
                 const int a[3] = {0, ""zero"", 0.5};
                                              ^~~
-                test.d:2:6: error: unsupported array type
+                test.d:2:23: error: cannot initialize an array element of type 'float' with an rvalue of type 'string'
                 const float b[3] = {1, ""one"", 1.5};
-                      ^
+                                       ^~~~~
                 test.d:3:21: error: cannot initialize an array element of type 'string' with an rvalue of type 'int'
                 const string c[3] = {2, ""two"", 2.5};
                                      ^
                 test.d:3:31: error: cannot initialize an array element of type 'string' with an rvalue of type 'float'
                 const string c[3] = {2, ""two"", 2.5};
                                                ^~~
+                5 errors generated.
             ";
 
             AssertCompilationOutputMatch();

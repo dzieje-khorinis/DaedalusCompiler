@@ -51,6 +51,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:10:8: error: unknown type name 'b'
                     var b d[5];
                         ^
+                9 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -84,6 +85,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:8:5: error: unsupported function return type
                 func Prototype func8() {}
                      ^
+                4 errors generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -356,6 +358,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:39:8: error: unsupported type
                     var Prototype d8;
                         ^
+                22 errors generated.
             ";
 
             AssertCompilationOutputMatch();

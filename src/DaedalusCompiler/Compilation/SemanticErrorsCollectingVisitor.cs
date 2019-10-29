@@ -238,7 +238,7 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
                 endColumn = Math.Max(endColumn, underlineExactLineLocations.Max(x => x.EndColumn));
             }
 
-            string lineContent = CurrentFileNode.Content[pointerLocation.Line - 1];
+            string lineContent = FilesContents[pointerLocation.FileIndex][pointerLocation.Line - 1]; //CurrentFileNode.Content[pointerLocation.Line - 1];
 
             string[] buffer = new string[endColumn];
 
