@@ -133,7 +133,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             Visit(node.IfNode);
             Visit(node.ElseIfNodes);
-            Visit(node.ElseNodeBodyNodes);
+            if (node.ElseNodeBodyNodes != null)
+            {
+                Visit(node.ElseNodeBodyNodes);
+            }
         }
 
         protected virtual void VisitWhileStatement(WhileStatementNode node)

@@ -106,6 +106,11 @@ namespace DaedalusCompiler.Compilation
         }
     }
 
+    public class PushNullInstance : AssemblyInstruction
+    {
+        
+    }
+    
     public class SetInstance : SymbolInstruction
     {
         public SetInstance(Symbol symbol) : base(symbol)

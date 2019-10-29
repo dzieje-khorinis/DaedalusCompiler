@@ -2818,10 +2818,10 @@ namespace DaedalusCompiler.Tests
                 new Call(Ref("firstFunc")),
                 new LogOr(),
                 new LogOr(),
-                new JumpIfToLabel("label_0"),
+                new JumpIfToLabel("#0001_endif"),
                 // endif 
             
-                new AssemblyLabel("label_0"),    
+                new AssemblyLabel("#0001_endif"),    
                 new Ret()
             };
             AssertInstructionsMatch();
@@ -2865,50 +2865,55 @@ namespace DaedalusCompiler.Tests
                             if ( NPC_IsDead(victim) == 1)
                             {
                                 return; 
-                            };
+                            }; //#0003_endif
                         }
-                        else
+                        else //#0002_else
                         {
                         
-                        };
-                    };
+                        };//#0002_endif
+                    }; //#0001_endif
                 };
             ";
             _instructions = GetExecBlockInstructions("testFunc");
             _expectedInstructions = new List<AssemblyElement>
             {
-                // if ( NPC_IsDead(self) == 1 )
+                // if ( NPC_IsDead(self) == 1 ) {
                 new PushInt(1),
                 new PushInstance(Ref("self")),
                 new CallExternal(Ref("NPC_IsDead")),
                 new Equal(),
-                new JumpIfToLabel("label_3"),
+                new JumpIfToLabel("#0001_endif"),
                 
-                // if ( NPC_IsDead(other) == 0)
+                // if ( NPC_IsDead(other) == 0) {
                 new PushInt(0),
                 new PushInstance(Ref("other")),
                 new CallExternal(Ref("NPC_IsDead")),
                 new Equal(),
-                new JumpIfToLabel("label_2"),
+                new JumpIfToLabel("#0002_else"),
                 
-                // if ( NPC_IsDead(victim) == 1 )
+                // if ( NPC_IsDead(victim) == 1 ) {
                 new PushInt(1),
                 new PushInstance(Ref("victim")),
                 new CallExternal(Ref("NPC_IsDead")),
                 new Equal(),
-                new JumpIfToLabel("label_0"),
+                new JumpIfToLabel("#0003_endif"),
  
                 // return; 
                 new Ret(),
-                
-                // else start 
-                new AssemblyLabel("label_0"),
-                new JumpToLabel("label_1"),
-                new AssemblyLabel("label_2"),
-                new AssemblyLabel("label_1"),
-                // else end
-                
-                new AssemblyLabel("label_3"),
+                            
+                // };
+                new AssemblyLabel("#0003_endif"),
+
+                new JumpToLabel("#0002_endif"),
+                // } else {
+                new AssemblyLabel("#0002_else"),
+                    
+                    
+                // };
+                new AssemblyLabel("#0002_endif"),
+
+                // };
+                new AssemblyLabel("#0001_endif"),
                 new Ret(),
             };
             AssertInstructionsMatch();
@@ -5498,7 +5503,7 @@ namespace DaedalusCompiler.Tests
                 new CallExternal(Ref("Info_AddChoice")),
                 
                 // NPC_IsInState(NULL, NOFUNC);
-                new PushInstance(Ref($"{prefix}instance_help")), //NULL = {prefix}instance_help
+                new PushNullInstance(),
                 new PushInt(-1), //NOFUNC = -1
                 new CallExternal(Ref("NPC_IsInState")), 
                 

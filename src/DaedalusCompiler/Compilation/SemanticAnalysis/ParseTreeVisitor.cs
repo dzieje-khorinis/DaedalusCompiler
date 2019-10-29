@@ -11,16 +11,17 @@ namespace DaedalusCompiler.Compilation
     public class ParseTreeVisitor : DaedalusBaseVisitor<ASTNode>
     {
 	    private readonly int _sourceFileNumber;
-	    public bool IsVisitingExternal;
+	    private bool _isExternal;
 	    
 	    public readonly List<InheritanceParentReferenceNode> InheritanceReferenceNodes;
 	    public readonly List<ReferenceNode> ReferenceNodes;
 	    public readonly List<ConstDefinitionNode> ConstDefinitionNodes;
 	    public readonly List<IArrayDeclarationNode> ArrayDeclarationNodes;
 
-	    public ParseTreeVisitor(int sourceFileNumber)
+	    public ParseTreeVisitor(int sourceFileNumber, bool isExternal)
 	    {
 		    _sourceFileNumber = sourceFileNumber;
+		    _isExternal = isExternal;
 		    ConstDefinitionNodes = new List<ConstDefinitionNode>();
 		    ArrayDeclarationNodes = new List<IArrayDeclarationNode>();
 		    InheritanceReferenceNodes = new List<InheritanceParentReferenceNode>();
@@ -64,7 +65,7 @@ namespace DaedalusCompiler.Compilation
 
 			List<StatementNode> statementNodes = GetStatementNodes(context.statementBlock());
 			
-			return new FunctionDefinitionNode(GetLocation(context), typeNameNode, nameNode, varDeclarationNodes, statementNodes);
+			return new FunctionDefinitionNode(GetLocation(context), typeNameNode, nameNode, varDeclarationNodes, statementNodes, _isExternal);
 	    }
 
 		public override ASTNode VisitConstDef([NotNull] DaedalusParser.ConstDefContext context)
@@ -189,7 +190,7 @@ namespace DaedalusCompiler.Compilation
 		{
 			ConditionalNode ConditionalNode = (ConditionalNode) VisitIfBlock(context.ifBlock());
 			List<ConditionalNode> ConditionalNodes = new List<ConditionalNode>();
-			List<StatementNode> elseNodeBodyNodes = new List<StatementNode>();
+			List<StatementNode> elseNodeBodyNodes = null;
 			
 			foreach (DaedalusParser.ElseIfBlockContext elseIfBlockContext in context.elseIfBlock())
 			{

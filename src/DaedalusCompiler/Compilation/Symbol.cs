@@ -162,15 +162,19 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         //public SymbolType ReturnBuiltinType;
         //public Symbol ReturnComplexType;
+        public readonly bool IsExternal;
 
-        public FunctionSymbol(string typeName, string name, ASTNode node) : base(name, node)
+        public FunctionSymbol(string typeName, string name, bool isExternal, ASTNode node) : base(name, node)
         {
             TypeName = typeName.ToUpper();
+
+            IsExternal = isExternal;
             //BuiltinType = SymbolType.Func;
             //ReturnBuiltinType = GetBuiltinType(TypeName);
             //ReturnComplexType = null;
             BuiltinType = GetBuiltinType(TypeName);
             ComplexType = null;
+            
         }
 
         /*

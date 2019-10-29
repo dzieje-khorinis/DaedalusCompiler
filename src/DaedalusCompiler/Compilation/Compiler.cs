@@ -93,7 +93,7 @@ namespace DaedalusCompiler.Compilation
                 
                 int syntaxErrorsCount = 0;
                 
-                if (File.Exists(runtimePath) && false)  //&& false
+                if (File.Exists(runtimePath))  //&& false
                 {
                     externalFilesCount++;
                     

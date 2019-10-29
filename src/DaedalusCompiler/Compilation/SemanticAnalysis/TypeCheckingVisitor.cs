@@ -25,6 +25,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         private int _floatExpressionDepth;
         private bool _isInsideFloatExpression;
         
+        
+        
+        private bool _isInsideConditional;
+
+        private Stack<SymbolTypePair> _currentExpressionTypes; //return/assignment/parameter
+        
+        
         /*
          * arguments vs parameters types
          * operations types
@@ -41,6 +48,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             _visitedNodes = new HashSet<ASTNode>();
             //_floatExpressionDepth = 0;
             //_isInsideFloatExpression = false;
+
+            _isInsideConditional = false;
+            _currentExpressionTypes = new Stack<SymbolTypePair>();
         }
 
         
@@ -68,6 +78,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
         }
 
+        
+        
         protected override void VisitFunctionCall(FunctionCallNode node)
         {
             if (node.FunctionReferenceNode.Symbol != null)
@@ -108,7 +120,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     {
                         _isInsideFloatExpression = true;
                     }
+
+                    _currentExpressionTypes.Push(parameterType);
                     Visit(argumentNode);
+                    _currentExpressionTypes.Pop();
+                    
+                    
                     _isInsideFloatExpression = false;
                     
                     SymbolTypePair argumentType = GetSymbolTypePairFromExpressionNode(argumentNode);
@@ -121,28 +138,46 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         protected override void VisitReturnStatement(ReturnStatementNode node)
         {
             ASTNode parentBlockNode = node.GetFirstSignificantAncestorNode();
-            if (parentBlockNode is FunctionDefinitionNode functionDefinitionNode)
+            FunctionDefinitionNode functionDefinitionNode = (FunctionDefinitionNode) parentBlockNode;
+            SymbolTypePair functionType = GetSymbolTypePairFromSymbol(functionDefinitionNode.Symbol);
+            
+
+            /*
+            if (functionDefinitionNode.Symbol.BuiltinType == SymbolType.Float)
             {
-                if (functionDefinitionNode.Symbol.BuiltinType == SymbolType.Float)
-                {
-                    _isInsideFloatExpression = true;
-                }
+                _isInsideFloatExpression = true;
             }
+            */
+
+            _currentExpressionTypes.Push(functionType);
             base.VisitReturnStatement(node);
-            _isInsideFloatExpression = false;
+            _currentExpressionTypes.Pop();
+            
+            //_isInsideFloatExpression = false;
+                
+
+            
         }
 
         protected override void VisitAssignment(AssignmentNode node)
         {
             Visit(node.LeftSideNode);
-
+            
+            SymbolTypePair assignmentType = GetSymbolTypePairFromSymbol(node.LeftSideNode.Symbol);
+            
+            /*
             if (node.LeftSideNode.BuiltinType == SymbolType.Float)
             {
                 _isInsideFloatExpression = true;
             }
+            */
+
+            _currentExpressionTypes.Push(assignmentType);
             Visit(node.RightSideNode);
-            _isInsideFloatExpression = false;
-            
+            _currentExpressionTypes.Pop();
+
+            //_isInsideFloatExpression = false;
+
             /*
              * IncompatibleTypeAssignmentError
              * TODO check assignment types compability
@@ -384,7 +419,31 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Symbol symbol = referenceNode.Symbol;
             if (symbol != null)
             {
-                if (symbol is FunctionSymbol functionSymbol)
+                
+                
+                
+                if (_currentExpressionTypes.Count > 0)
+                {
+                    SymbolTypePair currentExpressionType = _currentExpressionTypes.Peek();
+                    
+                    SymbolType asType = currentExpressionType.BuiltinType;
+                    if (asType == SymbolType.Func || (asType == SymbolType.Int && symbol.BuiltinType != SymbolType.Int)) // || _isInsideConditional but not always
+                    {
+                        referenceNode.CastToInt = true;
+                    }
+                }
+                else
+                {
+                    if (_isInsideConditional)
+                    {
+                        referenceNode.CastToInt = true;
+                    }
+                }
+                
+                
+                
+                
+                if (symbol is FunctionSymbol)
                 {
                     referenceNode.BuiltinType = SymbolType.Func;
                     return;
@@ -400,6 +459,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 {
                     referenceNode.ComplexType = nestableSymbol.ComplexType;
                 }
+
+                
+                
+
+                
             }
         }
 
@@ -444,7 +508,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         protected override void VisitConstArrayDefinition(ConstArrayDefinitionNode node) { }
 
 
-
-        
+        protected override void VisitConditional(ConditionalNode node)
+        {
+            _isInsideConditional = true;
+            base.VisitConditional(node);
+            _isInsideConditional = false;
+        }
     }
 }

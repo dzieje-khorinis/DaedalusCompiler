@@ -39,6 +39,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     if (typeSymbol is ClassSymbol)
                     {
                         typedSymbol.ComplexType = typeSymbol;
+                        symbol.BuiltinType = SymbolType.Instance;
                         symbolBuiltinType = SymbolType.Instance;
                         
                              

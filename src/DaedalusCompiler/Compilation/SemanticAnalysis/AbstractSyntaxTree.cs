@@ -94,7 +94,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             int index = 0;
             foreach (IParseTree parseTree in parseTrees)
             {
-                ParseTreeVisitor visitor = new ParseTreeVisitor(index);
+                bool isExternal = index < externalFilesCount;
+                ParseTreeVisitor visitor = new ParseTreeVisitor(index, isExternal);
                 RootNodes.Add((FileNode) visitor.Visit(parseTree));
                 ConstDefinitionNodes.AddRange(visitor.ConstDefinitionNodes);
                 ArrayDeclarationNodes.AddRange(visitor.ArrayDeclarationNodes);
@@ -283,9 +284,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public readonly List<ParameterDeclarationNode> ParameterNodes;
         public readonly List<StatementNode> BodyNodes;
+        public bool IsExternal;
 
         public FunctionDefinitionNode(NodeLocation location, NameNode typeNameNode, NameNode nameNode,
-            List<ParameterDeclarationNode> parameterNodes, List<StatementNode> bodyNodes) : base(location, typeNameNode, nameNode)
+            List<ParameterDeclarationNode> parameterNodes, List<StatementNode> bodyNodes, bool isExternal) : base(location, typeNameNode, nameNode)
         {
             foreach (var node in parameterNodes)
             {
@@ -298,6 +300,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             
             ParameterNodes = parameterNodes;
             BodyNodes = bodyNodes;
+            IsExternal = isExternal;
         }
     }
 
@@ -570,11 +573,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             {
                 node.ParentNode = this;
             }
-            
-            foreach (var node in elseNodeBodyNodes)
+
+            if (elseNodeBodyNodes != null)
             {
-                node.ParentNode = this;
+                foreach (var node in elseNodeBodyNodes)
+                {
+                    node.ParentNode = this;
+                }
             }
+            
             
             IfNode = ifNode;
             ElseIfNodes = elseIfNodes;
@@ -672,11 +679,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public string Name;
         public List<ReferencePartNode> PartNodes;
-
+        
         public Symbol Symbol; // TODO filled in ???
         public Symbol BaseSymbol; // if for example we have a.b.c, base symbol is a, and symbol is c
         public ArrayIndexNode IndexNode;
-        
+
+        public bool CastToInt;
 
         public ReferenceNode(string name, List<ReferencePartNode> partNodes, NodeLocation location) : base(location)
         {
@@ -685,6 +693,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Name = name;
             PartNodes = partNodes;
             IndexNode = null;
+
+            CastToInt = false;
+            /*
+             When CastToInt = true, this node should produce PushInt instruction.
+             It should happen in following situations:
+              - assignment/return/parameter of type func
+              - assignment/return/parameter of type int && symbol's builtintype isn't int
+              - inside conditional
+              */
 
             foreach (var partNode in partNodes)
             {

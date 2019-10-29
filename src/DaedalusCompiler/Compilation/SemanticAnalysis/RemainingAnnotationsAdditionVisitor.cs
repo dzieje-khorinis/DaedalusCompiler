@@ -97,7 +97,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected override void VisitIfStatement(IfStatementNode node)
         {
-            CheckStatementsForSingleExpressionHack(node.ElseNodeBodyNodes);
+            if (node.ElseNodeBodyNodes != null)
+            {
+                CheckStatementsForSingleExpressionHack(node.ElseNodeBodyNodes);
+            }
+            
             base.VisitIfStatement(node);
         }
 

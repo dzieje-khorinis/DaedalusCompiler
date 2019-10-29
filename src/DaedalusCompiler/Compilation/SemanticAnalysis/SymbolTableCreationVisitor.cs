@@ -10,7 +10,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public readonly Dictionary <string, Symbol> SymbolTable;
         private readonly List<Symbol> _stringConstSymbols;
         
-        private bool _isInExternal;
+        private bool _isInExternalFile;
         private int _nextSymbolIndex;
         private int _nextStringSymbolNumber;
         
@@ -29,7 +29,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             SymbolTable = new Dictionary<string, Symbol>();
             _stringConstSymbols = new List<Symbol>();
             
-            _isInExternal = false;
+            _isInExternalFile = false;
             _nextSymbolIndex = 0;
             _nextStringSymbolNumber = 10000;
 
@@ -54,10 +54,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected override void VisitFile(FileNode node)
         {
-            _isInExternal = node.IsExternal;
+            _isInExternalFile = node.IsExternal;
             base.VisitFile(node);
         }
 
+
+        
         protected override void VisitClassDefinition(ClassDefinitionNode classDefinitionNode)
         {
             string className = classDefinitionNode.NameNode.Value;
@@ -70,8 +72,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             string functionName = functionDefinitionNode.NameNode.Value;
             string returnTypeName = functionDefinitionNode.TypeNameCapitalized;
+            bool isExternal = functionDefinitionNode.IsExternal;
             
-            FunctionSymbol functionSymbol = new FunctionSymbol(returnTypeName, functionName, functionDefinitionNode);
+            FunctionSymbol functionSymbol = new FunctionSymbol(returnTypeName, functionName, isExternal, functionDefinitionNode);
             AddSymbol(functionSymbol);
             Visit(functionDefinitionNode.ParameterNodes);
             Visit(functionDefinitionNode.BodyNodes);
@@ -126,6 +129,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             BuildVar(varDeclarationNode);
         }
 
+        protected override void VisitBinaryExpression(BinaryExpressionNode node)
+        {
+            Visit(node.RightSideNode);
+            Visit(node.LeftSideNode);
+        }
+
         protected override void VisitVarArrayDeclaration(VarArrayDeclarationNode varArrayDeclarationNode)
         {
             BuildVar(varArrayDeclarationNode, true);
@@ -140,17 +149,17 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 string parameterTypeName = parameterDeclarationNode.TypeNameCapitalized;
 
                 ParameterSymbol parameterSymbol;
-                if (_isInExternal)
-                {
-                    parameterSymbol = buildArray
-                        ? new ParameterArraySymbol(functionSymbol, parameterTypeName, parameterName, parameterDeclarationNode)
-                        : new ParameterSymbol(functionSymbol, parameterTypeName, parameterName, parameterDeclarationNode);
-                }
-                else
+                if (_isInExternalFile)
                 {
                     parameterSymbol = buildArray
                         ? new ExternalParameterArraySymbol(functionSymbol, parameterTypeName, parameterName, parameterDeclarationNode)
                         : new ExternalParameterSymbol(functionSymbol, parameterTypeName, parameterName, parameterDeclarationNode);
+                }
+                else
+                {
+                    parameterSymbol = buildArray
+                        ? new ParameterArraySymbol(functionSymbol, parameterTypeName, parameterName, parameterDeclarationNode)
+                        : new ParameterSymbol(functionSymbol, parameterTypeName, parameterName, parameterDeclarationNode);
                 }
                 AddSymbol(parameterSymbol);
             }
@@ -187,6 +196,30 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         private void AddSymbol(Symbol symbol)
         {
             symbol.Index = _nextSymbolIndex++;
+            
+            /*
+            if (IsCurrentlyParsingExternals)
+            {
+                if (symbol.BuiltinType == DatSymbolType.Func && symbol.Flags.HasFlag(DatSymbolFlag.Const))
+                {
+                    symbol.Flags |= DatSymbolFlag.External;
+                }
+
+                if (symbol.Name == "instance_help")
+                {
+                    symbol.Name = $"{(char) 255}INSTANCE_HELP";
+                }
+            } 
+             */
+
+            if (_isInExternalFile)
+            {
+                if (symbol.Name == "instance_help")
+                {
+                    symbol.Name = $"{(char) 255}{symbol.Name}";
+                    symbol.Path = $"{(char) 255}{symbol.Path}".ToUpper();
+                }
+            }
 
             if (SymbolTable.ContainsKey(symbol.Path))
             {
