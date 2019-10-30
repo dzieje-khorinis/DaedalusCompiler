@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using DaedalusCompiler.Dat;
 
@@ -17,8 +18,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             _symbolTable = symbolTable;
             ArrayIndexNodes = new List<ArrayIndexNode>();
         }
-        
-        
+
+
         protected override void VisitReference(ReferenceNode referenceNode)
         {
 
@@ -153,6 +154,18 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             ASTNode ancestor = referenceNode.GetFirstSignificantAncestorNode();
             string referenceNameUpper = referenceNode.Name.ToUpper();
+
+            if (ancestor is InstanceDefinitionNode instanceDefinitionNode)
+            {
+                if (new List<string>{"SELF", "THIS"}.Contains(referenceNameUpper))
+                {
+                    //TODO SELF makes name collision with self global object, so only THIS keyword should be allowed to stay
+                    referenceNameUpper = instanceDefinitionNode.NameNode.Value.ToUpper();
+                    return _symbolTable[referenceNameUpper];
+                }
+            }
+            
+            
             NestableSymbol nestableSymbol;
 
             switch (ancestor)
