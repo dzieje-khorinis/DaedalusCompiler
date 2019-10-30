@@ -146,9 +146,6 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:2:6: error: unsupported array type
                 const Void a2[2] = {1, 200};
                       ^
-                test.d:3:6: error: unsupported array type
-                const Float a3[2] = {1, 200};
-                      ^
                 test.d:5:22: error: cannot initialize an array element of type 'string' with an rvalue of type 'int'
                 const String a5[2] = {1, 200};
                                       ^
@@ -176,9 +173,6 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:12:4: error: unsupported array type
                 var Void b2[2];
                     ^
-                test.d:13:4: error: unsupported array type
-                var Float b3[2];
-                    ^
                 test.d:16:4: error: unsupported array type
                 var Class b6[2];
                     ^
@@ -194,9 +188,6 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                           ^
                 test.d:23:10: error: unsupported array type
                     const Void c2[2] = {1, 200};
-                          ^
-                test.d:24:10: error: unsupported array type
-                    const Float c3[2] = {1, 200};
                           ^
                 test.d:26:26: error: cannot initialize an array element of type 'string' with an rvalue of type 'int'
                     const String c5[2] = {1, 200};
@@ -225,9 +216,6 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:33:8: error: unsupported array type
                     var Void d2[2];
                         ^
-                test.d:34:8: error: unsupported array type
-                    var Float d3[2];
-                        ^
                 test.d:37:8: error: unsupported array type
                     var Class d6[2];
                         ^
@@ -237,6 +225,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:40:8: error: unsupported array type
                     var Instance d9[2];
                         ^
+                28 errors generated.
             ";
 
             AssertCompilationOutputMatch();

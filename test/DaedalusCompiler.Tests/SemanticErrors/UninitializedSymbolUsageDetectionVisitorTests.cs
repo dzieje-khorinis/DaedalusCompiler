@@ -247,6 +247,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:34:16: error: 'c' undeclared
                     c = a + b + c + d;
                                 ^
+                4 errors, 9 warnings generated.
             ";
 
             AssertCompilationOutputMatch();
@@ -333,6 +334,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:29:32: error: 'attr' undeclared
                     attr[2] = tab[0] + tab[1] + attr[2] + d[0];
                                                 ^
+                4 errors, 9 warnings generated.
             ";
 
             AssertCompilationOutputMatch();

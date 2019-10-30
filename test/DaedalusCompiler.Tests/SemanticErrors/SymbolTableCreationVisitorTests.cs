@@ -102,6 +102,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:2:10: note: previous definition is here
                 prototype __prototype(C_NPC) {};
                           ^
+                2 errors generated.
                 ";
 
             AssertCompilationOutputMatch();
@@ -127,6 +128,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:2:9: note: previous definition is here
                 instance instanceDef(C_NPC) {};
                          ^
+                2 errors generated.
                 ";
 
             AssertCompilationOutputMatch();
@@ -152,6 +154,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:2:10: note: previous definition is here
                 const int constInt = 0;
                           ^
+                2 errors generated.
                 ";
 
             AssertCompilationOutputMatch();
@@ -176,6 +179,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:1:10: note: previous definition is here
                 const int constIntArr[2] = {0, 1};
                           ^
+                2 errors generated.
                 ";
 
             AssertCompilationOutputMatch();
@@ -200,6 +204,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:1:10: note: previous definition is here
                 var float varFloat;
                           ^
+                2 errors generated.
                 ";
 
             AssertCompilationOutputMatch();

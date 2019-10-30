@@ -390,7 +390,23 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         protected override NodeValue VisitFloatLiteral(FloatLiteralNode node)
         {
-            return new FloatValue(node.Value);
+            float value = node.Value;
+            
+            /*
+            if (node.ParentNode is UnaryExpressionNode unaryExpressionNode)
+            {
+                switch (unaryExpressionNode.Operator)
+                {
+                    case UnaryOperator.Minus:
+                        value = -value;
+                        break;
+                    case UnaryOperator.Plus:
+                        break;
+                }
+            }
+            */
+            
+            return new FloatValue(value);
         }
 
         protected override NodeValue VisitIntegerLiteral(IntegerLiteralNode node)

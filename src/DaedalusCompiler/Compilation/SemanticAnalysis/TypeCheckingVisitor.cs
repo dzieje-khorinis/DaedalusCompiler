@@ -53,6 +53,24 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             _currentExpressionTypes = new Stack<SymbolTypePair>();
         }
 
+
+        private bool IsInsideFloatExpression()
+        {
+            if (_currentExpressionTypes.Count > 0)
+            {
+                SymbolTypePair currentExpressionType = _currentExpressionTypes.Peek();
+                if (currentExpressionType != null)
+                {
+                    SymbolType asType = currentExpressionType.BuiltinType;
+                    if (asType == SymbolType.Float)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
         
         private SymbolTypePair GetSymbolTypePairFromExpressionNode(ExpressionNode expressionNode)
         {
@@ -225,6 +243,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         protected override void VisitUnaryExpression(UnaryExpressionNode node)
         {
             base.VisitUnaryExpression(node);
+
+            if (IsInsideFloatExpression())
+            {
+                node.DoGenerateOperatorInstruction = false;
+            }
+            
             
             switch (node.ExpressionNode.BuiltinType)
             {
@@ -263,15 +287,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected override void VisitBinaryExpression(BinaryExpressionNode node)
         {
-            if (_currentExpressionTypes.Count > 0)
+            if (IsInsideFloatExpression())
             {
-                SymbolTypePair currentExpressionType = _currentExpressionTypes.Peek();
-                    
-                SymbolType asType = currentExpressionType.BuiltinType;
-                if (asType == SymbolType.Float)
-                {
-                    node.Annotations.Add(new BinaryOperationsNotAllowedInsideFloatExpression(node.OperatorLocation));
-                }
+                node.Annotations.Add(new BinaryOperationsNotAllowedInsideFloatExpression(node.OperatorLocation));
+                return;
             }
             
             /*
@@ -446,18 +465,21 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 if (_currentExpressionTypes.Count > 0)
                 {
                     SymbolTypePair currentExpressionType = _currentExpressionTypes.Peek();
-                    
-                    SymbolType asType = currentExpressionType.BuiltinType;
-                    if (asType == SymbolType.Func || (asType == SymbolType.Int && symbol.BuiltinType != SymbolType.Int))
+
+                    if (currentExpressionType != null)
                     {
-                        referenceNode.CastToInt = true;
+                        SymbolType asType = currentExpressionType.BuiltinType;
+                        if (asType == SymbolType.Func || (asType == SymbolType.Int && symbol.BuiltinType != SymbolType.Int))
+                        {
+                            referenceNode.DoCastToInt = true;
+                        }
                     }
                 }
                 else
                 {
                     if (_isInsideCondition && symbol.BuiltinType != SymbolType.Int)
                     {
-                        referenceNode.CastToInt = true;
+                        referenceNode.DoCastToInt = true;
                     }
                 }
                 
@@ -490,12 +512,36 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected override void VisitIntegerLiteral(IntegerLiteralNode node)
         {
+            if (IsInsideFloatExpression())
+            {
+                node.DoCastToFloat = true;
+                
+                if (node.ParentNode is UnaryExpressionNode unaryExpressionNode)
+                {
+                    switch (unaryExpressionNode.Operator)
+                    {
+                        case UnaryOperator.Minus:
+                            node.Value = -node.Value;
+                            break;
+                    }
+                }
+                
+            }
             node.BuiltinType = SymbolType.Int;
         }
 
         protected override void VisitFloatLiteral(FloatLiteralNode node)
         {
             node.BuiltinType = SymbolType.Float;
+            if (IsInsideFloatExpression() && node.ParentNode is UnaryExpressionNode unaryExpressionNode)
+            {
+                switch (unaryExpressionNode.Operator)
+                    {
+                        case UnaryOperator.Minus:
+                            node.Value = -node.Value;
+                            break;
+                    }
+            }
         }
 
         protected override void VisitStringLiteral(StringLiteralNode node)

@@ -130,7 +130,7 @@ namespace DaedalusCompiler.Tests
                 var int x;
 
                 func void testFunc() {
-                    x = 1
+                    x = 1;
                     x += 2;
                     x -= 3;
                     x *= 4;
@@ -2722,7 +2722,7 @@ namespace DaedalusCompiler.Tests
                 new PushInt(2),
                 new PushInt(1),
                 new Less(),
-                new JumpIfToLabel("label_0"),
+                new JumpIfToLabel("#0001_endif"),
                 // a = 5;
                 new PushInt(5),
                 new PushVar(Ref("a")),
@@ -2734,7 +2734,7 @@ namespace DaedalusCompiler.Tests
                 new PushVar(Ref("a")),
                 new Assign(),
                 // if end
-                new AssemblyLabel("label_0"),
+                new AssemblyLabel("#0001_endif"),
                 new Ret()
             };
             AssertInstructionsMatch();
@@ -2768,17 +2768,17 @@ namespace DaedalusCompiler.Tests
                 new PushInt(1),
                 new PushVar(Ref("testFunc.x")),
                 new Equal(),
-                new JumpIfToLabel("label_1"),
-                new JumpToLabel("label_0"),
+                new JumpIfToLabel("#0001_else_if_1"),
+                new JumpToLabel("#0001_endif"),
                 // endif 
                 
                 // } else if x {
-                new AssemblyLabel("label_1"),
+                new AssemblyLabel("#0001_else_if_1"),
                 new PushVar(Ref("testFunc.x")),
-                new JumpIfToLabel("label_0"),
+                new JumpIfToLabel("#0001_endif"),
                 // endelseif
                 
-                new AssemblyLabel("label_0"),
+                new AssemblyLabel("#0001_endif"),
                 new Ret()
             };
             AssertInstructionsMatch();
@@ -2936,12 +2936,17 @@ namespace DaedalusCompiler.Tests
         public void TestIfInstructionFull()
         {
             _code = @"
+                class Pet {
+                    var string name;
+                };
+
                 class C_NPC {
                     var float varfloat;
                     var int varint;
                     var string varstring;
-                    var C_NPC varclass;
+                    var Pet varclass;
                     var func varfunc;
+                    var int data[191];
                 };
                 
                 var float varfloat;
@@ -2975,53 +2980,53 @@ namespace DaedalusCompiler.Tests
             {
                 // if(varint)
                 new PushVar(Ref("varint")),
-                new JumpIfToLabel("label_0"),
+                new JumpIfToLabel("#0001_endif"),
                 // endif
-                new AssemblyLabel("label_0"),
+                new AssemblyLabel("#0001_endif"),
                 
                 // if(varclass)
                 new PushInt(RefIndex("varclass")),
-                new JumpIfToLabel("label_1"),
+                new JumpIfToLabel("#0002_endif"),
                 // endif
-                new AssemblyLabel("label_1"),
+                new AssemblyLabel("#0002_endif"),
                 
                 // if(varprototype)
                 new PushInt(RefIndex("varprototype")),
-                new JumpIfToLabel("label_2"),
+                new JumpIfToLabel("#0003_endif"),
                 // endif
-                new AssemblyLabel("label_2"),
+                new AssemblyLabel("#0003_endif"),
                 
                 // if(varinstance)
                 new PushInt(RefIndex("varinstance")),
-                new JumpIfToLabel("label_3"),
+                new JumpIfToLabel("#0004_endif"),
                 // endif
-                new AssemblyLabel("label_3"),
+                new AssemblyLabel("#0004_endif"),
                 
                 // if(varinstance2)
                 new PushInt(RefIndex("varinstance2")),
-                new JumpIfToLabel("label_4"),
+                new JumpIfToLabel("#0005_endif"),
                 // endif
-                new AssemblyLabel("label_4"),
+                new AssemblyLabel("#0005_endif"),
                         
                 // if(retint())
                 new Call(Ref("retint")),
-                new JumpIfToLabel("label_5"),
+                new JumpIfToLabel("#0006_endif"),
                 // endif
-                new AssemblyLabel("label_5"),
+                new AssemblyLabel("#0006_endif"),
                         
                 // if(varinstance.varint)
                 new SetInstance(Ref("varinstance")),
                 new PushVar(Ref("C_NPC.varint")),
-                new JumpIfToLabel("label_6"),
+                new JumpIfToLabel("#0007_endif"),
                 // endif
-                new AssemblyLabel("label_6"),
+                new AssemblyLabel("#0007_endif"),
                 
                 // if(varinstance.varclass)
                 new SetInstance(Ref("varinstance")),
                 new PushInt(RefIndex("C_NPC.varclass")),
-                new JumpIfToLabel("label_7"),
+                new JumpIfToLabel("#0008_endif"),
                 // endif
-                new AssemblyLabel("label_7"),
+                new AssemblyLabel("#0008_endif"),
                 
                 new Ret()
             };
@@ -3054,12 +3059,16 @@ namespace DaedalusCompiler.Tests
             
             _expectedSymbols = new List<Symbol>
             {
+                Ref("Pet"),
+                Ref("Pet.name"),
                 Ref("C_NPC"),
                 Ref("C_NPC.varfloat"),
                 Ref("C_NPC.varint"),
                 Ref("C_NPC.varstring"),
                 Ref("C_NPC.varclass"),
+                Ref("C_NPC.varclass.name"),
                 Ref("C_NPC.varfunc"),
+                Ref("C_NPC.data"),
                 Ref("varfloat"),
                 Ref("varint"),
                 Ref("varstring"),
@@ -3071,6 +3080,7 @@ namespace DaedalusCompiler.Tests
                 Ref("varinstance3"),
                 Ref("retint"),
                 Ref("testFunc"),
+                
             };
             AssertSymbolsMatch();
         }
@@ -3097,21 +3107,21 @@ namespace DaedalusCompiler.Tests
                 new PushInt(2),
                 new PushInt(1),
                 new Less(),
-                new JumpIfToLabel("label_1"),
+                new JumpIfToLabel("#0001_else"),
                 // a = 3;
                 new PushInt(3),
                 new PushVar(Ref("a")),
                 new Assign(),
-                new JumpToLabel("label_0"),
+                new JumpToLabel("#0001_endif"),
                 // if end
                 // else start
-                new AssemblyLabel("label_1"),
+                new AssemblyLabel("#0001_else"),
                 // a = 4;
                 new PushInt(4),
                 new PushVar(Ref("a")),
                 new Assign(),
                 // else and if end
-                new AssemblyLabel("label_0"),
+                new AssemblyLabel("#0001_endif"),
                 new Ret()
             };
             AssertInstructionsMatch();
@@ -3148,33 +3158,33 @@ namespace DaedalusCompiler.Tests
                 new PushInt(2),
                 new PushInt(1),
                 new Less(),
-                new JumpIfToLabel("label_1"),
+                new JumpIfToLabel("#0001_else_if_1"),
                 // a = 3;
                 new PushInt(3),
                 new PushVar(Ref("a")),
                 new Assign(),
-                new JumpToLabel("label_0"),
+                new JumpToLabel("#0001_endif"),
                 // if end
-                new AssemblyLabel("label_1"),
+                new AssemblyLabel("#0001_else_if_1"),
                 // else if ( 4 < 5 )
                 new PushInt(5),
                 new PushInt(4),
                 new Less(),
-                new JumpIfToLabel("label_2"),
+                new JumpIfToLabel("#0001_else"),
                 // a = 6;
                 new PushInt(6),
                 new PushVar(Ref("a")),
                 new Assign(),
-                new JumpToLabel("label_0"),
+                new JumpToLabel("#0001_endif"),
                 // else if end
                 // else start
-                new AssemblyLabel("label_2"),
+                new AssemblyLabel("#0001_else"),
                 //a = 7;
                 new PushInt(7),
                 new PushVar(Ref("a")),
                 new Assign(),
                 // else end if end
-                new AssemblyLabel("label_0"),
+                new AssemblyLabel("#0001_endif"),
                 new Ret()
             };
             AssertInstructionsMatch();
@@ -3597,7 +3607,7 @@ namespace DaedalusCompiler.Tests
                 new Call(Ref("parC_NPC")),
                 
                 // parC_NPC(NULL);
-                new PushInstance(Ref($"{prefix}instance_help")),
+                new PushNullInstance(),
                 new Call(Ref("parC_NPC")),
 
                 // parfunc(varclass);
@@ -3641,7 +3651,7 @@ namespace DaedalusCompiler.Tests
                 new CallExternal(Ref("WLD_DetectPlayer")),
                 
                 // WLD_DetectPlayer(NULL);
-                new PushInstance(Ref($"{prefix}instance_help")),
+                new PushNullInstance(),
                 new CallExternal(Ref("WLD_DetectPlayer")),
                 
                 new Ret(),
@@ -4445,6 +4455,7 @@ namespace DaedalusCompiler.Tests
                     var int flags;
                     var float price;
 	                var float prices[2];
+                    var int data[188];
                 };
 
                 func void firstFunc(var C_NPC slf){};
@@ -4503,7 +4514,7 @@ namespace DaedalusCompiler.Tests
                                                                 
                     // CreateInvItems (slf, sword, 1); // cannot use slf alone
                     CreateInvItems(self, sword, 2);
-                    // gainStrength(self, slf.attribute[ATR_STRENGTH], self.attribute[ATR_DEXTERITY]);
+                    gainStrength(self, attribute[ATR_STRENGTH], attribute[ATR_DEXTERITY]);
                     firstFunc(self);
 
                     price = 0;
@@ -4611,7 +4622,7 @@ namespace DaedalusCompiler.Tests
                 // if (NPC_IsPlayer (self))
                 new PushInstance(Ref("self")),
                 new CallExternal(Ref("NPC_IsPlayer")),
-                new JumpIfToLabel("label_0"),
+                new JumpIfToLabel("#0001_endif"),
                 
                 // WLD_PlayEffect(""SLOW_TIME"", self, self, 0, 0, 0, 0);
                 new PushVar(Ref($"{prefix}10000")),
@@ -4624,7 +4635,7 @@ namespace DaedalusCompiler.Tests
                 new CallExternal(Ref("WLD_PlayEffect")),
                 
                 // endif
-                new AssemblyLabel("label_0"),
+                new AssemblyLabel("#0001_endif"),
                 new Ret(),
             };
             AssertInstructionsMatch();
@@ -4645,7 +4656,7 @@ namespace DaedalusCompiler.Tests
                 new SetInstance(Ref("gainStrength.slf")),
                 new PushArrayVar(Ref("C_NPC.attribute"), 4),
                 new Less(),
-                new JumpIfToLabel("label_1"),
+                new JumpIfToLabel("#0002_endif"),
                 
                 // NPC_ChangeAttribute(slf, ATR_STRENGTH, 10);
                 new PushInstance(Ref("gainStrength.slf")),
@@ -4654,7 +4665,7 @@ namespace DaedalusCompiler.Tests
                 new CallExternal(Ref("NPC_ChangeAttribute")),
                 
                 // endif
-                new AssemblyLabel("label_1"),
+                new AssemblyLabel("#0002_endif"),
                 
                 // NPC_ChangeAttribute(slf, ATR_STRENGTH, ATR_STRENGTH + 1);
                 new PushInstance(Ref("gainStrength.slf")),
@@ -4680,34 +4691,34 @@ namespace DaedalusCompiler.Tests
                 new Assign(),
                 
                 // slf.y = 6;
-                new PushInt(6),
-                new PushVar(Ref("Geralt.y")),
-                new Assign(),
+                // new PushInt(6),
+                // new PushVar(Ref("Geralt.y")),
+                // new Assign(),
                 
                 // slf.attribute[ATR_STRENGTH] = 10;
-                new PushInt(10),
-                new PushArrayVar(Ref("C_NPC.attribute"), 4), // Geralt.attribute if there was local variable attribute
-                new Assign(),
+                // new PushInt(10),
+                // new PushArrayVar(Ref("C_NPC.attribute"), 4), // Geralt.attribute if there was local variable attribute
+                // new Assign(),
                 
                 // self.attribute[ATR_DEXTERITY] = 10;
-                new PushInt(10),
-                new PushArrayVar(Ref("C_NPC.attribute"), 5),
-                new Assign(),
+                // new PushInt(10),
+                // new PushArrayVar(Ref("C_NPC.attribute"), 5),
+                // new Assign(),
                                                             
                 // CreateInvItems(self, sword, 2);
-                new PushInstance(Ref("Geralt")),
+                new PushInstance(Ref("Geralt")), //TODO now self isn't magic, and when using self, should be "self"
                 new PushInt(RefIndex("sword")),
                 new PushInt(2),
                 new CallExternal(Ref("CreateInvItems")),
                 
                 // gainStrength(self, slf.attribute[ATR_STRENGTH], self.attribute[ATR_DEXTERITY]);
-                new PushInstance(Ref("Geralt")),
+                new PushInstance(Ref("Geralt")), //TODO now self isn't magic, and when using self, should be "self"
                 new PushArrayVar(Ref("C_NPC.attribute"), 4),
                 new PushArrayVar(Ref("C_NPC.attribute"), 5),
                 new Call(Ref("gainStrength")),
                 
                 // firstFunc(self);
-                new PushInstance(Ref("Geralt")),
+                new PushInstance(Ref("Geralt")), //TODO now self isn't magic, and when using self, should be "self"
                 new Call(Ref("firstFunc")),
                 
                 // price = 0;
@@ -4721,24 +4732,24 @@ namespace DaedalusCompiler.Tests
                 new AssignFloat(),
                 
                 // slf.price = 1;
-                new PushInt(1065353216),
-                new PushVar(Ref("C_NPC.price")),
-                new AssignFloat(),
+                // new PushInt(1065353216),
+                // new PushVar(Ref("C_NPC.price")),
+                // new AssignFloat(),
                 
                 // slf.price = 1.5;
-                new PushInt(1069547520),
-                new PushVar(Ref("C_NPC.price")),
-                new AssignFloat(),
+                // new PushInt(1069547520),
+                // new PushVar(Ref("C_NPC.price")),
+                // new AssignFloat(),
 
                 // self.price = 2;
-                new PushInt(1073741824),
-                new PushVar(Ref("C_NPC.price")),
-                new AssignFloat(),
+                // new PushInt(1073741824),
+                // new PushVar(Ref("C_NPC.price")),
+                // new AssignFloat(),
 
                 // self.price = 2.5;
-                new PushInt(1075838976),
-                new PushVar(Ref("C_NPC.price")),
-                new AssignFloat(),
+                // new PushInt(1075838976),
+                // new PushVar(Ref("C_NPC.price")),
+                // new AssignFloat(),
                 
                 // prices[0] = 3;
                 new PushInt(1077936128),
@@ -4751,14 +4762,14 @@ namespace DaedalusCompiler.Tests
                 new AssignFloat(),
                 
                 // slf.prices[1] = 4;
-                new PushInt(1082130432),
-                new PushArrayVar(Ref("C_NPC.prices"), 1),
-                new AssignFloat(),
+                // new PushInt(1082130432),
+                // new PushArrayVar(Ref("C_NPC.prices"), 1),
+                // new AssignFloat(),
                 
                 // slf.prices[1] = 4.5;
-                new PushInt(1083179008),
-                new PushArrayVar(Ref("C_NPC.prices"), 1),
-                new AssignFloat(),
+                // new PushInt(1083179008),
+                // new PushArrayVar(Ref("C_NPC.prices"), 1),
+                // new AssignFloat(),
                 
                 new Ret(),
             };
@@ -4806,6 +4817,7 @@ namespace DaedalusCompiler.Tests
                 Ref("C_NPC.flags"),
                 Ref("C_NPC.price"),
                 Ref("C_NPC.prices"),
+                Ref("C_NPC.data"),
                 Ref("firstFunc"),
                 Ref("firstFunc.slf"),
                 Ref("NPC_Default"),
@@ -5589,10 +5601,10 @@ namespace DaedalusCompiler.Tests
                 new Not(),       
                 new LogAnd(),
                 new LogAnd(),
-                new JumpIfToLabel("label_0"),
+                new JumpIfToLabel("#0001_endif"),
                 // endif
        
-                new AssemblyLabel("label_0"),
+                new AssemblyLabel("#0001_endif"),
        
                 new Ret()
             };

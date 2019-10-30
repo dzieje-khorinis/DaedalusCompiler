@@ -121,6 +121,8 @@ namespace DaedalusCompiler.Compilation
             remainingAnnotationsAdditionVisitor.VisitTree(AbstractSyntaxTree);
             
             // TODO
+            // keyword self jednak był magiczny w instancjach, dodać keyword this , ktory bedzie znaczyl to samo co self
+            
             // moze wypierdolić nofunc i zostawic tylko null, ktore bedzie mozna wpisywac tylko do zmiennych typy klasowego i funkcyjnego?
             // write to srderr instead of stdout
             // add warning if if-statement condition is always true or always false (it may be HARD)

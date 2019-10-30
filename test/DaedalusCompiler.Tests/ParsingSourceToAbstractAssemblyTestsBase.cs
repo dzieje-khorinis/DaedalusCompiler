@@ -78,7 +78,10 @@ namespace DaedalusCompiler.Tests
         protected void AssertSymbolsMatch()
         {
             List<Symbol> symbols = _testsHelper.SymbolTable.Values.ToList();
-            //symbols.Sort((x, y) => x.Index.CompareTo(y.Index));
+            
+            symbols.Sort((x, y) => x.Index.CompareTo(y.SubIndex));
+            symbols.Sort((x, y) => x.Index.CompareTo(y.Index));
+            
 
             
             Assert.Equal(_expectedSymbols.Count, symbols.Count);
@@ -86,7 +89,8 @@ namespace DaedalusCompiler.Tests
             {
                 var symbol = symbols[index];
                 var expectedSymbol = _expectedSymbols[index];
-                Assert.Equal(index, symbol.Index);
+                //Assert.Equal(index, symbol.Index); //because of subindexing
+                Assert.Equal(expectedSymbol.Index, symbol.Index);
                 Assert.Equal(expectedSymbol, symbol);
             }
         }

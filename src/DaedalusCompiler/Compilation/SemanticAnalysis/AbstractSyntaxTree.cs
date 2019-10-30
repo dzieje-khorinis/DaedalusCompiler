@@ -349,6 +349,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public NodeLocation OperatorLocation;
         public ExpressionNode ExpressionNode;
 
+        public bool DoGenerateOperatorInstruction;
+
         public UnaryExpressionNode(NodeLocation location, UnaryOperator @operator, NodeLocation operatorLocation, ExpressionNode expressionNode) : base(
             location)
         {
@@ -357,6 +359,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Operator = @operator;
             ExpressionNode = expressionNode;
             OperatorLocation = operatorLocation;
+
+            DoGenerateOperatorInstruction = true;
         }
     }
 
@@ -603,10 +607,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public long Value;
         public bool EvaluatedCorrectly;
 
+        public bool DoCastToFloat;
+
         public IntegerLiteralNode(NodeLocation location, long value, bool evaluatedCorrectly=true) : base(location)
         {
             Value = value;
             EvaluatedCorrectly = evaluatedCorrectly;
+            DoCastToFloat = false;
         }
     }
 
@@ -684,7 +691,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public Symbol BaseSymbol; // if for example we have a.b.c, base symbol is a, and symbol is c
         public ArrayIndexNode IndexNode;
 
-        public bool CastToInt;
+        public bool DoCastToInt;
 
         public ReferenceNode(string name, List<ReferencePartNode> partNodes, NodeLocation location) : base(location)
         {
@@ -694,7 +701,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             PartNodes = partNodes;
             IndexNode = null;
 
-            CastToInt = false;
+            DoCastToInt = false;
             /*
              When CastToInt = true, this node should produce PushInt instruction.
              It should happen in following situations:

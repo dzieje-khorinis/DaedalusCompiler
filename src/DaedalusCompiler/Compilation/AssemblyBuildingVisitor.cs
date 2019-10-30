@@ -134,10 +134,17 @@ namespace DaedalusCompiler.Compilation
         protected override List<AssemblyElement> VisitInstanceDefinition(InstanceDefinitionNode node)
         {
             List<AssemblyElement> instructions = ((BlockSymbol)node.Symbol).Instructions;
+
+            if (node.InheritanceParentReferenceNode.Symbol is PrototypeSymbol prototypeSymbol)
+            {
+                instructions.Add(new Call(prototypeSymbol));
+            }
+            
             foreach (StatementNode bodyNode in node.BodyNodes)
             {
                 instructions.AddRange(Visit(bodyNode));
             }
+            instructions.Add(new Ret());
             return instructions;
         }
 
@@ -148,6 +155,7 @@ namespace DaedalusCompiler.Compilation
             {
                 instructions.AddRange(Visit(bodyNode));
             }
+            instructions.Add(new Ret());
             return instructions;
         }
 
@@ -328,8 +336,8 @@ namespace DaedalusCompiler.Compilation
         {
             return new List<AssemblyElement>
             {
-                new PushVar(node.Symbol),
-                new Assign()
+                GetParameterPush(node.Symbol),
+                GetAssignInstruction(node.Symbol),
             };
         }
 
@@ -353,7 +361,7 @@ namespace DaedalusCompiler.Compilation
             {
                 instructions.Add(new PushArrayVar(referenceNode.Symbol, index));
             }
-            else if (referenceNode.CastToInt)
+            else if (referenceNode.DoCastToInt)
             {
                 instructions.Add(new PushInt(referenceNode.Symbol.Index));
             }
@@ -436,7 +444,16 @@ namespace DaedalusCompiler.Compilation
 
         protected override List<AssemblyElement> VisitIntegerLiteral(IntegerLiteralNode node)
         {
-            return new List<AssemblyElement>{ new PushInt((int) node.Value) };
+            int intValue = (int) node.Value;
+            
+            if (node.DoCastToFloat)
+            {
+                float floatValue = node.Value;
+                intValue = BitConverter.ToInt32(BitConverter.GetBytes(floatValue), 0);
+            }
+            
+            
+            return new List<AssemblyElement>{ new PushInt(intValue) };
         }
 
         protected override List<AssemblyElement> VisitFloatLiteral(FloatLiteralNode node)
@@ -555,20 +572,23 @@ namespace DaedalusCompiler.Compilation
         {
             List<AssemblyElement> instructions = new List<AssemblyElement>();
             instructions.AddRange(Visit(node.ExpressionNode));
-            switch (node.Operator)
+            if (node.DoGenerateOperatorInstruction)
             {
-                case UnaryOperator.Minus:
-                    instructions.Add(new Minus());
-                    break;
-                case UnaryOperator.Not:
-                    instructions.Add(new Not());
-                    break;
-                case UnaryOperator.Negate:
-                    instructions.Add(new Negate());
-                    break;
-                case UnaryOperator.Plus:
-                    instructions.Add(new Plus());
-                    break;
+                switch (node.Operator)
+                {
+                    case UnaryOperator.Minus:
+                        instructions.Add(new Minus());
+                        break;
+                    case UnaryOperator.Not:
+                        instructions.Add(new Not());
+                        break;
+                    case UnaryOperator.Negate:
+                        instructions.Add(new Negate());
+                        break;
+                    case UnaryOperator.Plus:
+                        instructions.Add(new Plus());
+                        break;
+                }
             }
             return instructions;
         }
