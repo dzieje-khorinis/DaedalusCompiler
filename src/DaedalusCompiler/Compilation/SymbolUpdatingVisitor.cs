@@ -23,7 +23,15 @@ namespace DaedalusCompiler.Compilation
         
         protected override void VisitConstDefinition(ConstDefinitionNode node)
         {
-            node.Symbol.Content = new[] { GetValue(node.RightSideValue) };
+            object value = GetValue(node.RightSideValue);
+            
+            switch (node.Symbol.BuiltinType)
+            {
+                case SymbolType.Float:
+                    value = Convert.ToSingle(value);
+                    break;
+            }
+            node.Symbol.Content = new[] {value};
         }
     }
 }
