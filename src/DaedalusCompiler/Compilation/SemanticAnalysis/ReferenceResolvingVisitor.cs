@@ -145,9 +145,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
             referenceNode.Symbol = symbol;
             referenceNode.IndexNode = firstArrayIndexNode;
-
-            //NamesNotMatchingCaseWiseWarning
-            //referenceNode.Name
         }
         
         private Symbol GetBaseReferenceSymbol(ReferenceNode referenceNode)
@@ -157,10 +154,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
             if (ancestor is InstanceDefinitionNode instanceDefinitionNode)
             {
-                if (new List<string>{"SELF", "THIS"}.Contains(referenceNameUpper))
+                if (referenceNameUpper == "THIS") //TODO originally its SELF but it makes name collision with self global object, so only THIS keyword should be allowed to stay
                 {
-                    //TODO SELF makes name collision with self global object, so only THIS keyword should be allowed to stay
-                    referenceNameUpper = instanceDefinitionNode.NameNode.Value.ToUpper();
+                    referenceNode.Name = instanceDefinitionNode.NameNode.Value;
+                    referenceNameUpper = referenceNode.Name.ToUpper();
                     return _symbolTable[referenceNameUpper];
                 }
             }

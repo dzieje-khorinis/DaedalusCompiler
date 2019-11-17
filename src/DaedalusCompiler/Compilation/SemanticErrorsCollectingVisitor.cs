@@ -230,7 +230,7 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
         
         private string GetErrorPointerLine(NodeLocation pointerLocation, List<NodeLocation> locations)
         {
-            List<UnderlineExactLineLocation> underlineExactLineLocations = CovertToUnderlineLineLocations(pointerLocation.Line, locations);
+            List<UnderlineExactLineLocation> underlineExactLineLocations = CovertToUnderlineLineLocations(pointerLocation, locations);
 
             int endColumn = pointerLocation.Column + 1;
             if (underlineExactLineLocations.Any())
@@ -308,10 +308,11 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
             }
         }
 
-        private List<UnderlineExactLineLocation> CovertToUnderlineLineLocations(int line, List<NodeLocation> locations)
+        private List<UnderlineExactLineLocation> CovertToUnderlineLineLocations(NodeLocation pointerLocation, List<NodeLocation> locations)
         {
-            string lineContent = CurrentFileNode.Content[line - 1];
-            
+            string lineContent = FilesContents[pointerLocation.FileIndex][pointerLocation.Line - 1]; //CurrentFileNode.Content[pointerLocation.Line - 1];
+
+            int line = pointerLocation.Line;
             int firstSignificantColumn = 0;
             for (int i = 0; i < lineContent.Length; ++i)
             {

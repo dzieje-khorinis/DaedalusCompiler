@@ -106,5 +106,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 ";
             AssertCompilationOutputMatch();
         }
+        
+        //TODO add test what would happend if person had person inside, should we remove circular attribute reference dependency?
     }
 }

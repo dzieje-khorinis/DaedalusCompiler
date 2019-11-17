@@ -125,6 +125,10 @@ namespace DaedalusCompiler.Tests
                 }
 
                 case SymbolInstruction symbolInstruction:
+                    if (((SymbolInstruction) expectedInstruction).Symbol.Index != symbolInstruction.Symbol.Index)
+                    {
+                        Console.Write("ds");
+                    }
                     Assert.Equal(
                         ((SymbolInstruction) expectedInstruction).Symbol.Index,
                         symbolInstruction.Symbol.Index

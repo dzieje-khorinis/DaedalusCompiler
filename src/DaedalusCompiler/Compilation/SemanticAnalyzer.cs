@@ -122,6 +122,8 @@ namespace DaedalusCompiler.Compilation
             
             // TODO
             // keyword self jednak był magiczny w instancjach, dodać keyword this , ktory bedzie znaczyl to samo co self
+            // slf wasn't special, it you could always write dupa.dlsdsd
+            // backward incompability: keywordy tylko malymi literkami, a wczesniej nie bylo to wazne
             
             // moze wypierdolić nofunc i zostawic tylko null, ktore bedzie mozna wpisywac tylko do zmiennych typy klasowego i funkcyjnego?
             // write to srderr instead of stdout
