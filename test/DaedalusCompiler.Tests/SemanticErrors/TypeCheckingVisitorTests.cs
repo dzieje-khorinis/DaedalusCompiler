@@ -536,5 +536,21 @@ namespace DaedalusCompiler.Tests.SemanticErrors
             AssertCompilationOutputMatch();
         }
         
+        
+        
+        [Fact]
+        public void TestAssignToArrayWithoutSquareBrackets()
+        {
+            Code = @"
+
+            ";
+
+            ExpectedCompilationOutput = @"
+
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
     }
 }

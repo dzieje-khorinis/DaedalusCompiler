@@ -31,11 +31,11 @@ namespace DaedalusCompiler.Tests
                 new Assign(),
                 
                 // while(x < 5) {
-                new AssemblyLabel("label_while_0"),
+                new AssemblyLabel("#0000_while"),
                 new PushInt(5),
                 new PushVar(Ref("firstFunc.x")),
                 new Less(),
-                new JumpIfToLabel("label_while_1"),
+                new JumpIfToLabel("#0000_endwhile"),
                 
                 //     x += 1;
                 new PushInt(1),
@@ -43,8 +43,8 @@ namespace DaedalusCompiler.Tests
                 new AssignAdd(),
                 
                 // }
-                new JumpToLabel("label_while_0"),
-                new AssemblyLabel("label_while_1"),
+                new JumpToLabel("#0000_while"),
+                new AssemblyLabel("#0000_endwhile"),
 
                 new Ret(),
             };
@@ -87,11 +87,11 @@ namespace DaedalusCompiler.Tests
                 new Assign(),
                 
                 // while(x < 5) {
-                new AssemblyLabel("label_while_0"),
+                new AssemblyLabel("#0000_while"),
                 new PushInt(5),
                 new PushVar(Ref("secondFunc.x")),
                 new Less(),
-                new JumpIfToLabel("label_while_1"),
+                new JumpIfToLabel("#0000_endwhile"),
                 
                 //     x += 1;
                 new PushInt(1),
@@ -102,28 +102,28 @@ namespace DaedalusCompiler.Tests
                 new PushInt(3),
                 new PushVar(Ref("secondFunc.x")),
                 new Equal(),
-                new JumpIfToLabel("label_1"),
+                new JumpIfToLabel("#0001_else_if_1"),
                 
                 //         break;
-                new JumpToLabel("label_while_1"),
+                new JumpToLabel("#0000_endwhile"),
                 
                 //     } else if (x == 4) {
-                new JumpToLabel("label_0"),
-                new AssemblyLabel("label_1"),
+                new JumpToLabel("#0001_endif"),
+                new AssemblyLabel("#0001_else_if_1"),
                 new PushInt(4),
                 new PushVar(Ref("secondFunc.x")),
                 new Equal(),
-                new JumpIfToLabel("label_0"),
+                new JumpIfToLabel("#0001_endif"),
                 
                 //         continue;
-                new JumpToLabel("label_while_0"),
+                new JumpToLabel("#0000_while"),
                 
                 //     }
-                new AssemblyLabel("label_0"),
+                new AssemblyLabel("#0001_endif"),
                 
                 // }
-                new JumpToLabel("label_while_0"),
-                new AssemblyLabel("label_while_1"),
+                new JumpToLabel("#0000_while"),
+                new AssemblyLabel("#0000_endwhile"),
 
 
                 new Ret(),
@@ -482,12 +482,101 @@ namespace DaedalusCompiler.Tests
         }
         
         
-        //TODO ADD TEST IT SHOULDNT BE POSSIBLE TO write x = 5  if x is an array
-        // TODO add test for class attributes of type class
+        
+        [Fact]
+        public void TestNestedAttributes()
+        {
+            _code = @"
+                class Pet {
+                    var int size;
+                    var Human owner;
+                };
+
+                class Human {
+                    var int age;
+                    var Human enemy;
+                    var Pet pet;
+                };
+
+                func int getAge(var Human human) {
+                    return human.age;
+                };
+
+                instance Person1(Human);
+                instance Person2(Human) {
+                    age = 10;
+                    enemy = Person1;
+                };
+                instance Dog(Pet);
+                instance Cat(Pet);
+
+                func void testFunc() {
+                    Person1.age = 1;
+                    Person1.enemy = Person2;
+                    Person1.enemy.age = 2;
+                    Person1.enemy.age = Person2.enemy.age;
+                    Person1.enemy.age = getAge(Person2.enemy);
+
+                    Person1.pet = Dog;
+                    Person1.pet.size = 3;
+                    Person1.pet.size = Dog.size;
+                    Person1.pet.owner.age = Cat.owner.age;
+                
+                    Person1.pet.owner.pet.owner.pet.owner = Person1;
+                    Person1.pet.owner.pet.owner.pet.owner.enemy = Person2;
+                    Person1.pet.owner.pet.owner.pet = Cat;
+                    Person1.pet.owner.pet.owner.pet.size = 4;
+                };
+
+                //TODO secondFunc
+                //var Human Person2;
+                //Person2 = Person1;
+           ";
+            
+            _instructions = GetExecBlockInstructions("Person2");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+                new PushInt(10),
+                new PushVar(Ref("Human.age")),
+                new Assign(),
+                new PushInstance(Ref("Person1")),
+                new PushInstance(Ref("Human.enemy")),
+                new AssignInstance(),
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            
+            _instructions = GetExecBlockInstructions("testFunc");
+            _expectedInstructions = new List<AssemblyElement>
+            {
+               
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+
+            _expectedSymbols = new List<Symbol>
+            {
+                Ref("Pet"),
+                Ref("Pet.size"),
+                Ref("Pet.owner"),
+                Ref("Human"),
+                Ref("Human.age"),
+                Ref("Human.enemy"),
+                Ref("Human.pet"),
+                Ref("getAge"),
+                Ref("getAge.human"),
+                Ref("Person1"),
+                Ref("Person2"),
+                Ref("Dog"),
+                Ref("Cat"),
+                Ref("testFunc"),
+            };
+            AssertSymbolsMatch();
+            
+        }
         
         
     }
-    
-    
-    
 }

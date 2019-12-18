@@ -740,8 +740,9 @@ namespace DaedalusCompiler.Tests
                     var float varfloat;
                     var int varint;
                     var string varstring;
-                    var C_NPC varclass;
+                    var C_NPC varclass;    // this has size 0 in original compiler
                     var func varfunc;
+                    var int data[191]; // because C_NPC class is supposed to have 800 bytes
                 };
                 
                 var float varfloat;
@@ -854,12 +855,14 @@ namespace DaedalusCompiler.Tests
                 // new AssignInstance(),
                 
                 // varinstance.varfunc = varinstance2.varclass;
+                new SetInstance(Ref("varinstance2")),  //TODO original compiler doesn't add SetInstance here, but it would be good if we had it
                 new PushInt(RefIndex("C_NPC.varclass")), // SetInstance before?
                 new SetInstance(Ref("varinstance")),
                 new PushVar(Ref("C_NPC.varfunc")),
                 new AssignFunc(),
                 
                 // varinstance.varfunc = varinstance2.varfunc;
+                new SetInstance(Ref("varinstance2")),  //TODO original compiler doesn't add SetInstance here, but it would be good if we had it
                 new PushInt(RefIndex("C_NPC.varfunc")),
                 new SetInstance(Ref("varinstance")),
                 new PushVar(Ref("C_NPC.varfunc")),
@@ -926,6 +929,7 @@ namespace DaedalusCompiler.Tests
                 Ref("C_NPC.varstring"),
                 Ref("C_NPC.varclass"),
                 Ref("C_NPC.varfunc"),
+                Ref("C_NPC.data"),
                 Ref("varfloat"),
                 Ref("varint"),
                 Ref("varstring"),
@@ -3066,7 +3070,6 @@ namespace DaedalusCompiler.Tests
                 Ref("C_NPC.varint"),
                 Ref("C_NPC.varstring"),
                 Ref("C_NPC.varclass"),
-                Ref("C_NPC.varclass.name"),
                 Ref("C_NPC.varfunc"),
                 Ref("C_NPC.data"),
                 Ref("varfloat"),
@@ -3900,6 +3903,8 @@ namespace DaedalusCompiler.Tests
                     var string varstring;
                     var C_NPC varclass;
                     var func varfunc;
+
+                    var int data[191]; // because C_NPC class is supposed to have 800 bytes
                 };
                 
                 instance varinstance(C_NPC) {};
@@ -3954,18 +3959,22 @@ namespace DaedalusCompiler.Tests
                 new Call(Ref("parstring")),
                 
                 // parC_NPC(varinstance.varclass);
+                new SetInstance(Ref("varinstance")),  //TODO original compiler doesn't add SetInstance here, but it would be good if we had it
                 new PushInstance(Ref("C_NPC.varclass")), // SetInstance before
                 new Call(Ref("parC_NPC")),
                 
                 // parfunc(varinstance.varclass);
+                new SetInstance(Ref("varinstance")),  //TODO original compiler doesn't add SetInstance here, but it would be good if we had it
                 new PushInt(RefIndex("C_NPC.varclass")), // SetInstance before
                 new Call(Ref("parfunc")),
                 
                 // parfunc(varinstance.varfunc);
+                new SetInstance(Ref("varinstance")),  //TODO original compiler doesn't add SetInstance here, but it would be good if we had it
                 new PushInt(RefIndex("C_NPC.varfunc")), // SetInstance before
                 new Call(Ref("parfunc")),
                 
                 // WLD_DetectPlayer(varinstance.varclass);
+                new SetInstance(Ref("varinstance")),  //TODO original compiler doesn't add SetInstance here, but it would be good if we had it
                 new PushInstance(Ref("C_NPC.varclass")), // SetInstance before
                 new CallExternal(Ref("WLD_DetectPlayer")),
                 
@@ -3983,6 +3992,7 @@ namespace DaedalusCompiler.Tests
                 Ref("C_NPC.varstring"),
                 Ref("C_NPC.varclass"),
                 Ref("C_NPC.varfunc"),
+                Ref("C_NPC.data"),
                 Ref("varinstance"),
                 Ref("parfloat"),
                 Ref("parfloat.par"),
@@ -4097,6 +4107,7 @@ namespace DaedalusCompiler.Tests
                     var string varstring;
                     var C_NPC varclass;
                     var func varfunc;
+                    var int data[191]; // because C_NPC class is supposed to have 800 bytes
                 };
                 
                 var float varfloat;
@@ -4326,6 +4337,7 @@ namespace DaedalusCompiler.Tests
                 Ref("C_NPC.varstring"),
                 Ref("C_NPC.varclass"),
                 Ref("C_NPC.varfunc"),
+                Ref("C_NPC.data"),
                 Ref("varfloat"),
                 Ref("varint"),
                 Ref("varstring"),

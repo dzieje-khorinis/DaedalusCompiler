@@ -64,11 +64,7 @@ namespace DaedalusCompiler.Compilation
             // InfiniteReferenceLoopError
             InheritanceResolver inheritanceResolver = new InheritanceResolver(SymbolTable);
             inheritanceResolver.Resolve(symbolTableCreationVisitor.SubclassSymbols);
-
-            // InfiniteAttributeReferenceLoopError
-            PrefixAttributesSymbolCreator prefixAttributesSymbolCreator = new PrefixAttributesSymbolCreator(SymbolTable);
-            prefixAttributesSymbolCreator.Scan(symbolTableCreationVisitor.ClassSymbols);
-
+            
             // UndeclaredIdentifierError
             // AccessToAttributeOfArrayElementNotSupportedError
             // AttributeOfNonInstanceError

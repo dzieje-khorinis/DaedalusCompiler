@@ -261,7 +261,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
     
-    public class ConditionalNode : ASTNode
+    public class ConditionalNode : StatementNode
     {
         public ExpressionNode ConditionNode;
         public List<StatementNode> BodyNodes;

@@ -5,13 +5,18 @@ using DaedalusCompiler.Compilation.SemanticAnalysis;
 
 namespace DaedalusCompiler.Compilation
 {
-    enum LabelType
+    enum IfLabelType
     {
         ElseIfBlockStart = 0,
         ElseBlockStart = 1,
         EndOfIfStatement = 2,
     }
 
+    enum WhileLabelType
+    {
+        Start = 0,
+        End = 1,
+    }
     class LabelManager
     {
         private int _nextIfLabelIndex;
@@ -30,40 +35,46 @@ namespace DaedalusCompiler.Compilation
             _nextElseIfLabelSubIndex = 0;
         }
         
-        public string GenerateIfLabel(LabelType labelType)
+        public string GenerateIfLabel(IfLabelType ifLabelType)
         {
             string labelId = _nextIfLabelIndex.ToString("0000");
             string label = "";
-            switch (labelType)
+            switch (ifLabelType)
             {
-                case LabelType.ElseIfBlockStart:
+                case IfLabelType.ElseIfBlockStart:
                     label = $"else_if_{++_nextElseIfLabelSubIndex}";
                     break;
-                case LabelType.ElseBlockStart:
+                case IfLabelType.ElseBlockStart:
                     label = "else";
                     break;
-                case LabelType.EndOfIfStatement:
+                case IfLabelType.EndOfIfStatement:
                     label = "endif";
                     break;
             }
 
             return $"#{labelId}_{label}";
-            
-            
-            // TODO change label names to like: if_start_0001, if_end_0001
-            return $"label_{_nextIfLabelIndex}";
-            //0001_else_if_1
-            //0001_else_if_2
-            //0001_else_if_3
-            //0001_else_if_4
-            //0001_else
-            //0001_endif
-            
         }
         
-        public string GenerateWhileLabel()
+        public void StartNextWhileStatement()
         {
-            return $"label_while_{_nextWhileLabelIndex++}";
+            _nextWhileLabelIndex++;
+        }
+        
+        public string GenerateWhileLabel(WhileLabelType whileLabelType)
+        {
+            string labelId = _nextIfLabelIndex.ToString("0000");
+            string label = "";
+            switch (whileLabelType)
+            {
+                case WhileLabelType.Start:
+                    label = $"while";
+                    break;
+                case WhileLabelType.End:
+                    label = "endwhile";
+                    break;
+            }
+
+            return $"#{labelId}_{label}";
         }
     }
     
@@ -168,8 +179,8 @@ namespace DaedalusCompiler.Compilation
         {
             _labelManager.StartNextIfStatement();
             
-            string statementEndLabel = _labelManager.GenerateIfLabel(LabelType.EndOfIfStatement);
-            string elseStartLabel = _labelManager.GenerateIfLabel(LabelType.ElseBlockStart);
+            string statementEndLabel = _labelManager.GenerateIfLabel(IfLabelType.EndOfIfStatement);
+            string elseStartLabel = _labelManager.GenerateIfLabel(IfLabelType.ElseBlockStart);
             
             List<AssemblyElement> instructions = new List<AssemblyElement>();
             
@@ -203,7 +214,7 @@ namespace DaedalusCompiler.Compilation
                 }
                 else
                 {
-                    string nextJumpLabel = _labelManager.GenerateIfLabel(LabelType.ElseIfBlockStart);
+                    string nextJumpLabel = _labelManager.GenerateIfLabel(IfLabelType.ElseIfBlockStart);
                     instructions.Add(new JumpIfToLabel(nextJumpLabel));
                     foreach (StatementNode bodyNode in conditionalNode.BodyNodes)
                     {
@@ -223,75 +234,17 @@ namespace DaedalusCompiler.Compilation
                 }
             }
             instructions.Add(new AssemblyLabel(statementEndLabel));
-            
-            
-            /*
-             *
-                public ConditionalNode IfNode;
-                public List<ConditionalNode> ElseIfNodes;
-                public List<StatementNode> ElseNodeBodyNodes;
-             */
 
             return instructions;
-            /*
-             
-             string statementEndLabel = GetNextLabel();
-            string elseStartLabel = "";
-            
-            List<AssemblyElement> instructions = new List<AssemblyElement>();
-            
-            
-            List<ConditionalBlockContext> conditionalBlocks = new List<ConditionalBlockContext>();
-            
-            conditionalBlocks.Add(IfBlock);
-            conditionalBlocks.AddRange(ElseIfBlocks);
-            
-            foreach (var conditionalBlock in conditionalBlocks)
-            {
-                instructions.AddRange(conditionalBlock.Condition);
-                
-                bool isLastIteration = (conditionalBlock == conditionalBlocks.Last());
-                if (isLastIteration)
-                {
-                    if (ElseBlock != null)
-                    {
-                        elseStartLabel = GetNextLabel();
-                        instructions.Add(new JumpIfToLabel(elseStartLabel));
-                        instructions.AddRange(conditionalBlock.Body);
-                        instructions.Add(new JumpToLabel(statementEndLabel));
-                    }
-                    else
-                    {
-                        instructions.Add(new JumpIfToLabel(statementEndLabel));
-                        instructions.AddRange(conditionalBlock.Body);
-                    }
-                }
-                else
-                {
-                    string nextJumpLabel = GetNextLabel();
-                    instructions.Add(new JumpIfToLabel(nextJumpLabel));
-                    instructions.AddRange(conditionalBlock.Body);
-                    instructions.Add(new JumpToLabel(statementEndLabel));
-                    instructions.Add(new AssemblyLabel(nextJumpLabel));
-                }
-            }
 
-            if (ElseBlock != null)
-            {
-                instructions.Add(new AssemblyLabel(elseStartLabel));
-                instructions.AddRange(ElseBlock.Body);
-            }
-
-            instructions.Add(new AssemblyLabel(statementEndLabel));
-
-            return instructions;
-             */
         }
 
         protected override List<AssemblyElement> VisitWhileStatement(WhileStatementNode node)
         {
-            string startLabel = _labelManager.GenerateWhileLabel();
-            string endLabel = _labelManager.GenerateWhileLabel();
+            _labelManager.StartNextWhileStatement();
+            
+            string startLabel = _labelManager.GenerateWhileLabel(WhileLabelType.Start);
+            string endLabel = _labelManager.GenerateWhileLabel(WhileLabelType.End);
 
             List<AssemblyElement> instructions = new List<AssemblyElement>();
             instructions.Add(new AssemblyLabel(startLabel));
@@ -319,6 +272,7 @@ namespace DaedalusCompiler.Compilation
                 }
             }
 
+            instructions.Add(new JumpToLabel(startLabel));
             instructions.Add(new AssemblyLabel(endLabel));
             return instructions;
         }
