@@ -49,6 +49,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
             */
 
+            int attributeDepth = 0;
             bool arrayIndexNodeFound = false;
             ArrayIndexNode firstArrayIndexNode = null;
 
@@ -79,6 +80,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                                         symbol = resultNestableSymbol;
                                         symbolLocalPath = $"{symbolLocalPath}.{attributeNode.Name}";
                                         attributeNode.Symbol = symbol;
+                                        attributeDepth++;
                                         
                                         declarationNode = (DeclarationNode) symbol.Node;
                                         declarationNode.Usages.Add(attributeNode);
@@ -104,6 +106,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                                         symbol = resultNestableSymbol;
                                         symbolLocalPath = $"{symbolLocalPath}.{attributeNode.Name}";
                                         attributeNode.Symbol = symbol;
+                                        attributeDepth++;
                                         
                                         declarationNode = (DeclarationNode) symbol.Node;
                                         declarationNode.Usages.Add(attributeNode);
@@ -145,6 +148,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
             referenceNode.Symbol = symbol;
             referenceNode.IndexNode = firstArrayIndexNode;
+            if (attributeDepth > 1)
+            {
+                referenceNode.DoesHaveNestedAttributes = true;
+            }
         }
         
         private Symbol GetBaseReferenceSymbol(ReferenceNode referenceNode)

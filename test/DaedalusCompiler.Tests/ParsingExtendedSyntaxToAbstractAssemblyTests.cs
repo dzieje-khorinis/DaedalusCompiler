@@ -31,11 +31,11 @@ namespace DaedalusCompiler.Tests
                 new Assign(),
                 
                 // while(x < 5) {
-                new AssemblyLabel("#0000_while"),
+                new AssemblyLabel("#0001_while"),
                 new PushInt(5),
                 new PushVar(Ref("firstFunc.x")),
                 new Less(),
-                new JumpIfToLabel("#0000_endwhile"),
+                new JumpIfToLabel("#0001_endwhile"),
                 
                 //     x += 1;
                 new PushInt(1),
@@ -43,8 +43,8 @@ namespace DaedalusCompiler.Tests
                 new AssignAdd(),
                 
                 // }
-                new JumpToLabel("#0000_while"),
-                new AssemblyLabel("#0000_endwhile"),
+                new JumpToLabel("#0001_while"),
+                new AssemblyLabel("#0001_endwhile"),
 
                 new Ret(),
             };
@@ -87,11 +87,11 @@ namespace DaedalusCompiler.Tests
                 new Assign(),
                 
                 // while(x < 5) {
-                new AssemblyLabel("#0000_while"),
+                new AssemblyLabel("#0001_while"),
                 new PushInt(5),
                 new PushVar(Ref("secondFunc.x")),
                 new Less(),
-                new JumpIfToLabel("#0000_endwhile"),
+                new JumpIfToLabel("#0001_endwhile"),
                 
                 //     x += 1;
                 new PushInt(1),
@@ -105,7 +105,7 @@ namespace DaedalusCompiler.Tests
                 new JumpIfToLabel("#0001_else_if_1"),
                 
                 //         break;
-                new JumpToLabel("#0000_endwhile"),
+                new JumpToLabel("#0001_endwhile"),
                 
                 //     } else if (x == 4) {
                 new JumpToLabel("#0001_endif"),
@@ -116,14 +116,14 @@ namespace DaedalusCompiler.Tests
                 new JumpIfToLabel("#0001_endif"),
                 
                 //         continue;
-                new JumpToLabel("#0000_while"),
+                new JumpToLabel("#0001_while"),
                 
                 //     }
                 new AssemblyLabel("#0001_endif"),
                 
                 // }
-                new JumpToLabel("#0000_while"),
-                new AssemblyLabel("#0000_endwhile"),
+                new JumpToLabel("#0001_while"),
+                new AssemblyLabel("#0001_endwhile"),
 
 
                 new Ret(),
@@ -511,21 +511,21 @@ namespace DaedalusCompiler.Tests
                 instance Cat(Pet);
 
                 func void testFunc() {
-                    Person1.age = 1;
-                    Person1.enemy = Person2;
+                    //Person1.age = 1;
+                    //Person1.enemy = Person2;
                     Person1.enemy.age = 2;
-                    Person1.enemy.age = Person2.enemy.age;
-                    Person1.enemy.age = getAge(Person2.enemy);
+                    //Person1.enemy.age = Person2.enemy.age;
+                    //Person1.enemy.age = getAge(Person2.enemy);
 
-                    Person1.pet = Dog;
-                    Person1.pet.size = 3;
-                    Person1.pet.size = Dog.size;
-                    Person1.pet.owner.age = Cat.owner.age;
+                    //Person1.pet = Dog;
+                    //Person1.pet.size = 3;
+                    //Person1.pet.size = Dog.size;
+                    //Person1.pet.owner.age = Cat.owner.age;
                 
-                    Person1.pet.owner.pet.owner.pet.owner = Person1;
-                    Person1.pet.owner.pet.owner.pet.owner.enemy = Person2;
-                    Person1.pet.owner.pet.owner.pet = Cat;
-                    Person1.pet.owner.pet.owner.pet.size = 4;
+                    //Person1.pet.owner.pet.owner.pet.owner = Person1;
+                    //Person1.pet.owner.pet.owner.pet.owner.enemy = Person2;
+                    //Person1.pet.owner.pet.owner.pet = Cat;
+                    //Person1.pet.owner.pet.owner.pet.size = 4;
                 };
 
                 //TODO secondFunc

@@ -692,6 +692,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public ArrayIndexNode IndexNode;
 
         public bool DoCastToInt;
+        public bool DoesHaveNestedAttributes;
 
         public ReferenceNode(string name, List<ReferencePartNode> partNodes, NodeLocation location) : base(location)
         {
@@ -702,6 +703,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             IndexNode = null;
 
             DoCastToInt = false;
+            DoesHaveNestedAttributes = false;
             /*
              When CastToInt = true, this node should produce PushInt instruction.
              It should happen in following situations:

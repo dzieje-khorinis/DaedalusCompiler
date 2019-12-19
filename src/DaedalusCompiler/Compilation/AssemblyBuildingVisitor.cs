@@ -62,7 +62,7 @@ namespace DaedalusCompiler.Compilation
         
         public string GenerateWhileLabel(WhileLabelType whileLabelType)
         {
-            string labelId = _nextIfLabelIndex.ToString("0000");
+            string labelId = _nextWhileLabelIndex.ToString("0000");
             string label = "";
             switch (whileLabelType)
             {
@@ -80,13 +80,28 @@ namespace DaedalusCompiler.Compilation
     
     public class AssemblyBuildingVisitor : AbstractSyntaxTreeBaseGenericVisitor<List<AssemblyElement>>
     {
-        private Dictionary<string, Symbol> _symbolTable;
-        private LabelManager _labelManager;
+        private readonly Dictionary<string, Symbol> _symbolTable;
+        private readonly LabelManager _labelManager;
+        private bool _nestedAttributesFound;
+        private readonly InstanceSymbol _helperInstance;
+        private static string HELPER_INSTANCE = ".HELPER_INSTANCE";
 
         public AssemblyBuildingVisitor(Dictionary<string, Symbol> symbolTable)
         {
             _symbolTable = symbolTable;
             _labelManager = new LabelManager();
+
+
+            _nestedAttributesFound = false;
+            _helperInstance = new InstanceSymbol(HELPER_INSTANCE, null);
+        }
+
+        ~AssemblyBuildingVisitor()
+        {
+            if (_nestedAttributesFound)
+            {
+                _symbolTable[HELPER_INSTANCE] = _helperInstance;
+            }
         }
 
 
@@ -297,37 +312,197 @@ namespace DaedalusCompiler.Compilation
 
         protected override List<AssemblyElement> VisitReference(ReferenceNode referenceNode)
         {
-            int index = -1;
-            if (referenceNode.IndexNode != null)
-            {
-                index = (int) ((IntValue) referenceNode.IndexNode.Value).Value;
-            }
-
 
             List<AssemblyElement> instructions = new List<AssemblyElement>();
-            
-            if (referenceNode.BaseSymbol != referenceNode.Symbol)
+
+
+
+
+            if (referenceNode.DoesHaveNestedAttributes)
             {
-                instructions.Add(new SetInstance(referenceNode.BaseSymbol));
-            }
-            
-            if (index > 0)
-            {
-                instructions.Add(new PushArrayVar(referenceNode.Symbol, index));
-            }
-            else if (referenceNode.DoCastToInt)
-            {
-                instructions.Add(new PushInt(referenceNode.Symbol.Index));
-            }
-            else if (referenceNode.Symbol.BuiltinType == SymbolType.Instance)
-            {
-                instructions.Add(new PushInstance(referenceNode.Symbol));
+                //TODO check in game if it does work correctly
+                Symbol currentBaseSymbol = referenceNode.BaseSymbol;
+
+                foreach (ReferencePartNode partNode in referenceNode.PartNodes)
+                {
+                    switch (partNode)
+                    {
+                        case AttributeNode attributeNode:
+                            break;
+                        
+                        case ArrayIndexNode arrayIndexNode:
+                            break;
+                    }
+                }
+
+
+
+                //_nestedAttributesFound = true;
+
+                //instructions.Add(new PushVar(_helperInstance));
+
+
+
+                /*
+                _helperInstance
+                 TODO
+                 Person1.enemy = Person2;
+                 Person1.enemy.age = 5; //also changes Person2's age
+                 
+                 //PushInt 5
+                   
+                //PushVar TMPINST
+                //SetInstance Person1
+                //PushVar Human.enemy
+                //Assign
+                //SetInstance TMPINST
+                //PushVar Human.age
+                //Assign
+                 */
+
+
+
             }
             else
             {
-                instructions.Add(new PushVar(referenceNode.Symbol));
+                
+                int index = -1;
+                if (referenceNode.IndexNode != null)
+                {
+                    index = (int) ((IntValue) referenceNode.IndexNode.Value).Value;
+                }
+                
+                
+                if (referenceNode.BaseSymbol != referenceNode.Symbol)
+                {
+                    instructions.Add(new SetInstance(referenceNode.BaseSymbol));
+                }
+            
+                if (index > 0)
+                {
+                    instructions.Add(new PushArrayVar(referenceNode.Symbol, index));
+                }
+                else if (referenceNode.DoCastToInt)
+                {
+                    instructions.Add(new PushInt(referenceNode.Symbol.Index));
+                }
+                else if (referenceNode.Symbol.BuiltinType == SymbolType.Instance)
+                {
+                    instructions.Add(new PushInstance(referenceNode.Symbol));
+                }
+                else
+                {
+                    instructions.Add(new PushVar(referenceNode.Symbol));
+                }
+
             }
             
+            
+            
+            
+            
+           
+
+            
+            /*
+             bool arrayIndexNodeFound = false;
+            ArrayIndexNode firstArrayIndexNode = null;
+
+            string symbolLocalPath = referenceNode.Name;
+            
+            foreach (ReferencePartNode partNode in referenceNode.PartNodes)
+            {
+                if (arrayIndexNodeFound)
+                {
+                    partNode.Annotations.Add(new AccessToAttributeOfArrayElementNotSupportedError());
+                    return;
+                }
+                
+                switch (partNode)
+                {
+                    case AttributeNode attributeNode:
+
+
+                        NestableSymbol resultNestableSymbol;
+                        switch (symbol)
+                        {
+                            case InstanceSymbol instanceSymbol:
+                                ClassSymbol baseClassSymbol = instanceSymbol.BaseClassSymbol;
+                                if (baseClassSymbol != null)
+                                {
+                                    if (baseClassSymbol.BodySymbols.TryGetValue(attributeNode.Name.ToUpper(), out resultNestableSymbol))
+                                    {
+                                        symbol = resultNestableSymbol;
+                                        symbolLocalPath = $"{symbolLocalPath}.{attributeNode.Name}";
+                                        attributeNode.Symbol = symbol;
+                                        
+                                        declarationNode = (DeclarationNode) symbol.Node;
+                                        declarationNode.Usages.Add(attributeNode);
+                                        
+                                    }
+                                    else
+                                    {
+                                        attributeNode.Annotations.Add(new ClassDoesNotHaveAttributeError(symbolLocalPath, baseClassSymbol.Name, attributeNode.Name));
+                                        return;
+                                    }
+                                }
+                                else
+                                {
+                                    // TODO shouldn't we annotate something here?
+                                }
+                                break;
+                            
+                            case NestableSymbol nestableSymbol:
+                                if (nestableSymbol.ComplexType is ClassSymbol classSymbol)
+                                {
+                                    if (classSymbol.BodySymbols.TryGetValue(attributeNode.Name.ToUpper(), out resultNestableSymbol))
+                                    {
+                                        symbol = resultNestableSymbol;
+                                        symbolLocalPath = $"{symbolLocalPath}.{attributeNode.Name}";
+                                        attributeNode.Symbol = symbol;
+                                        
+                                        declarationNode = (DeclarationNode) symbol.Node;
+                                        declarationNode.Usages.Add(attributeNode);
+                                    }
+                                    else
+                                    {
+                                        attributeNode.Annotations.Add(new ClassDoesNotHaveAttributeError(symbolLocalPath, classSymbol.Name, attributeNode.Name)); //TODO test
+                                        return;
+                                    }
+                                }
+                                else
+                                {
+                                    attributeNode.Annotations.Add(new AttributeOfNonInstanceError(attributeNode.Name, symbolLocalPath));
+                                }
+                                break;
+                            
+                            
+                            default:
+                                attributeNode.Annotations.Add(new AttributeOfNonInstanceError(attributeNode.Name, symbolLocalPath));
+                                return;
+                        }
+                        break;
+                    
+                    case ArrayIndexNode arrayIndexNode:
+                        arrayIndexNodeFound = true;
+                        firstArrayIndexNode = arrayIndexNode;
+                        
+                        if (!(symbol.Node is IArrayDeclarationNode))
+                        {
+                            referenceNode.Annotations.Add(new ReferencedSymbolIsNotArrayError(referenceNode.Name));
+                            return;
+                        }
+                        
+                        ArrayIndexNodes.Add(arrayIndexNode);
+                        break;
+                    default:
+                        throw new Exception();
+                }
+             
+            
+             */
+
+
             return instructions;
             
             
