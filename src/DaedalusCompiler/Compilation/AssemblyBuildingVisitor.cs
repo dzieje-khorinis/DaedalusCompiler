@@ -91,19 +91,26 @@ namespace DaedalusCompiler.Compilation
             _symbolTable = symbolTable;
             _labelManager = new LabelManager();
 
-
+            
             _nestedAttributesFound = false;
             _helperInstance = new InstanceSymbol(HELPER_INSTANCE, null);
+            if (_symbolTable.Count > 0)
+            {
+                _helperInstance.Index = _symbolTable.Values.Last().Index + 1;
+            }
+            
         }
 
-        ~AssemblyBuildingVisitor()
+        public List<AssemblyElement> VisitTree(AbstractSyntaxTree tree)
         {
+            base.VisitTree(tree);
             if (_nestedAttributesFound)
             {
                 _symbolTable[HELPER_INSTANCE] = _helperInstance;
             }
+            return DefaultResult;
         }
-
+        
 
         private AssemblyElement GetParameterPush(Symbol symbol)
         {
@@ -312,36 +319,51 @@ namespace DaedalusCompiler.Compilation
 
         protected override List<AssemblyElement> VisitReference(ReferenceNode referenceNode)
         {
-
+            int index;
             List<AssemblyElement> instructions = new List<AssemblyElement>();
-
-
-
 
             if (referenceNode.DoesHaveNestedAttributes)
             {
                 //TODO check in game if it does work correctly
-                Symbol currentBaseSymbol = referenceNode.BaseSymbol;
+                _nestedAttributesFound = true;
 
-                foreach (ReferencePartNode partNode in referenceNode.PartNodes)
+                instructions.Add(new PushVar(_helperInstance));
+                instructions.Add(new PushVar(referenceNode.BaseSymbol));
+                instructions.Add(new Assign());
+                
+                //foreach (ReferencePartNode partNode in referenceNode.PartNodes)
+                for (int i = 0; i < referenceNode.PartNodes.Count - 1; ++i)
                 {
+                    ReferencePartNode partNode = referenceNode.PartNodes[i];
                     switch (partNode)
                     {
                         case AttributeNode attributeNode:
-                            break;
-                        
-                        case ArrayIndexNode arrayIndexNode:
+
+                            if (attributeNode.Symbol is InstanceSymbol ||
+                                (attributeNode.Symbol is VarSymbol varSymbol &&
+                                 varSymbol.BuiltinType == SymbolType.Instance))
+                            {
+                                
+                                instructions.Add(new PushVar(_helperInstance));
+                                instructions.Add(new SetInstance(_helperInstance));
+                                if (attributeNode.ArrayIndexNode == null)
+                                {
+                                    instructions.Add(new PushVar(attributeNode.Symbol));
+                                }
+                                else
+                                {
+                                    index = (int) ((IntValue) attributeNode.ArrayIndexNode.Value).Value;
+                                    instructions.Add(new PushArrayVar(attributeNode.Symbol, index));
+                                }
+                                instructions.Add(new Assign());
+
+                                
+                            }
+
+                            
                             break;
                     }
                 }
-
-
-
-                //_nestedAttributesFound = true;
-
-                //instructions.Add(new PushVar(_helperInstance));
-
-
 
                 /*
                 _helperInstance
@@ -349,8 +371,7 @@ namespace DaedalusCompiler.Compilation
                  Person1.enemy = Person2;
                  Person1.enemy.age = 5; //also changes Person2's age
                  
-                 //PushInt 5
-                   
+                 //PushInt 
                 //PushVar TMPINST
                 //SetInstance Person1
                 //PushVar Human.enemy
@@ -358,151 +379,61 @@ namespace DaedalusCompiler.Compilation
                 //SetInstance TMPINST
                 //PushVar Human.age
                 //Assign
+                
+                
+                Person1.pet.owner.age = 20;
+                // PushInt 20
+                PushVar TMPINST
+                SetInstance Person1
+                PushVar Human.pet
+                Assign
+                PushVar TMPINST
+                SetInstance TMPINST
+                PushVar Pet.owner
+                Assign
+                SetInstance TMPINST
+                PushVar Human.age
+                Assign()
                  */
-
-
-
+                
             }
-            else
+
+            index = -1;
+            if (referenceNode.IndexNode != null)
             {
-                
-                int index = -1;
-                if (referenceNode.IndexNode != null)
-                {
-                    index = (int) ((IntValue) referenceNode.IndexNode.Value).Value;
-                }
-                
-                
-                if (referenceNode.BaseSymbol != referenceNode.Symbol)
-                {
-                    instructions.Add(new SetInstance(referenceNode.BaseSymbol));
-                }
+                index = (int) ((IntValue) referenceNode.IndexNode.Value).Value;
+            }
             
-                if (index > 0)
+            
+            if (referenceNode.BaseSymbol != referenceNode.Symbol)
+            {
+                if (referenceNode.DoesHaveNestedAttributes)
                 {
-                    instructions.Add(new PushArrayVar(referenceNode.Symbol, index));
-                }
-                else if (referenceNode.DoCastToInt)
-                {
-                    instructions.Add(new PushInt(referenceNode.Symbol.Index));
-                }
-                else if (referenceNode.Symbol.BuiltinType == SymbolType.Instance)
-                {
-                    instructions.Add(new PushInstance(referenceNode.Symbol));
+                    instructions.Add(new SetInstance(_helperInstance));
                 }
                 else
                 {
-                    instructions.Add(new PushVar(referenceNode.Symbol));
+                    instructions.Add(new SetInstance(referenceNode.BaseSymbol));
                 }
-
+            }
+        
+            if (index > 0)
+            {
+                instructions.Add(new PushArrayVar(referenceNode.Symbol, index));
+            }
+            else if (referenceNode.DoCastToInt)
+            {
+                instructions.Add(new PushInt(referenceNode.Symbol.Index));
+            }
+            else if (referenceNode.Symbol.BuiltinType == SymbolType.Instance)
+            {
+                instructions.Add(new PushInstance(referenceNode.Symbol));
+            }
+            else
+            {
+                instructions.Add(new PushVar(referenceNode.Symbol));
             }
             
-            
-            
-            
-            
-           
-
-            
-            /*
-             bool arrayIndexNodeFound = false;
-            ArrayIndexNode firstArrayIndexNode = null;
-
-            string symbolLocalPath = referenceNode.Name;
-            
-            foreach (ReferencePartNode partNode in referenceNode.PartNodes)
-            {
-                if (arrayIndexNodeFound)
-                {
-                    partNode.Annotations.Add(new AccessToAttributeOfArrayElementNotSupportedError());
-                    return;
-                }
-                
-                switch (partNode)
-                {
-                    case AttributeNode attributeNode:
-
-
-                        NestableSymbol resultNestableSymbol;
-                        switch (symbol)
-                        {
-                            case InstanceSymbol instanceSymbol:
-                                ClassSymbol baseClassSymbol = instanceSymbol.BaseClassSymbol;
-                                if (baseClassSymbol != null)
-                                {
-                                    if (baseClassSymbol.BodySymbols.TryGetValue(attributeNode.Name.ToUpper(), out resultNestableSymbol))
-                                    {
-                                        symbol = resultNestableSymbol;
-                                        symbolLocalPath = $"{symbolLocalPath}.{attributeNode.Name}";
-                                        attributeNode.Symbol = symbol;
-                                        
-                                        declarationNode = (DeclarationNode) symbol.Node;
-                                        declarationNode.Usages.Add(attributeNode);
-                                        
-                                    }
-                                    else
-                                    {
-                                        attributeNode.Annotations.Add(new ClassDoesNotHaveAttributeError(symbolLocalPath, baseClassSymbol.Name, attributeNode.Name));
-                                        return;
-                                    }
-                                }
-                                else
-                                {
-                                    // TODO shouldn't we annotate something here?
-                                }
-                                break;
-                            
-                            case NestableSymbol nestableSymbol:
-                                if (nestableSymbol.ComplexType is ClassSymbol classSymbol)
-                                {
-                                    if (classSymbol.BodySymbols.TryGetValue(attributeNode.Name.ToUpper(), out resultNestableSymbol))
-                                    {
-                                        symbol = resultNestableSymbol;
-                                        symbolLocalPath = $"{symbolLocalPath}.{attributeNode.Name}";
-                                        attributeNode.Symbol = symbol;
-                                        
-                                        declarationNode = (DeclarationNode) symbol.Node;
-                                        declarationNode.Usages.Add(attributeNode);
-                                    }
-                                    else
-                                    {
-                                        attributeNode.Annotations.Add(new ClassDoesNotHaveAttributeError(symbolLocalPath, classSymbol.Name, attributeNode.Name)); //TODO test
-                                        return;
-                                    }
-                                }
-                                else
-                                {
-                                    attributeNode.Annotations.Add(new AttributeOfNonInstanceError(attributeNode.Name, symbolLocalPath));
-                                }
-                                break;
-                            
-                            
-                            default:
-                                attributeNode.Annotations.Add(new AttributeOfNonInstanceError(attributeNode.Name, symbolLocalPath));
-                                return;
-                        }
-                        break;
-                    
-                    case ArrayIndexNode arrayIndexNode:
-                        arrayIndexNodeFound = true;
-                        firstArrayIndexNode = arrayIndexNode;
-                        
-                        if (!(symbol.Node is IArrayDeclarationNode))
-                        {
-                            referenceNode.Annotations.Add(new ReferencedSymbolIsNotArrayError(referenceNode.Name));
-                            return;
-                        }
-                        
-                        ArrayIndexNodes.Add(arrayIndexNode);
-                        break;
-                    default:
-                        throw new Exception();
-                }
-             
-            
-             */
-
-
             return instructions;
             
             

@@ -662,10 +662,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public string Name;
         public Symbol Symbol;
+        public ArrayIndexNode ArrayIndexNode;
         
         public AttributeNode(string name, NodeLocation location) : base(location)
         {
             Name = name;
+            ArrayIndexNode = null;
         }
     }
 

@@ -484,7 +484,7 @@ namespace DaedalusCompiler.Tests
         
         
         [Fact]
-        public void TestNestedAttributes()
+        public void TestNestedAttributes() // TODO check if it does work ingame
         {
             _code = @"
                 class Pet {
@@ -511,27 +511,27 @@ namespace DaedalusCompiler.Tests
                 instance Cat(Pet);
 
                 func void testFunc() {
-                    //Person1.age = 1;
-                    //Person1.enemy = Person2;
+                    Person1.age = 1;
+                    Person1.enemy = Person2;
                     Person1.enemy.age = 2;
-                    //Person1.enemy.age = Person2.enemy.age;
-                    //Person1.enemy.age = getAge(Person2.enemy);
+                    Person1.enemy.age = Person2.enemy.age;
+                    Person1.enemy.age = getAge(Person2.enemy);
 
-                    //Person1.pet = Dog;
-                    //Person1.pet.size = 3;
-                    //Person1.pet.size = Dog.size;
-                    //Person1.pet.owner.age = Cat.owner.age;
+                    Person1.pet = Dog;
+                    Person1.pet.size = 3;
+                    Person1.pet.size = Dog.size;
+                    Person1.pet.owner.age = Cat.owner.age;
                 
-                    //Person1.pet.owner.pet.owner.pet.owner = Person1;
-                    //Person1.pet.owner.pet.owner.pet.owner.enemy = Person2;
-                    //Person1.pet.owner.pet.owner.pet = Cat;
-                    //Person1.pet.owner.pet.owner.pet.size = 4;
+                    Person1.pet.owner.pet.owner.pet.owner = Person1;
+                    Person1.pet.owner.pet.owner.pet.owner.enemy = Person2;
+                    Person1.pet.owner.pet.owner.pet = Cat;
+                    Person1.pet.owner.pet.owner.pet.size = 4;
                 };
-
-                //TODO secondFunc
-                //var Human Person2;
-                //Person2 = Person1;
            ";
+            //TODO add secondFunc
+            //var Human Person2;
+            //Person2 = Person1;
+            // .. copy of testFunc
             
             _instructions = GetExecBlockInstructions("Person2");
             _expectedInstructions = new List<AssemblyElement>
@@ -550,7 +550,315 @@ namespace DaedalusCompiler.Tests
             _instructions = GetExecBlockInstructions("testFunc");
             _expectedInstructions = new List<AssemblyElement>
             {
-               
+                // Person1.age = 1;
+                new PushInt(1),
+                new SetInstance(Ref("Person1")),
+                new PushVar(Ref("Human.age")),
+                new Assign(),
+                
+                // Person1.enemy = Person2;
+                new PushInstance(Ref("Person2")),
+                new SetInstance(Ref("Person1")),
+                new PushInstance(Ref("Human.enemy")),
+                new AssignInstance(),
+                
+                // Person1.enemy.age = 2;
+                new PushInt(2),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Person1")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.enemy")),
+                new Assign(),
+                
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.age")),
+                
+                new Assign(),
+                
+                
+                // Person1.enemy.age = Person2.enemy.age;
+                // Person2.enemy.age
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Person2")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.enemy")),
+                new Assign(),
+                
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.age")),
+                
+                // Person1.enemy.age
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Person1")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.enemy")),
+                new Assign(),
+                
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.age")),
+                
+                new Assign(),
+                
+                
+                // Person1.enemy.age = getAge(Person2.enemy);
+                // getAge(Person2.enemy)
+                new SetInstance(Ref("Person2")),
+                new PushInstance(Ref("Human.enemy")),
+                new Call(Ref("getAge")),
+                
+                // Person1.enemy.age
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Person1")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.enemy")),
+                new Assign(),
+                
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.age")),
+                
+                new Assign(),
+                
+                // Person1.pet = Dog;
+                new PushInstance(Ref("Dog")),
+                new SetInstance(Ref("Person1")),
+                new PushInstance(Ref("Human.pet")),
+                new AssignInstance(),
+                
+                
+                // Person1.pet.size = 3;
+                new PushInt(3),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Person1")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.pet")),
+                new Assign(),
+                
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Pet.size")),
+                
+                new Assign(),
+                
+                // Person1.pet.size = Dog.size;
+                new SetInstance(Ref("Dog")),
+                new PushVar(Ref("Pet.size")),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Person1")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.pet")),
+                new Assign(),
+                
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Pet.size")),
+                
+                new Assign(),
+                
+                
+                // Person1.pet.owner.age = Cat.owner.age;
+                // Cat.owner.age
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Cat")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Pet.owner")),
+                new Assign(),
+                
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.age")),
+                
+                // Person1.pet.owner.age
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Person1")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.pet")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Pet.owner")),
+                new Assign(),
+                
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.age")),
+
+                // =
+                new Assign(),
+                
+                
+                // Person1.pet.owner.pet.owner.pet.owner = Person1;
+                new PushInstance(Ref("Person1")),
+
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Person1")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.pet")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Pet.owner")),
+                new Assign(),
+            
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.pet")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Pet.owner")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.pet")),
+                new Assign(),
+                
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushInstance(Ref("Pet.owner")),
+                new AssignInstance(),
+                
+                
+                // Person1.pet.owner.pet.owner.pet.owner.enemy = Person2;
+                new PushInstance(Ref("Person2")),
+
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Person1")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.pet")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Pet.owner")),
+                new Assign(),
+            
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.pet")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Pet.owner")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.pet")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Pet.owner")),
+                new Assign(),
+                
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushInstance(Ref("Human.enemy")),
+                new AssignInstance(),
+                
+                // Person1.pet.owner.pet.owner.pet = Cat;
+                new PushInstance(Ref("Cat")),
+
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Person1")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.pet")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Pet.owner")),
+                new Assign(),
+            
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.pet")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Pet.owner")),
+                new Assign(),
+
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushInstance(Ref("Human.pet")),
+                new AssignInstance(),
+                
+                
+                
+                // Person1.pet.owner.pet.owner.pet.size = 4;
+                new PushInt(4),
+
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Person1")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.pet")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Pet.owner")),
+                new Assign(),
+            
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.pet")),
+                new Assign(),
+                
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Pet.owner")),
+                new Assign(),
+
+                new PushVar(Ref(".HELPER_INSTANCE")),
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Human.pet")),
+                new Assign(),
+                
+                new SetInstance(Ref(".HELPER_INSTANCE")),
+                new PushVar(Ref("Pet.size")),
+                new Assign(),
+
+                
+                
                 new Ret(),
             };
             AssertInstructionsMatch();
@@ -572,6 +880,7 @@ namespace DaedalusCompiler.Tests
                 Ref("Dog"),
                 Ref("Cat"),
                 Ref("testFunc"),
+                Ref(".HELPER_INSTANCE"),
             };
             AssertSymbolsMatch();
             

@@ -362,11 +362,18 @@ namespace DaedalusCompiler.Compilation
 			List<ReferencePartNode> referencePartNodes = new List<ReferencePartNode>();
 			foreach (var referenceAtomContext in context.referenceAtom())
 			{
-				referencePartNodes.Add(new AttributeNode(referenceAtomContext.nameNode().GetText(), GetLocation(referenceAtomContext)));
+
+				AttributeNode attributeNode = new AttributeNode(
+					referenceAtomContext.nameNode().GetText(),
+					GetLocation(referenceAtomContext)
+					);
+				referencePartNodes.Add(attributeNode);
 
 				if (referenceAtomContext.arrayIndex() != null)
 				{
-					referencePartNodes.Add((ReferencePartNode) VisitArrayIndex(referenceAtomContext.arrayIndex()));
+					ArrayIndexNode arrayIndexNode = (ArrayIndexNode) VisitArrayIndex(referenceAtomContext.arrayIndex());
+					attributeNode.ArrayIndexNode = arrayIndexNode;
+					referencePartNodes.Add(arrayIndexNode);
 				}
 			}
 
