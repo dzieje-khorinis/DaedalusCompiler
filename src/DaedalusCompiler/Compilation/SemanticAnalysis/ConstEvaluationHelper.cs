@@ -80,7 +80,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public static NodeValue EvaluateUnaryOperation(UnaryOperator oper, NodeValue value)
         {
-            Console.WriteLine("UnaryOperator oper, NodeValue value");
+            //Console.WriteLine("UnaryOperator oper, NodeValue value");
             if (value is UndefinedValue) //  || value is StringValue
             {
                 return new UndefinedValue();
@@ -100,7 +100,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         public static IntValue EvaluateUnaryIntExpression(UnaryOperator oper, IntValue intValue)
         {
-            Console.WriteLine("UnaryOperator oper, IntValue intValue");
+            //Console.WriteLine("UnaryOperator oper, IntValue intValue");
             switch (oper)
             {
                 case UnaryOperator.Minus:
@@ -121,7 +121,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         public static FloatValue EvaluateUnaryFloatExpression(UnaryOperator oper, FloatValue floatValue)
         {
-            Console.WriteLine("UnaryOperator oper, FloatValue floatValue");
+            //Console.WriteLine("UnaryOperator oper, FloatValue floatValue");
             switch (oper)
             {
                 case UnaryOperator.Minus:
@@ -140,7 +140,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         public static NodeValue EvaluateBinaryOperation(BinaryOperator oper, NodeValue left, NodeValue right)
         {
-            Console.WriteLine("BinaryOperator oper, NodeValue leftValue, NodeValue rightValue");
+            //Console.WriteLine("BinaryOperator oper, NodeValue leftValue, NodeValue rightValue");
 
 
             if (left is UndefinedValue || right is UndefinedValue)
@@ -224,7 +224,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         private static NodeValue EvaluateBinaryOperation(BinaryOperator oper, StringValue left, IntValue right)
         {
-            Console.WriteLine("BinaryOperator oper, StringValue left, IntValue right");
+            //Console.WriteLine("BinaryOperator oper, StringValue left, IntValue right");
             switch (oper)
             {
                 case BinaryOperator.Mult:
@@ -236,7 +236,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         private static NodeValue EvaluateBinaryOperation(BinaryOperator oper, IntValue left, StringValue right)
         {
-            Console.WriteLine("BinaryOperator oper, IntValue left, StringValue right");
+            //Console.WriteLine("BinaryOperator oper, IntValue left, StringValue right");
             switch (oper)
             {
                 case BinaryOperator.Mult:
@@ -249,7 +249,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         public static StringValue EvaluateBinaryOperation(BinaryOperator oper, StringValue left, StringValue right)
         {
-            Console.WriteLine("BinaryOperator oper, StringValue left, StringValue right");
+            //Console.WriteLine("BinaryOperator oper, StringValue left, StringValue right");
             switch (oper)
             {
                 case BinaryOperator.Add:
@@ -262,7 +262,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         public static IntValue EvaluateBinaryOperation(BinaryOperator oper, IntValue left, IntValue right)
         {
-            Console.WriteLine("BinaryOperator oper, IntValue left, IntValue right");
+            //Console.WriteLine("BinaryOperator oper, IntValue left, IntValue right");
             switch (oper)
             {
                 case BinaryOperator.Mult:
@@ -278,9 +278,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     return new IntValue(checked(left.Value - right.Value));
                 
                 case BinaryOperator.ShiftLeft:
-                    return new IntValue(checked(left.Value << (int)right.Value));
+                    return new IntValue(checked((int)left.Value << (int)right.Value));
                 case BinaryOperator.ShiftRight:
-                    return new IntValue(checked(left.Value << (int)right.Value));
+                    return new IntValue(checked((int)left.Value >> (int)right.Value));
                 
                 case BinaryOperator.Less:
                     return new IntValue(left.Value < right.Value ? 1 : 0);
@@ -315,7 +315,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         public static FloatValue EvaluateBinaryOperation(BinaryOperator oper, FloatValue left, FloatValue right)
         {
-            Console.WriteLine("BinaryOperator oper, FloatValue left, FloatValue right");
+            //Console.WriteLine("BinaryOperator oper, FloatValue left, FloatValue right");
             switch (oper)
             {
                 case BinaryOperator.Mult:

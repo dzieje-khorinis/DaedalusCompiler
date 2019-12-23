@@ -84,10 +84,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     
     public class NamesNotMatchingCaseWiseWarning : WarningAnnotationNoted, IWithCode
     {
+        public static string WCode = "W2";
         private readonly string _declaredName;
         private readonly string _usedName;
         
-        public string Code { get; set; } = "W2";
+        public string Code { get; set; } = WCode;
 
         public NamesNotMatchingCaseWiseWarning(NodeLocation noteLocation, string declaredName, string usedName) : base(noteLocation)
         {

@@ -511,6 +511,7 @@ namespace DaedalusCompiler.Tests
                 instance Cat(Pet);
 
                 func void testFunc() {
+                    Person1 = Person2;
                     Person1.age = 1;
                     Person1.enemy = Person2;
                     Person1.enemy.age = 2;
@@ -550,6 +551,11 @@ namespace DaedalusCompiler.Tests
             _instructions = GetExecBlockInstructions("testFunc");
             _expectedInstructions = new List<AssemblyElement>
             {
+                // Person1 = Person2;;
+                new PushInstance(Ref("Person2")),
+                new PushInstance(Ref("Person1")),
+                new AssignInstance(),
+
                 // Person1.age = 1;
                 new PushInt(1),
                 new SetInstance(Ref("Person1")),
@@ -705,8 +711,7 @@ namespace DaedalusCompiler.Tests
                 
                 new SetInstance(Ref(".HELPER_INSTANCE")),
                 new PushVar(Ref("Human.age")),
-
-                // =
+                
                 new Assign(),
                 
                 

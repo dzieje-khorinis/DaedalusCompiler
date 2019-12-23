@@ -108,7 +108,17 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             if (node.FunctionReferenceNode.Symbol != null)
             {
-                FunctionDefinitionNode functionDefinitionNode = (FunctionDefinitionNode) node.FunctionReferenceNode.Symbol.Node;
+                FunctionDefinitionNode functionDefinitionNode;
+                try
+                {
+                    functionDefinitionNode = (FunctionDefinitionNode) node.FunctionReferenceNode.Symbol.Node;
+                }
+                catch (InvalidCastException)
+                {
+                    Console.WriteLine("dx");
+                    throw new InvalidCastException();
+                }
+                
                 Symbol symbol = functionDefinitionNode.Symbol;
 
                 if (symbol != null)
@@ -156,7 +166,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     
                     SymbolTypePair argumentType = GetSymbolTypePairFromExpressionNode(argumentNode);
                     
-                    Console.Write("x");
+                    //Console.Write("x");
                 }
             }
         }

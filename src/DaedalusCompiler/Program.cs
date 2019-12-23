@@ -42,6 +42,7 @@ namespace DaedalusCompiler
             var getVersion = false;
             bool suppressModeOn = false;
             bool detectUnused = false;
+            bool caseSensitiveCode = false;
             string filePath = String.Empty;
             HashSet<string> suppressCodes = new HashSet<string>();
 
@@ -53,6 +54,7 @@ namespace DaedalusCompiler
                 { "verbose", v => verbose = true },
                 { "strict", v => strict = true },
                 { "detect-unused", v => detectUnused = true },
+                { "case-sensitive-code", v => caseSensitiveCode = true },
                 { "suppress", v => suppressModeOn = true },
                 { "version|v", v => getVersion = true  },
                 { "<>", v =>
@@ -76,6 +78,12 @@ namespace DaedalusCompiler
                 Console.WriteLine (e.Message);
                 return;
             }
+            
+            if (!caseSensitiveCode)
+            {
+                suppressCodes.Add(NamesNotMatchingCaseWiseWarning.WCode);
+            }
+
             
             if (!detectUnused)
             {

@@ -589,6 +589,15 @@ namespace DaedalusCompiler.Compilation
 		
 		private NodeLocation GetLocation(ParserRuleContext context)
 		{
+			if (context.Stop == null)
+			{
+				/*
+				 * In case of empty file, context has Start (EOF token) but has no end
+				 */
+				context.Stop = context.Start;
+			}
+			
+
 			return new NodeLocation
 			{
 				FileIndex = _sourceFileNumber,
@@ -597,7 +606,7 @@ namespace DaedalusCompiler.Compilation
 				Index = context.Start.StartIndex,
 				LinesCount = context.Stop.Line - context.Start.Line + 1,
 				CharsCount = context.Stop.StopIndex - context.Start.StartIndex + 1,
-				
+			
 				EndColumn = context.Stop.StopIndex,
 			};
 		}

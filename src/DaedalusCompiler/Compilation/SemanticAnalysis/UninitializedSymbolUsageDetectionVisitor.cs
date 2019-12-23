@@ -119,9 +119,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         protected override void VisitAssignment(AssignmentNode node)
         {
-            Visit(node.RightSideNode);
-            
             ReferenceNode referenceNode = node.LeftSideNode;
+            if (referenceNode.Symbol is InstanceSymbol)
+            {
+                // instances as of now aren't of type NestableSymbol, they can appear tough
+                // however they are always initialized when they are created
+                return;
+            }
+            
+            Visit(node.RightSideNode);
             NestableSymbol nestableSymbol = (NestableSymbol) referenceNode.Symbol;
 
             switch (nestableSymbol?.Node)

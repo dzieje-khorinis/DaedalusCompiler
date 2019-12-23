@@ -130,6 +130,7 @@ namespace DaedalusCompiler.Compilation
             
             // doc: wyjebane magiczne słowo self z instancji bo sie myliło z globalnym obiektem self, a zamiast tego bedzie uzywane slowo this
             // test ingame (zSpy print) return float / float assignment / float argument (func call, literal, variable), 
+            // test ingame: nested attributes, while loop
             // doc: we have hoisting, when original compiler only have hoisting when there is global variable with same name
             // extern keyword
             // inline keyword and inline comment for backwards compability
