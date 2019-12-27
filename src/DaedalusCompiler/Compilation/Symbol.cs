@@ -29,6 +29,16 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         Instance = 7,
         Undefined = 8,
     }
+    
+    [Flags]
+    public enum SymbolFlag
+    {
+        Const = 1,
+        Return = 2,
+        ClassVar = 4,
+        External = 8,
+        Merged = 16,
+    }
 
     
     public abstract class Symbol
@@ -40,6 +50,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public ASTNode Node;
 
         public SymbolType BuiltinType;
+        public SymbolFlag Flags;
 
 
         // DatSymbol properties
@@ -75,11 +86,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public readonly Dictionary<string, NestableSymbol> BodySymbols;
         public readonly List<AssemblyElement> Instructions;
-
+        public int FirstTokenAddress;
+        
         protected BlockSymbol(string name, ASTNode node) : base(name, node)
         {
             BodySymbols = new Dictionary<string, NestableSymbol>();
             Instructions = new List<AssemblyElement>();
+            FirstTokenAddress = -1;
         }
 
         public void AddBodySymbol(NestableSymbol nestableSymbol)
@@ -163,6 +176,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         //public SymbolType ReturnBuiltinType;
         //public Symbol ReturnComplexType;
         public readonly bool IsExternal;
+        
+        public int ParametersCount { get; set; }
 
         public FunctionSymbol(string typeName, string name, bool isExternal, ASTNode node) : base(name, node)
         {
@@ -198,9 +213,18 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         Symbol ComplexType { get; set; }
     }
+
+    public interface IAttributeSymbol
+    {
+        int Offset { get; set; }
+    }
     
     public class ClassSymbol : InheritanceSymbol
     {
+        public int Size { get; set; }
+        public int Offset { get; set; }
+        
+        public int AttributesCount { get; set; }
         public ClassSymbol(string name, ASTNode node) : base(name, node)
         {
             BuiltinType = SymbolType.Class;
@@ -239,6 +263,24 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
 
+    public class AttributeSymbol : VarSymbol, IAttributeSymbol
+    {
+        public int Offset { get; set; }
+        
+        public AttributeSymbol(BlockSymbol parentBlockSymbol, string typeName, string name, ASTNode node) : base(parentBlockSymbol, typeName, name, node)
+        {
+        }
+    }
+    
+    public class AttributeArraySymbol : AttributeSymbol, IArraySymbol
+    {
+        public int Size { get; set; }
+
+        public AttributeArraySymbol(BlockSymbol parentBlockSymbol, string typeName, string name, ASTNode node) : base(parentBlockSymbol, typeName, name, node)
+        {
+        }
+    }
+    
     public class ConstSymbol : NestableSymbol
     {
         public ConstSymbol(BlockSymbol parentBlockSymbol, string typeName, string name, ASTNode node) : base(parentBlockSymbol, typeName, name, node)
@@ -293,10 +335,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     
     public class StringConstSymbol : Symbol
     {
-        //public string Content;
         public StringConstSymbol(string content, string name, ASTNode node) : base(name, node)
         {
             Content = new object[]{content};
+            BuiltinType = SymbolType.String;
         }
     }
 }

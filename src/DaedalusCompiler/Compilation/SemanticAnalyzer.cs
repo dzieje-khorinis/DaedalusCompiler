@@ -113,7 +113,7 @@ namespace DaedalusCompiler.Compilation
             // WrongClassSizeError
             // ConstValueChangedWarning
             // UsageOfNonInitializedVariableWarning
-            RemainingAnnotationsAdditionVisitor remainingAnnotationsAdditionVisitor = new RemainingAnnotationsAdditionVisitor();
+            RemainingAnnotationsAdditionVisitor remainingAnnotationsAdditionVisitor = new RemainingAnnotationsAdditionVisitor(SymbolTable);
             remainingAnnotationsAdditionVisitor.VisitTree(AbstractSyntaxTree);
             
             // TODO

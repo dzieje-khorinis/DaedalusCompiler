@@ -7,14 +7,70 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class RemainingAnnotationsAdditionVisitor : AbstractSyntaxTreeBaseVisitor
     {
         private readonly HashSet<string> _initializedSymbolsPaths;
+
+        private readonly Dictionary<string, Symbol> _symbolTable;
         
-        private static readonly Dictionary<string, long> Class2RequiredSize = new Dictionary<string, long>
+        private static readonly Dictionary<string, int> Class2RequiredSize = new Dictionary<string, int>
         {
             {"C_NPC", 800},
             {"C_INFO", 48},
             {"C_ITEMREACT", 28},
         };
+        
+        private static readonly Dictionary<string, int> Class2Offset = new Dictionary<string, int>
+        {
+            {"C_NPC", 288},
+            {"C_ITEM", 288},
+        };
 
+        public RemainingAnnotationsAdditionVisitor(Dictionary<string, Symbol> symbolTable)
+        {
+            _symbolTable = symbolTable;
+        }
+
+        public override void VisitTree(AbstractSyntaxTree tree)
+        {
+            base.VisitTree(tree);
+            
+            foreach (Symbol symbol in _symbolTable.Values)
+            {
+                switch (symbol)
+                {
+                    case FunctionSymbol functionSymbol:
+                        functionSymbol.Flags |= SymbolFlag.Const;
+                        
+                        if (functionSymbol.BuiltinType != SymbolType.Void)
+                        {
+                            functionSymbol.Flags |= SymbolFlag.Return;
+                        }
+
+                        if (functionSymbol.IsExternal)
+                        {
+                            functionSymbol.Flags |= SymbolFlag.External;
+                        }
+                        
+                        break;
+                    
+                    case InstanceSymbol instanceSymbol:
+                        instanceSymbol.Flags |= SymbolFlag.Const;
+                        break;
+                    
+                    case ConstSymbol constSymbol:
+                        constSymbol.Flags |= SymbolFlag.Const;
+                        break;
+                    
+                    case VarSymbol varSymbol:
+                        if (varSymbol.ParentBlockSymbol is ClassSymbol)
+                        {
+                            varSymbol.Flags |= SymbolFlag.ClassVar;
+                        }
+
+                        break;
+                }
+            }
+        }
+
+        
         protected override void VisitCompoundAssignment(CompoundAssignmentNode node)
         {
             if (node.LeftSideNode.Symbol?.Node is ConstDefinitionNode)
@@ -39,21 +95,26 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         protected override void VisitClassDefinition(ClassDefinitionNode node)
         {
             string classNameUpper = node.NameNode.Value.ToUpper();
-            if (!Class2RequiredSize.ContainsKey(classNameUpper))
+            int offset = 0;
+            if (Class2Offset.ContainsKey(classNameUpper))
             {
-                return;
+                offset = Class2Offset[classNameUpper];
             }
-            
-            long size = 0;
-            long requiredSize = Class2RequiredSize[classNameUpper];
+
+            int size = 0;
             foreach (DeclarationNode attributeNode in node.AttributeNodes)
             {
+                if (attributeNode.Symbol is AttributeSymbol attributeSymbol)
+                {
+                    attributeSymbol.Offset = offset + size;
+                }
+                
                 if (attributeNode is VarArrayDeclarationNode varArrayDeclarationNode)
                 {
                     NodeValue arraySizeValue = varArrayDeclarationNode.ArraySizeValue;
                     if (arraySizeValue is IntValue intValue)
                     {
-                        size += (attributeNode.Symbol.BuiltinType == SymbolType.String ? 20 : 4) * intValue.Value;
+                        size += (attributeNode.Symbol.BuiltinType == SymbolType.String ? 20 : 4) * Convert.ToInt32(intValue.Value);
                     }
                     else
                     {
@@ -65,11 +126,26 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     size += (attributeNode.Symbol.BuiltinType == SymbolType.String ? 20 : 4);
                 }
             }
-
-            if (size != requiredSize)
+            
+            
+            if (node.Symbol is ClassSymbol classSymbol)
             {
-                node.Annotations.Add(new WrongClassSizeError(node.NameNode.Location, node.NameNode.Value, size, requiredSize));
+                classSymbol.Offset = offset;
+                classSymbol.Size = size;
+                classSymbol.AttributesCount = node.AttributeNodes.Count;
             }
+
+            
+
+            if (Class2RequiredSize.ContainsKey(classNameUpper))
+            {
+                long requiredSize = Class2RequiredSize[classNameUpper];
+                if (size != requiredSize)
+                {
+                    node.Annotations.Add(new WrongClassSizeError(node.NameNode.Location, node.NameNode.Value, size, requiredSize));
+                }
+            }
+            
         }
 
         protected override void VisitConstDefinition(ConstDefinitionNode node) { }
@@ -91,6 +167,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected override void VisitFunctionDefinition(FunctionDefinitionNode node)
         {
+            if (node.Symbol is FunctionSymbol functionSymbol)
+            {
+                functionSymbol.ParametersCount = node.ParameterNodes.Count;
+            }
+            
+            
             CheckStatementsForSingleExpressionHack(node.BodyNodes);
             base.VisitFunctionDefinition(node);
         }

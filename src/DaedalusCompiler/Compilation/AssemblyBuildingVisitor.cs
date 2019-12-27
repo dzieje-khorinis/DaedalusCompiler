@@ -101,14 +101,14 @@ namespace DaedalusCompiler.Compilation
             
         }
 
-        public List<AssemblyElement> VisitTree(AbstractSyntaxTree tree)
+        public Dictionary<string, Symbol>  VisitTree(AbstractSyntaxTree tree)
         {
             base.VisitTree(tree);
             if (_nestedAttributesFound)
             {
                 _symbolTable[HELPER_INSTANCE] = _helperInstance;
             }
-            return DefaultResult;
+            return _symbolTable;
         }
         
 

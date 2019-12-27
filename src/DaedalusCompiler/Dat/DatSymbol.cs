@@ -245,6 +245,7 @@ namespace DaedalusCompiler.Dat
         /// <summary>
         /// Loads DatSymbol from binary DAT formatted stream
         /// </summary>
+        /*
         public static DatSymbol Load(DatBinaryReader reader)
         {
             var symbol = new DatSymbol();
@@ -309,6 +310,7 @@ namespace DaedalusCompiler.Dat
 
             return symbol;
         }
+        */
 
         private static object[] GetContentIfExists(DatBinaryReader reader, DatSymbol symbol)
         {

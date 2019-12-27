@@ -188,7 +188,17 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             string varTypeName = varDeclarationNode.TypeNameCapitalized;
 
             BlockSymbol parentBlockSymbol = GetParentBlockSymbol(varDeclarationNode);
-            VarSymbol varSymbol = buildArray ? new VarArraySymbol(parentBlockSymbol, varTypeName, varName, varDeclarationNode) : new VarSymbol(parentBlockSymbol, varTypeName, varName, varDeclarationNode);
+            VarSymbol varSymbol;
+            if (parentBlockSymbol is ClassSymbol)
+            {
+                varSymbol = buildArray ? new AttributeArraySymbol(parentBlockSymbol, varTypeName, varName, varDeclarationNode) : new AttributeSymbol(parentBlockSymbol, varTypeName, varName, varDeclarationNode);
+            }
+            else
+            {
+                varSymbol = buildArray ? new VarArraySymbol(parentBlockSymbol, varTypeName, varName, varDeclarationNode) : new VarSymbol(parentBlockSymbol, varTypeName, varName, varDeclarationNode);
+
+            }
+            
             AddSymbol(varSymbol);
         }
         

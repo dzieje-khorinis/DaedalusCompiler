@@ -1,28 +1,30 @@
-﻿/*using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using DaedalusCompiler.Compilation;
+using DaedalusCompiler.Compilation.SemanticAnalysis;
 using DaedalusCompiler.Dat;
 
-namespace DaedalusCompiler.Compilation
+namespace DaedalusCompiler.Dat
 {
     public class DatBuilder
     {
         private int _currentAddress;
-        private readonly List<DatSymbol> _symbols;
-        private readonly List<BaseExecBlockContext> _execBlocks;
+        private string _datPath;
+        private readonly Dictionary<string, Symbol> _symbolTable;
 
-        public DatBuilder(AssemblyBuilder assemblyBuilder)
+        public DatBuilder(Dictionary<string, Symbol> symbolTable, string datPath)
         {
             _currentAddress = 0;
-            _symbols = assemblyBuilder.Symbols;
-            _execBlocks = assemblyBuilder.ExecBlocks;
+            _symbolTable = symbolTable;
+            _datPath = datPath;
         }
 
-        private Dictionary<string, int> GetLabelToAddressDict(BaseExecBlockContext execBlock)
+        private Dictionary<string, int> GetLabelToAddressDict(BlockSymbol blockSymbol)
         {
             Dictionary<string, int> labelToAddress = new Dictionary<string, int>();
 
-            foreach (var instruction in execBlock.Body)
+            foreach (var instruction in blockSymbol.Instructions)
             {
                 switch (instruction)
                 {
@@ -58,18 +60,27 @@ namespace DaedalusCompiler.Compilation
             return labelToAddress;
         }
 
-        private List<DatToken> GetTokens(BaseExecBlockContext execBlock)
+        private List<DatToken> GetTokens(BlockSymbol blockSymbol)
         {
             List<DatToken> tokens = new List<DatToken>();
-            Dictionary<string, int> labelToAddress = GetLabelToAddressDict(execBlock);
+            Dictionary<string, int> labelToAddress = GetLabelToAddressDict(blockSymbol);
 
-            foreach (var instruction in execBlock.Body)
+            char prefix = (char) 255;
+            string null_instance_name = $"{prefix}instance_help".ToUpper();
+            
+            foreach (AssemblyElement it in blockSymbol.Instructions)
             {
+                AssemblyElement instruction = it;
+                
                 if (instruction is AssemblyLabel)
                 {
                     continue;
                 }
 
+                if (instruction is PushNullInstance)
+                {
+                    instruction = new PushInstance(_symbolTable[null_instance_name]);
+                }
 
                 int? intParam = null;
                 byte? byteParam = null;
@@ -77,7 +88,7 @@ namespace DaedalusCompiler.Compilation
                 {
                     case Call call:
                     {
-                        intParam = call.Symbol.FirstTokenAddress;
+                        intParam = ((BlockSymbol)call.Symbol).FirstTokenAddress;
                         break;
                     }
                     case PushArrayVar pushArrVar:
@@ -114,7 +125,7 @@ namespace DaedalusCompiler.Compilation
                 {
                     tokenName = tokenName.Substring(0, tokenName.Length - "ToLabel".Length);
                 }
-
+                
                 DatTokenType datTokenType = Enum.Parse<DatTokenType>(tokenName);
                 tokens.Add(new DatToken {TokenType = datTokenType, IntParam = intParam, ByteParam = byteParam});
             }
@@ -125,8 +136,26 @@ namespace DaedalusCompiler.Compilation
         public DatFile GetDatFile()
         {
             List<DatToken> tokens = new List<DatToken>();
-            foreach (var execBlock in _execBlocks)
+            
+            List<Symbol> symbols = _symbolTable.Values.ToList();
+            symbols.Sort((x, y) => x.Index.CompareTo(y.SubIndex));
+            symbols.Sort((x, y) => x.Index.CompareTo(y.Index));
+            
+            foreach (Symbol symbol in symbols)
             {
+                if (symbol is FunctionSymbol functionSymbol && functionSymbol.IsExternal)
+                {
+                    continue;
+                }
+                
+                if (symbol is BlockSymbol blockSymbol)
+                {
+                    blockSymbol.FirstTokenAddress = _currentAddress;
+                    tokens.AddRange(GetTokens(blockSymbol));
+                }
+                
+                
+                /*
                 if (execBlock.GetSymbol().Flags.HasFlag(DatSymbolFlag.External))
                 {
                     continue;
@@ -150,14 +179,15 @@ namespace DaedalusCompiler.Compilation
                     }
                 }
                 tokens.AddRange(GetTokens(execBlock));
+                */
             }
 
             return new DatFile
             {
                 Version = '2',
-                Symbols = _symbols,
+                Symbols = symbols,
                 Tokens = tokens,
             };
         }
     }
-}*/
+}

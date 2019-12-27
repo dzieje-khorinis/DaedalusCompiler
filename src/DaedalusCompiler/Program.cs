@@ -116,7 +116,7 @@ namespace DaedalusCompiler
         static void AnalyzeDATFile(string path)
         {
             var dat = new DatFile();
-            dat.Load(path);
+            //dat.Load(path);
 
             //TODO: Move save to compilation process
             var fileName = Path.GetFileName(path);

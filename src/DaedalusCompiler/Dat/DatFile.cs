@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Runtime.InteropServices;
+using DaedalusCompiler.Compilation.SemanticAnalysis;
 
 namespace DaedalusCompiler.Dat
 {
@@ -13,13 +14,14 @@ namespace DaedalusCompiler.Dat
     {
         public char Version { get; set; }
 
-        public IEnumerable<DatSymbol> Symbols { get; set; }
+        public IEnumerable<Symbol> Symbols { get; set; }
 
         public IEnumerable<DatToken> Tokens { get; set; }
 
 
         public DatFile() {}
 
+        /*
         public DatFile(string filePath)
         {
             using (FileStream stream = File.Open(filePath, FileMode.Open))
@@ -27,7 +29,9 @@ namespace DaedalusCompiler.Dat
                 Load(stream);
             }
         }
+        */
 
+        /*
         private void Load(Stream stream)
         {
             var reader = new DatBinaryReader(stream);
@@ -52,6 +56,7 @@ namespace DaedalusCompiler.Dat
                 Load(stream);
             }
         }
+        */
 
         public void Save(string path)
         {
@@ -82,7 +87,8 @@ namespace DaedalusCompiler.Dat
             }
         }
 
-        private IEnumerable<DatSymbol> LoadSymbols(DatBinaryReader reader)
+        /*
+        private IEnumerable<Symbol> LoadSymbols(DatBinaryReader reader)
         {
             var symbolsCount = reader.ReadInt32();
             var symbolsOrder = new int[symbolsCount];
@@ -91,10 +97,10 @@ namespace DaedalusCompiler.Dat
                 symbolsOrder[i] = reader.ReadInt32();
             }
 
-            var symbols = new DatSymbol[symbolsCount];
+            var symbols = new Symbol[symbolsCount];
             for (int i = 0; i < symbolsCount; i++)
             {
-                symbols[i] = DatSymbol.Load(reader);
+                symbols[i] = Symbol.Load(reader);
             }
 
             return symbols;
@@ -113,8 +119,127 @@ namespace DaedalusCompiler.Dat
             }
             return result;
         }
+        */
 
-        private void SaveSymbols(DatBinaryWriter writer, IEnumerable<DatSymbol> symbols)
+        private void SaveSymbol(DatBinaryWriter writer, Symbol symbol)
+        {
+            NodeLocation location = symbol.Node.Location;
+            
+            writer.Write(Convert.ToUInt32(symbol.Path != null));
+            if (symbol.Path != null)
+            {
+                writer.Write(symbol.Path);
+            }
+
+            switch (symbol)
+            {
+                case FunctionSymbol functionSymbol:
+                    writer.Write((int)functionSymbol.BuiltinType);
+                    break;
+                case AttributeSymbol attributeSymbol:
+                    writer.Write(attributeSymbol.Offset);
+                    break;
+                case ClassSymbol classSymbol:
+                    writer.Write(classSymbol.Size);
+                    break;
+                default:
+                    writer.Write(0);
+                    break;
+            }
+            
+            uint bitField = 0u;
+            switch (symbol)
+            {
+                case FunctionSymbol functionSymbol:
+                    bitField |= (uint)functionSymbol.ParametersCount;
+                    break;
+                
+                case ClassSymbol classSymbol:
+                    bitField |= (uint)classSymbol.AttributesCount;
+                    break;
+                
+                case IArraySymbol arraySymbol:
+                    bitField |= (uint)arraySymbol.Size;
+                    break;
+                
+                case ExternalParameterSymbol _:
+                    break;
+                
+                default:
+                    bitField |= 1;
+                    break;
+            }
+
+            if (symbol is FunctionSymbol)
+            {
+                bitField |= ((uint)SymbolType.Func << 12);
+            }
+            else
+            {
+                bitField |= ((uint)symbol.BuiltinType << 12);
+            }
+            bitField |= ((uint)symbol.Flags << 16);
+            bitField |= 0x400000;
+            writer.Write(bitField);
+            
+            
+            writer.Write(location.FileIndex);
+            writer.Write(location.Line);
+            writer.Write(location.LinesCount);
+            writer.Write(location.Index);
+            writer.Write(location.CharsCount);
+
+            switch (symbol)
+            {
+                case ClassSymbol classSymbol:
+                    writer.Write(classSymbol.Offset);
+                    break;
+                
+                case BlockSymbol blockSymbol:
+                    writer.Write(blockSymbol.FirstTokenAddress);
+                    break;
+                
+                default:
+                    foreach (var obj in symbol.Content ?? Enumerable.Empty<object>())
+                    {
+                        switch (symbol.BuiltinType)
+                        {
+                            case SymbolType.String:
+                                writer.Write((string)obj);
+                                break;
+                            case SymbolType.Float:
+                                writer.Write(Convert.ToSingle(obj));
+                                break;
+                            default:
+                                writer.Write(Convert.ToInt32(obj));
+                                break;
+                        }
+                    }
+                    break;
+            }
+            
+            switch (symbol)
+            {
+                case InstanceSymbol instanceSymbol:
+                    writer.Write(instanceSymbol.BaseClassSymbol.Index);
+                    break;
+                case VarSymbol varSymbol:
+                    if (varSymbol.BuiltinType == SymbolType.Instance && varSymbol.ComplexType != null)
+                    {
+                        writer.Write(varSymbol.ComplexType.Index);
+                    }
+                    else
+                    {
+                        writer.Write(-1);
+                    }
+                    break;
+                default:
+                    writer.Write(-1);
+                    break;
+            }
+        }
+
+        private void SaveSymbols(DatBinaryWriter writer, IEnumerable<Symbol> symbols)
         {
             writer.Write(symbols.Count());
 
@@ -127,7 +252,7 @@ namespace DaedalusCompiler.Dat
 
             foreach (var symbol in symbols)
             {
-                symbol.Save(writer);
+                SaveSymbol(writer, symbol);
             }
         }
 

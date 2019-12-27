@@ -164,7 +164,7 @@ namespace DaedalusCompiler.Compilation
                 semanticErrorsCollectingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
 
                 int errorsCount = semanticErrorsCollectingVisitor.ErrorsCount;
-                int warningsCount =semanticErrorsCollectingVisitor.WarningsCount;
+                int warningsCount = semanticErrorsCollectingVisitor.WarningsCount;
                 string error = errorsCount == 1 ? "error" : "errors";
                 string warning = warningsCount == 1 ? "warning" : "warnings";
 
@@ -190,9 +190,30 @@ namespace DaedalusCompiler.Compilation
                 symbolUpdatingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
 
                 AssemblyBuildingVisitor assemblyBuildingVisitor = new AssemblyBuildingVisitor(semanticAnalyzer.SymbolTable);
-                assemblyBuildingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
+                Dictionary<string, Symbol> symbolTable = assemblyBuildingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
                 
                 Console.WriteLine($"parseTrees.Count: {parseTrees.Count}");
+                
+                
+                if (generateOutputUnits)
+                {
+                    _ouBuilder.SaveOutputUnits(_outputDirPath);
+                }
+                
+                Directory.CreateDirectory(_outputDirPath);
+                string datPath = Path.Combine(_outputDirPath, srcFileName + ".dat");
+                
+                DatBuilder datBuilder = new DatBuilder(semanticAnalyzer.SymbolTable, datPath);
+                DatFile datFile = datBuilder.GetDatFile();
+                datFile.Save(datPath);
+                
+                /*
+                DatBuilder datBuilder = new DatBuilder(this);
+                DatFile datFile = datBuilder.GetDatFile();
+                datFile.Save(path);
+                */
+                //_assemblyBuilder.SaveToDat(datPath);
+                
                 return true;
                 
                 

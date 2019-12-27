@@ -24,6 +24,11 @@ namespace DaedalusCompiler.Compilation
         protected override void VisitConstDefinition(ConstDefinitionNode node)
         {
             object value = GetValue(node.RightSideValue);
+
+            if (value is Symbol symbol)
+            {
+                value = symbol.Index;
+            }
             
             switch (node.Symbol.BuiltinType)
             {
