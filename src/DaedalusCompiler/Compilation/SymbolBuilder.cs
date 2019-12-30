@@ -1,4 +1,5 @@
-﻿using Antlr4.Runtime.Misc;
+﻿/*
+using Antlr4.Runtime.Misc;
 using DaedalusCompiler.Compilation.SemanticAnalysis;
 using DaedalusCompiler.Dat;
 
@@ -19,76 +20,76 @@ namespace DaedalusCompiler.Compilation
             {
                 Name = name,
                 ArrayLength = (uint) attributesCount,
-                BuiltinType = DatSymbolType.Class,
+                BuiltinType = SymbolType.Class,
                 ClassOffset = classOffset,
             };
         }
         
-        public static DatSymbol BuildClassConst(string varName, DatSymbolType builtinType, DatSymbol classSymbol)
+        public static DatSymbol BuildClassConst(string varName, SymbolType builtinType, DatSymbol classSymbol)
         {
             return new DatSymbol
             {
                 Name = $"{classSymbol.Name}.{varName}",
                 ArrayLength = 1,
                 BuiltinType = builtinType,
-                Flags = DatSymbolFlag.Classvar | DatSymbolFlag.Const,
+                Flags = SymbolFlag.Classvar | SymbolFlag.Const,
                 Parent = classSymbol,
             };
         }
         
-        public static DatSymbol BuildGlobalConst(string name, DatSymbolType builtinType)
+        public static DatSymbol BuildGlobalConst(string name, SymbolType builtinType)
         {
             return new DatSymbol
             {
                 Name = name,
                 ArrayLength = 1,
                 BuiltinType = builtinType,
-                Flags = DatSymbolFlag.Const,
+                Flags = SymbolFlag.Const,
             };
         }
         
-        public static DatSymbol BuildLocalConst(string name, DatSymbolType builtinType, DatSymbol functionSymbol)
+        public static DatSymbol BuildLocalConst(string name, SymbolType builtinType, DatSymbol functionSymbol)
         {
             return new DatSymbol
             {
                 Name = $"{functionSymbol.Name}.{name}",
                 ArrayLength = 1,
                 BuiltinType = builtinType,
-                Flags = DatSymbolFlag.Const,
+                Flags = SymbolFlag.Const,
             };
         }
         
-        public static DatSymbol BuildClassVar(string varName, DatSymbolType builtinType, DatSymbol classSymbol)
+        public static DatSymbol BuildClassVar(string varName, SymbolType builtinType, DatSymbol classSymbol)
         {
             return new DatSymbol
             {
                 Name = $"{classSymbol.Name}.{varName}",
                 ArrayLength = 1,
                 BuiltinType = builtinType,
-                Flags = DatSymbolFlag.Classvar,
+                Flags = SymbolFlag.Classvar,
                 Parent = classSymbol,
             };
         }
         
-        public static DatSymbol BuildGlobalVar(string name, DatSymbolType builtinType)
+        public static DatSymbol BuildGlobalVar(string name, SymbolType builtinType)
         {
             return new DatSymbol
             {
                 Name = name,
                 ArrayLength = 1,
                 BuiltinType = builtinType,
-                Content = builtinType == DatSymbolType.String ? new object[] {string.Empty} : new object[] {0},
+                Content = builtinType == SymbolType.String ? new object[] {string.Empty} : new object[] {0},
             };
         }
         
-        public static DatSymbol BuildLocalVar(string name, DatSymbolType builtinType, DatSymbol functionSymbol)
+        public static DatSymbol BuildLocalVar(string name, SymbolType builtinType, DatSymbol functionSymbol)
         {
             return new DatSymbol
             {
                 Name = $"{functionSymbol.Name}.{name}",
                 ArrayLength = 1,
                 BuiltinType = builtinType,
-                Content = builtinType == DatSymbolType.String ? new object[] {string.Empty} : new object[] {0},
+                Content = builtinType == SymbolType.String ? new object[] {string.Empty} : new object[] {0},
             };
         }
         
@@ -96,18 +97,18 @@ namespace DaedalusCompiler.Compilation
         
         
         
-        public static DatSymbol BuildParameter(string name, DatSymbolType builtinType, DatSymbol functionSymbol)
+        public static DatSymbol BuildParameter(string name, SymbolType builtinType, DatSymbol functionSymbol)
         {
             return new DatSymbol
             {
                 Name = $"{functionSymbol.Name}.{name}",
                 ArrayLength = 1,
                 BuiltinType = builtinType,
-                ParametersCount = (uint) ((builtinType == DatSymbolType.Func) ? 1 : 0),
+                ParametersCount = (uint) ((builtinType == SymbolType.Func) ? 1 : 0),
             };
         }
         
-        public static DatSymbol BuildExternalParameter(string name, DatSymbolType builtinType, DatSymbol functionSymbol)
+        public static DatSymbol BuildExternalParameter(string name, SymbolType builtinType, DatSymbol functionSymbol)
         {
             return new DatSymbol
             {
@@ -118,10 +119,8 @@ namespace DaedalusCompiler.Compilation
         
         
         
-        
-        
-        /*
-        public static DatSymbol BuildArrOfVariables(string name, DatSymbolType type, uint size,
+
+        public static DatSymbol BuildArrOfVariables(string name, SymbolType type, uint size,
             NodeLocation location = null)
         {
             object[] content = new object[size];
@@ -129,15 +128,15 @@ namespace DaedalusCompiler.Compilation
             {
                 switch (type)
                 {
-                    case DatSymbolType.Int:
+                    case SymbolType.Int:
                         content[i] = 0;
                         break;
                     
-                    case DatSymbolType.Float:
+                    case SymbolType.Float:
                         content[i] = 0.0;
                         break;
                     
-                    case DatSymbolType.String:
+                    case SymbolType.String:
                         content[i] = string.Empty;
                         break;
                 }              
@@ -157,22 +156,22 @@ namespace DaedalusCompiler.Compilation
 
             return symbol;
         }
-        */
+        
         
         public static DatSymbol BuildStringConst(string name, object value)
         {
             return new DatSymbol
             {
                 Name = name,
-                BuiltinType = DatSymbolType.String,
+                BuiltinType = SymbolType.String,
                 ArrayLength = 1,
                 Content = new[] {value},
-                Flags = DatSymbolFlag.Const,
+                Flags = SymbolFlag.Const,
             };
         }
         
-        /*
-        public static DatSymbol BuildArrOfConst(string name, DatSymbolType type, object[] values,
+        
+        public static DatSymbol BuildArrOfConst(string name, SymbolType type, object[] values,
             NodeLocation location = null)
         {
             var symbol = new DatSymbol
@@ -181,32 +180,32 @@ namespace DaedalusCompiler.Compilation
                 BuiltinType = type,
                 ArrayLength = (uint) values.Length,
                 Content = values,
-                Flags = DatSymbolFlag.Const,
+                Flags = SymbolFlag.Const,
                 Location = location,
                 ParentIndex = -1,
             };
 
             return symbol;
         }
-        */
+        
 
-        public static DatSymbol BuildFunction(string name, int parametersCount, DatSymbolType returnType)
+        public static DatSymbol BuildFunction(string name, int parametersCount, SymbolType returnType)
         {
-            if (returnType == DatSymbolType.Class)
+            if (returnType == SymbolType.Class)
             {
-                returnType = DatSymbolType.Instance;
+                returnType = SymbolType.Instance;
             }
             
-            DatSymbolFlag flags = DatSymbolFlag.Const;
-            if (returnType != DatSymbolType.Void)
+            SymbolFlag flags = SymbolFlag.Const;
+            if (returnType != SymbolType.Void)
             {
-                flags |= DatSymbolFlag.Return;
+                flags |= SymbolFlag.Return;
             }
             
             return new DatSymbol
             {
                 Name = name,
-                BuiltinType = DatSymbolType.Func,
+                BuiltinType = SymbolType.Func,
                 Flags = flags,
                 FirstTokenAddress = -1,
                 ReturnType = returnType,
@@ -219,7 +218,7 @@ namespace DaedalusCompiler.Compilation
             return new DatSymbol
             {
                 Name = name,
-                BuiltinType = DatSymbolType.Prototype,
+                BuiltinType = SymbolType.Prototype,
                 FirstTokenAddress = -1,
             };
         }
@@ -229,9 +228,10 @@ namespace DaedalusCompiler.Compilation
             return new DatSymbol
             {
                 Name = name,
-                BuiltinType = DatSymbolType.Instance,
+                BuiltinType = SymbolType.Instance,
                 FirstTokenAddress = -1,
             };
         }
     }
 }
+*/

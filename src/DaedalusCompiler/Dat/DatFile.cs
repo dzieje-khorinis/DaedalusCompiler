@@ -14,14 +14,14 @@ namespace DaedalusCompiler.Dat
     {
         public char Version { get; set; }
 
-        public IEnumerable<Symbol> Symbols { get; set; }
+        public List<DatSymbol> DatSymbols { get; set; }
 
-        public IEnumerable<DatToken> Tokens { get; set; }
+        public List<DatToken> DatTokens { get; set; }
 
 
         public DatFile() {}
 
-        /*
+        
         public DatFile(string filePath)
         {
             using (FileStream stream = File.Open(filePath, FileMode.Open))
@@ -29,16 +29,16 @@ namespace DaedalusCompiler.Dat
                 Load(stream);
             }
         }
-        */
+        
 
-        /*
+        
         private void Load(Stream stream)
         {
             var reader = new DatBinaryReader(stream);
 
             Version = reader.ReadChar();
-            Symbols = LoadSymbols(reader);
-            Tokens = LoadTokens(reader);
+            DatSymbols = LoadDatSymbols(reader);
+            DatTokens = LoadDatTokens(reader);
         }
         
         public void Load(string path)
@@ -56,7 +56,7 @@ namespace DaedalusCompiler.Dat
                 Load(stream);
             }
         }
-        */
+        
 
         public void Save(string path)
         {
@@ -71,8 +71,8 @@ namespace DaedalusCompiler.Dat
         private void writeToStreamProgram(DatBinaryWriter writer)
         {
             writer.Write(Version);
-            SaveSymbols(writer, Symbols);
-            SaveTokens(writer, Tokens);
+            SaveDatSymbols(writer, DatSymbols);
+            SaveDatTokens(writer, DatTokens);
         }
 
         public byte[] getBinary()
@@ -87,8 +87,8 @@ namespace DaedalusCompiler.Dat
             }
         }
 
-        /*
-        private IEnumerable<Symbol> LoadSymbols(DatBinaryReader reader)
+        
+        private List<DatSymbol> LoadDatSymbols(DatBinaryReader reader)
         {
             var symbolsCount = reader.ReadInt32();
             var symbolsOrder = new int[symbolsCount];
@@ -97,16 +97,15 @@ namespace DaedalusCompiler.Dat
                 symbolsOrder[i] = reader.ReadInt32();
             }
 
-            var symbols = new Symbol[symbolsCount];
+            List<DatSymbol> symbols = new List<DatSymbol>();
             for (int i = 0; i < symbolsCount; i++)
             {
-                symbols[i] = Symbol.Load(reader);
+                symbols.Add(new DatSymbol(reader));
             }
-
             return symbols;
         }
 
-        private IEnumerable<DatToken> LoadTokens(DatBinaryReader reader)
+        private List<DatToken> LoadDatTokens(DatBinaryReader reader)
         {
             int stackLength = reader.ReadInt32();
 
@@ -119,8 +118,9 @@ namespace DaedalusCompiler.Dat
             }
             return result;
         }
-        */
+        
 
+        /*
         private void SaveSymbol(DatBinaryWriter writer, Symbol symbol)
         {
             NodeLocation location = symbol.Node.Location;
@@ -238,30 +238,31 @@ namespace DaedalusCompiler.Dat
                     break;
             }
         }
+        */
 
-        private void SaveSymbols(DatBinaryWriter writer, IEnumerable<Symbol> symbols)
+        private void SaveDatSymbols(DatBinaryWriter writer, List<DatSymbol> symbols)
         {
-            writer.Write(symbols.Count());
+            writer.Write(symbols.Count);
 
-            var symbolsOrder = symbols
+            List<int> nameOrderedSymbols = symbols
                 .Select((symbol, id) => new { Id = id, SymbolName = symbol.Name })
                 .OrderBy(s => s.SymbolName, StringComparer.OrdinalIgnoreCase)
                 .Select(s => s.Id)
                 .ToList();
-            symbolsOrder.ForEach(id => writer.Write(id));
+            nameOrderedSymbols.ForEach(writer.Write);
 
-            foreach (var symbol in symbols)
+            foreach (DatSymbol symbol in symbols)
             {
-                SaveSymbol(writer, symbol);
+                symbol.Save(writer);
             }
         }
 
-        private void SaveTokens(DatBinaryWriter writer, IEnumerable<DatToken> tokens)
+        private void SaveDatTokens(DatBinaryWriter writer, List<DatToken> tokens)
         {
-            var stackLength = Tokens.Select(x => x.Size).Sum();
+            int stackLength = tokens.Select(x => x.Size).Sum();
             writer.Write(stackLength);
 
-            foreach(var token in Tokens)
+            foreach(var token in tokens)
             {
                 token.Save(writer);
             }

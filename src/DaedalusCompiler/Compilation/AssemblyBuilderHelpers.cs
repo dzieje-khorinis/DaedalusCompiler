@@ -1,37 +1,38 @@
 ﻿using System;
+using DaedalusCompiler.Compilation.SemanticAnalysis;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
 {
     public static class AssemblyBuilderHelpers
     {
-        public static ParamLessInstruction GetAssignInstructionForDatSymbolType(DatSymbolType type)
+        public static ParamLessInstruction GetAssignInstructionForSymbolType(SymbolType type)
         {
             ParamLessInstruction instruction = new ParamLessInstruction();
             switch (type)
             {
-                case (DatSymbolType.Int):
+                case (SymbolType.Int):
                 {
                     instruction = new Assign();
                     break;
                 }
-                case (DatSymbolType.String):
+                case (SymbolType.String):
                 {
                     instruction = new AssignString(); //TODO when to use AssignStringRef?
                     break;
                 }
-                case (DatSymbolType.Func):
+                case (SymbolType.Func):
                 {
                     instruction = new AssignFunc();
                     break;
                 }
-                case (DatSymbolType.Float):
+                case (SymbolType.Float):
                 {
                     instruction = new AssignFloat();
                     break;
                 }
-                case (DatSymbolType.Instance): // TODO check if it happens
-                case (DatSymbolType.Class):
+                case (SymbolType.Instance): // TODO check if it happens
+                case (SymbolType.Class):
                 {
                     instruction = new AssignInstance();
                     break;
@@ -44,14 +45,14 @@ namespace DaedalusCompiler.Compilation
         public static ParamLessInstruction GetInstructionForOperator(
             string operatorVal,
             bool twoArg = true,
-            DatSymbolType leftSideType = DatSymbolType.Void)
+            SymbolType leftSideType = SymbolType.Void)
         {
             ParamLessInstruction instruction = new ParamLessInstruction();
 
             switch (operatorVal)
             {
                 case "=":
-                    instruction = GetAssignInstructionForDatSymbolType(leftSideType);
+                    instruction = GetAssignInstructionForSymbolType(leftSideType);
                     break;
                 case "+=":
                     instruction = new AssignAdd();
