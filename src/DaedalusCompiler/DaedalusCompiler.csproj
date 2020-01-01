@@ -55,6 +55,26 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="AntlrOutput\" />
-    <Folder Include="output" />
+  </ItemGroup>
+  <ItemGroup>
+    <_UnmanagedRegistrationCache Remove="obj\DaedalusCompiler.csproj.UnmanagedRegistration.cache" />
+  </ItemGroup>
+  <ItemGroup>
+    <_ResolveComReferenceCache Remove="obj\Debug\netcoreapp2.1\DaedalusCompiler.csproj.ResolveComReference.cache" />
+  </ItemGroup>
+  <ItemGroup>
+    <IntermediateAssembly Remove="obj\Debug\netcoreapp2.1\DaedalusCompiler.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <_DebugSymbolsIntermediatePath Remove="obj\Debug\netcoreapp2.1\DaedalusCompiler.pdb" />
+  </ItemGroup>
+  <ItemGroup>
+    <_DeploymentManifestEntryPoint Remove="obj\Debug\netcoreapp2.1\DaedalusCompiler.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationManifest Remove="obj\Debug\netcoreapp2.1\DaedalusCompiler.dll.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <DeployManifest Remove="obj\Debug\netcoreapp2.1\DaedalusCompiler.application" />
   </ItemGroup>
 </Project>

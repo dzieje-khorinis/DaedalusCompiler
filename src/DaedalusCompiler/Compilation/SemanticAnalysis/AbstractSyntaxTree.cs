@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Antlr4.Runtime.Tree;
-using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
@@ -68,23 +67,17 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class AbstractSyntaxTree
     {
-        public List<FileNode> RootNodes;
+        public readonly List<FileNode> RootNodes;
 
-        public readonly List<InheritanceParentReferenceNode> InheritanceReferenceNodes;
         public readonly List<ReferenceNode> ReferenceNodes;
-        public readonly List<ConstDefinitionNode> ConstDefinitionNodes;
-        public readonly List<IArrayDeclarationNode> ArrayDeclarationNodes;
 
-        public List<string> FilesPaths;
-        public List<string[]> FilesContents;
-        public List<HashSet<string>> SuppressedWarningCodes;
+        public readonly List<string> FilesPaths;
+        public readonly List<string[]> FilesContents;
+        public readonly List<HashSet<string>> SuppressedWarningCodes;
         
         public AbstractSyntaxTree(List<IParseTree> parseTrees, int externalFilesCount, List<string> filesPaths, List<string[]> filesContents, List<HashSet<string>> suppressedWarningCodes)
         {
             RootNodes = new List<FileNode>();
-            ConstDefinitionNodes = new List<ConstDefinitionNode>();
-            ArrayDeclarationNodes = new List<IArrayDeclarationNode>();
-            InheritanceReferenceNodes = new List<InheritanceParentReferenceNode>();
             ReferenceNodes = new List<ReferenceNode>();
 
             FilesPaths = filesPaths;
@@ -97,9 +90,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 bool isExternal = index < externalFilesCount;
                 ParseTreeVisitor visitor = new ParseTreeVisitor(index, isExternal);
                 RootNodes.Add((FileNode) visitor.Visit(parseTree));
-                ConstDefinitionNodes.AddRange(visitor.ConstDefinitionNodes);
-                ArrayDeclarationNodes.AddRange(visitor.ArrayDeclarationNodes);
-                InheritanceReferenceNodes.AddRange(visitor.InheritanceReferenceNodes);
                 ReferenceNodes.AddRange(visitor.ReferenceNodes);
                 index++;
             }
@@ -111,10 +101,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
             for (int i = 0; i < RootNodes.Count; ++i)
             {
-                //RootNodes[i].Index = i;
-                //RootNodes[i].Path = FilesPaths[i];
                 RootNodes[i].Content = FilesContents[i];
-                //RootNodes[i].SuppressedWarningCodes = SuppressedWarningCodes[i];
             }
         }
     }
@@ -122,12 +109,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
  
     public abstract class ASTNode
     {
-        public NodeLocation Location;
+        public readonly NodeLocation Location;
 
         public readonly List<NodeAnnotation> Annotations; //warnings & errors
         public ASTNode ParentNode { get; set; }
-        
-        //public ASTNode ParentBlockNode { get; set; }
 
         protected ASTNode(NodeLocation location)
         {
@@ -187,7 +172,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         protected DeclarationNode(NodeLocation location, string typeName, NameNode nameNode) : base(location)
         {
-            TypeNameCapitalized = typeName.First().ToString().ToUpper() + typeName.Substring(1).ToLower(); //capitalized
+            TypeNameCapitalized = typeName.First().ToString().ToUpper() + typeName.Substring(1).ToLower();
             NameNode = nameNode;
             NameNode.ParentNode = this;
             Symbol = null;
@@ -215,7 +200,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public abstract class SubclassNode : InheritanceNode
     {
-        public InheritanceParentReferenceNode InheritanceParentReferenceNode;
+        public readonly InheritanceParentReferenceNode InheritanceParentReferenceNode;
         protected SubclassNode(NodeLocation location, string type, NameNode nameNode, InheritanceParentReferenceNode inheritanceParentReferenceNode) : base(location, type, nameNode)
         {
             inheritanceParentReferenceNode.ParentNode = this;
@@ -238,16 +223,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     
     public class FileNode : ASTNode
     {
-        public List<DeclarationNode> DefinitionNodes;
+        public readonly List<DeclarationNode> DefinitionNodes;
         public bool IsExternal;
-
-
-        //public int Index;
-        //public string Path;
+        
         public string[] Content;
-        //public string[] SuppressedWarningCodes;
-        
-        
+
         public FileNode(NodeLocation location, List<DeclarationNode> definitionNodes, bool isExternal = false) :
             base(location)
         {
@@ -263,8 +243,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     
     public class ConditionalNode : StatementNode
     {
-        public ExpressionNode ConditionNode;
-        public List<StatementNode> BodyNodes;
+        public readonly ExpressionNode ConditionNode;
+        public readonly List<StatementNode> BodyNodes;
 
         public ConditionalNode(NodeLocation location, ExpressionNode conditionNode, List<StatementNode> bodyNodes) :
             base(location)
@@ -284,7 +264,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public readonly List<ParameterDeclarationNode> ParameterNodes;
         public readonly List<StatementNode> BodyNodes;
-        public bool IsExternal;
+        public readonly bool IsExternal;
 
         public FunctionDefinitionNode(NodeLocation location, NameNode typeNameNode, NameNode nameNode,
             List<ParameterDeclarationNode> parameterNodes, List<StatementNode> bodyNodes, bool isExternal) : base(location, typeNameNode, nameNode)
@@ -308,8 +288,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public NodeLocation OperatorLocation;
         
-        public ReferenceNode LeftSideNode;
-        public ExpressionNode RightSideNode;
+        public readonly ReferenceNode LeftSideNode;
+        public readonly ExpressionNode RightSideNode;
 
         public AssignmentNode(NodeLocation location, NodeLocation operatorLocation, ReferenceNode leftSideNode, ExpressionNode rightSideNode) :
             base(location)
@@ -325,10 +305,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class CompoundAssignmentNode : StatementNode
     {
-        public CompoundAssignmentOperator Operator;
-        public NodeLocation OperatorLocation;
-        public ReferenceNode LeftSideNode;
-        public ExpressionNode RightSideNode;
+        public readonly CompoundAssignmentOperator Operator;
+        public readonly NodeLocation OperatorLocation;
+        public readonly ReferenceNode LeftSideNode;
+        public readonly ExpressionNode RightSideNode;
 
         public CompoundAssignmentNode(NodeLocation location, CompoundAssignmentOperator @operator, NodeLocation operatorLocation, ReferenceNode leftSideNode,
             ExpressionNode rightSideNode) : base(location)
@@ -345,9 +325,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     
     public class UnaryExpressionNode : ExpressionNode
     {
-        public UnaryOperator Operator;
-        public NodeLocation OperatorLocation;
-        public ExpressionNode ExpressionNode;
+        public readonly UnaryOperator Operator;
+        public readonly NodeLocation OperatorLocation;
+        public readonly ExpressionNode ExpressionNode;
 
         public bool DoGenerateOperatorInstruction;
 
@@ -366,10 +346,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class BinaryExpressionNode : ExpressionNode
     {
-        public BinaryOperator Operator;
-        public NodeLocation OperatorLocation;
-        public ExpressionNode LeftSideNode;
-        public ExpressionNode RightSideNode;
+        public readonly BinaryOperator Operator;
+        public readonly NodeLocation OperatorLocation;
+        public readonly ExpressionNode LeftSideNode;
+        public readonly ExpressionNode RightSideNode;
 
         public BinaryExpressionNode(NodeLocation location, BinaryOperator @operator, NodeLocation operatorLocation, ExpressionNode leftSideNode,
             ExpressionNode rightSideNode) : base(location)
@@ -403,7 +383,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class PrototypeDefinitionNode : SubclassNode
     {
-        public List<StatementNode> BodyNodes;
+        public readonly List<StatementNode> BodyNodes;
 
         public PrototypeDefinitionNode(NodeLocation location, NameNode nameNode, InheritanceParentReferenceNode inheritanceParentReferenceNode,
             List<StatementNode> bodyNodes) : base(location, "prototype", nameNode, inheritanceParentReferenceNode)
@@ -418,8 +398,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class InstanceDefinitionNode : SubclassNode
     {
-        public List<StatementNode> BodyNodes;
-        public bool DefinedWithoutBody;
+        public readonly List<StatementNode> BodyNodes;
+        public readonly bool DefinedWithoutBody;
 
         public InstanceDefinitionNode(NodeLocation location, NameNode nameNode, InheritanceParentReferenceNode inheritanceParentReferenceNode,
             List<StatementNode> bodyNodes, bool definedWithoutBody) : base(location, "instance", nameNode, inheritanceParentReferenceNode)
@@ -436,7 +416,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     
     public class ConstDefinitionNode : VarDeclarationNode
     {
-        public ExpressionNode RightSideNode;
+        public readonly ExpressionNode RightSideNode;
         public NodeValue RightSideValue;
 
         public ConstDefinitionNode(NodeLocation location, NameNode typeNameNode, NameNode nameNode,
@@ -548,8 +528,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class FunctionCallNode : ExpressionNode
     {
-        public ReferenceNode FunctionReferenceNode;
-        public List<ExpressionNode> ArgumentNodes;
+        public readonly ReferenceNode FunctionReferenceNode;
+        public readonly List<ExpressionNode> ArgumentNodes;
 
         public FunctionCallNode(NodeLocation location, ReferenceNode functionReferenceNode,
             List<ExpressionNode> argumentNodes) : base(location)
@@ -568,9 +548,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class IfStatementNode : StatementNode
     {
-        public ConditionalNode IfNode;
-        public List<ConditionalNode> ElseIfNodes;
-        public List<StatementNode> ElseNodeBodyNodes;
+        public readonly ConditionalNode IfNode;
+        public readonly List<ConditionalNode> ElseIfNodes;
+        public readonly List<StatementNode> ElseNodeBodyNodes;
 
         public IfStatementNode(NodeLocation location, ConditionalNode ifNode,
             List<ConditionalNode> elseIfNodes, List<StatementNode> elseNodeBodyNodes) : base(location)
@@ -588,7 +568,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     node.ParentNode = this;
                 }
             }
-            
             
             IfNode = ifNode;
             ElseIfNodes = elseIfNodes;
@@ -608,7 +587,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class IntegerLiteralNode : ValueNode
     {
         public long Value;
-        public bool EvaluatedCorrectly;
+        public readonly bool EvaluatedCorrectly;
 
         public bool DoCastToFloat;
 
@@ -632,7 +611,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class StringLiteralNode : ValueNode
     {
-        public string Value;
+        public readonly string Value;
         public StringConstSymbol Symbol; //filled in SymbolTableCreationVisitor
 
         public StringLiteralNode(NodeLocation location, string value) : base(location)
@@ -663,7 +642,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     
     class AttributeNode : ReferencePartNode
     {
-        public string Name;
+        public readonly string Name;
         public Symbol Symbol;
         public ArrayIndexNode ArrayIndexNode;
         
@@ -676,7 +655,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class ArrayIndexNode : ReferencePartNode
     {
-        public ExpressionNode ExpressionNode;
+        public readonly ExpressionNode ExpressionNode;
         public NodeValue Value;
         public ArrayIndexNode(ExpressionNode expressionNode, NodeLocation location) : base(location)
         {
@@ -690,9 +669,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class ReferenceNode : ExpressionNode
     {
         public string Name;
-        public List<ReferencePartNode> PartNodes;
+        public readonly List<ReferencePartNode> PartNodes;
         
-        public Symbol Symbol; // TODO filled in ???
+        public Symbol Symbol; // TODO when should it be filled?
         public Symbol BaseSymbol; // if for example we have a.b.c, base symbol is a, and symbol is c
         public ArrayIndexNode IndexNode;
 
@@ -713,7 +692,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
              When CastToInt = true, this node should produce PushInt instruction.
              It should happen in following situations:
               - assignment/return/parameter of type func
-              - assignment/return/parameter of type int && symbol's builtintype isn't int
+              - assignment/return/parameter of type int && symbol's builtin type isn't int
               - inside conditional
               */
 
@@ -740,7 +719,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class NameNode : ASTNode
     {
-        public string Value;
+        public readonly string Value;
 
         public NameNode(NodeLocation location, string value) : base(location)
         {
@@ -752,7 +731,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     /// <remarks>Helper nodes used only during AST construction. These nodes don't appear in the result AST.</remarks>
     public abstract class TemporaryNode : ASTNode
     {
-        public List<DeclarationNode> Nodes;
+        public readonly List<DeclarationNode> Nodes;
 
         protected TemporaryNode(NodeLocation location, List<DeclarationNode> nodes) : base(location)
         {

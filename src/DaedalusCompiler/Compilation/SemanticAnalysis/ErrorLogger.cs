@@ -13,32 +13,27 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             Console.WriteLine(message);
         }
-        
-        public void Log(string message)
-        {
-            Console.Write(message);
-        }
     }
 
     public class StringBufforErrorLogger : ErrorLogger
     {   
-        private string _buffor = "";
+        private string _buffer = "";
 
         public override void LogLine(string message)
         {
-            if (_buffor == null)
+            if (_buffer == null)
             {
-                _buffor = message;
+                _buffer = message;
             }
             else
             {
-                _buffor = $"{_buffor}{Environment.NewLine}{message}";
+                _buffer = $"{_buffer}{Environment.NewLine}{message}";
             }
         }
 
-        public string GetBuffor()
+        public string GetBuffer()
         {
-            return _buffor;
+            return _buffer;
         }
     }
 }

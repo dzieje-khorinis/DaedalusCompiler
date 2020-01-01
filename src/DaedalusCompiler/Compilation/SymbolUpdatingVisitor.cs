@@ -21,12 +21,6 @@ namespace DaedalusCompiler.Compilation
             throw new Exception();
         }
 
-
-        protected override void VisitParameterDeclaration(ParameterDeclarationNode node)
-        {
-            base.VisitParameterDeclaration(node);
-        }
-
         protected override void VisitConstDefinition(ConstDefinitionNode node)
         {
             object value = GetValue(node.RightSideValue);

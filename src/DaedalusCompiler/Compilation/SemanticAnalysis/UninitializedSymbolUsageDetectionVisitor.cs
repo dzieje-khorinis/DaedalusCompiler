@@ -1,17 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Antlr4.Runtime.Misc;
-
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
     class ReferenceData
     {
-        public bool HasDotInPath;
-        public string PreDotPath; // if '.' apprears in path, this will only contain part before '.'
-        public string BaseName; // if '[' appears in PreDotPath, this will only contain part before '['
-        public long Index; 
+        public readonly bool HasDotInPath;
+        public readonly string PreDotPath; // if '.' apprears in path, this will only contain part before '.'
+        public readonly string BaseName; // if '[' appears in PreDotPath, this will only contain part before '['
+        public readonly long Index; 
         public ASTNode Node;
 
         public ReferenceData(ASTNode node, string fullPath, long index = -1)
@@ -26,7 +24,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
 
-    
     public class UninitializedSymbolUsageDetectionVisitor : AbstractSyntaxTreeBaseVisitor
     {
         private readonly Dictionary<SubclassNode, HashSet<string>> _node2InitializedAttributesPaths;
@@ -75,8 +72,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         private ReferenceData GetDataFromReferenceNode(ReferenceNode referenceNode)
         {
-            
-            
             string path = referenceNode.Name;
             long index = -1;
 
@@ -178,7 +173,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Visit(node.LeftSideNode);
         }
         
-        //maybe collect float expressions?
 
         protected override void VisitReference(ReferenceNode referenceNode)
         {
@@ -250,7 +244,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             {
                 Visit(symbol.InheritanceParentSymbol.Node);
             }
-            
 
             _initializedAttributesPaths = new HashSet<string>();
             _initializedLocalsPaths = new HashSet<string>();

@@ -1,6 +1,5 @@
-using System;
 using System.Collections.Generic;
-using System.Net.Http.Headers;
+
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
@@ -25,9 +24,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 Resolve(subclassSymbol);    
             }
         }
-
-
-        public Symbol GetSymbol(string symbolName)
+        
+        private Symbol GetSymbol(string symbolName)
         {
             symbolName = symbolName.ToUpper();
             if (!_symbolTable.ContainsKey(symbolName))
@@ -88,13 +86,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             {
                 DeclarationNode declarationNode = (DeclarationNode) parentReferenceNode.Symbol.Node;
                 declarationNode.Usages.Add(parentReferenceNode);
-                /*
-                if (parentReferenceNode.Name != parentReferenceNode.Symbol.Name)
-                {
-                    
-                    parentReferenceNode.Annotations.Add(new NamesNotMatchingCaseWiseWarning(declarationNode.NameNode.Location, parentReferenceNode.Symbol.Name, parentReferenceNode.Name));
-                }
-                */
             }
             
             return subclassSymbol.BaseClassSymbol;

@@ -67,7 +67,7 @@ namespace DaedalusCompiler.Compilation
             switch (whileLabelType)
             {
                 case WhileLabelType.Start:
-                    label = $"while";
+                    label = "while";
                     break;
                 case WhileLabelType.End:
                     label = "endwhile";
@@ -101,7 +101,7 @@ namespace DaedalusCompiler.Compilation
             
         }
 
-        public Dictionary<string, Symbol>  VisitTree(AbstractSyntaxTree tree)
+        public new Dictionary<string, Symbol> VisitTree(AbstractSyntaxTree tree)
         {
             base.VisitTree(tree);
             if (_nestedAttributesFound)
@@ -190,11 +190,6 @@ namespace DaedalusCompiler.Compilation
             }
             instructions.Add(new Ret());
             return instructions;
-        }
-
-        protected override List<AssemblyElement> VisitConditional(ConditionalNode node)
-        {
-            return base.VisitConditional(node);
         }
 
         protected override List<AssemblyElement> VisitIfStatement(IfStatementNode node)
@@ -331,7 +326,6 @@ namespace DaedalusCompiler.Compilation
                 instructions.Add(new PushVar(referenceNode.BaseSymbol));
                 instructions.Add(new Assign());
                 
-                //foreach (ReferencePartNode partNode in referenceNode.PartNodes)
                 for (int i = 0; i < referenceNode.PartNodes.Count - 1; ++i)
                 {
                     ReferencePartNode partNode = referenceNode.PartNodes[i];
@@ -356,46 +350,10 @@ namespace DaedalusCompiler.Compilation
                                     instructions.Add(new PushArrayVar(attributeNode.Symbol, index));
                                 }
                                 instructions.Add(new Assign());
-
-                                
                             }
-
-                            
                             break;
                     }
                 }
-
-                /*
-                _helperInstance
-                 TODO
-                 Person1.enemy = Person2;
-                 Person1.enemy.age = 5; //also changes Person2's age
-                 
-                 //PushInt 
-                //PushVar TMPINST
-                //SetInstance Person1
-                //PushVar Human.enemy
-                //Assign
-                //SetInstance TMPINST
-                //PushVar Human.age
-                //Assign
-                
-                
-                Person1.pet.owner.age = 20;
-                // PushInt 20
-                PushVar TMPINST
-                SetInstance Person1
-                PushVar Human.pet
-                Assign
-                PushVar TMPINST
-                SetInstance TMPINST
-                PushVar Pet.owner
-                Assign
-                SetInstance TMPINST
-                PushVar Human.age
-                Assign()
-                 */
-                
             }
 
             index = -1;
@@ -403,8 +361,7 @@ namespace DaedalusCompiler.Compilation
             {
                 index = (int) ((IntValue) referenceNode.IndexNode.Value).Value;
             }
-            
-            
+
             if (referenceNode.BaseSymbol != referenceNode.Symbol)
             {
                 if (referenceNode.DoesHaveNestedAttributes)
@@ -435,71 +392,6 @@ namespace DaedalusCompiler.Compilation
             }
             
             return instructions;
-            
-            
-
-            /*
-             
-             // if ref inside if condition
-             //ReferenceNode.CastTo Int
-             
-             // Cast to INT if:
-             // - assignment/return/parameter of type func
-             // - assignment/return/parameter of type int && symbol's builtintype isn't int
-             // - inside if condition
-             
-             
-        public AssemblyElement GetProperPushInstruction(DatSymbol symbol, int arrIndex)
-        {
-            BaseExecBlockContext activeBlock = ActiveExecBlock;
-            
-            if (arrIndex > 0)
-            {
-                return new PushArrayVar(symbol, arrIndex);
-            }
-            
-            if (IsInsideArgList)
-            {
-                return PushSymbol(symbol, FuncCallCtx.GetParameterType());
-            }
-            
-            if (IsInsideReturnStatement && activeBlock != null)
-            {
-                return PushSymbol(symbol, activeBlock.GetSymbol().ReturnType);
-            }
-            
-            if (IsInsideAssignment)
-            {
-                return PushSymbol(symbol, AssignmentType);
-            }
-            
-            if (IsInsideIfCondition)
-            {
-                return PushSymbol(symbol, DatSymbolType.Int);
-            }
-
-            return PushSymbol(symbol);
-        }
-        
-        
-        public AssemblyInstruction PushSymbol(DatSymbol symbol, DatSymbolType? asType=null)
-        {
-            if (asType == DatSymbolType.Func || (asType == DatSymbolType.Int && symbol.BuiltinType != DatSymbolType.Int))
-            {
-                return new PushInt(symbol.Index);
-            }
-
-            if (symbol.BuiltinType == DatSymbolType.Instance || asType == DatSymbolType.Instance)  /* DatSymbolType.Class isn't possible #1#
-            {
-                return new PushInstance(symbol);
-            }
-            return new PushVar(symbol);
-        }
-
-
-             
-                          
-             */
         }
 
         protected override List<AssemblyElement> VisitIntegerLiteral(IntegerLiteralNode node)
@@ -511,7 +403,6 @@ namespace DaedalusCompiler.Compilation
                 float floatValue = node.Value;
                 intValue = BitConverter.ToInt32(BitConverter.GetBytes(floatValue), 0);
             }
-            
             
             return new List<AssemblyElement>{ new PushInt(intValue) };
         }

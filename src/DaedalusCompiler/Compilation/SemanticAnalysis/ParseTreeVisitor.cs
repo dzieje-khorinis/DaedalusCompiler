@@ -1,30 +1,28 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
-using DaedalusCompiler.Compilation.SemanticAnalysis;
 
-namespace DaedalusCompiler.Compilation
+namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
     public class ParseTreeVisitor : DaedalusBaseVisitor<ASTNode>
     {
 	    private readonly int _sourceFileNumber;
-	    private bool _isExternal;
-	    
-	    public readonly List<InheritanceParentReferenceNode> InheritanceReferenceNodes;
+	    private readonly bool _isExternal;
+
+	    private readonly List<InheritanceParentReferenceNode> _inheritanceReferenceNodes;
 	    public readonly List<ReferenceNode> ReferenceNodes;
-	    public readonly List<ConstDefinitionNode> ConstDefinitionNodes;
-	    public readonly List<IArrayDeclarationNode> ArrayDeclarationNodes;
+	    private readonly List<ConstDefinitionNode> _constDefinitionNodes;
+	    private readonly List<IArrayDeclarationNode> _arrayDeclarationNodes;
 
 	    public ParseTreeVisitor(int sourceFileNumber, bool isExternal)
 	    {
 		    _sourceFileNumber = sourceFileNumber;
 		    _isExternal = isExternal;
-		    ConstDefinitionNodes = new List<ConstDefinitionNode>();
-		    ArrayDeclarationNodes = new List<IArrayDeclarationNode>();
-		    InheritanceReferenceNodes = new List<InheritanceParentReferenceNode>();
+		    _constDefinitionNodes = new List<ConstDefinitionNode>();
+		    _arrayDeclarationNodes = new List<IArrayDeclarationNode>();
+		    _inheritanceReferenceNodes = new List<InheritanceParentReferenceNode>();
 		    ReferenceNodes = new List<ReferenceNode>();
 	    }
 
@@ -109,7 +107,7 @@ namespace DaedalusCompiler.Compilation
 			NameNode nameNode = new NameNode(GetLocation(prototypeDefContext.nameNode()), prototypeDefContext.nameNode().GetText());
 			DaedalusParser.ParentReferenceContext parentReferenceContext = prototypeDefContext.parentReference();
 			InheritanceParentReferenceNode inheritanceParentReferenceNode = new InheritanceParentReferenceNode(parentReferenceContext.GetText(), GetLocation(parentReferenceContext));
-			InheritanceReferenceNodes.Add(inheritanceParentReferenceNode);
+			_inheritanceReferenceNodes.Add(inheritanceParentReferenceNode);
 			List<StatementNode> statementNodes = GetStatementNodes(prototypeDefContext.statementBlock());
 			return new PrototypeDefinitionNode(GetLocation(prototypeDefContext), nameNode, inheritanceParentReferenceNode, statementNodes);
 		}
@@ -119,7 +117,7 @@ namespace DaedalusCompiler.Compilation
 			NameNode nameNode = new NameNode(GetLocation(instanceDefContext.nameNode()), instanceDefContext.nameNode().GetText());
 			DaedalusParser.ParentReferenceContext parentReferenceContext = instanceDefContext.parentReference();
 			InheritanceParentReferenceNode inheritanceParentReferenceNode = new InheritanceParentReferenceNode(parentReferenceContext.GetText(), GetLocation(parentReferenceContext));
-			InheritanceReferenceNodes.Add(inheritanceParentReferenceNode);
+			_inheritanceReferenceNodes.Add(inheritanceParentReferenceNode);
 			List<StatementNode> statementNodes = GetStatementNodes(instanceDefContext.statementBlock());
 			return new InstanceDefinitionNode(GetLocation(instanceDefContext), nameNode, inheritanceParentReferenceNode, statementNodes, definedWithoutBody:false);
 		}
@@ -133,7 +131,7 @@ namespace DaedalusCompiler.Compilation
 			{
 				var arraySize = (ExpressionNode) VisitArraySize(context.arraySize());
 				ParameterArrayDeclarationNode parameterArrayDeclarationNode = new ParameterArrayDeclarationNode(location, typeNameNode, nameNode, arraySize);
-				ArrayDeclarationNodes.Add(parameterArrayDeclarationNode);
+				_arrayDeclarationNodes.Add(parameterArrayDeclarationNode);
 				return parameterArrayDeclarationNode;
 			}
 			return new ParameterDeclarationNode(location, typeNameNode, nameNode);
@@ -188,13 +186,13 @@ namespace DaedalusCompiler.Compilation
 
 		public override ASTNode VisitIfBlockStatement([NotNull] DaedalusParser.IfBlockStatementContext context)
 		{
-			ConditionalNode ConditionalNode = (ConditionalNode) VisitIfBlock(context.ifBlock());
-			List<ConditionalNode> ConditionalNodes = new List<ConditionalNode>();
+			ConditionalNode conditionalNode = (ConditionalNode) VisitIfBlock(context.ifBlock());
+			List<ConditionalNode> conditionalNodes = new List<ConditionalNode>();
 			List<StatementNode> elseNodeBodyNodes = null;
 			
 			foreach (DaedalusParser.ElseIfBlockContext elseIfBlockContext in context.elseIfBlock())
 			{
-				ConditionalNodes.Add((ConditionalNode) VisitElseIfBlock(elseIfBlockContext));
+				conditionalNodes.Add((ConditionalNode) VisitElseIfBlock(elseIfBlockContext));
 			}
 			
 			if (context.elseBlock() != null)
@@ -202,7 +200,7 @@ namespace DaedalusCompiler.Compilation
 				elseNodeBodyNodes = GetStatementNodes(context.elseBlock().statementBlock());
 			}
 			
-			return new IfStatementNode(GetLocation(context), ConditionalNode, ConditionalNodes, elseNodeBodyNodes);
+			return new IfStatementNode(GetLocation(context), conditionalNode, conditionalNodes, elseNodeBodyNodes);
 		}
 
 		public override ASTNode VisitWhileStatement([NotNull] DaedalusParser.WhileStatementContext context)
@@ -389,7 +387,7 @@ namespace DaedalusCompiler.Compilation
 		{
 			DaedalusParser.ParentReferenceContext parentReferenceContext = instanceDeclContext.parentReference();
 			InheritanceParentReferenceNode inheritanceParentReferenceNode = new InheritanceParentReferenceNode(parentReferenceContext.GetText(), GetLocation(parentReferenceContext));
-			InheritanceReferenceNodes.Add(inheritanceParentReferenceNode);
+			_inheritanceReferenceNodes.Add(inheritanceParentReferenceNode);
 			
 			List<DeclarationNode> instanceDeclarationNodes = new List<DeclarationNode>();
 			
@@ -419,7 +417,7 @@ namespace DaedalusCompiler.Compilation
 					ExpressionNode rightSideNode = (ExpressionNode) Visit(constValueDefContext.constValueAssignment().expression());
 					ConstDefinitionNode constDefinitionNode = new ConstDefinitionNode(GetLocation(constValueDefContext),
 						typeNameNode, nameNode, rightSideNode);
-					ConstDefinitionNodes.Add(constDefinitionNode);
+					_constDefinitionNodes.Add(constDefinitionNode);
 					constDefinitionNodes.Add(constDefinitionNode);
 				}
 				else if (childContext is DaedalusParser.ConstArrayDefContext constArrayDefContext)
@@ -437,7 +435,7 @@ namespace DaedalusCompiler.Compilation
 					ConstArrayDefinitionNode constArrayDefinitionNode =
 						new ConstArrayDefinitionNode(GetLocation(nameNodeContext), typeNameNode, nameNode, arraySizeNode,
 							elementNodes);
-					ArrayDeclarationNodes.Add(constArrayDefinitionNode);
+					_arrayDeclarationNodes.Add(constArrayDefinitionNode);
 					constDefinitionNodes.Add(constArrayDefinitionNode);
 				}
 			}
@@ -465,7 +463,7 @@ namespace DaedalusCompiler.Compilation
 					ExpressionNode arraySizeNode = (ExpressionNode) VisitArraySize(varArrayDeclContext.arraySize());
 					VarArrayDeclarationNode varArrayDeclarationNode =
 						new VarArrayDeclarationNode(GetLocation(nameNodeContext), typeNameNode, nameNode, arraySizeNode);
-					ArrayDeclarationNodes.Add(varArrayDeclarationNode);
+					_arrayDeclarationNodes.Add(varArrayDeclarationNode);
 					varDeclarationNodes.Add(varArrayDeclarationNode);
 				}
 			}
@@ -591,9 +589,7 @@ namespace DaedalusCompiler.Compilation
 		{
 			if (context.Stop == null)
 			{
-				/*
-				 * In case of empty file, context has Start (EOF token) but has no end
-				 */
+				// In case of empty file, context has Start (EOF token) but has no end
 				context.Stop = context.Start;
 			}
 			

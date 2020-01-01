@@ -1,7 +1,6 @@
 ﻿using Antlr4.Runtime;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -14,8 +13,6 @@ namespace DaedalusCompiler.Compilation
 {
     public class Compiler
     {
-
-        //private readonly AssemblyBuilder _assemblyBuilder;
         private readonly OutputUnitsBuilder _ouBuilder;
         private readonly string _outputDirPath;
         private readonly bool _strictSyntax;
@@ -47,8 +44,8 @@ namespace DaedalusCompiler.Compilation
             }
             return new HashSet<string>();
         }
-        
-        public string GetBuiltinsPath()
+
+        private string GetBuiltinsPath()
         {
             string programStartPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
 
@@ -56,23 +53,19 @@ namespace DaedalusCompiler.Compilation
         }
 
         public bool CompileFromSrc(
-            string srcFilePath, 
-            bool compileToAssembly,
+            string srcFilePath,
             bool verbose = true,
             bool generateOutputUnits = true
         )
         {
             var absoluteSrcFilePath = Path.GetFullPath(srcFilePath);
-            
 
-                
             string[] paths = SrcFileHelper.LoadScriptsFilePaths(absoluteSrcFilePath).ToArray();
             string srcFileName = Path.GetFileNameWithoutExtension(absoluteSrcFilePath).ToLower();
             
             string runtimePath = Path.Combine(GetBuiltinsPath(), srcFileName + ".d");
             List<IParseTree> parseTrees = new List<IParseTree>();
 
-            
             int externalFilesCount = 0;
             List<string> filesPaths = new List<string>();
             List<string[]> filesContentsLines = new List<string[]>();
@@ -81,7 +74,7 @@ namespace DaedalusCompiler.Compilation
             
             int syntaxErrorsCount = 0;
             
-            if (File.Exists(runtimePath))  //&& false
+            if (File.Exists(runtimePath))
             {
                 externalFilesCount++;
                 
@@ -175,7 +168,7 @@ namespace DaedalusCompiler.Compilation
             symbolUpdatingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
 
             AssemblyBuildingVisitor assemblyBuildingVisitor = new AssemblyBuildingVisitor(semanticAnalyzer.SymbolTable);
-            Dictionary<string, Symbol> symbolTable = assemblyBuildingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
+            assemblyBuildingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
             
             Console.WriteLine($"parseTrees.Count: {parseTrees.Count}");
             
@@ -191,13 +184,12 @@ namespace DaedalusCompiler.Compilation
 
             string datPath = Path.Combine(_outputDirPath, srcFileName + ".dat");
             
-            DatBuilder datBuilder = new DatBuilder(semanticAnalyzer.SymbolTable, semanticAnalyzer.SymbolsWithInstructions, datPath);
+            DatBuilder datBuilder = new DatBuilder(semanticAnalyzer.SymbolTable, semanticAnalyzer.SymbolsWithInstructions);
             DatFile = datBuilder.GetDatFile();
             DatFile.Save(datPath);
 
             return true;
         }
-
 
         public void SetCompilationDateTimeText(string compilationDateTimeText)
         {
@@ -211,7 +203,7 @@ namespace DaedalusCompiler.Compilation
 
         private string GetFileContent(string filePath)
         {
-            return File.ReadAllText(filePath, Encoding.GetEncoding(1250));//.Replace("\t", "    ");
+            return File.ReadAllText(filePath, Encoding.GetEncoding(1250));
         }
         
         public static DaedalusParser GetParserForText(string input)
@@ -220,12 +212,6 @@ namespace DaedalusCompiler.Compilation
             DaedalusLexer lexer = new DaedalusLexer(inputStream);
             CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
             return new DaedalusParser(commonTokenStream);
-        }
-
-        private DaedalusParser GetParserForScriptsFile(string scriptFilePath)
-        {
-            string fileContent = GetFileContent(scriptFilePath);
-            return GetParserForText(fileContent);
         }
     }
 }

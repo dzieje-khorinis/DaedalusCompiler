@@ -27,17 +27,6 @@ namespace DaedalusCompiler.Compilation
 
         public void Run()
         {
-            //Stopwatch timer = new Stopwatch();
-            //timer.Start();
-            //SymbolTableCreationVisitor symbolTableCreationVisitor = new SymbolTableCreationVisitor();
-            //symbolTableCreationVisitor.VisitTree(_abstractSyntaxTree);
-            //timer.Stop();
-            //Console.WriteLine($"SymbolTable creation time: {timer.Elapsed}");
-            //_symbolTable = visitor.SymbolTable;
-            
-            
-            // RedefinedIdentifierError
-            // KeywordUsedAsNameError
             SymbolTableCreationVisitor symbolTableCreationVisitor = new SymbolTableCreationVisitor();
             symbolTableCreationVisitor.VisitTree(AbstractSyntaxTree);
             SymbolTable = symbolTableCreationVisitor.SymbolTable;
@@ -49,8 +38,7 @@ namespace DaedalusCompiler.Compilation
             // UnsupportedFunctionTypeError
             TypeResolver typeResolver = new TypeResolver(SymbolTable);
             typeResolver.Resolve(symbolTableCreationVisitor.TypedSymbols);
-            //typeResolver.Resolve(symbolTableCreationVisitor.FunctionSymbols);
-            
+
             // NotClassOrPrototypeReferenceError
             // UndeclaredIdentifierError
             // InfiniteReferenceLoopError
@@ -81,7 +69,7 @@ namespace DaedalusCompiler.Compilation
             // IntegerLiteralTooLargeError
             // CannotInitializeConstWithValueOfDifferentTypeError
             // CannotInitializeArrayElementWithValueOfDifferentTypeError
-            ConstEvaluationVisitor constEvaluationVisitor = new ConstEvaluationVisitor(SymbolTable);
+            ConstEvaluationVisitor constEvaluationVisitor = new ConstEvaluationVisitor();
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ConstDefinitionNodes);
             constEvaluationVisitor.Visit(symbolTableCreationVisitor.ArrayDeclarationNodes);
             constEvaluationVisitor.Visit(referenceResolvingVisitor.ArrayIndexNodes);

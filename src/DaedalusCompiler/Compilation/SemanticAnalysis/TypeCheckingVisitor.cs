@@ -1,14 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Antlr4.Runtime.Misc;
+
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
+    /*
+     * WORK IN PROGRESS
+     */
 
     class SymbolTypePair
     {
-        public SymbolType BuiltinType;
+        public readonly SymbolType BuiltinType;
         public Symbol ComplexType;
 
         public SymbolTypePair(SymbolType builtinType, Symbol complexType)
@@ -24,13 +26,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         private int _floatExpressionDepth;
         private bool _isInsideFloatExpression;
-        
-        
-        
         private bool _isInsideCondition;
-
         private Stack<SymbolTypePair> _currentExpressionTypes; //return/assignment/parameter
-        
         
         /*
          * arguments vs parameters types
@@ -48,11 +45,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             _visitedNodes = new HashSet<ASTNode>();
             //_floatExpressionDepth = 0;
             //_isInsideFloatExpression = false;
-
             //_isInsideCondition = false;
             _currentExpressionTypes = new Stack<SymbolTypePair>();
         }
-
 
         private bool IsInsideFloatExpression()
         {
@@ -68,7 +63,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     }
                 }
             }
-
             return false;
         }
         
@@ -91,8 +85,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
             return new SymbolTypePair(symbol.BuiltinType, null);
         }
-
-
+        
         protected override void Visit(ASTNode node)
         {
             if (!_visitedNodes.Contains(node))
@@ -102,8 +95,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
         }
 
-        
-        
         protected override void VisitFunctionCall(FunctionCallNode node)
         {
             if (node.FunctionReferenceNode.Symbol != null)
@@ -569,9 +560,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             node.BuiltinType = SymbolType.Int;
         }
-/*
-         *
-         *         Uninitialized = -1,
+        
+        /*
+        Uninitialized = -1,
         Void = 0,
         Float = 1,
         Int = 2,

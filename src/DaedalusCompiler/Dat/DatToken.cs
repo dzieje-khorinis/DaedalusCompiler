@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace DaedalusCompiler.Dat
 {
@@ -104,7 +100,7 @@ namespace DaedalusCompiler.Dat
 
         public DatTokenType TokenType { get; set; }
 
-        public int Size { get { return 1 + (IntParam.HasValue ? 4 : 0) + (ByteParam.HasValue ? 1 : 0); } }
+        public int Size => 1 + (IntParam.HasValue ? 4 : 0) + (ByteParam.HasValue ? 1 : 0);
 
         public int? IntParam { get; set; }
 

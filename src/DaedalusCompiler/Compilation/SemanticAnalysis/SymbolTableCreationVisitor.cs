@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DaedalusCompiler.Dat;
+
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
@@ -18,10 +18,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public readonly List<IArrayDeclarationNode> ArrayDeclarationNodes;
         
         public readonly List<ITypedSymbol> TypedSymbols;
-        public readonly List<FunctionSymbol> FunctionSymbols;
         public readonly List<SubclassSymbol> SubclassSymbols;
         public readonly List<BlockSymbol> SymbolsWithInstructions;
-        public readonly List<ClassSymbol> ClassSymbols;
+        private readonly List<ClassSymbol> _classSymbols;
         
         public readonly List<DeclarationNode> DeclarationNodes;
         
@@ -37,10 +36,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             ConstDefinitionNodes = new List<ConstDefinitionNode>();
             ArrayDeclarationNodes = new List<IArrayDeclarationNode>();
             TypedSymbols = new List<ITypedSymbol>();
-            FunctionSymbols = new List<FunctionSymbol>();
             SubclassSymbols = new List<SubclassSymbol>();
             SymbolsWithInstructions = new List<BlockSymbol>();
-            ClassSymbols = new List<ClassSymbol>();
+            _classSymbols = new List<ClassSymbol>();
             
             DeclarationNodes = new List<DeclarationNode>();
         }
@@ -59,8 +57,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             _isInExternalFile = node.IsExternal;
             base.VisitFile(node);
         }
-
-
         
         protected override void VisitClassDefinition(ClassDefinitionNode classDefinitionNode)
         {
@@ -170,8 +166,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 throw new Exception();
             }
         }
-
-
+        
 
         private void BuildConst(ConstDefinitionNode constDefinitionNode, bool buildArray=false)
         {
@@ -209,21 +204,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             symbol.Index = _nextSymbolIndex++;
             
-            /*
-            if (IsCurrentlyParsingExternals)
-            {
-                if (symbol.BuiltinType == DatSymbolType.Func && symbol.Flags.HasFlag(DatSymbolFlag.Const))
-                {
-                    symbol.Flags |= DatSymbolFlag.External;
-                }
-
-                if (symbol.Name == "instance_help")
-                {
-                    symbol.Name = $"{(char) 255}INSTANCE_HELP";
-                }
-            } 
-             */
-
             if (_isInExternalFile)
             {
                 symbol.IsExternal = true;
@@ -288,8 +268,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     break;
                 
                 
-                
-                
                 case SubclassSymbol subclassSymbol:
                     SubclassSymbols.Add(subclassSymbol);
                     if (!subclassSymbol.IsExternal)
@@ -298,7 +276,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     }
                     break;
                 case ClassSymbol classSymbol:
-                    ClassSymbols.Add(classSymbol);
+                    _classSymbols.Add(classSymbol);
                     break;
             }
             

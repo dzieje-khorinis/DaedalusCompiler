@@ -6,9 +6,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public abstract class NodeAnnotation
     {
         public NodeLocation PointerLocation;
-        public List<NodeLocation> UnderlineLocations;
-        
-        public NodeAnnotation()
+        public readonly List<NodeLocation> UnderlineLocations;
+
+        protected NodeAnnotation()
         {
             PointerLocation = null;
             UnderlineLocations = new List<NodeLocation>();
@@ -34,7 +34,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public abstract class WarningAnnotation : NodeAnnotation
     {
-        //public const string Code = "WARNING";
     }
 
     public abstract class ErrorAnnotationNoted : ErrorAnnotation, INotedAnnotation
@@ -142,9 +141,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
          */
         public string Code { get; set; } = "W5";
 
-        private string _identifier;
-        private long _index;
-        private bool _isAttribute;
+        private readonly string _identifier;
+        private readonly long _index;
+        private readonly bool _isAttribute;
 
         public UsageOfNonInitializedVariableWarning(string identifier, long index, bool isAttribute)
         {
@@ -175,18 +174,18 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     
     public class IncompatibleTypesError : ErrorAnnotation
     {
-        public SymbolType ExpectedSymbolType;
-        public SymbolType ActualSymbolType;
+        private readonly SymbolType _expectedSymbolType;
+        private readonly SymbolType _actualSymbolType;
 
         public IncompatibleTypesError(SymbolType expectedSymbolType, SymbolType actualSymbolType)
         {
-            ExpectedSymbolType = expectedSymbolType;
-            ActualSymbolType = actualSymbolType;
+            _expectedSymbolType = expectedSymbolType;
+            _actualSymbolType = actualSymbolType;
         }
 
         public override string GetMessage()
         {
-            return $"{ExpectedSymbolType} type expected (actual type: {ActualSymbolType})".ToLower();
+            return $"{_expectedSymbolType} type expected (actual type: {_actualSymbolType})".ToLower();
         }
     }
     

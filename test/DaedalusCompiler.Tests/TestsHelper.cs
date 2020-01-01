@@ -8,21 +8,19 @@ namespace DaedalusCompiler.Tests
 {
     public class TestsHelper
     {
-        public int SyntaxErrorsCount;
+        private int _syntaxErrorsCount;
         public Dictionary<string, Symbol> SymbolTable;
         private readonly ErrorLogger _errorLogger;
         private readonly bool _strictSyntax;
-        private readonly bool _detectUnused;
         private readonly HashSet<string> _globallySuppressedCodes;
 
         public TestsHelper(ErrorLogger errorLogger, bool strictSyntax, bool detectUnused)
         {
             _errorLogger = errorLogger;
             _strictSyntax = strictSyntax;
-            _detectUnused = detectUnused;
             _globallySuppressedCodes = new HashSet<string>();
 
-            if (!_detectUnused)
+            if (!detectUnused)
             {
                 _globallySuppressedCodes.Add(UnusedSymbolWarning.WCode);
             }
@@ -36,7 +34,7 @@ namespace DaedalusCompiler.Tests
             List<HashSet<string>> suppressedWarningCodes = new List<HashSet<string>>();
             int externalFilesCount = 0;
             
-            SyntaxErrorsCount = 0;
+            _syntaxErrorsCount = 0;
             
             if (externalCode != "")
             {
@@ -52,7 +50,7 @@ namespace DaedalusCompiler.Tests
                 filesContents.Add(fileContentLines);
                 suppressedWarningCodes.Add(Compiler.GetWarningCodesToSuppress(fileContentLines[0]));
 
-                SyntaxErrorsCount += syntaxErrorListener.ErrorsCount;
+                _syntaxErrorsCount += syntaxErrorListener.ErrorsCount;
             }
 
 
@@ -68,13 +66,13 @@ namespace DaedalusCompiler.Tests
                 filesContents.Add(fileContentLines);
                 suppressedWarningCodes.Add(Compiler.GetWarningCodesToSuppress(fileContentLines[0]));
 
-                SyntaxErrorsCount += syntaxErrorListener.ErrorsCount;
+                _syntaxErrorsCount += syntaxErrorListener.ErrorsCount;
             }
             
             
-            if (SyntaxErrorsCount > 0)
+            if (_syntaxErrorsCount > 0)
             {
-                _errorLogger.LogLine($"{SyntaxErrorsCount} syntax {(SyntaxErrorsCount == 1 ? "error" : "errors")} generated.");
+                _errorLogger.LogLine($"{_syntaxErrorsCount} syntax {(_syntaxErrorsCount == 1 ? "error" : "errors")} generated.");
                 return;
             }
 

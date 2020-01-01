@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using DaedalusCompiler.Dat;
 
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
@@ -24,11 +23,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class UndefinedValue : NodeValue
     {
     }
-    
-    
-    
-    
-    
+
     public class IntValue : NodeValue
     {
         public new readonly long Value;
@@ -41,7 +36,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     
     public class FloatValue : NodeValue
     {
-        public new float Value;
+        public new readonly float Value;
         
         public FloatValue(float value)
         {
@@ -56,7 +51,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class StringValue : NodeValue
     {
-        public new string Value;
+        public new readonly string Value;
         
         public StringValue(string value)
         {
@@ -66,22 +61,19 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class FunctionValue : NodeValue
     {
-        public new Symbol Value;
+        public new readonly Symbol Value;
 
         public FunctionValue(Symbol value)
         {
             Value = value;
         }
     }
-   
-    
-    
+
     public static class ConstEvaluationHelper
     {
         public static NodeValue EvaluateUnaryOperation(UnaryOperator oper, NodeValue value)
         {
-            //Console.WriteLine("UnaryOperator oper, NodeValue value");
-            if (value is UndefinedValue) //  || value is StringValue
+            if (value is UndefinedValue)
             {
                 return new UndefinedValue();
             }
@@ -97,10 +89,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     throw new InvalidUnaryOperationException();
             }
         }
-        
-        public static IntValue EvaluateUnaryIntExpression(UnaryOperator oper, IntValue intValue)
+
+        private static IntValue EvaluateUnaryIntExpression(UnaryOperator oper, IntValue intValue)
         {
-            //Console.WriteLine("UnaryOperator oper, IntValue intValue");
             switch (oper)
             {
                 case UnaryOperator.Minus:
@@ -117,11 +108,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
         }
         
-        
-        
-        public static FloatValue EvaluateUnaryFloatExpression(UnaryOperator oper, FloatValue floatValue)
+        private static FloatValue EvaluateUnaryFloatExpression(UnaryOperator oper, FloatValue floatValue)
         {
-            //Console.WriteLine("UnaryOperator oper, FloatValue floatValue");
             switch (oper)
             {
                 case UnaryOperator.Minus:
@@ -136,13 +124,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
         }
         
-        
-        
         public static NodeValue EvaluateBinaryOperation(BinaryOperator oper, NodeValue left, NodeValue right)
         {
-            //Console.WriteLine("BinaryOperator oper, NodeValue leftValue, NodeValue rightValue");
-
-
             if (left is UndefinedValue || right is UndefinedValue)
             {
                 return new UndefinedValue();
@@ -153,7 +136,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             switch (left)
             {
                 case IntValue leftIntValue:
-
                     switch (right)
                     {
                         case IntValue rightIntValue:
@@ -168,12 +150,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         default:
                             throw new Exception();
                     }
-
                     break;
 
 
                 case FloatValue leftFloatValue:
-
                     switch (right)
                     {
                         case IntValue rightIntValue:
@@ -182,49 +162,39 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         case FloatValue rightFloatValue:
                             resultValue = EvaluateBinaryOperation(oper, leftFloatValue, rightFloatValue);
                             break;
-                        case StringValue rightStringValue:
+                        case StringValue _:
                             throw new InvalidBinaryOperationException();
-                            //resultValue = EvaluateBinaryOperation(oper, leftFloatValue, rightStringValue);
-                            break;
                         default:
                             throw new Exception();
                     }
-
                     break;
 
 
                 case StringValue leftStringValue:
-
                     switch (right)
                     {
                         case IntValue rightIntValue:
                             resultValue = EvaluateBinaryOperation(oper, leftStringValue, rightIntValue);
                             break;
-                        case FloatValue rightFloatValue:
+                        case FloatValue _:
                             throw new InvalidBinaryOperationException();
-                            //resultValue = EvaluateBinaryOperation(oper, leftStringValue, rightFloatValue);
-                            break;
                         case StringValue rightStringValue:
                             resultValue = EvaluateBinaryOperation(oper, leftStringValue, rightStringValue);
                             break;
                         default:
                             throw new Exception();
                     }
-
                     break;
                     
                 default:
                     throw new Exception();
             }
-
-
             
             return resultValue;
         }
 
         private static NodeValue EvaluateBinaryOperation(BinaryOperator oper, StringValue left, IntValue right)
         {
-            //Console.WriteLine("BinaryOperator oper, StringValue left, IntValue right");
             switch (oper)
             {
                 case BinaryOperator.Mult:
@@ -236,7 +206,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         private static NodeValue EvaluateBinaryOperation(BinaryOperator oper, IntValue left, StringValue right)
         {
-            //Console.WriteLine("BinaryOperator oper, IntValue left, StringValue right");
             switch (oper)
             {
                 case BinaryOperator.Mult:
@@ -245,11 +214,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     throw new InvalidBinaryOperationException();
             }
         }
-        
 
-        public static StringValue EvaluateBinaryOperation(BinaryOperator oper, StringValue left, StringValue right)
+
+        private static StringValue EvaluateBinaryOperation(BinaryOperator oper, StringValue left, StringValue right)
         {
-            //Console.WriteLine("BinaryOperator oper, StringValue left, StringValue right");
             switch (oper)
             {
                 case BinaryOperator.Add:
@@ -258,11 +226,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     throw new InvalidBinaryOperationException();
             }
         }
-        
 
-        public static IntValue EvaluateBinaryOperation(BinaryOperator oper, IntValue left, IntValue right)
+
+        private static IntValue EvaluateBinaryOperation(BinaryOperator oper, IntValue left, IntValue right)
         {
-            //Console.WriteLine("BinaryOperator oper, IntValue left, IntValue right");
             switch (oper)
             {
                 case BinaryOperator.Mult:
@@ -313,9 +280,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
         }
 
-        public static FloatValue EvaluateBinaryOperation(BinaryOperator oper, FloatValue left, FloatValue right)
+        private static FloatValue EvaluateBinaryOperation(BinaryOperator oper, FloatValue left, FloatValue right)
         {
-            //Console.WriteLine("BinaryOperator oper, FloatValue left, FloatValue right");
             switch (oper)
             {
                 case BinaryOperator.Mult:

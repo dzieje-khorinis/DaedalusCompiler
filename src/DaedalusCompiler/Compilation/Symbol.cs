@@ -1,21 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DaedalusCompiler.Compilation.SemanticAnalysis;
 
-namespace DaedalusCompiler.Compilation.SemanticAnalysis
+namespace DaedalusCompiler.Compilation
 {
-    /*
-    public class SymbolTree
-    {
-        public List<Symbol> Symbols;
-
-        public SymbolTree()
-        {
-            Symbols = new List<Symbol>();
-        }
-    }
-    */
-
     public enum SymbolType
     {
         Uninitialized = -1,
@@ -44,16 +33,14 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public abstract class Symbol
     {
         public int Index;
-        public int SubIndex; // only used by prefix attributes
+        public readonly int SubIndex; // only used by prefix attributes
         public string Name;
         public string Path;
-        public ASTNode Node;
+        public readonly ASTNode Node;
 
         public SymbolType BuiltinType;
         public SymbolFlag Flags;
-
-
-        // DatSymbol properties
+        
         public object[] Content;
         public bool IsExternal;
 
@@ -69,8 +56,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Content = new object[]{};
             IsExternal = false;
         }
-        
-        public static SymbolType GetBuiltinType(string typeName)
+
+        protected static SymbolType GetBuiltinType(string typeName)
         {
             string capitalizedTypeName = typeName.First().ToString().ToUpper() + typeName.Substring(1).ToLower();
             if(Enum.TryParse(capitalizedTypeName, out SymbolType symbolType))
@@ -89,7 +76,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public readonly List<AssemblyElement> Instructions;
         
         public int FirstTokenAddress;
-        public Dictionary<string, int> Label2Addres;
+        public readonly Dictionary<string, int> Label2Address;
         
         protected BlockSymbol(string name, ASTNode node) : base(name, node)
         {
@@ -97,7 +84,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Instructions = new List<AssemblyElement>();
             
             FirstTokenAddress = -1;
-            Label2Addres = new Dictionary<string, int>();
+            Label2Address = new Dictionary<string, int>();
         }
 
         public void AddBodySymbol(NestableSymbol nestableSymbol)
@@ -112,26 +99,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 throw new Exception();
             }
         }
-
-        public void RemoveBodySymbol(NestableSymbol nestableSymbol)
-        {
-            string name = nestableSymbol.Name.ToUpper();
-            if (BodySymbols.ContainsKey(name))
-            {
-                BodySymbols.Remove(name);
-            }
-            else
-            {
-                throw new Exception();
-            }
-        }
     }
     
     public abstract class NestableSymbol : Symbol, ITypedSymbol
     {
-        public BlockSymbol ParentBlockSymbol;
+        public readonly BlockSymbol ParentBlockSymbol;
         public string TypeName { get; set; }
-        //public SymbolType? BuiltinType { get; set; }
         public Symbol ComplexType { get; set; }
 
         protected NestableSymbol(BlockSymbol parentBlockSymbol, string typeName, string name, ASTNode node) : base(name, node)
@@ -147,7 +120,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 {
                     parentBlockSymbol.AddBodySymbol(this);
                 }
-                
             }
         }
     }
@@ -159,7 +131,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
 
-    public abstract class SubclassSymbol : InheritanceSymbol //Prototype / Instance
+    public abstract class SubclassSymbol : InheritanceSymbol
     {
         public InheritanceSymbol InheritanceParentSymbol;
         public ClassSymbol BaseClassSymbol;
@@ -172,38 +144,17 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     
     public class FunctionSymbol : BlockSymbol, ITypedSymbol
     {
-        //public List<ParameterSymbol> ParametersSymbols;
-
         public string TypeName { get; set; }
-        //public SymbolType? BuiltinType { get; set; }
         public Symbol ComplexType { get; set; }
-
-        //public SymbolType ReturnBuiltinType;
-        //public Symbol ReturnComplexType;
-        //public readonly bool IsExternal;
-        
         public int ParametersCount { get; set; }
 
         public FunctionSymbol(string typeName, string name, bool isExternal, ASTNode node) : base(name, node)
         {
             TypeName = typeName.ToUpper();
-
             IsExternal = isExternal;
-            //BuiltinType = SymbolType.Func;
-            //ReturnBuiltinType = GetBuiltinType(TypeName);
-            //ReturnComplexType = null;
             BuiltinType = GetBuiltinType(TypeName);
             ComplexType = null;
-            
         }
-
-        /*
-        public void AddParameterSymbol(ParameterSymbol parameterSymbol)
-        {
-            ParametersSymbols.Add(parameterSymbol);
-            AddBodySymbol(parameterSymbol);
-        }
-        */
     }
 
     public interface IArraySymbol
@@ -214,8 +165,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public interface ITypedSymbol
     {
         string TypeName { get; set; }
-        //SymbolType? BuiltinType { get; set; }
-        
         Symbol ComplexType { get; set; }
     }
 

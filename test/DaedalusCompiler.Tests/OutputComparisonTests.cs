@@ -5,9 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using DaedalusCompiler.Compilation;
-using DaedalusCompiler.Compilation.SemanticAnalysis;
 using DaedalusCompiler.Dat;
-using Newtonsoft.Json;
 using Xunit;
 using Ionic.Zip;
 using Xunit.Abstractions;
@@ -106,7 +104,7 @@ namespace DaedalusCompiler.Tests
                     compiler.SetCompilationDateTimeText(compileTime);
                     compiler.SetCompilationUserName(compileUsername);
                 }
-                compiler.CompileFromSrc(srcPath, compileToAssembly:false, verbose:false, generateOutputUnits: generateOutputUnits);
+                compiler.CompileFromSrc(srcPath, verbose:false, generateOutputUnits: generateOutputUnits);
                 _originalDatFiles[datFileName] = compiler.DatFile;
             }
         }

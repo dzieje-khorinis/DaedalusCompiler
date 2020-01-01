@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using DaedalusCompiler.Compilation.SemanticAnalysis;
 
-namespace DaedalusCompiler.Compilation.SemanticAnalysis
+namespace DaedalusCompiler.Compilation
 {
     
 public enum FilePathDisplayStatus
@@ -16,32 +16,28 @@ public enum FilePathDisplayStatus
     
 public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
     {
-        public FileNode CurrentFileNode;
-        public ASTNode CurrentBlockNode; //function, instance, prototype, class
-
-        public readonly ErrorLogger ErrorLogger;
-        public List<string> FilesPaths;
-        public List<string[]> FilesContents;
-        public List<string> FileNames;
-        public List<HashSet<string>> SuppressedWarningCodes;
+        private readonly ErrorLogger _errorLogger;
+        private List<string> _filesPaths;
+        private List<string[]> _filesContents;
+        private List<string> _fileNames;
+        private List<HashSet<string>> _suppressedWarningCodes;
 
         public int ErrorsCount;
         public int WarningsCount;
-        
-        public ASTNode LastParentBlockNode;
+
+        private ASTNode _lastParentBlockNode;
         public FilePathDisplayStatus FilePathDisplayStatus;
         private bool _wasFilePathDisplayed;
         
         private readonly bool _strictSyntax;
-        private HashSet<string> _globallySuppressedCodes;
+        private readonly HashSet<string> _globallySuppressedCodes;
         
         public SemanticErrorsCollectingVisitor(ErrorLogger errorLogger, bool strictSyntax, HashSet<string> globallySuppressedCodes)
         {
-            CurrentFileNode = null;
-            ErrorLogger = errorLogger;
+            _errorLogger = errorLogger;
             _strictSyntax = strictSyntax;
             _globallySuppressedCodes = globallySuppressedCodes;
-            LastParentBlockNode = null;
+            _lastParentBlockNode = null;
 
             ErrorsCount = 0;
             WarningsCount = 0;
@@ -52,14 +48,14 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
 
         public override void VisitTree(AbstractSyntaxTree tree)
         {
-            FilesPaths = tree.FilesPaths;
-            FilesContents = tree.FilesContents;
-            FileNames = new List<string>();
+            _filesPaths = tree.FilesPaths;
+            _filesContents = tree.FilesContents;
+            _fileNames = new List<string>();
             foreach (var filePath in tree.FilesPaths)
             {
-                FileNames.Add(Path.GetFileName(filePath));
+                _fileNames.Add(Path.GetFileName(filePath));
             }
-            SuppressedWarningCodes = tree.SuppressedWarningCodes;
+            _suppressedWarningCodes = tree.SuppressedWarningCodes;
             base.VisitTree(tree);
         }
 
@@ -79,59 +75,38 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
 
         protected override void VisitFile(FileNode node)
         {
-            CurrentFileNode = node;
             _wasFilePathDisplayed = false;
             base.VisitFile(node);
         }
-
-        protected override void VisitFunctionDefinition(FunctionDefinitionNode node)
-        {
-            CurrentBlockNode = node;
-            base.VisitFunctionDefinition(node);
-        }
-
-        protected override void VisitClassDefinition(ClassDefinitionNode node)
-        {
-            CurrentBlockNode = node;
-            base.VisitClassDefinition(node);
-        }
-
-        protected override void VisitPrototypeDefinition(PrototypeDefinitionNode node)
-        {
-            CurrentBlockNode = node;
-            base.VisitPrototypeDefinition(node);
-        }
-
+        
         protected override void VisitInstanceDefinition(InstanceDefinitionNode node)
         {
-            CurrentBlockNode = node;
             base.VisitInstanceDefinition(node);
         }
 
 
-        public bool IsAnnotationSuppressed(NodeAnnotation annotation, ASTNode node)
+        private bool IsAnnotationSuppressed(NodeAnnotation annotation, ASTNode node)
         {
-            if (annotation is WarningAnnotation _ && annotation is IWithCode withCode)
+            if (annotation is WarningAnnotation && annotation is IWithCode withCode)
             {
                 int fileIndex = node.Location.FileIndex;
-                string line = FilesContents[fileIndex][node.Location.Line - 1];
+                string line = _filesContents[fileIndex][node.Location.Line - 1];
                 HashSet<string> suppressedLineWarningCodes = Compiler.GetWarningCodesToSuppress(line);
-                HashSet<string> suppressedFileWarningCodes = null;
-                suppressedFileWarningCodes = SuppressedWarningCodes[fileIndex];
+                HashSet<string> suppressedFileWarningCodes = _suppressedWarningCodes[fileIndex];
                 
                 HashSet<string> suppressedWarningCodes = suppressedLineWarningCodes.Union(suppressedFileWarningCodes).ToHashSet();
                 if (_globallySuppressedCodes != null)
                 {
                     suppressedWarningCodes.UnionWith(_globallySuppressedCodes);
                 }
-                string code = withCode.Code;//annotation.GetType().GetField("Code").GetValue(null).ToString();
+                string code = withCode.Code;
                 return suppressedWarningCodes.Contains(code);
             }
 
             return false;
         }
-        
-        public void PrintAnnotation(NodeAnnotation annotation, ASTNode node)
+
+        private void PrintAnnotation(NodeAnnotation annotation, ASTNode node)
         {
             string annotationType;
             if (annotation is ErrorAnnotation || _strictSyntax)
@@ -142,7 +117,7 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
             else if (annotation is WarningAnnotation)
             {
                 WarningsCount++;
-                annotationType = $"warning";
+                annotationType = "warning";
             }
             else
             {
@@ -165,13 +140,13 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
 
             if ((!_wasFilePathDisplayed && FilePathDisplayStatus == FilePathDisplayStatus.DisplayOncePerFile) || FilePathDisplayStatus == FilePathDisplayStatus.AlwaysDisplay)
             {
-                ErrorLogger.LogLine(FilesPaths[pointerLocation.FileIndex]);
+                _errorLogger.LogLine(_filesPaths[pointerLocation.FileIndex]);
             }
 
 
             string parentBlockName = String.Empty;
             ASTNode ancestor = node.GetFirstSignificantAncestorNode();
-            if (ancestor != LastParentBlockNode)
+            if (ancestor != _lastParentBlockNode)
             {
                 switch (ancestor)
                 {
@@ -188,7 +163,7 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
                         parentBlockName = $"class '{classDefinitionNode.NameNode.Value}'";
                         break;
                     case FileNode _:
-                        if (LastParentBlockNode != null)
+                        if (_lastParentBlockNode != null)
                         {
                             parentBlockName = "global scope";
                         }
@@ -197,27 +172,27 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
                         throw new Exception();
                 }
                 
-                LastParentBlockNode = ancestor;
+                _lastParentBlockNode = ancestor;
             }
 
             if (parentBlockName != String.Empty)
             {
-                ErrorLogger.LogLine($"{FileNames[pointerLocation.FileIndex]}: In {parentBlockName}:");
+                _errorLogger.LogLine($"{_fileNames[pointerLocation.FileIndex]}: In {parentBlockName}:");
             }
             
             
-            ErrorLogger.LogLine($"{FileNames[pointerLocation.FileIndex]}:{pointerLocation.Line}:{pointerLocation.Column}: {annotationType}: {message}");
-            ErrorLogger.LogLine(FilesContents[pointerLocation.FileIndex][pointerLocation.Line - 1].Replace("\t", "    "));
-            ErrorLogger.LogLine(GetErrorPointerLine(pointerLocation, underlineLocations));
+            _errorLogger.LogLine($"{_fileNames[pointerLocation.FileIndex]}:{pointerLocation.Line}:{pointerLocation.Column}: {annotationType}: {message}");
+            _errorLogger.LogLine(_filesContents[pointerLocation.FileIndex][pointerLocation.Line - 1].Replace("\t", "    "));
+            _errorLogger.LogLine(GetErrorPointerLine(pointerLocation, underlineLocations));
 
             if (annotation is INotedAnnotation annotationNoted)
             {
                 string note = annotationNoted.GetNote();
                 NodeLocation noteLocation = annotationNoted.NoteLocation;
                 
-                ErrorLogger.LogLine($"{FileNames[noteLocation.FileIndex]}:{noteLocation.Line}:{noteLocation.Column}: note: {note}");
-                ErrorLogger.LogLine(FilesContents[noteLocation.FileIndex][noteLocation.Line - 1].Replace("\t", "    "));
-                ErrorLogger.LogLine(GetErrorPointerLine(noteLocation, new List<NodeLocation>()));
+                _errorLogger.LogLine($"{_fileNames[noteLocation.FileIndex]}:{noteLocation.Line}:{noteLocation.Column}: note: {note}");
+                _errorLogger.LogLine(_filesContents[noteLocation.FileIndex][noteLocation.Line - 1].Replace("\t", "    "));
+                _errorLogger.LogLine(GetErrorPointerLine(noteLocation, new List<NodeLocation>()));
             }
         }
         
@@ -231,7 +206,7 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
                 endColumn = Math.Max(endColumn, underlineExactLineLocations.Max(x => x.EndColumn));
             }
 
-            string lineContent = FilesContents[pointerLocation.FileIndex][pointerLocation.Line - 1]; //CurrentFileNode.Content[pointerLocation.Line - 1];
+            string lineContent = _filesContents[pointerLocation.FileIndex][pointerLocation.Line - 1];
 
             string[] buffer = new string[endColumn];
 
@@ -303,7 +278,7 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
 
         private List<UnderlineExactLineLocation> CovertToUnderlineLineLocations(NodeLocation pointerLocation, List<NodeLocation> locations)
         {
-            string lineContent = FilesContents[pointerLocation.FileIndex][pointerLocation.Line - 1]; //CurrentFileNode.Content[pointerLocation.Line - 1];
+            string lineContent = _filesContents[pointerLocation.FileIndex][pointerLocation.Line - 1];
 
             int line = pointerLocation.Line;
             int firstSignificantColumn = 0;

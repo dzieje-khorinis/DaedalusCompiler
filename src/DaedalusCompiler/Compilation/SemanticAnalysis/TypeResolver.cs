@@ -18,13 +18,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 Resolve(typedSymbol);    
             }
         }
-        
-        public void Resolve(ITypedSymbol typedSymbol)
+
+        private void Resolve(ITypedSymbol typedSymbol)
         {
             Symbol symbol = (Symbol) typedSymbol;
             
             SymbolType symbolBuiltinType = symbol.BuiltinType;
-            //ASTNode typedSymbolNode = symbol.Node;
+
             DeclarationNode typedSymbolNode = (DeclarationNode) symbol.Node;
             
             CustomTypeDeclarationNode customTypeDeclarationNode = (CustomTypeDeclarationNode) typedSymbolNode;
@@ -45,15 +45,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                              
                         DeclarationNode declarationNode = (DeclarationNode) typeSymbol.Node;
                         declarationNode.Usages.Add(customTypeDeclarationNode.TypeNameNode);
-                             
-                        /*
-                        if (customTypeDeclarationNode.TypeNameNode.Value != typeSymbol.Name)
-                        {
-                            DeclarationNode declarationNode = (DeclarationNode) typeSymbol.Node;
-                            customTypeDeclarationNode.TypeNameNode.Annotations.Add(new NamesNotMatchingCaseWiseWarning(declarationNode.NameNode.Location, typeSymbol.Name, customTypeDeclarationNode.TypeNameNode.Value));
-                        }
-                        */
-
                     }
                     else
                     {
@@ -72,8 +63,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             switch (typedSymbol)
             {
                 case FunctionSymbol _:
-                    //FunctionDefinitionNode functionDefinitionNode = (FunctionDefinitionNode) typedSymbolNode;
-                    
                     switch (symbolBuiltinType)
                     {
                         case SymbolType.Class:

@@ -1,7 +1,4 @@
-using System.Collections.Generic;
-using System.Linq;
 using DaedalusCompiler.Compilation.SemanticAnalysis;
-using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
 {
@@ -130,7 +127,6 @@ namespace DaedalusCompiler.Compilation
     public class AssignMultiply : ParamLessInstruction {}
     public class AssignDivide : ParamLessInstruction {}
     public class AssignString : ParamLessInstruction {}
-    // public class AssignStringRef : ParamLessInstruction {}
     public class AssignFunc : ParamLessInstruction {}
     public class AssignFloat : ParamLessInstruction {}
     public class AssignInstance : ParamLessInstruction {}
@@ -157,8 +153,7 @@ namespace DaedalusCompiler.Compilation
         {
         }
     }
-    //public class Call : LabelJumpInstruction {}
-
+    
     public class Call : SymbolInstruction
     {
         public Call(Symbol symbol) : base(symbol)
@@ -172,21 +167,4 @@ namespace DaedalusCompiler.Compilation
         {
         }
     }
-
-    /*
-    public class LazyReferenceAtomInstructions : AssemblyInstruction
-    {
-        public readonly DaedalusParser.ReferenceContext ReferenceContext;
-        public readonly AssemblyBuilderSnapshot AssemblyBuilderSnapshot;
-        
-        public LazyReferenceAtomInstructions(
-            AssemblyBuilderSnapshot assemblyBuilderSnapshot,
-            DaedalusParser.ReferenceContext referenceContext)
-        {
-            AssemblyBuilderSnapshot = assemblyBuilderSnapshot;
-            ReferenceContext = referenceContext;
-        }
-    }
-    */
-    
 }

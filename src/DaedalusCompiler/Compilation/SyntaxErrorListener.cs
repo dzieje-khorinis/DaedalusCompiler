@@ -5,7 +5,7 @@ namespace DaedalusCompiler.Compilation
 {
     public class SyntaxErrorListener : BaseErrorListener
     {
-        public int ErrorsCount = 0;
+        public int ErrorsCount;
         
         public override void SyntaxError(
             TextWriter output,

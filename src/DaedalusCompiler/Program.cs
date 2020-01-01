@@ -35,7 +35,6 @@ namespace DaedalusCompiler
         {
             var loadHelp = false;
             var loadDat = false;
-            var compileToAssembly = false;
             var generateOutputUnits = false;
             var verbose = false;
             var strict = false;
@@ -49,7 +48,6 @@ namespace DaedalusCompiler
             var optionSet = new NDesk.Options.OptionSet () {
                 { "h|?|help",   v => loadHelp = true },
                 { "load-dat", v => loadDat = true },
-                { "get-assembly", v => compileToAssembly = true },
                 { "gen-ou", v => generateOutputUnits = true },
                 { "verbose", v => verbose = true },
                 { "strict", v => strict = true },
@@ -108,7 +106,7 @@ namespace DaedalusCompiler
                 }
                 else
                 {
-                    CompileDaedalus(filePath, compileToAssembly, verbose, generateOutputUnits, strict, suppressCodes);
+                    CompileDaedalus(filePath, verbose, generateOutputUnits, strict, suppressCodes);
                 }
             }
         }
@@ -124,12 +122,12 @@ namespace DaedalusCompiler
             dat.Save(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), fileName));
         }
 
-        static void CompileDaedalus(string path, bool compileToAssembly, bool verbose, bool generateOutputUnits, bool strictSyntax, HashSet<string> suppressCodes)
+        static void CompileDaedalus(string path, bool verbose, bool generateOutputUnits, bool strictSyntax, HashSet<string> suppressCodes)
         {
             var compiler = new Compiler("output", verbose, strictSyntax, suppressCodes);
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
-            bool compiledSuccessfully = compiler.CompileFromSrc(path, compileToAssembly, verbose, generateOutputUnits);
+            bool compiledSuccessfully = compiler.CompileFromSrc(path, verbose, generateOutputUnits);
             if (compiledSuccessfully)
             {
                 Console.WriteLine($"Compilation completed successfully. Total time: {stopwatch.Elapsed}");

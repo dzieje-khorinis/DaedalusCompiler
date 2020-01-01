@@ -41,7 +41,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
             StringBufforErrorLogger logger = new StringBufforErrorLogger();
             TestsHelper testsHelper = new TestsHelper(logger, strictSyntax, detectUnused);
             testsHelper.RunCode(Code);
-            Assert.Equal(ExpectedCompilationOutput, logger.GetBuffor().Trim());
+            Assert.Equal(ExpectedCompilationOutput, logger.GetBuffer().Trim());
         }
     }
 }

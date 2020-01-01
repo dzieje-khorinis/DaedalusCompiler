@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -21,7 +20,7 @@ namespace DaedalusCompiler.Compilation
         private const string StringLiteral = "stringLiteral";
         private const string Comment = "comment";
 
-        private bool _verbose;
+        private readonly bool _verbose;
 
         public OutputUnitsBuilder(bool verbose)
         {

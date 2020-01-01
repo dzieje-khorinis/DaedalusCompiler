@@ -1,10 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Net;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
-using DaedalusCompiler.Dat;
+
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
@@ -18,8 +14,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             _symbolTable = symbolTable;
             ArrayIndexNodes = new List<ArrayIndexNode>();
         }
-
-
+        
         protected override void VisitReference(ReferenceNode referenceNode)
         {
 
@@ -40,15 +35,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             
             declarationNode = (DeclarationNode) symbol.Node;
             declarationNode.Usages.Add(referenceNode);
-
-            /*
-            if (referenceNode.Name != symbol.Name)
-            {
-                DeclarationNode declarationNode = (DeclarationNode) symbol.Node;
-                referenceNode.Annotations.Add(new NamesNotMatchingCaseWiseWarning(declarationNode.NameNode.Location, symbol.Name, referenceNode.Name));
-            }
-            */
-
+            
             int attributeDepth = 0;
             bool arrayIndexNodeFound = false;
             ArrayIndexNode firstArrayIndexNode = null;
@@ -113,7 +100,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                                     }
                                     else
                                     {
-                                        attributeNode.Annotations.Add(new ClassDoesNotHaveAttributeError(symbolLocalPath, classSymbol.Name, attributeNode.Name)); //TODO test
+                                        attributeNode.Annotations.Add(new ClassDoesNotHaveAttributeError(symbolLocalPath, classSymbol.Name, attributeNode.Name)); //TODO does it ever occur?
                                         return;
                                     }
                                 }
@@ -177,7 +164,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
             switch (ancestor)
             {
-                case SubclassNode subclassNode: // Instance/Prototype
+                case SubclassNode subclassNode:
                     
                     // look for local variable
                     SubclassSymbol subclassSymbol = (SubclassSymbol) subclassNode.Symbol;

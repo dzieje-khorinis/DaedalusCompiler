@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
 using DaedalusCompiler.Compilation;
-using DaedalusCompiler.Compilation.SemanticAnalysis;
 
 namespace DaedalusCompiler.Dat
 {
@@ -10,32 +8,31 @@ namespace DaedalusCompiler.Dat
     //[DebuggerDisplay("{IsFunction} {BuiltinType} {Name} '{Flags}'")]
     public class DatSymbol
     {
-        public bool IsFunction;
+        public readonly bool IsFunction;
         public bool IsAddressable;
         
         public int Index;
 
-        public string Name;
+        public readonly string Name;
 
-        public uint OffClsRet;  // Offset (ClassVar) | Size (Class) | ReturnType (Func)
+        public readonly uint OffClsRet;  // Offset (ClassVar) | Size (Class) | ReturnType (Func)
 
-        public uint Count; // AttributesCount (Class) | ParametersCount (Function) | 0 (External function) | ArraySize (Var/Const) | 1 (Default)
+        public readonly uint Count; // AttributesCount (Class) | ParametersCount (Function) | 0 (External function) | ArraySize (Var/Const) | 1 (Default)
         
-        public SymbolType BuiltinType;
+        public readonly SymbolType BuiltinType;
         
-        public SymbolFlag Flags;
+        public readonly SymbolFlag Flags;
 
-        public uint FileIndex;
-        public uint Line;
-        public uint LinesCount;
-        public uint Column;
-        public uint CharsCount;
+        public readonly uint FileIndex;
+        public readonly uint Line;
+        public readonly uint LinesCount;
+        public readonly uint Column;
+        public readonly uint CharsCount;
         
-        public object[] Content; // Offset (Class) | FirstTokenAddress (Callable) | Content (Const)
+        public readonly object[] Content; // Offset (Class) | FirstTokenAddress (Callable) | Content (Const)
 
-        public int ParentIndex;
-
-
+        public readonly int ParentIndex;
+        
         /// <summary>
         /// Creates DatSymbol from Symbol
         /// </summary>
@@ -111,9 +108,6 @@ namespace DaedalusCompiler.Dat
             
             Flags = symbol.Flags;
 
-            
-            
-            
             FileIndex = (uint) symbol.Node.Location.FileIndex;
             Line = (uint) symbol.Node.Location.Line;
             LinesCount = (uint) symbol.Node.Location.LinesCount;
@@ -315,15 +309,7 @@ namespace DaedalusCompiler.Dat
                 switch (BuiltinType)
                 {
                     case SymbolType.String:
-                        try
-                        {
-                            writer.Write((string)obj);
-                        }
-                        catch (InvalidCastException)
-                        {
-                            throw  new InvalidCastException();
-                        }
-                        
+                        writer.Write((string)obj);
                         break;
                     case SymbolType.Float:
                         writer.Write(Convert.ToSingle(obj));

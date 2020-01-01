@@ -8,55 +8,20 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         
     }
-    
-    //evaluate const content, array elements, array index, array reference index 
+
     public class ConstEvaluationVisitor : AbstractSyntaxTreeBaseGenericVisitor<NodeValue>
     {
-        private readonly Dictionary <string, Symbol> _symbolTable;
         private readonly Dictionary<ASTNode, NodeValue> _visitedNodesValuesCache;
         
-
-
-        public ConstEvaluationVisitor(Dictionary <string, Symbol> symbolTable)
+        public ConstEvaluationVisitor()
         {
-            _symbolTable = symbolTable;
             _visitedNodesValuesCache = new Dictionary<ASTNode, NodeValue>();
-        }
-
-
-        private void PrintVisit(ASTNode node, bool cached=false)
-        {
-            return;
-            string message = node.GetType().ToString().Split(".").Last();
-            switch (node)
-            {
-                case ConstDefinitionNode constDefinitionNode:
-                    message = $"{message} {constDefinitionNode.NameNode.Value}";
-                    break;
-                case ReferenceNode referenceNode:
-                    message = $"{message} {referenceNode.Name}";
-                    break;
-                case BinaryExpressionNode _:
-                    break;
-                default:
-                    return;
-            }
-
-            if (cached)
-            {
-                Console.WriteLine($"Visit CACHED: {message}");
-            }
-            else
-            {
-                Console.WriteLine($"Visit: {message}");
-            }
         }
         
         public override NodeValue Visit(ASTNode node)
         {
             if (_visitedNodesValuesCache.ContainsKey(node))
             {
-                PrintVisit(node, true);
                 if (_visitedNodesValuesCache[node] is UninitializedValue)
                 {
                     node.Annotations.Add(new InfiniteConstReferenceLoopError());
@@ -73,7 +38,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 return _visitedNodesValuesCache[node];
             }
             
-            PrintVisit(node, false);
             _visitedNodesValuesCache[node] = new UninitializedValue();
             
             NodeValue resultValue = base.Visit(node);
@@ -277,14 +241,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 case ConstArrayDefinitionNode constArrayDefinitionNode:
                     
                     NodeValue arrayIndexValue = new IntValue(0);
-                    //ArrayIndexNode arrayIndexNode = null;
             
                     foreach (var partNode in referenceNode.PartNodes)
                     {
                         switch (partNode)
                         {
                             case ArrayIndexNode node:
-                                //arrayIndexNode = node;
                                 arrayIndexValue = Visit(node);
                                 break;
                         }
@@ -295,7 +257,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         case IntValue intValue:
                             if (intValue.Value >= constArrayDefinitionNode.ElementNodes.Count)
                             {
-                                //arrayIndexNode?.Annotations.Add(new IndexOutOfRangeError());
                                 return new UndefinedValue();
                             }
                             
@@ -396,21 +357,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         protected override NodeValue VisitFloatLiteral(FloatLiteralNode node)
         {
             float value = node.Value;
-            
-            /*
-            if (node.ParentNode is UnaryExpressionNode unaryExpressionNode)
-            {
-                switch (unaryExpressionNode.Operator)
-                {
-                    case UnaryOperator.Minus:
-                        value = -value;
-                        break;
-                    case UnaryOperator.Plus:
-                        break;
-                }
-            }
-            */
-            
             return new FloatValue(value);
         }
 
@@ -448,7 +394,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
 
 
-        private void CheckValueType(ConstDefinitionNode node) // SymbolType expectedType, SymbolType actualType, ASTNode node
+        private void CheckValueType(ConstDefinitionNode node)
         {
             SymbolType expectedType = node.Symbol.BuiltinType;
             SymbolType actualType = NodeValueToBuiltinType(node.RightSideValue);
@@ -462,8 +408,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             {
                 rightSideNode.Annotations.Add(new CannotInitializeConstWithValueOfDifferentTypeError(expectedType, actualType, node.NameNode.Location, rightSideNode.Location));//+
             }
-
-            
         }
 
         private void CheckArrayElementType(SymbolType expectedType, SymbolType actualType, ASTNode node)

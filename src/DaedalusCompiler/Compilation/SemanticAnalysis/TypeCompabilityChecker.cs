@@ -4,9 +4,9 @@ using DaedalusCompiler.Dat;
 
 
 /*
- *
- Dodać do drzewka wyliczanie jakiego typu jest dane wyrażenie.
+ WORK IN PROGRESS
  
+ Dodać do drzewka wyliczanie jakiego typu jest dane wyrażenie.
  NoneType
  */
 

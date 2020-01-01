@@ -2,24 +2,20 @@
 using System.Collections.Generic;
 using System.Linq;
 using DaedalusCompiler.Compilation;
-using DaedalusCompiler.Compilation.SemanticAnalysis;
-using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Dat
 {
     public class DatBuilder
     {
         private int _currentAddress;
-        private string _datPath;
         private readonly IOrderedEnumerable<Symbol> _symbols;
         private readonly List<BlockSymbol> _symbolsWithInstructions;
 
-        public DatBuilder(Dictionary<string, Symbol> symbolTable, List<BlockSymbol> symbolsWithInstructions, string datPath)
+        public DatBuilder(Dictionary<string, Symbol> symbolTable, List<BlockSymbol> symbolsWithInstructions)
         {
             _currentAddress = 0;
             _symbols = symbolTable.Values.OrderBy(symbol => symbol.Index).ThenBy(symbol => symbol.SubIndex);
             _symbolsWithInstructions = symbolsWithInstructions;
-            _datPath = datPath;
         }
 
 
@@ -57,7 +53,7 @@ namespace DaedalusCompiler.Dat
 
                         case AssemblyLabel assemblyLabel:
                         {
-                            blockSymbol.Label2Addres[assemblyLabel.Label] = _currentAddress;
+                            blockSymbol.Label2Address[assemblyLabel.Label] = _currentAddress;
                             break;
                         }
                     }
@@ -66,54 +62,9 @@ namespace DaedalusCompiler.Dat
         }
         
 
-        /*
-        private Dictionary<string, int> GetLabelToAddressDict(BlockSymbol blockSymbol)
-        {
-            Dictionary<string, int> labelToAddress = new Dictionary<string, int>();
-
-            foreach (var instruction in blockSymbol.Instructions)
-            {
-                switch (instruction)
-                {
-                    case PushArrayVar _:
-                    {
-                        _currentAddress += 6;
-                        break;
-                    }
-
-                    case PushNullInstance _:
-                    case JumpToLabel _:
-                    case SymbolInstruction _:
-                    case ValueInstruction _:
-                    {
-                        _currentAddress += 5;
-                        break;
-                    }
-
-                    case ParamLessInstruction _:
-                    {
-                        _currentAddress += 1;
-                        break;
-                    }
-
-
-                    case AssemblyLabel assemblyLabel:
-                    {
-                        labelToAddress[assemblyLabel.Label] = _currentAddress;
-                        break;
-                    }
-                }
-            }
-
-            return labelToAddress;
-        }
-        */
-
         private List<DatToken> GetTokens(BlockSymbol blockSymbol)
         {
             List<DatToken> tokens = new List<DatToken>();
-
-            char prefix = (char) 255;
 
             foreach (AssemblyElement it in blockSymbol.Instructions)
             {
@@ -146,7 +97,7 @@ namespace DaedalusCompiler.Dat
                     }
                     case JumpToLabel jumpToLabel:
                     {
-                        intParam = blockSymbol.Label2Addres[jumpToLabel.Label];
+                        intParam = blockSymbol.Label2Address[jumpToLabel.Label];
                         break;
                     }
                     case SymbolInstruction symbolInstruction:
@@ -186,10 +137,6 @@ namespace DaedalusCompiler.Dat
             foreach (BlockSymbol blockSymbol in _symbolsWithInstructions)
             {
                 datTokens.AddRange(GetTokens(blockSymbol));
-                if (datTokens.Count > 120561)
-                {
-                    Console.WriteLine("stop");
-                }
             }
 
             List<DatSymbol> datSymbols = new List<DatSymbol>();
