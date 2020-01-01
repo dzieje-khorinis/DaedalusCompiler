@@ -419,15 +419,18 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class InstanceDefinitionNode : SubclassNode
     {
         public List<StatementNode> BodyNodes;
+        public bool DefinedWithoutBody;
 
         public InstanceDefinitionNode(NodeLocation location, NameNode nameNode, InheritanceParentReferenceNode inheritanceParentReferenceNode,
-            List<StatementNode> bodyNodes) : base(location, "instance", nameNode, inheritanceParentReferenceNode)
+            List<StatementNode> bodyNodes, bool definedWithoutBody) : base(location, "instance", nameNode, inheritanceParentReferenceNode)
         {
             foreach (var node in bodyNodes)
             {
                 node.ParentNode = this;
             }
             BodyNodes = bodyNodes;
+            DefinedWithoutBody = definedWithoutBody;
+
         }
     }
     

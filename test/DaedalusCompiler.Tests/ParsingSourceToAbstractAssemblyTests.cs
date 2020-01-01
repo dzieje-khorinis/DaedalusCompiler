@@ -3663,7 +3663,7 @@ namespace DaedalusCompiler.Tests
             
             _expectedSymbols = new List<Symbol>
             {
-                Ref($"{prefix}instance_help"),
+                Ref($"{prefix}INSTANCE_HELP"),
                 Ref("WLD_DetectPlayer"),
                 Ref("WLD_DetectPlayer.par0"),
                 Ref("C_NPC"),
@@ -5133,7 +5133,7 @@ namespace DaedalusCompiler.Tests
             
             _expectedSymbols = new List<Symbol>
             {
-                Ref($"{prefix}instance_help"),
+                Ref($"{prefix}INSTANCE_HELP"),
                 Ref("Info_AddChoice"),
                 Ref("Info_AddChoice.par0"),
                 Ref("Info_AddChoice.par1"),

@@ -7,7 +7,7 @@ using DaedalusCompiler.Compilation.SemanticAnalysis;
 namespace DaedalusCompiler.Dat
 {
     
-    [DebuggerDisplay("{IsFunction ? \"func \"}{BuiltinType} {Name} '{Flags}'")]
+    //[DebuggerDisplay("{IsFunction} {BuiltinType} {Name} '{Flags}'")]
     public class DatSymbol
     {
         public bool IsFunction;
@@ -39,14 +39,14 @@ namespace DaedalusCompiler.Dat
         /// <summary>
         /// Creates DatSymbol from Symbol
         /// </summary>
-        public DatSymbol(Symbol symbol, int address)
+        public DatSymbol(Symbol symbol)
         {
             IsFunction = symbol is FunctionSymbol;
             IsAddressable = symbol is BlockSymbol;
             
             Index = symbol.Index;
             Name = symbol.Path;
-            
+
             switch (symbol)
             {
                 case FunctionSymbol functionSymbol:
@@ -82,13 +82,37 @@ namespace DaedalusCompiler.Dat
                     Count = 0;
                     break;
                 
+                case PrototypeSymbol _:
+                    Count = 0;
+                    break;
+                
+                case InstanceSymbol instanceSymbol:
+                    if (instanceSymbol.IsExternal)
+                    {
+                        Count = 1; //INSTANCE_HELP
+                    }
+                    else
+                    {
+                        Count = 0;
+                    }
+
+                    break;
+                
                 default:
                     Count = 1;
                     break;
             }
 
             BuiltinType = IsFunction ? SymbolType.Func : symbol.BuiltinType;
+            if (symbol is ConstSymbol && symbol.BuiltinType == SymbolType.Func)
+            {
+                BuiltinType = SymbolType.Int;
+            }
+            
             Flags = symbol.Flags;
+
+            
+            
             
             FileIndex = (uint) symbol.Node.Location.FileIndex;
             Line = (uint) symbol.Node.Location.Line;
@@ -102,12 +126,75 @@ namespace DaedalusCompiler.Dat
                     Content = new object[] {classSymbol.Offset};
                     break;
                 
-                case BlockSymbol _:
-                    Content = new object[] {address};
+                case BlockSymbol blockSymbol:
+                    Content = new object[] {blockSymbol.FirstTokenAddress};
                     break;
 
+                case AttributeSymbol _:
+                    Content = new object[]{};
+                    break;
+                
+                case StringConstSymbol stringConstSymbol:
+                    Content = stringConstSymbol.Content;
+                    break;
+                
+                case ConstSymbol constSymbol:
+                    Content = constSymbol.Content;
+                    break;
+                
+                case VarSymbol varSymbol:
+                    if (varSymbol.IsExternal)
+                    {
+                        Content = varSymbol.BuiltinType == SymbolType.Instance ? new object[] {0} : null;
+                        break;
+                    }
+                    Content = new object[Count];
+                    for (int i = 0; i < Count; ++i)
+                    {
+                        switch (BuiltinType)
+                        {
+                            case SymbolType.String:
+                                Content[i] = "";
+                                break;
+                            case SymbolType.Float:
+                                Content[i] = 0.0f;
+                                break;
+                            default:
+                                Content[i] = 0;
+                                break;
+                        }
+                    }
+                    break;
+
+                case ExternalParameterSymbol externalParameterSymbol:
+                    if (externalParameterSymbol.BuiltinType == SymbolType.Instance || externalParameterSymbol.BuiltinType == SymbolType.Func)
+                    {
+                        Content = new object[] {0};
+                    }
+                    else
+                    {
+                        Content = new object[]{};
+                    }
+                    break;
+
+                case ParameterSymbol _:
+                    
+                    switch (BuiltinType)
+                    {
+                        case SymbolType.String:
+                            Content = new object[] {""};
+                            break;
+                        case SymbolType.Float:
+                            Content = new object[] {0.0f};
+                            break;
+                        default:
+                            Content = new object[] {0};
+                            break;
+                    }
+                    break;
+                
                 default:
-                    Content = symbol.Content;
+                    Content = new object[]{};
                     break;
                 
             }
@@ -127,6 +214,12 @@ namespace DaedalusCompiler.Dat
                         ParentIndex = classSymbol.Index;
                     }
                     break;
+                case ParameterSymbol parameterSymbol:
+                    if (parameterSymbol.ComplexType is ClassSymbol classSymbol2)
+                    {
+                        ParentIndex = classSymbol2.Index;
+                    }
+                    break;
             }
         }
 
@@ -140,7 +233,7 @@ namespace DaedalusCompiler.Dat
             {
                 Name = reader.ReadString();
             }
-
+            
             OffClsRet = reader.ReadUInt32();
             
             uint bitField = reader.ReadUInt32();
@@ -154,40 +247,40 @@ namespace DaedalusCompiler.Dat
             Column = reader.ReadUInt32();
             CharsCount = reader.ReadUInt32();
 
-            Content = null;
-            switch (BuiltinType)
+            Content = new object[]{};
+            
+            if (!Flags.HasFlag(SymbolFlag.ClassVar))
             {
-                case SymbolType.Class:
-                case SymbolType.Func:
-                case SymbolType.Instance:
-                case SymbolType.Prototype:
-                    Content = new object[]{reader.ReadInt32()};
-                    break;
-                
-                default:
-                    if (Flags.HasFlag(SymbolFlag.ClassVar))
-                    {
+                switch (BuiltinType)
+                {
+                    case SymbolType.Class:
+                    case SymbolType.Func:
+                    case SymbolType.Instance:
+                    case SymbolType.Prototype:
+                        Content = new object[]{reader.ReadInt32()};
                         break;
-                    }
-                    Content = new object[Count];
-                    for (int i = 0; i < Count; ++i)
-                    {
-                        switch (BuiltinType)
+                
+                    default:
+                        Content = new object[Count];
+                        for (int i = 0; i < Count; ++i)
                         {
-                            case SymbolType.String:
-                                Content[i] = reader.ReadString();
-                                break;
-                            case SymbolType.Float:
-                                Content[i] = reader.ReadSingle();
-                                break;
-                            default:
-                                Content[i] = reader.ReadInt32();
-                                break;
+                            switch (BuiltinType)
+                            {
+                                case SymbolType.String:
+                                    Content[i] = reader.ReadString();
+                                    break;
+                                case SymbolType.Float:
+                                    Content[i] = reader.ReadSingle();
+                                    break;
+                                default:
+                                    Content[i] = reader.ReadInt32();
+                                    break;
+                            }
                         }
-                    }
-                    break;
+                        break;
+                }
             }
-
+            
             ParentIndex = reader.ReadInt32();
         }
         
@@ -222,7 +315,15 @@ namespace DaedalusCompiler.Dat
                 switch (BuiltinType)
                 {
                     case SymbolType.String:
-                        writer.Write((string)obj);
+                        try
+                        {
+                            writer.Write((string)obj);
+                        }
+                        catch (InvalidCastException)
+                        {
+                            throw  new InvalidCastException();
+                        }
+                        
                         break;
                     case SymbolType.Float:
                         writer.Write(Convert.ToSingle(obj));

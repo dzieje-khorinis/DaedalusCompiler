@@ -38,6 +38,10 @@ namespace DaedalusCompiler.Tests
         
         protected Symbol Ref(string symbolName)
         {
+            if (symbolName.StartsWith((char) 255))
+            {
+                return _testsHelper.SymbolTable[symbolName];
+            }
             return _testsHelper.SymbolTable[symbolName.ToUpper()];
         }
 

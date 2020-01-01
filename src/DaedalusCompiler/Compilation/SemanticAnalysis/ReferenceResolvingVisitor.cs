@@ -161,7 +161,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
             if (ancestor is InstanceDefinitionNode instanceDefinitionNode)
             {
-                if (referenceNameUpper == "THIS") //TODO originally its SELF but it makes name collision with self global object, so only THIS keyword should be allowed to stay
+                /*
+                 TODO once transpiler is done, make only THIS to be available keywords since SELF makes name collision with self global object
+                 */
+                if (referenceNameUpper == "THIS" || referenceNameUpper == "SELF") 
                 {
                     referenceNode.Name = instanceDefinitionNode.NameNode.Value;
                     referenceNameUpper = referenceNode.Name.ToUpper();

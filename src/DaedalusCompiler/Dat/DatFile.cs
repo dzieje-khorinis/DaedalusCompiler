@@ -18,6 +18,7 @@ namespace DaedalusCompiler.Dat
 
         public List<DatToken> DatTokens { get; set; }
 
+        private int _nextSymbolIndex;
 
         public DatFile() {}
 
@@ -90,6 +91,7 @@ namespace DaedalusCompiler.Dat
         
         private List<DatSymbol> LoadDatSymbols(DatBinaryReader reader)
         {
+            _nextSymbolIndex = 0;
             var symbolsCount = reader.ReadInt32();
             var symbolsOrder = new int[symbolsCount];
             for (int i = 0; i < symbolsCount; i++)
@@ -100,7 +102,13 @@ namespace DaedalusCompiler.Dat
             List<DatSymbol> symbols = new List<DatSymbol>();
             for (int i = 0; i < symbolsCount; i++)
             {
-                symbols.Add(new DatSymbol(reader));
+                if (_nextSymbolIndex == 21)
+                {
+                    Console.WriteLine("Ds");
+                }
+                DatSymbol symbol = new DatSymbol(reader) {Index = _nextSymbolIndex};
+                symbols.Add(symbol);
+                _nextSymbolIndex++;
             }
             return symbols;
         }

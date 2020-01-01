@@ -20,6 +20,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public readonly List<ITypedSymbol> TypedSymbols;
         public readonly List<FunctionSymbol> FunctionSymbols;
         public readonly List<SubclassSymbol> SubclassSymbols;
+        public readonly List<BlockSymbol> SymbolsWithInstructions;
         public readonly List<ClassSymbol> ClassSymbols;
         
         public readonly List<DeclarationNode> DeclarationNodes;
@@ -38,6 +39,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             TypedSymbols = new List<ITypedSymbol>();
             FunctionSymbols = new List<FunctionSymbol>();
             SubclassSymbols = new List<SubclassSymbol>();
+            SymbolsWithInstructions = new List<BlockSymbol>();
             ClassSymbols = new List<ClassSymbol>();
             
             DeclarationNodes = new List<DeclarationNode>();
@@ -224,10 +226,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
             if (_isInExternalFile)
             {
+                symbol.IsExternal = true;
+                
                 if (symbol.Name == "instance_help")
                 {
                     symbol.Name = $"{(char) 255}{symbol.Name}";
-                    symbol.Path = $"{(char) 255}{symbol.Path}".ToUpper();
+                    symbol.Path = $"{(char) 255}{symbol.Path.ToUpper()}";
                 }
             }
 
@@ -270,16 +274,28 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             
             switch (symbol)
             {
+                case FunctionSymbol functionSymbol:
+                    //FunctionSymbols.Add(functionSymbol);
+                    TypedSymbols.Add(functionSymbol);
+                    if (!functionSymbol.IsExternal)
+                    {
+                        SymbolsWithInstructions.Add(functionSymbol);
+                    }
+                    break;
+                
                 case ITypedSymbol typedSymbol:
                     TypedSymbols.Add(typedSymbol);
                     break;
-                /*
-                case FunctionSymbol functionSymbol:
-                    FunctionSymbols.Add(functionSymbol);
-                    break;
-                */
+                
+                
+                
+                
                 case SubclassSymbol subclassSymbol:
                     SubclassSymbols.Add(subclassSymbol);
+                    if (!subclassSymbol.IsExternal)
+                    {
+                        SymbolsWithInstructions.Add(subclassSymbol);
+                    }
                     break;
                 case ClassSymbol classSymbol:
                     ClassSymbols.Add(classSymbol);

@@ -1,0 +1,32 @@
+// TODO
+// make `self` keyword in instances deprecated (it's confusing since we got global `self` instance, which is completely different object), and replace it with `this` keyword (once transpiler is done, self will be unsupported)
+// doc: backward incompability:  slf wasn't special in prototypes/instances, in original compiler you could always write `someundefinedname.varname` and it would work as it was `varname`
+// doc: backward incompability: keywords should be lowercase (it wasn't case sensitive in original compiler)
+// maybe remove nofunc and stay only with null (will be possible to assign null to variables of class and func type)
+
+// maybe write errors to srderr instead of stdout
+// add warning if if-statement condition is always false (unreachable code) or true (only in cases we are sure)
+// add warning/error accessing/assigning array element without square brackets
+// add warning if there is code after return (unreachable code)
+// add warning if function doesn't return anything but it's type isn't void. Also check if all return paths
+// test ingame (zSpy print) return float / float assignment / float argument (func call, literal, variable)
+// test ingame: nested attributes, while loop
+// doc: we have hoisting, when original compiler only have hoisting when there is global variable with same name
+// add extern keyword
+// inline keyword and inline comment for backwards compability
+// tenary operator
+// for and foreach loops
+// methods in classes
+// boolean type
+// make builting symbols list
+// make unused symbols (that are used by the engine, so we know not to give warning because symbol is unused)
+// assignment on var declaration (only inside functions)
+// let grammar allow const not to have assignment and detect that error in semantic analysis
+// add documentation: why created, differences to original compiler, tutorial, transpiler, all supported errors
+// dynamic array accesss (with custom assembly) if > 255
+// think about: make casting possible
+// think about: add float arithmetics
+// make ou files be generated using hidden channel, not regexes (it may be fast)
+// translation strings, t"Hello world", also think about different way of writing dialogs (not in comments)
+
+// when all features added, optimize grammar and code as much as possible

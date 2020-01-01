@@ -55,7 +55,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         // DatSymbol properties
         public object[] Content;
-        
+        public bool IsExternal;
 
         protected Symbol(string name, ASTNode node)
         {
@@ -66,7 +66,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Node = node;
             BuiltinType = SymbolType.Uninitialized;
 
-            Content = null;
+            Content = new object[]{};
+            IsExternal = false;
         }
         
         public static SymbolType GetBuiltinType(string typeName)
@@ -86,13 +87,17 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     {
         public readonly Dictionary<string, NestableSymbol> BodySymbols;
         public readonly List<AssemblyElement> Instructions;
+        
         public int FirstTokenAddress;
+        public Dictionary<string, int> Label2Addres;
         
         protected BlockSymbol(string name, ASTNode node) : base(name, node)
         {
             BodySymbols = new Dictionary<string, NestableSymbol>();
             Instructions = new List<AssemblyElement>();
+            
             FirstTokenAddress = -1;
+            Label2Addres = new Dictionary<string, int>();
         }
 
         public void AddBodySymbol(NestableSymbol nestableSymbol)
@@ -175,7 +180,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         //public SymbolType ReturnBuiltinType;
         //public Symbol ReturnComplexType;
-        public readonly bool IsExternal;
+        //public readonly bool IsExternal;
         
         public int ParametersCount { get; set; }
 
@@ -339,6 +344,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             Content = new object[]{content};
             BuiltinType = SymbolType.String;
+            Path = name;
         }
     }
 }

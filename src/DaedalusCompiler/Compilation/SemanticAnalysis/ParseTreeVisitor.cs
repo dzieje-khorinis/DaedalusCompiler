@@ -121,7 +121,7 @@ namespace DaedalusCompiler.Compilation
 			InheritanceParentReferenceNode inheritanceParentReferenceNode = new InheritanceParentReferenceNode(parentReferenceContext.GetText(), GetLocation(parentReferenceContext));
 			InheritanceReferenceNodes.Add(inheritanceParentReferenceNode);
 			List<StatementNode> statementNodes = GetStatementNodes(instanceDefContext.statementBlock());
-			return new InstanceDefinitionNode(GetLocation(instanceDefContext), nameNode, inheritanceParentReferenceNode, statementNodes);
+			return new InstanceDefinitionNode(GetLocation(instanceDefContext), nameNode, inheritanceParentReferenceNode, statementNodes, definedWithoutBody:false);
 		}
 		
 		public override ASTNode VisitParameterDecl([NotNull] DaedalusParser.ParameterDeclContext context)
@@ -396,7 +396,7 @@ namespace DaedalusCompiler.Compilation
 			foreach (DaedalusParser.NameNodeContext nameNodeContext in instanceDeclContext.nameNode())
 			{
 				NameNode nameNode = new NameNode(GetLocation(nameNodeContext), nameNodeContext.GetText());
-				instanceDeclarationNodes.Add(new InstanceDefinitionNode(GetLocation(instanceDeclContext), nameNode, inheritanceParentReferenceNode, new List<StatementNode>()));
+				instanceDeclarationNodes.Add(new InstanceDefinitionNode(GetLocation(instanceDeclContext), nameNode, inheritanceParentReferenceNode, new List<StatementNode>(), definedWithoutBody: true));
 			}
 			
 			return new InstanceDeclarationsTemporaryNode(GetLocation(instanceDeclContext), instanceDeclarationNodes);

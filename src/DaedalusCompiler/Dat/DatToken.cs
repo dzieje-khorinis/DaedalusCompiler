@@ -60,7 +60,9 @@ namespace DaedalusCompiler.Dat
             var tokenByte = reader.ReadByte();
 
             if (Enum.IsDefined(typeof(DatTokenType), tokenByte) == false)
+            {
                 throw new Exception($"Unable to parse DatToken with id = {tokenByte}");
+            }
 
             var token = new DatToken
             {

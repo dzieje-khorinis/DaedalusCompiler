@@ -107,6 +107,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     {
                         node.ArraySizeNode.Annotations.Add(new TooBigArraySizeError());//+
                     }
+
+                    ((IArraySymbol) node.Symbol).Size = Convert.ToInt32(intValue.Value);
+
                     break;
                 default:
                     node.ArraySizeNode.Annotations.Add(new ArraySizeNotConstIntegerError());
@@ -156,6 +159,8 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     {
                         node.ArraySizeNode.Annotations.Add(new InconsistentConstArraySizeError(node.NameNode.Value, (int) intValue.Value, node.ElementNodes.Count));//+
                     }
+                    
+                    ((IArraySymbol) node.Symbol).Size = Convert.ToInt32(intValue.Value);
                     break;
                 default:
                     node.ArraySizeNode.Annotations.Add(new ArraySizeNotConstIntegerError());

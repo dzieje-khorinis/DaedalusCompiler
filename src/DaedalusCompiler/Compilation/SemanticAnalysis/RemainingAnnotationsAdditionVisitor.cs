@@ -52,13 +52,24 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         break;
                     
                     case InstanceSymbol instanceSymbol:
-                        instanceSymbol.Flags |= SymbolFlag.Const;
+                        if (((InstanceDefinitionNode)instanceSymbol.Node).DefinedWithoutBody)
+                        {
+                            
+                        }
+                        else
+                        {
+                            instanceSymbol.Flags |= SymbolFlag.Const;
+                        }
                         break;
                     
                     case ConstSymbol constSymbol:
                         constSymbol.Flags |= SymbolFlag.Const;
                         break;
                     
+                    case StringConstSymbol stringConstSymbol:
+                        stringConstSymbol.Flags |= SymbolFlag.Const;
+                        break;
+
                     case VarSymbol varSymbol:
                         if (varSymbol.ParentBlockSymbol is ClassSymbol)
                         {

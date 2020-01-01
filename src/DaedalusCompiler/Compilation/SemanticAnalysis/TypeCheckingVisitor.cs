@@ -109,16 +109,17 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             if (node.FunctionReferenceNode.Symbol != null)
             {
                 FunctionDefinitionNode functionDefinitionNode;
-                try
+                ASTNode declarationNode = node.FunctionReferenceNode.Symbol.Node;
+                if (declarationNode is FunctionDefinitionNode)
                 {
                     functionDefinitionNode = (FunctionDefinitionNode) node.FunctionReferenceNode.Symbol.Node;
                 }
-                catch (InvalidCastException)
+                else
                 {
-                    Console.WriteLine("dx");
-                    throw new InvalidCastException();
+                    node.Annotations.Add(new SymbolIsNotAFunctionError(node.FunctionReferenceNode.Name, declarationNode.Location));
+                    return;
                 }
-                
+
                 Symbol symbol = functionDefinitionNode.Symbol;
 
                 if (symbol != null)

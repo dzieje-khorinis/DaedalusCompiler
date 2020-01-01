@@ -537,9 +537,69 @@ namespace DaedalusCompiler.Tests.SemanticErrors
         }
         
         
+        [Fact]
+        public void TestCallNotFunction()
+        {
+            Code = @"
+                //! suppress: W5
+                const int a = 1;
+                var float b;
+                
+                func void firstFunc() {}
+                
+                func void testFunc() {
+                    var func c;
+                    var string d;
+                    const func e = firstFunc;
+                    a();
+                    b();
+                    c();
+                    d();
+                    e();
+                }
+            ";
+
+            ExpectedCompilationOutput = @"
+                test.d: In function 'testFunc':
+                test.d:11:4: error: 'a' is not a function and cannot be called
+                    a();
+                    ^
+                test.d:2:10: note: 'a' declared here
+                const int a = 1;
+                          ^
+                test.d:12:4: error: 'b' is not a function and cannot be called
+                    b();
+                    ^
+                test.d:3:10: note: 'b' declared here
+                var float b;
+                          ^
+                test.d:13:4: error: 'c' is not a function and cannot be called
+                    c();
+                    ^
+                test.d:8:13: note: 'c' declared here
+                    var func c;
+                             ^
+                test.d:14:4: error: 'd' is not a function and cannot be called
+                    d();
+                    ^
+                test.d:9:15: note: 'd' declared here
+                    var string d;
+                               ^
+                test.d:15:4: error: 'e' is not a function and cannot be called
+                    e();
+                    ^
+                test.d:10:15: note: 'e' declared here
+                    const func e = firstFunc;
+                               ^
+                5 errors generated.
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
         
         [Fact]
-        public void TestAssignToArrayWithoutSquareBrackets()
+        public void TestAssignToArrayWithoutSquareBrackets() // TODO
         {
             Code = @"
 

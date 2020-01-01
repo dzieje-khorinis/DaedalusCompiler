@@ -254,6 +254,26 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
     
+    public class SymbolIsNotAFunctionError : ErrorAnnotationNoted
+    {
+        private readonly string _identifier;
+
+        public SymbolIsNotAFunctionError(string identifier, NodeLocation noteLocation) : base(noteLocation)
+        {
+            _identifier = identifier;
+        }
+
+        public override string GetMessage()
+        {
+            return $"'{_identifier}' is not a function and cannot be called";
+        }
+
+        public override string GetNote()
+        {
+            return $"'{_identifier}' declared here";
+        }
+    }
+    
 
     public class UndeclaredIdentifierError : ErrorAnnotation
     {

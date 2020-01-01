@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters;
 using System.Text;
 
 namespace DaedalusCompiler.Dat
@@ -52,14 +54,60 @@ namespace DaedalusCompiler.Dat
 
         public string ReadString()
         {
-            var builder = new StringBuilder();
-            var nextChar = ReadChar();
+            /*
+            List<byte> bytes = new List<byte>();
+
+
+            bool isPrefixed = false;
+            byte lastByte = ReadByte();
+            
+            if (lastByte == 255)
+            {
+                isPrefixed = true;
+            }
+            else
+            {
+                bytes.Add(lastByte);
+            }
+
+
+            while (true)
+            {
+                lastByte = ReadByte();
+                if (lastByte == '\n')
+                {
+                    break;
+                }
+                bytes.Add(lastByte);
+            }
+
+            string result = Encoding.GetEncoding(1250).GetString(bytes.ToArray());
+            if (isPrefixed)
+            {
+                result = $"{(char) 255}{result}";
+            }
+            
+            return result;
+            */
+
+            
+            List<byte> bytes = new List<byte>();
+            var nextChar = ReadByte();
+            bool isPrefixed = nextChar == 255;
+   
             while (nextChar != '\n')
             {
-                builder.Append(nextChar);
-                nextChar = ReadChar();
+                bytes.Add(nextChar);
+                nextChar = ReadByte();
             }
-            return builder.ToString();
+            
+            string result = Encoding.GetEncoding(1250).GetString(bytes.ToArray());
+            if (isPrefixed)
+            {
+                result = (char) 255 + result.Substring(1);
+            }
+            
+            return result;
         }
     }
 }

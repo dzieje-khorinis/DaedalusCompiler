@@ -12,14 +12,61 @@ namespace DaedalusCompiler.Dat
         private int _currentAddress;
         private string _datPath;
         private readonly IOrderedEnumerable<Symbol> _symbols;
+        private readonly List<BlockSymbol> _symbolsWithInstructions;
 
-        public DatBuilder(Dictionary<string, Symbol> symbolTable, string datPath)
+        public DatBuilder(Dictionary<string, Symbol> symbolTable, List<BlockSymbol> symbolsWithInstructions, string datPath)
         {
             _currentAddress = 0;
             _symbols = symbolTable.Values.OrderBy(symbol => symbol.Index).ThenBy(symbol => symbol.SubIndex);
+            _symbolsWithInstructions = symbolsWithInstructions;
             _datPath = datPath;
         }
 
+
+        private void CalculateAddresses(List<BlockSymbol> blockSymbols)
+        {
+            _currentAddress = 0;
+            foreach (BlockSymbol blockSymbol in blockSymbols)
+            {
+                blockSymbol.FirstTokenAddress = _currentAddress;
+                foreach (var instruction in blockSymbol.Instructions)
+                {
+                    switch (instruction)
+                    {
+                        case PushArrayVar _:
+                        {
+                            _currentAddress += 6;
+                            break;
+                        }
+
+                        case PushNullInstance _:
+                        case JumpToLabel _:
+                        case SymbolInstruction _:
+                        case ValueInstruction _:
+                        {
+                            _currentAddress += 5;
+                            break;
+                        }
+
+                        case ParamLessInstruction _:
+                        {
+                            _currentAddress += 1;
+                            break;
+                        }
+
+
+                        case AssemblyLabel assemblyLabel:
+                        {
+                            blockSymbol.Label2Addres[assemblyLabel.Label] = _currentAddress;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+
+        /*
         private Dictionary<string, int> GetLabelToAddressDict(BlockSymbol blockSymbol)
         {
             Dictionary<string, int> labelToAddress = new Dictionary<string, int>();
@@ -34,6 +81,7 @@ namespace DaedalusCompiler.Dat
                         break;
                     }
 
+                    case PushNullInstance _:
                     case JumpToLabel _:
                     case SymbolInstruction _:
                     case ValueInstruction _:
@@ -59,11 +107,11 @@ namespace DaedalusCompiler.Dat
 
             return labelToAddress;
         }
+        */
 
         private List<DatToken> GetTokens(BlockSymbol blockSymbol)
         {
             List<DatToken> tokens = new List<DatToken>();
-            Dictionary<string, int> labelToAddress = GetLabelToAddressDict(blockSymbol);
 
             char prefix = (char) 255;
 
@@ -98,7 +146,7 @@ namespace DaedalusCompiler.Dat
                     }
                     case JumpToLabel jumpToLabel:
                     {
-                        intParam = labelToAddress[jumpToLabel.Label];
+                        intParam = blockSymbol.Label2Addres[jumpToLabel.Label];
                         break;
                     }
                     case SymbolInstruction symbolInstruction:
@@ -134,23 +182,22 @@ namespace DaedalusCompiler.Dat
         public DatFile GetDatFile()
         {
             List<DatToken> datTokens = new List<DatToken>();
-            List<DatSymbol> datSymbols = new List<DatSymbol>();
-
-            foreach (Symbol symbol in _symbols)
+            CalculateAddresses(_symbolsWithInstructions);
+            foreach (BlockSymbol blockSymbol in _symbolsWithInstructions)
             {
-                datSymbols.Add(new DatSymbol(symbol, _currentAddress));
-
-                if (symbol is FunctionSymbol functionSymbol && functionSymbol.IsExternal)
+                datTokens.AddRange(GetTokens(blockSymbol));
+                if (datTokens.Count > 120561)
                 {
-                    continue;
-                }
-                
-                if (symbol is BlockSymbol blockSymbol)
-                {
-                    datTokens.AddRange(GetTokens(blockSymbol));
+                    Console.WriteLine("stop");
                 }
             }
 
+            List<DatSymbol> datSymbols = new List<DatSymbol>();
+            foreach (Symbol symbol in _symbols)
+            {
+                datSymbols.Add(new DatSymbol(symbol));
+            }
+            
             return new DatFile
             {
                 Version = '2',
