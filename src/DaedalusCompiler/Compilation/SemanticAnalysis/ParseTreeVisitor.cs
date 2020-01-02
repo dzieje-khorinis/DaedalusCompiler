@@ -454,15 +454,34 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 				{
 					DaedalusParser.NameNodeContext nameNodeContext = varValueDeclContext.nameNode();
 					NameNode nameNode = new NameNode(GetLocation(nameNodeContext), nameNodeContext.GetText());
-					varDeclarationNodes.Add(new VarDeclarationNode(GetLocation(varValueDeclContext), typeNameNode, nameNode));
+					
+					ExpressionNode rightSideNode = null;
+					if (varValueDeclContext.varValueAssignment() != null)
+					{
+						rightSideNode = (ExpressionNode) Visit(varValueDeclContext.varValueAssignment().expression()); // TODO check if null
+					}
+					
+					varDeclarationNodes.Add(new VarDeclarationNode(GetLocation(varValueDeclContext), typeNameNode, nameNode, rightSideNode));
 				}
 				else if (childContext is DaedalusParser.VarArrayDeclContext varArrayDeclContext)
 				{	
 					DaedalusParser.NameNodeContext nameNodeContext = varArrayDeclContext.nameNode();
 					NameNode nameNode = new NameNode(GetLocation(nameNodeContext), nameNodeContext.GetText());
 					ExpressionNode arraySizeNode = (ExpressionNode) VisitArraySize(varArrayDeclContext.arraySize());
+
+
+					List<ExpressionNode> elementNodes = null;
+					if (varArrayDeclContext.varArrayAssignment() != null)
+					{
+						elementNodes = new List<ExpressionNode>();
+						foreach (DaedalusParser.ExpressionContext expressionContext in varArrayDeclContext.varArrayAssignment().expression())
+						{
+							elementNodes.Add((ExpressionNode) Visit(expressionContext));
+						}
+					}
+					
 					VarArrayDeclarationNode varArrayDeclarationNode =
-						new VarArrayDeclarationNode(GetLocation(nameNodeContext), typeNameNode, nameNode, arraySizeNode);
+						new VarArrayDeclarationNode(GetLocation(nameNodeContext), typeNameNode, nameNode, arraySizeNode, elementNodes); // TODO check if null
 					_arrayDeclarationNodes.Add(varArrayDeclarationNode);
 					varDeclarationNodes.Add(varArrayDeclarationNode);
 				}

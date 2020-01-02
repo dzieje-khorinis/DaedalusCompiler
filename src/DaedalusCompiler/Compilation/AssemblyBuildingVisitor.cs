@@ -590,12 +590,41 @@ namespace DaedalusCompiler.Compilation
 
         protected override List<AssemblyElement> VisitVarDeclaration(VarDeclarationNode node)
         {
-            return new List<AssemblyElement>();
+            List<AssemblyElement> instructions = new List<AssemblyElement>();
+            if (node.RightSideNode != null)
+            {
+                instructions.AddRange(Visit(node.RightSideNode));
+                instructions.Add(new PushVar(node.Symbol));
+                instructions.Add(GetAssignInstruction(node.Symbol));
+            }
+
+            return instructions;
         }
 
         protected override List<AssemblyElement> VisitVarArrayDeclaration(VarArrayDeclarationNode node)
         {
-            return new List<AssemblyElement>();
+            List<AssemblyElement> instructions = new List<AssemblyElement>();
+            if (node.ElementNodes != null)
+            {
+                int index = 0;
+                foreach (ExpressionNode elementNode in node.ElementNodes)
+                {
+                    instructions.AddRange(Visit(elementNode));
+                    if (index > 0)
+                    {
+                        instructions.Add(new PushArrayVar(node.Symbol, index));
+                    }
+                    else
+                    {
+                        instructions.Add(new PushVar(node.Symbol));
+                    }
+                    instructions.Add(GetAssignInstruction(node.Symbol));
+                    index++;
+                }
+            }
+
+
+            return instructions;
         }
 
         protected override List<AssemblyElement> VisitConstDefinition(ConstDefinitionNode node)

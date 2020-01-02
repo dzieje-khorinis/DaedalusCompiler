@@ -648,13 +648,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     }
 
 
-    public class InconsistentConstArraySizeError : ErrorAnnotation
+    public class InconsistentArraySizeError : ErrorAnnotation
     {
         private readonly string _identifier;
         private readonly int _declaredSize;
         private readonly int _elementsCount;
 
-        public InconsistentConstArraySizeError(string identifier, int declaredSize, int elementsCount)
+        public InconsistentArraySizeError(string identifier, int declaredSize, int elementsCount)
         {
             _declaredSize = declaredSize;
             _elementsCount = elementsCount;
@@ -746,6 +746,19 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             return $"object '{_objectName}' of type '{_className}' has no member named '{_attributeName}'";
         }
-
     }
+
+    public class VarAssignmentNotAllowedHereError : ErrorAnnotation
+    {
+        
+        public VarAssignmentNotAllowedHereError(NodeLocation pointerLocation)
+        {
+            PointerLocation = pointerLocation;
+        }
+        public override string GetMessage()
+        {
+            return "variable assignment allowed only in functions, prototypes and instances";
+        }
+    }
+
 }

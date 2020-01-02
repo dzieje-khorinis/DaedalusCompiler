@@ -29,7 +29,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             
             CustomTypeDeclarationNode customTypeDeclarationNode = (CustomTypeDeclarationNode) typedSymbolNode;
             
-            if (symbolBuiltinType == SymbolType.Uninitialized) // symbolType isn't one of the simple builtin types
+            if (symbolBuiltinType == SymbolType.Uninitialized) // if symbolBuiltinType isn't one of the simple builtin types
             {
                 // TODO think of: differentiate NotAClassError and UnknownTypeNameError
                 if (_symbolTable.ContainsKey(typedSymbol.TypeName))

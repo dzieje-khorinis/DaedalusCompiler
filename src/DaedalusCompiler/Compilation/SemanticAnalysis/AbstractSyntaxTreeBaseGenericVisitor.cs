@@ -108,6 +108,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             Visit(node.TypeNameNode);
             Visit(node.NameNode);
+            if (node.RightSideNode != null)
+            {
+                Visit(node.RightSideNode);
+            }
             return DefaultResult;
         }
 
@@ -116,6 +120,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Visit(node.TypeNameNode);
             Visit(node.NameNode);
             Visit(node.ArraySizeNode);
+            if (node.ElementNodes != null)
+            {
+                Visit(node.ElementNodes);
+            }
             return DefaultResult;
         }
         

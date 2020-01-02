@@ -122,11 +122,23 @@ public interface IDaedalusVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitVarArrayDecl([NotNull] DaedalusParser.VarArrayDeclContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="DaedalusParser.varArrayAssignment"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitVarArrayAssignment([NotNull] DaedalusParser.VarArrayAssignmentContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="DaedalusParser.varValueDecl"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitVarValueDecl([NotNull] DaedalusParser.VarValueDeclContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="DaedalusParser.varValueAssignment"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitVarValueAssignment([NotNull] DaedalusParser.VarValueAssignmentContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="DaedalusParser.parameterList"/>.
 	/// </summary>

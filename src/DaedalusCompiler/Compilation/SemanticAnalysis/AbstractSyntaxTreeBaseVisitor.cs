@@ -91,6 +91,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         {
             Visit(node.TypeNameNode);
             Visit(node.NameNode);
+            if (node.RightSideNode != null)
+            {
+                Visit(node.RightSideNode);
+            }
         }
 
         protected virtual void VisitVarArrayDeclaration(VarArrayDeclarationNode node)
@@ -98,6 +102,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             Visit(node.TypeNameNode);
             Visit(node.NameNode);
             Visit(node.ArraySizeNode);
+            if (node.ElementNodes != null)
+            {
+                Visit(node.ElementNodes);
+            }
         }
         
         protected virtual void VisitParameterDeclaration(ParameterDeclarationNode node)

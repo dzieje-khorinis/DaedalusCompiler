@@ -19,6 +19,9 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                     b = a[0].attr;
                     b = b[1].attr;
                     b = xxx[2].attr;
+
+                    var int new_a[2] = {a[0].attr, b[1].attr};
+                    var int new_b = xxx[2].attr;
                 }
             ";
 
@@ -42,7 +45,16 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:11:8: error: 'xxx' undeclared
                     b = xxx[2].attr;
                         ^
-                6 errors generated.
+                test.d:13:29: error: access to attribute of array element not supported
+                    var int new_a[2] = {a[0].attr, b[1].attr};
+                                             ^
+                test.d:13:35: error: cannot access array element because 'b' is not an array
+                    var int new_a[2] = {a[0].attr, b[1].attr};
+                                                   ^
+                test.d:14:20: error: 'xxx' undeclared
+                    var int new_b = xxx[2].attr;
+                                    ^
+                9 errors generated.
                 ";
 
             AssertCompilationOutputMatch();
@@ -108,16 +120,23 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 class NPC {
                     var int y;
                 };
-                
+
                 instance self(NPC) {};
                 var NPC victim;
-                
+
                 func void testFunc() {
                     self.x = 5;
                     self.y = 10;
                     other.y = 15;
                     victim.x = 20;
                     victim.y = 25;
+
+                    var int a = self.x;
+                    var int b = self.y;
+                    var int c = other.y;
+                    var int d = victim.x;
+                    var int e = victim.y;
+                    var int tab[5] = {self.x, self.y, other.y, victim.x, victim.y};
                 };
             ";
 
@@ -132,7 +151,25 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:12:11: error: object 'victim' of type 'NPC' has no member named 'x'
                     victim.x = 20;
                            ^
-                3 errors generated.
+                test.d:15:21: error: object 'self' of type 'NPC' has no member named 'x'
+                    var int a = self.x;
+                                     ^
+                test.d:17:16: error: 'other' undeclared
+                    var int c = other.y;
+                                ^
+                test.d:18:23: error: object 'victim' of type 'NPC' has no member named 'x'
+                    var int d = victim.x;
+                                       ^
+                test.d:20:27: error: object 'self' of type 'NPC' has no member named 'x'
+                    var int tab[5] = {self.x, self.y, other.y, victim.x, victim.y};
+                                           ^
+                test.d:20:38: error: 'other' undeclared
+                    var int tab[5] = {self.x, self.y, other.y, victim.x, victim.y};
+                                                      ^
+                test.d:20:54: error: object 'victim' of type 'NPC' has no member named 'x'
+                    var int tab[5] = {self.x, self.y, other.y, victim.x, victim.y};
+                                                                      ^
+                9 errors generated.
                 ";
 
             AssertCompilationOutputMatch();
@@ -146,7 +183,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 //! suppress: W5
 
                 prototype Proto(X) {};
-                
+
                 func void testFunc() {
                     var int x;
                     var int y;
@@ -157,6 +194,15 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                     x = Proto;
                     
                     x = NonExistant.a;
+
+                    var int new_x1 = y.attr;
+                    var int new_x2 = Proto.a;
+                    var int new_x3 = Proto;
+                    var int new_x4 = NonExistant.a;
+                    var int new_x5 = x;
+                    var int new_x6 = y;
+
+                    var int tab[6] = {y.attr, Proto.a, Proto, NonExistant.a, x, y};
                 };
             ";
 
@@ -178,7 +224,25 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 test.d:14:8: error: 'NonExistant' undeclared
                     x = NonExistant.a;
                         ^
-                5 errors generated.
+                test.d:16:23: error: cannot access attribute 'attr' because 'y' is not an instance of a class
+                    var int new_x1 = y.attr;
+                                       ^
+                test.d:17:27: error: cannot access attribute 'a' because 'Proto' is not an instance of a class
+                    var int new_x2 = Proto.a;
+                                           ^
+                test.d:19:21: error: 'NonExistant' undeclared
+                    var int new_x4 = NonExistant.a;
+                                     ^
+                test.d:23:24: error: cannot access attribute 'attr' because 'y' is not an instance of a class
+                    var int tab[6] = {y.attr, Proto.a, Proto, NonExistant.a, x, y};
+                                        ^
+                test.d:23:36: error: cannot access attribute 'a' because 'Proto' is not an instance of a class
+                    var int tab[6] = {y.attr, Proto.a, Proto, NonExistant.a, x, y};
+                                                    ^
+                test.d:23:46: error: 'NonExistant' undeclared
+                    var int tab[6] = {y.attr, Proto.a, Proto, NonExistant.a, x, y};
+                                                              ^
+                11 errors generated.
                 ";
 
             AssertCompilationOutputMatch();

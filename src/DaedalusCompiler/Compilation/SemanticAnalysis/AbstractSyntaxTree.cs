@@ -113,15 +113,22 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
         public readonly List<NodeAnnotation> Annotations; //warnings & errors
         public ASTNode ParentNode { get; set; }
+        private ASTNode _firstSignificantAncestorNode;
 
         protected ASTNode(NodeLocation location)
         {
             Annotations = new List<NodeAnnotation>();
             Location = location;
+            _firstSignificantAncestorNode = null;
         }
         
         public ASTNode GetFirstSignificantAncestorNode()
         {
+            if (_firstSignificantAncestorNode != null)
+            {
+                return _firstSignificantAncestorNode;
+            }
+            
             ASTNode node = this;
             while (node != null)
             {
@@ -129,15 +136,24 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 switch (node)
                 {
                     case PrototypeDefinitionNode prototypeDefinitionNode:
-                        return prototypeDefinitionNode;
+                        _firstSignificantAncestorNode = prototypeDefinitionNode;
+                        return _firstSignificantAncestorNode;
+                    
                     case InstanceDefinitionNode instanceDefinitionNode:
-                        return instanceDefinitionNode;
+                        _firstSignificantAncestorNode = instanceDefinitionNode;
+                        return _firstSignificantAncestorNode;
+                    
                     case FunctionDefinitionNode functionDefinitionNode:
-                        return functionDefinitionNode;
+                        _firstSignificantAncestorNode = functionDefinitionNode;
+                        return _firstSignificantAncestorNode;
+                    
                     case ClassDefinitionNode classDefinitionNode:
-                        return classDefinitionNode;
+                        _firstSignificantAncestorNode = classDefinitionNode;
+                        return _firstSignificantAncestorNode;
+                    
                     case FileNode fileNode:
-                        return fileNode;
+                        _firstSignificantAncestorNode = fileNode;
+                        return _firstSignificantAncestorNode;
                 }
             }
             throw new Exception();
@@ -416,17 +432,13 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     
     public class ConstDefinitionNode : VarDeclarationNode
     {
-        public readonly ExpressionNode RightSideNode;
         public NodeValue RightSideValue;
 
         public ConstDefinitionNode(NodeLocation location, NameNode typeNameNode, NameNode nameNode,
-            ExpressionNode rightSideNode) : base(location, typeNameNode, nameNode)
+            ExpressionNode rightSideNode) : base(location, typeNameNode, nameNode, rightSideNode)
         {
-            rightSideNode.ParentNode = this;
-            
-            RightSideNode = rightSideNode;
         }
-
+        
         protected ConstDefinitionNode(NodeLocation location, NameNode typeNameNode, NameNode nameNode) : base(location, typeNameNode, nameNode)
         {
         }
@@ -457,6 +469,17 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class VarDeclarationNode : CustomTypeDeclarationNode
     {
+        public readonly ExpressionNode RightSideNode;
+        public VarDeclarationNode(NodeLocation location, NameNode typeNameNode, NameNode nameNode, ExpressionNode rightSideNode) : base(location, typeNameNode,
+            nameNode)
+        {
+            if (rightSideNode != null)
+            {
+                rightSideNode.ParentNode = this;
+            }
+            RightSideNode = rightSideNode;
+        }
+        
         public VarDeclarationNode(NodeLocation location, NameNode typeNameNode, NameNode nameNode) : base(location, typeNameNode,
             nameNode)
         {
@@ -465,21 +488,31 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
     public class VarArrayDeclarationNode : VarDeclarationNode, IArrayDeclarationNode
     {
+        public readonly List<ExpressionNode> ElementNodes;
         public ExpressionNode ArraySizeNode { get; set; }
         public NodeValue ArraySizeValue { get; set; }
         
         public VarArrayDeclarationNode(NodeLocation location, NameNode typeNameNode, NameNode nameNode,
-            ExpressionNode arraySizeNode) : base(location, typeNameNode, nameNode)
+            ExpressionNode arraySizeNode, List<ExpressionNode> elementNodes) : base(location, typeNameNode, nameNode)
         {
             ArraySizeNode = arraySizeNode;
             ArraySizeNode.ParentNode = this;
+
+            if (elementNodes != null)
+            {
+                foreach (var node in elementNodes)
+                {
+                    node.ParentNode = this;
+                }
+
+            }
+            
+            ElementNodes = elementNodes;
         }
     }
     
     public class ParameterDeclarationNode : VarDeclarationNode
     {
-        //public new FunctionDefinitionNode Parent { get; set; }
-        
         public ParameterDeclarationNode(NodeLocation location, NameNode typeNameNode, NameNode nameNode) : base(location, typeNameNode,
             nameNode)
         {

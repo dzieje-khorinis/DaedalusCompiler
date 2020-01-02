@@ -108,11 +108,14 @@ namespace DaedalusCompiler.Dat
             
             Flags = symbol.Flags;
 
-            FileIndex = (uint) symbol.Node.Location.FileIndex;
-            Line = (uint) symbol.Node.Location.Line;
-            LinesCount = (uint) symbol.Node.Location.LinesCount;
-            Column = (uint) symbol.Node.Location.Column;
-            CharsCount = (uint) symbol.Node.Location.CharsCount;
+            if (!symbol.Path.StartsWith(".")) // .HELPER_INSTANCE symbol (used for nested attributes) is automatically created
+            {
+                FileIndex = (uint) symbol.Node.Location.FileIndex;
+                Line = (uint) symbol.Node.Location.Line;
+                LinesCount = (uint) symbol.Node.Location.LinesCount;
+                Column = (uint) symbol.Node.Location.Column;
+                CharsCount = (uint) symbol.Node.Location.CharsCount;
+            }
 
             switch (symbol)
             {
@@ -197,7 +200,15 @@ namespace DaedalusCompiler.Dat
             switch (symbol)
             {
                 case SubclassSymbol subclassSymbol:
-                    ParentIndex = subclassSymbol.InheritanceParentSymbol.Index;
+                    if (subclassSymbol.Path.StartsWith(".")) // .HELPER_INSTANCE symbol (used for nested attributes) is automatically created
+                    {
+                        ParentIndex = -1;
+                    }
+                    else
+                    {
+                        ParentIndex = subclassSymbol.InheritanceParentSymbol.Index;
+                    }
+                    
                     break;
                 case AttributeSymbol attributeSymbol:
                     ParentIndex = attributeSymbol.ParentBlockSymbol.Index;

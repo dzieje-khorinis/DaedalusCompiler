@@ -612,5 +612,17 @@ namespace DaedalusCompiler.Tests.SemanticErrors
             AssertCompilationOutputMatch();
         }
         
+        /*
+         CODE TO TEST:
+         func void testFunc() {
+            var int a3 = "six";
+            var int c3[2] = {"one"};
+            var int d3[2] = {1, "two"};
+            var int e3[2] = {1, "two", 3};
+            var int x;
+            x = "seven";
+        }
+         */
+        
     }
 }

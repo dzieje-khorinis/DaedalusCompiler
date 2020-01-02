@@ -27,6 +27,12 @@ namespace DaedalusCompiler.Compilation
 
         public void Run()
         {
+            // VarAssignmentNotAllowedHereError
+            RemainingSyntaxErrorsDetectionVisitor remainingSyntaxErrorsDetectionVisitor = new RemainingSyntaxErrorsDetectionVisitor();
+            remainingSyntaxErrorsDetectionVisitor.VisitTree(AbstractSyntaxTree);
+            
+            // RedefinedIdentifierError
+            // KeywordUsedAsNameError
             SymbolTableCreationVisitor symbolTableCreationVisitor = new SymbolTableCreationVisitor();
             symbolTableCreationVisitor.VisitTree(AbstractSyntaxTree);
             SymbolTable = symbolTableCreationVisitor.SymbolTable;
@@ -57,7 +63,7 @@ namespace DaedalusCompiler.Compilation
             // ArraySizeEqualsZeroError
             // TooBigArraySizeError
             // ArraySizeNotConstIntegerError
-            // InconsistentConstArraySizeError
+            // InconsistentArraySizeError
             // IndexOutOfRangeError
             // TooBigArrayIndex
             // ConstIntegerExpectedError
@@ -83,10 +89,10 @@ namespace DaedalusCompiler.Compilation
             DeclarationUsagesChecker declarationUsagesChecker = new DeclarationUsagesChecker();
             declarationUsagesChecker.Check(symbolTableCreationVisitor.DeclarationNodes);
             
+            // UsageOfNonInitializedVariableWarning
             UninitializedSymbolUsageDetectionVisitor uninitializedSymbolUsageDetectionVisitor = new UninitializedSymbolUsageDetectionVisitor();
             uninitializedSymbolUsageDetectionVisitor.VisitTree(AbstractSyntaxTree);
             
-            // annotates:
             // IterationStatementNotInLoopError
             // IntegerLiteralTooLargeError
             // SingleExpressionWarning

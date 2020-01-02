@@ -61,8 +61,11 @@ constArrayAssignment: '=' '{' ( expression (',' expression)*? ) '}';
 constValueDef: nameNode constValueAssignment;
 constValueAssignment: '=' expression;
 
-varArrayDecl: nameNode '[' arraySize ']';
-varValueDecl: nameNode;
+varArrayDecl: nameNode '[' arraySize ']' varArrayAssignment?;
+varArrayAssignment: '=' '{' expression (',' expression)*  '}';
+
+varValueDecl: nameNode varValueAssignment?;
+varValueAssignment: '=' expression;
 
 parameterList: '(' (parameterDecl (',' parameterDecl)*? )? ')';
 parameterDecl: Var dataType nameNode ('[' arraySize ']')?;
@@ -108,7 +111,7 @@ value
     ;
     
 referenceAtom: nameNode ( '[' arrayIndex ']')?;
-reference: referenceAtom ( '.' referenceAtom )?;
+reference: referenceAtom ( '.' referenceAtom )*;
 
 dataType: Identifier | Void | Int | Float | String | Func | Instance;
 

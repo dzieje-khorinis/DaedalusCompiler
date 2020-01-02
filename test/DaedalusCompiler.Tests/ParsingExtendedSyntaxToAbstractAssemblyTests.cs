@@ -891,5 +891,126 @@ namespace DaedalusCompiler.Tests
         }
         
         
+        
+        [Fact]
+        public void TestVarDeclAssignment()
+        {
+            Code = @"
+                class NPC {}
+
+                prototype Proto(NPC) {
+                    var int a = 6;
+                    var int b[2] = {9};
+                    var int c[2] = {8, 9};
+                }
+
+                instance Inst(NPC) {
+                    var int a = 6;
+                    var int b[2] = {9};
+                    var int c[2] = {8, 9};
+                }
+
+                func void testFunc() {
+                    var int a = 6;
+                    var int b[2] = {9};
+                    var int c[2] = {8, 9};
+                }
+           ";
+            
+            Instructions = GetExecBlockInstructions("Proto");
+            ExpectedInstructions = new List<AssemblyElement>
+            {
+                // var int a = 6;
+                new PushInt(6),
+                new PushVar(Ref("Proto.a")),
+                new Assign(),
+                
+                // var int b[2] = {9};
+                new PushInt(9),
+                new PushVar(Ref("Proto.b")),
+                new Assign(),
+                
+                // var int c[2] = {8, 9};
+                new PushInt(8),
+                new PushVar(Ref("Proto.c")),
+                new Assign(),
+                new PushInt(9),
+                new PushArrayVar(Ref("Proto.c"), 1),
+                new Assign(),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            Instructions = GetExecBlockInstructions("Inst");
+            ExpectedInstructions = new List<AssemblyElement>
+            {
+                // var int a = 6;
+                new PushInt(6),
+                new PushVar(Ref("Inst.a")),
+                new Assign(),
+                
+                // var int b[2] = {9};
+                new PushInt(9),
+                new PushVar(Ref("Inst.b")),
+                new Assign(),
+                
+                // var int c[2] = {8, 9};
+                new PushInt(8),
+                new PushVar(Ref("Inst.c")),
+                new Assign(),
+                new PushInt(9),
+                new PushArrayVar(Ref("Inst.c"), 1),
+                new Assign(),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+            
+            Instructions = GetExecBlockInstructions("testFunc");
+            ExpectedInstructions = new List<AssemblyElement>
+            {
+                // var int a = 6;
+                new PushInt(6),
+                new PushVar(Ref("testFunc.a")),
+                new Assign(),
+                
+                // var int b[2] = {9};
+                new PushInt(9),
+                new PushVar(Ref("testFunc.b")),
+                new Assign(),
+                
+                // var int c[2] = {8, 9};
+                new PushInt(8),
+                new PushVar(Ref("testFunc.c")),
+                new Assign(),
+                new PushInt(9),
+                new PushArrayVar(Ref("testFunc.c"), 1),
+                new Assign(),
+                
+                new Ret(),
+            };
+            AssertInstructionsMatch();
+
+            ExpectedSymbols = new List<Symbol>
+            {
+                Ref("NPC"),
+                Ref("Proto"),
+                Ref("Proto.a"),
+                Ref("Proto.b"),
+                Ref("Proto.c"),
+                Ref("Inst"),
+                Ref("Inst.a"),
+                Ref("Inst.b"),
+                Ref("Inst.c"),
+                Ref("testFunc"),
+                Ref("testFunc.a"),
+                Ref("testFunc.b"),
+                Ref("testFunc.c"),
+            };
+            AssertSymbolsMatch();
+            
+        }
+        
     }
 }

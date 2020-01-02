@@ -56,6 +56,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             {
                 return new UndefinedValue();
             }
+
+            if (node.Annotations.Count > 0)
+            {
+                return new UndefinedValue();
+            }
             node.ArraySizeValue = Visit(node.ArraySizeNode);
             
             switch (node.ArraySizeValue)
@@ -69,7 +74,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     }
                     else if (intValue.Value > 4095)
                     {
-                        node.ArraySizeNode.Annotations.Add(new TooBigArraySizeError());//+
+                        node.ArraySizeNode.Annotations.Add(new TooBigArraySizeError());
+                    }
+                    else if (node.ElementNodes != null && intValue.Value < node.ElementNodes.Count) // i.e. if you have array of size 2, you should be able to assign only 1 element
+                    {
+                        node.ArraySizeNode.Annotations.Add(new InconsistentArraySizeError(node.NameNode.Value, (int) intValue.Value, node.ElementNodes.Count));
                     }
 
                     ((IArraySymbol) node.Symbol).Size = Convert.ToInt32(intValue.Value);
@@ -121,7 +130,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     }
                     else if (intValue.Value != node.ElementNodes.Count)
                     {
-                        node.ArraySizeNode.Annotations.Add(new InconsistentConstArraySizeError(node.NameNode.Value, (int) intValue.Value, node.ElementNodes.Count));//+
+                        node.ArraySizeNode.Annotations.Add(new InconsistentArraySizeError(node.NameNode.Value, (int) intValue.Value, node.ElementNodes.Count));//+
                     }
                     
                     ((IArraySymbol) node.Symbol).Size = Convert.ToInt32(intValue.Value);
