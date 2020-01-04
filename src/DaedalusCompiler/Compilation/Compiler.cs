@@ -6,27 +6,32 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Antlr4.Runtime.Tree;
+using DaedalusCompiler.Compilation.SemanticAnalysis;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
 {
     public class Compiler
     {
-
-        private readonly AssemblyBuilder _assemblyBuilder;
         private readonly OutputUnitsBuilder _ouBuilder;
         private readonly string _outputDirPath;
+        private readonly bool _strictSyntax;
+        private readonly HashSet<string> _globallySuppressedCodes;
+
+        public DatFile DatFile;
         
 
-        public Compiler(string outputDirPath="output", bool verbose=true, bool strictSyntax=false)
+        public Compiler(string outputDirPath, bool verbose, bool strictSyntax, HashSet<string> globallySuppressedCodes)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            _assemblyBuilder = new AssemblyBuilder(verbose, strictSyntax);
             _ouBuilder = new OutputUnitsBuilder(verbose);
             _outputDirPath = outputDirPath;
+            _strictSyntax = strictSyntax;
+            _globallySuppressedCodes = globallySuppressedCodes;
+            DatFile = null;
         }
 
-        public static string[] GetWarningCodesToSuppress(string line)
+        public static HashSet<string> GetWarningCodesToSuppress(string line)
         {
             string ws = @"(?:[ \t])*";
             string newline = @"(?:\r\n?|\n)";
@@ -35,12 +40,12 @@ namespace DaedalusCompiler.Compilation
             MatchCollection matches = Regex.Matches(line, suppressWarningsPattern, options);
             foreach (Match match in matches)
             {
-                return match.Groups[1].Value.Split(" ").Where(s => !s.Equals(String.Empty)).ToArray();
+                return match.Groups[1].Value.Split(" ").Where(s => !s.Equals(String.Empty)).ToHashSet();
             }
-            return new string[]{};
+            return new HashSet<string>();
         }
-        
-        public string GetBuiltinsPath()
+
+        private string GetBuiltinsPath()
         {
             string programStartPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
 
@@ -48,199 +53,142 @@ namespace DaedalusCompiler.Compilation
         }
 
         public bool CompileFromSrc(
-            string srcFilePath, 
-            bool compileToAssembly,
+            string srcFilePath,
             bool verbose = true,
             bool generateOutputUnits = true
         )
         {
             var absoluteSrcFilePath = Path.GetFullPath(srcFilePath);
 
-            try
+            string[] paths = SrcFileHelper.LoadScriptsFilePaths(absoluteSrcFilePath).ToArray();
+            string srcFileName = Path.GetFileNameWithoutExtension(absoluteSrcFilePath).ToLower();
+            
+            string runtimePath = Path.Combine(GetBuiltinsPath(), srcFileName + ".d");
+            List<IParseTree> parseTrees = new List<IParseTree>();
+
+            int externalFilesCount = 0;
+            List<string> filesPaths = new List<string>();
+            List<string[]> filesContentsLines = new List<string[]>();
+            List<string> filesContents = new List<string>();
+            List<HashSet<string>> suppressedWarningCodes = new List<HashSet<string>>();
+            
+            int syntaxErrorsCount = 0;
+            
+            if (File.Exists(runtimePath))
             {
-                string[] paths = SrcFileHelper.LoadScriptsFilePaths(absoluteSrcFilePath).ToArray();
-                string srcFileName = Path.GetFileNameWithoutExtension(absoluteSrcFilePath).ToLower();
+                externalFilesCount++;
                 
-                string runtimePath = Path.Combine(GetBuiltinsPath(), srcFileName + ".d");
-                if (File.Exists(runtimePath))
-                {
-                    if (verbose) Console.WriteLine($"[0/{paths.Length}]Compiling runtime: {runtimePath}");
-                    _assemblyBuilder.IsCurrentlyParsingExternals = true;
-                    
-                    string fileContent = GetFileContent(runtimePath);
-                    DaedalusParser parser = GetParserForText(fileContent);
-
-                    _assemblyBuilder.ErrorFileContext.FileContentLines = fileContent.Split(Environment.NewLine);
-                    _assemblyBuilder.ErrorFileContext.FilePath = runtimePath;
-                    _assemblyBuilder.ErrorFileContext.FileIndex = -1;
-                    
-                    ParseTreeWalker.Default.Walk(new DaedalusListener(_assemblyBuilder, 0), parser.daedalusFile());
-                    _assemblyBuilder.IsCurrentlyParsingExternals = false;
-                }
-
-                int syntaxErrorsCount = 0;
-                for (int i = 0; i < paths.Length; i++)
-                {
-                    if (verbose) Console.WriteLine($"[{i + 1}/{paths.Length}]Compiling: {paths[i]}");
-
-                    string fileContent = GetFileContent(paths[i]);
-                    DaedalusParser parser = GetParserForText(fileContent);
-                    //parser.RemoveErrorListeners(); // TODO uncomment this line once SyntaxErrorListener is fully implemented
-                    SyntaxErrorListener syntaxErrorListener = new SyntaxErrorListener();
-                    parser.AddErrorListener(syntaxErrorListener);
-
-                    _assemblyBuilder.ErrorFileContext.FileContentLines = fileContent.Split(Environment.NewLine);
-                    _assemblyBuilder.ErrorFileContext.FilePath = paths[i];
-                    _assemblyBuilder.ErrorFileContext.FileIndex = i;
-                    _assemblyBuilder.ErrorFileContext.SuppressedWarningCodes = Compiler.GetWarningCodesToSuppress(
-                        _assemblyBuilder.ErrorFileContext.FileContentLines[0]
-                    );
-                    ParseTreeWalker.Default.Walk(new DaedalusListener(_assemblyBuilder, i), parser.daedalusFile());
-                    syntaxErrorsCount += syntaxErrorListener.ErrorsCount;
-                    
-                    if (generateOutputUnits && syntaxErrorListener.ErrorsCount == 0)
-                    {
-                        _ouBuilder.ParseText(fileContent);
-                    }
-                }
-
-                if (syntaxErrorsCount > 0)
-                {
-                    StdErrorLogger logger = new StdErrorLogger();
-                    logger.LogLine($"{syntaxErrorsCount} syntax {(syntaxErrorsCount == 1 ? "error" : "errors")} generated.");
-                    return false;
-                }
-
-                if (!compileToAssembly)
-                {
-                    Directory.CreateDirectory(_outputDirPath);
-                }
-
-                if (generateOutputUnits)
-                {
-                    _ouBuilder.SaveOutputUnits(_outputDirPath);
-                }
+                if (verbose) Console.WriteLine($"[0/{paths.Length}]Parsing runtime: {runtimePath}");
                 
-                _assemblyBuilder.Finish();
+                string fileContent = GetFileContent(runtimePath);
+                DaedalusParser parser = GetParserForText(fileContent);
+                
+                SyntaxErrorListener syntaxErrorListener = new SyntaxErrorListener();
+                parser.AddErrorListener(syntaxErrorListener);
+                parseTrees.Add(parser.daedalusFile());
+                
+                string[] fileContentLines = fileContent.Split(Environment.NewLine);
+                filesPaths.Add(runtimePath);
+                filesContentsLines.Add(fileContentLines);
+                suppressedWarningCodes.Add(GetWarningCodesToSuppress(fileContentLines[0]));
+                
+                syntaxErrorsCount += syntaxErrorListener.ErrorsCount;
+            }
+            else
+            {
+                if (verbose) Console.WriteLine($"Runtime {runtimePath} doesn't exist.");
+            }
 
-                List<CompilationMessage> errors = new List<CompilationMessage>();
-                foreach (CompilationMessage error in _assemblyBuilder.Errors)
+            
+            for (int i = 0; i < paths.Length; i++)
+            {
+                if (verbose) Console.WriteLine($"[{i + 1}/{paths.Length}]Parsing: {paths[i]}");
+                
+                string fileContent = GetFileContent(paths[i]);
+                DaedalusParser parser = GetParserForText(fileContent);
+                
+                SyntaxErrorListener syntaxErrorListener = new SyntaxErrorListener();
+                parser.AddErrorListener(syntaxErrorListener);
+                parseTrees.Add(parser.daedalusFile());
+
+                string[] fileContentLines = fileContent.Split(Environment.NewLine);
+                filesPaths.Add(paths[i]);
+                filesContentsLines.Add(fileContentLines);
+                filesContents.Add(fileContent);
+                suppressedWarningCodes.Add(GetWarningCodesToSuppress(fileContentLines[0]));
+                
+                syntaxErrorsCount += syntaxErrorListener.ErrorsCount;
+            }
+            
+            
+            StdErrorLogger logger = new StdErrorLogger();
+            
+            if (syntaxErrorsCount > 0)
+            {
+                logger.LogLine($"{syntaxErrorsCount} syntax {(syntaxErrorsCount == 1 ? "error" : "errors")} generated.");
+                return false;
+            }
+            
+            if (verbose) Console.WriteLine("parseTrees created");
+
+            SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(parseTrees, externalFilesCount, filesPaths, filesContentsLines, suppressedWarningCodes);
+            semanticAnalyzer.Run();
+
+            SemanticErrorsCollectingVisitor semanticErrorsCollectingVisitor = new SemanticErrorsCollectingVisitor(
+                new StdErrorLogger(),
+                _strictSyntax,
+                _globallySuppressedCodes);
+                
+            semanticErrorsCollectingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
+
+            int errorsCount = semanticErrorsCollectingVisitor.ErrorsCount;
+            int warningsCount = semanticErrorsCollectingVisitor.WarningsCount;
+            string error = errorsCount == 1 ? "error" : "errors";
+            string warning = warningsCount == 1 ? "warning" : "warnings";
+
+            if (errorsCount > 0)
+            {    
+                if (warningsCount > 0)
                 {
-                    if (error is CompilationError)
-                    {
-                        errors.Add(error);
-                    }
-                    else if (error is CompilationWarning compilationWarning)
-                    {
-                        if (compilationWarning.IsSuppressed == false)
-                        {
-                            errors.Add(compilationWarning);
-                        }
-                    }
-                }
-
-
-                int errorsCount = errors.Count(x => x is CompilationError);
-                int warningsCount = errors.Count(x => x is CompilationWarning);
-                if (_assemblyBuilder.StrictSyntax)
-                {
-                    errorsCount += warningsCount;
-                    warningsCount = 0;
-                }
-
-                if (errors.Any())
-                {
-                    errors.Sort((x, y) => x.CompareTo(y));
-
-                    bool stopCompilation = _assemblyBuilder.StrictSyntax;
-
-                    string lastErrorFilePath = "";
-                    string lastErrorBlockName = null;
-                    StdErrorLogger logger = new StdErrorLogger();
-
-                    foreach (CompilationMessage error in errors)
-                    {
-                        if (error is CompilationError)
-                        {
-                            stopCompilation = true;
-                        }
-
-                        if (lastErrorFilePath != error.FilePath)
-                        {
-                            lastErrorFilePath = error.FilePath;
-                            Console.WriteLine(error.FilePath);
-                        }
-
-                        if (lastErrorBlockName != error.ExecBlockName)
-                        {
-                            lastErrorBlockName = error.ExecBlockName;
-                            if (error.ExecBlockName == null)
-                            {
-                                Console.WriteLine($"{error.FileName}: In global scope:");
-                            }
-                            else
-                            {
-                                Console.WriteLine($"{error.FileName}: In {error.ExecBlockType} ‘{error.ExecBlockName}’:");
-                            }
-                            
-                        }
-
-                        error.Print(logger);
-                    }
-
-                    if (stopCompilation)
-                    {
-
-                        if (errorsCount > 0 || warningsCount > 0)
-                        {
-                            if (errorsCount > 0)
-                            {
-                                logger.Log($"{errorsCount} {(errorsCount == 1 ? "error" : "errors")}");
-                            }
-
-                            if (warningsCount > 0)
-                            {
-                                if (errorsCount > 0)
-                                {
-                                    logger.Log(", ");
-                                }
-                                logger.Log($"{warningsCount} {(warningsCount == 1 ? "warning" : "warnings")}");
-                            }
-                            logger.LogLine(" generated.");
-                        }
-                        return false;
-                    }
-                }
-
-                if (compileToAssembly)
-                {
-                    Console.WriteLine(_assemblyBuilder.GetAssembler());
+                    logger.LogLine($"{errorsCount} {error}, {warningsCount} {warning} generated.");
                 }
                 else
                 {
-                    Directory.CreateDirectory(_outputDirPath);
-                    string datPath = Path.Combine(_outputDirPath, srcFileName + ".dat");
-                    _assemblyBuilder.SaveToDat(datPath);
+                    logger.LogLine($"{errorsCount} {error} generated.");
                 }
-
-                return true;
-            }
-            catch (Exception exc)
-            {
-                Console.WriteLine("SRC compilation failed");
-                Console.WriteLine($"{exc}");
                 return false;
             }
-        }
 
-        public List<DatSymbol> GetSymbols()
-        {
-            return _assemblyBuilder.GetSymbols();
-        }
+            if (warningsCount > 0)
+            {
+                logger.LogLine($"{warningsCount} {warning} generated.");
+            }
+            
+            SymbolUpdatingVisitor symbolUpdatingVisitor = new SymbolUpdatingVisitor();
+            symbolUpdatingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
 
-        public List<BaseExecBlockContext> GetExecBlocks()
-        {
-            return _assemblyBuilder.GetExecBlocks();
+            AssemblyBuildingVisitor assemblyBuildingVisitor = new AssemblyBuildingVisitor(semanticAnalyzer.SymbolTable);
+            assemblyBuildingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
+            
+            if (verbose) Console.WriteLine($"parseTrees.Count: {parseTrees.Count}");
+            
+            Directory.CreateDirectory(_outputDirPath);
+            if (generateOutputUnits)
+            {
+                foreach (string filesContent in filesContents)
+                {
+                    _ouBuilder.ParseText(filesContent);
+                }
+                _ouBuilder.SaveOutputUnits(_outputDirPath);
+            }
+
+            string datPath = Path.Combine(_outputDirPath, srcFileName + ".dat");
+            
+            DatBuilder datBuilder = new DatBuilder(semanticAnalyzer.SymbolTable, semanticAnalyzer.SymbolsWithInstructions);
+            DatFile = datBuilder.GetDatFile();
+            DatFile.Save(datPath);
+
+            return true;
         }
 
         public void SetCompilationDateTimeText(string compilationDateTimeText)
@@ -258,18 +206,12 @@ namespace DaedalusCompiler.Compilation
             return File.ReadAllText(filePath, Encoding.GetEncoding(1250));
         }
         
-        private DaedalusParser GetParserForText(string input)
+        public static DaedalusParser GetParserForText(string input)
         {
             AntlrInputStream inputStream = new AntlrInputStream(input);
             DaedalusLexer lexer = new DaedalusLexer(inputStream);
             CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
             return new DaedalusParser(commonTokenStream);
-        }
-
-        private DaedalusParser GetParserForScriptsFile(string scriptFilePath)
-        {
-            string fileContent = GetFileContent(scriptFilePath);
-            return GetParserForText(fileContent);
         }
     }
 }

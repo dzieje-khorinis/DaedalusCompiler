@@ -6,7 +6,6 @@ using System.Net;
 using System.Text;
 using DaedalusCompiler.Compilation;
 using DaedalusCompiler.Dat;
-using Newtonsoft.Json;
 using Xunit;
 using Ionic.Zip;
 using Xunit.Abstractions;
@@ -20,7 +19,8 @@ namespace DaedalusCompiler.Tests
         private readonly ITestOutputHelper _output;
         private readonly string _downloadTo;
         private string _scriptsPath;
-
+        private readonly  Dictionary<string, DatFile> _originalDatFiles;
+        
         private List<string> _srcPaths = new List<string>()
         {
             "Scripts/Content/*.src",
@@ -47,6 +47,7 @@ namespace DaedalusCompiler.Tests
 
             _downloadTo = "{PROJECT_PATH}/TestFiles/".Replace("{PROJECT_PATH}", projectPath);
             _output = output;
+            _originalDatFiles = new Dictionary<string, DatFile>();
         }
 
         private void PrepareScripts(string name, string url, string zipPassword)
@@ -57,6 +58,7 @@ namespace DaedalusCompiler.Tests
             string scriptsFilePath = Path.Combine(_downloadTo, scriptsFileName);
 
             (new FileInfo(scriptsFilePath)).Directory?.Create();
+            
             File.Delete(scriptsFilePath);
 
             using (WebClient client = new WebClient())
@@ -64,7 +66,7 @@ namespace DaedalusCompiler.Tests
                 client.DownloadFile(url, scriptsFilePath);
                 _output.WriteLine($"Downloaded {scriptsFileName}.");
             }
-            
+
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             using (ZipFile archive = new ZipFile(scriptsFilePath))
             {
@@ -96,13 +98,14 @@ namespace DaedalusCompiler.Tests
                 string datFileName = Path.GetFileName(datPath).ToLower();
                 bool generateOutputUnits = (datFileName == "gothic.dat");
                 
-                Compiler compiler = new Compiler(outputDirPath);
+                Compiler compiler = new Compiler(outputDirPath, verbose:false, strictSyntax:false, globallySuppressedCodes:new HashSet<string>{"W1", "W2", "W3", "W5"});
                 if (generateOutputUnits)
                 {
                     compiler.SetCompilationDateTimeText(compileTime);
                     compiler.SetCompilationUserName(compileUsername);
                 }
-                compiler.CompileFromSrc(srcPath, compileToAssembly:false, verbose:false, generateOutputUnits: generateOutputUnits);
+                compiler.CompileFromSrc(srcPath, verbose:false, generateOutputUnits: generateOutputUnits);
+                _originalDatFiles[datFileName] = compiler.DatFile;
             }
         }
 
@@ -141,6 +144,7 @@ namespace DaedalusCompiler.Tests
         private void CompareDats()
         {
             string outputDirPath = Path.Combine(_scriptsPath, _outputPath);
+            List<string> alreadyLoaded = new List<string>();
             foreach (KeyValuePair<string, string> entry in _srcPathToDatPath)
             {
                 string datPath = entry.Value;
@@ -150,9 +154,17 @@ namespace DaedalusCompiler.Tests
                 DatFile expectedDatFile = new DatFile(datPath);
                 DatFile datFile = new DatFile(outputDatPath);
             
+                // First compare the same .DAT file before saving VS after save&load
+                DatFile originalDatFile = _originalDatFiles[datFileName];
+                Assert.Equal(originalDatFile.Version, datFile.Version);
+                CompareSymbols(originalDatFile.DatSymbols.ToList(), datFile.DatSymbols.ToList());
+                CompareTokens(originalDatFile.DatTokens.ToList(), datFile.DatTokens.ToList());
+                
                 Assert.Equal(expectedDatFile.Version, datFile.Version);
-                CompareSymbols(expectedDatFile.Symbols.ToList(), datFile.Symbols.ToList());
-                CompareTokens(expectedDatFile.Tokens.ToList(), datFile.Tokens.ToList());
+                CompareSymbols(expectedDatFile.DatSymbols.ToList(), datFile.DatSymbols.ToList());
+                CompareTokens(expectedDatFile.DatTokens.ToList(), datFile.DatTokens.ToList());
+                
+                alreadyLoaded.Add(datFileName);
             }
         }
 
@@ -175,14 +187,14 @@ namespace DaedalusCompiler.Tests
 
         private void CompareSymbols(List<DatSymbol> expectedSymbols, List<DatSymbol> symbols)
         {
-            HashSet<DatSymbolType> parentLessTypes = new HashSet<DatSymbolType>()
+            HashSet<SymbolType> parentLessTypes = new HashSet<SymbolType>()
             {
-                DatSymbolType.Int,
-                DatSymbolType.Float,
-                DatSymbolType.String,
-                DatSymbolType.Func
+                SymbolType.Int,
+                SymbolType.Float,
+                SymbolType.String,
+                SymbolType.Func
             };
-            int lastParentIndex = DatSymbol.NULL_INDEX;
+            int lastParentIndex = -1;
             
             Assert.Equal(expectedSymbols.Count, symbols.Count);
             for (int i = 0; i < symbols.Count; i++)
@@ -194,27 +206,25 @@ namespace DaedalusCompiler.Tests
                 {
                     Assert.Equal(expectedSymbol.Name, symbol.Name);
                 }
-                Assert.Equal(expectedSymbol.ArrayLength, symbol.ArrayLength);
-                Assert.Equal(expectedSymbol.ParametersCount, symbol.ParametersCount);
-                Assert.Equal(expectedSymbol.Type, symbol.Type);
+                Assert.Equal(expectedSymbol.OffClsRet, symbol.OffClsRet);
+                Assert.Equal(expectedSymbol.Count, symbol.Count);
+                Assert.Equal(expectedSymbol.BuiltinType, symbol.BuiltinType);
                 Assert.Equal(expectedSymbol.Flags, symbol.Flags);
-                Assert.Equal(expectedSymbol.ReturnType, symbol.ReturnType);
-                Assert.Equal(expectedSymbol.ClassVarOffset, symbol.ClassVarOffset);
-                Assert.Equal(expectedSymbol.ClassSize, symbol.ClassSize);
-                // Assert.Equal(expectedSymbol.Location, symbol.Location);
-                Assert.Equal(expectedSymbol.Content, symbol.Content);
                 
-                if (!symbol.Flags.HasFlag(DatSymbolFlag.External))
+
+                if (symbol.BuiltinType == SymbolType.Func && symbol.Flags.HasFlag(SymbolFlag.External))
                 {
-                    Assert.Equal(expectedSymbol.FirstTokenAddress, symbol.FirstTokenAddress);
+                    
                 }
-                Assert.Equal(expectedSymbol.ClassOffset, symbol.ClassOffset);
-
-
-                bool isParentLessType = parentLessTypes.Contains(symbol.Type);
-                bool isBuggedParentIndex = lastParentIndex == expectedSymbol.ParentIndex && isParentLessType;
-                                           
+                else
+                {
+                    Assert.Equal(expectedSymbol.Content, symbol.Content);
+                }
                 
+
+                bool isParentLessType = parentLessTypes.Contains(symbol.BuiltinType);
+                bool isBuggedParentIndex = lastParentIndex == expectedSymbol.ParentIndex && isParentLessType;
+
                 if (!isBuggedParentIndex)
                 {
                     Assert.Equal(expectedSymbol.ParentIndex, symbol.ParentIndex);
@@ -263,7 +273,6 @@ namespace DaedalusCompiler.Tests
                 "https://drive.google.com/uc?authuser=0&id=1TZFfADoOPrmdNHbrbxMAad7Mk63HKloT&export=download",
                 "dziejekhorinis"
                 );
-
             CompileScripts("13.11.2018 15:30:55", "kisio");
                 
             CompareDats();
@@ -278,7 +287,7 @@ namespace DaedalusCompiler.Tests
                 "https://drive.google.com/uc?authuser=0&id=1OkTUUHYt7tXTg_ewmyFQaqYMFv_6gOxW&export=download",
                 "dziejekhorinis"
             );
-
+            
             CompileScripts();
             CompareDats();
         }        

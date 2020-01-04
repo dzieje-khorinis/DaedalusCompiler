@@ -231,15 +231,15 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitStatement([NotNull] DaedalusParser.StatementContext context);
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.funcCall"/>.
+	/// Enter a parse tree produced by <see cref="DaedalusParser.functionCall"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void EnterFuncCall([NotNull] DaedalusParser.FuncCallContext context);
+	void EnterFunctionCall([NotNull] DaedalusParser.FunctionCallContext context);
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.funcCall"/>.
+	/// Exit a parse tree produced by <see cref="DaedalusParser.functionCall"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void ExitFuncCall([NotNull] DaedalusParser.FuncCallContext context);
+	void ExitFunctionCall([NotNull] DaedalusParser.FunctionCallContext context);
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.assignment"/>.
 	/// </summary>
@@ -250,16 +250,6 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitAssignment([NotNull] DaedalusParser.AssignmentContext context);
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.ifCondition"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterIfCondition([NotNull] DaedalusParser.IfConditionContext context);
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.ifCondition"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitIfCondition([NotNull] DaedalusParser.IfConditionContext context);
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.elseBlock"/>.
 	/// </summary>
@@ -321,16 +311,6 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitWhileStatement([NotNull] DaedalusParser.WhileStatementContext context);
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.whileCondition"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterWhileCondition([NotNull] DaedalusParser.WhileConditionContext context);
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.whileCondition"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitWhileCondition([NotNull] DaedalusParser.WhileConditionContext context);
-	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.breakStatement"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
@@ -351,26 +331,6 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitContinueStatement([NotNull] DaedalusParser.ContinueStatementContext context);
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.funcArgExpression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterFuncArgExpression([NotNull] DaedalusParser.FuncArgExpressionContext context);
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.funcArgExpression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitFuncArgExpression([NotNull] DaedalusParser.FuncArgExpressionContext context);
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.expressionBlock"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterExpressionBlock([NotNull] DaedalusParser.ExpressionBlockContext context);
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.expressionBlock"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitExpressionBlock([NotNull] DaedalusParser.ExpressionBlockContext context);
-	/// <summary>
 	/// Enter a parse tree produced by the <c>bitMoveExpression</c>
 	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
 	/// </summary>
@@ -383,17 +343,17 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitBitMoveExpression([NotNull] DaedalusParser.BitMoveExpressionContext context);
 	/// <summary>
-	/// Enter a parse tree produced by the <c>oneArgExpression</c>
+	/// Enter a parse tree produced by the <c>valueExpression</c>
 	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void EnterOneArgExpression([NotNull] DaedalusParser.OneArgExpressionContext context);
+	void EnterValueExpression([NotNull] DaedalusParser.ValueExpressionContext context);
 	/// <summary>
-	/// Exit a parse tree produced by the <c>oneArgExpression</c>
+	/// Exit a parse tree produced by the <c>valueExpression</c>
 	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void ExitOneArgExpression([NotNull] DaedalusParser.OneArgExpressionContext context);
+	void ExitValueExpression([NotNull] DaedalusParser.ValueExpressionContext context);
 	/// <summary>
 	/// Enter a parse tree produced by the <c>eqExpression</c>
 	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
@@ -406,18 +366,6 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitEqExpression([NotNull] DaedalusParser.EqExpressionContext context);
-	/// <summary>
-	/// Enter a parse tree produced by the <c>valExpression</c>
-	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterValExpression([NotNull] DaedalusParser.ValExpressionContext context);
-	/// <summary>
-	/// Exit a parse tree produced by the <c>valExpression</c>
-	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitValExpression([NotNull] DaedalusParser.ValExpressionContext context);
 	/// <summary>
 	/// Enter a parse tree produced by the <c>addExpression</c>
 	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
@@ -502,6 +450,18 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitBracketExpression([NotNull] DaedalusParser.BracketExpressionContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>unaryExpression</c>
+	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterUnaryExpression([NotNull] DaedalusParser.UnaryExpressionContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>unaryExpression</c>
+	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitUnaryExpression([NotNull] DaedalusParser.UnaryExpressionContext context);
 	/// <summary>
 	/// Enter a parse tree produced by the <c>logAndExpression</c>
 	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
@@ -595,17 +555,17 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitNoFuncLiteralValue([NotNull] DaedalusParser.NoFuncLiteralValueContext context);
 	/// <summary>
-	/// Enter a parse tree produced by the <c>funcCallValue</c>
+	/// Enter a parse tree produced by the <c>functionCallValue</c>
 	/// labeled alternative in <see cref="DaedalusParser.value"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void EnterFuncCallValue([NotNull] DaedalusParser.FuncCallValueContext context);
+	void EnterFunctionCallValue([NotNull] DaedalusParser.FunctionCallValueContext context);
 	/// <summary>
-	/// Exit a parse tree produced by the <c>funcCallValue</c>
+	/// Exit a parse tree produced by the <c>functionCallValue</c>
 	/// labeled alternative in <see cref="DaedalusParser.value"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void ExitFuncCallValue([NotNull] DaedalusParser.FuncCallValueContext context);
+	void ExitFunctionCallValue([NotNull] DaedalusParser.FunctionCallValueContext context);
 	/// <summary>
 	/// Enter a parse tree produced by the <c>referenceValue</c>
 	/// labeled alternative in <see cref="DaedalusParser.value"/>.
@@ -639,15 +599,15 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitReference([NotNull] DaedalusParser.ReferenceContext context);
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.typeReference"/>.
+	/// Enter a parse tree produced by <see cref="DaedalusParser.dataType"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void EnterTypeReference([NotNull] DaedalusParser.TypeReferenceContext context);
+	void EnterDataType([NotNull] DaedalusParser.DataTypeContext context);
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.typeReference"/>.
+	/// Exit a parse tree produced by <see cref="DaedalusParser.dataType"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void ExitTypeReference([NotNull] DaedalusParser.TypeReferenceContext context);
+	void ExitDataType([NotNull] DaedalusParser.DataTypeContext context);
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.nameNode"/>.
 	/// </summary>
@@ -719,15 +679,15 @@ public interface IDaedalusListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitEqOperator([NotNull] DaedalusParser.EqOperatorContext context);
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.oneArgOperator"/>.
+	/// Enter a parse tree produced by <see cref="DaedalusParser.unaryOperator"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void EnterOneArgOperator([NotNull] DaedalusParser.OneArgOperatorContext context);
+	void EnterUnaryOperator([NotNull] DaedalusParser.UnaryOperatorContext context);
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.oneArgOperator"/>.
+	/// Exit a parse tree produced by <see cref="DaedalusParser.unaryOperator"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void ExitOneArgOperator([NotNull] DaedalusParser.OneArgOperatorContext context);
+	void ExitUnaryOperator([NotNull] DaedalusParser.UnaryOperatorContext context);
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.multOperator"/>.
 	/// </summary>

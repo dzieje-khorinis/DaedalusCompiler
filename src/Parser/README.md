@@ -1,4 +1,4 @@
-To generate Lexer and Parser type:
+Generate Daedalus Lexer, Parser and Visitor with the following command:
 ```sh
-antlr4 -Dlanguage=CSharp -o Output Daedalus.g4
+antlr4 -Dlanguage=CSharp -encoding utf8 -o Output -visitor -no-listener Daedalus.g4
 ```

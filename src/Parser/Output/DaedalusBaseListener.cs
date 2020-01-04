@@ -275,17 +275,17 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitStatement([NotNull] DaedalusParser.StatementContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.funcCall"/>.
+	/// Enter a parse tree produced by <see cref="DaedalusParser.functionCall"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterFuncCall([NotNull] DaedalusParser.FuncCallContext context) { }
+	public virtual void EnterFunctionCall([NotNull] DaedalusParser.FunctionCallContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.funcCall"/>.
+	/// Exit a parse tree produced by <see cref="DaedalusParser.functionCall"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitFuncCall([NotNull] DaedalusParser.FuncCallContext context) { }
+	public virtual void ExitFunctionCall([NotNull] DaedalusParser.FunctionCallContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.assignment"/>.
 	/// <para>The default implementation does nothing.</para>
@@ -298,18 +298,6 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitAssignment([NotNull] DaedalusParser.AssignmentContext context) { }
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.ifCondition"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterIfCondition([NotNull] DaedalusParser.IfConditionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.ifCondition"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitIfCondition([NotNull] DaedalusParser.IfConditionContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.elseBlock"/>.
 	/// <para>The default implementation does nothing.</para>
@@ -383,18 +371,6 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitWhileStatement([NotNull] DaedalusParser.WhileStatementContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.whileCondition"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterWhileCondition([NotNull] DaedalusParser.WhileConditionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.whileCondition"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitWhileCondition([NotNull] DaedalusParser.WhileConditionContext context) { }
-	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.breakStatement"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
@@ -419,30 +395,6 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitContinueStatement([NotNull] DaedalusParser.ContinueStatementContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.funcArgExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterFuncArgExpression([NotNull] DaedalusParser.FuncArgExpressionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.funcArgExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitFuncArgExpression([NotNull] DaedalusParser.FuncArgExpressionContext context) { }
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.expressionBlock"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterExpressionBlock([NotNull] DaedalusParser.ExpressionBlockContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.expressionBlock"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitExpressionBlock([NotNull] DaedalusParser.ExpressionBlockContext context) { }
-	/// <summary>
 	/// Enter a parse tree produced by the <c>bitMoveExpression</c>
 	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
 	/// <para>The default implementation does nothing.</para>
@@ -457,19 +409,19 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitBitMoveExpression([NotNull] DaedalusParser.BitMoveExpressionContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by the <c>oneArgExpression</c>
+	/// Enter a parse tree produced by the <c>valueExpression</c>
 	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterOneArgExpression([NotNull] DaedalusParser.OneArgExpressionContext context) { }
+	public virtual void EnterValueExpression([NotNull] DaedalusParser.ValueExpressionContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by the <c>oneArgExpression</c>
+	/// Exit a parse tree produced by the <c>valueExpression</c>
 	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitOneArgExpression([NotNull] DaedalusParser.OneArgExpressionContext context) { }
+	public virtual void ExitValueExpression([NotNull] DaedalusParser.ValueExpressionContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by the <c>eqExpression</c>
 	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
@@ -484,20 +436,6 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitEqExpression([NotNull] DaedalusParser.EqExpressionContext context) { }
-	/// <summary>
-	/// Enter a parse tree produced by the <c>valExpression</c>
-	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterValExpression([NotNull] DaedalusParser.ValExpressionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by the <c>valExpression</c>
-	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitValExpression([NotNull] DaedalusParser.ValExpressionContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by the <c>addExpression</c>
 	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
@@ -596,6 +534,20 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitBracketExpression([NotNull] DaedalusParser.BracketExpressionContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>unaryExpression</c>
+	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterUnaryExpression([NotNull] DaedalusParser.UnaryExpressionContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>unaryExpression</c>
+	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitUnaryExpression([NotNull] DaedalusParser.UnaryExpressionContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by the <c>logAndExpression</c>
 	/// labeled alternative in <see cref="DaedalusParser.expression"/>.
@@ -705,19 +657,19 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitNoFuncLiteralValue([NotNull] DaedalusParser.NoFuncLiteralValueContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by the <c>funcCallValue</c>
+	/// Enter a parse tree produced by the <c>functionCallValue</c>
 	/// labeled alternative in <see cref="DaedalusParser.value"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterFuncCallValue([NotNull] DaedalusParser.FuncCallValueContext context) { }
+	public virtual void EnterFunctionCallValue([NotNull] DaedalusParser.FunctionCallValueContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by the <c>funcCallValue</c>
+	/// Exit a parse tree produced by the <c>functionCallValue</c>
 	/// labeled alternative in <see cref="DaedalusParser.value"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitFuncCallValue([NotNull] DaedalusParser.FuncCallValueContext context) { }
+	public virtual void ExitFunctionCallValue([NotNull] DaedalusParser.FunctionCallValueContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by the <c>referenceValue</c>
 	/// labeled alternative in <see cref="DaedalusParser.value"/>.
@@ -757,17 +709,17 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitReference([NotNull] DaedalusParser.ReferenceContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.typeReference"/>.
+	/// Enter a parse tree produced by <see cref="DaedalusParser.dataType"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterTypeReference([NotNull] DaedalusParser.TypeReferenceContext context) { }
+	public virtual void EnterDataType([NotNull] DaedalusParser.DataTypeContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.typeReference"/>.
+	/// Exit a parse tree produced by <see cref="DaedalusParser.dataType"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitTypeReference([NotNull] DaedalusParser.TypeReferenceContext context) { }
+	public virtual void ExitDataType([NotNull] DaedalusParser.DataTypeContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.nameNode"/>.
 	/// <para>The default implementation does nothing.</para>
@@ -853,17 +805,17 @@ public partial class DaedalusBaseListener : IDaedalusListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitEqOperator([NotNull] DaedalusParser.EqOperatorContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="DaedalusParser.oneArgOperator"/>.
+	/// Enter a parse tree produced by <see cref="DaedalusParser.unaryOperator"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterOneArgOperator([NotNull] DaedalusParser.OneArgOperatorContext context) { }
+	public virtual void EnterUnaryOperator([NotNull] DaedalusParser.UnaryOperatorContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="DaedalusParser.oneArgOperator"/>.
+	/// Exit a parse tree produced by <see cref="DaedalusParser.unaryOperator"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitOneArgOperator([NotNull] DaedalusParser.OneArgOperatorContext context) { }
+	public virtual void ExitUnaryOperator([NotNull] DaedalusParser.UnaryOperatorContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="DaedalusParser.multOperator"/>.
 	/// <para>The default implementation does nothing.</para>

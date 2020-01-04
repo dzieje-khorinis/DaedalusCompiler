@@ -47,60 +47,58 @@ blockDef : (functionDef  | classDef | prototypeDef | instanceDef)';'?;
 inlineDef :  (constDef | varDecl | instanceDecl )';';
 
 
-functionDef: Func typeReference nameNode parameterList statementBlock;
-constDef: Const typeReference (constValueDef | constArrayDef) (',' (constValueDef | constArrayDef) )*;
+functionDef: Func dataType nameNode parameterList statementBlock;
+constDef: Const dataType (constValueDef | constArrayDef) (',' (constValueDef | constArrayDef) )*;
 classDef: Class nameNode '{' ( varDecl ';' )*? '}';
 prototypeDef: Prototype nameNode '(' parentReference ')' statementBlock;
 instanceDef: Instance nameNode '(' parentReference ')' statementBlock;
 instanceDecl: Instance nameNode ( ',' nameNode )*? '(' parentReference ')';
-varDecl: Var typeReference (varValueDecl | varArrayDecl) (',' (varValueDecl | varArrayDecl) )* ;
+varDecl: Var dataType (varValueDecl | varArrayDecl) (',' (varValueDecl | varArrayDecl) )* ;
 
 constArrayDef: nameNode '[' arraySize ']' constArrayAssignment;
-constArrayAssignment: '=' '{' ( expressionBlock (',' expressionBlock)*? ) '}';
+constArrayAssignment: '=' '{' ( expression (',' expression)*? ) '}';
 
 constValueDef: nameNode constValueAssignment;
-constValueAssignment: '=' expressionBlock;
+constValueAssignment: '=' expression;
 
-varArrayDecl: nameNode '[' arraySize ']';
-varValueDecl: nameNode;
+varArrayDecl: nameNode '[' arraySize ']' varArrayAssignment?;
+varArrayAssignment: '=' '{' expression (',' expression)*  '}';
+
+varValueDecl: nameNode varValueAssignment?;
+varValueAssignment: '=' expression;
 
 parameterList: '(' (parameterDecl (',' parameterDecl)*? )? ')';
-parameterDecl: Var typeReference nameNode ('[' arraySize ']')?;
+parameterDecl: Var dataType nameNode ('[' arraySize ']')?;
 statementBlock: '{' ( ( (statement ';')  | ( (ifBlockStatement | whileStatement) ';'? ) ) )*? '}';
-statement: assignment | returnStatement | constDef | varDecl | funcCall | breakStatement | continueStatement | expressionBlock;
-funcCall: nameNode '(' ( funcArgExpression ( ',' funcArgExpression )*? )? ')';
-assignment: reference assignmentOperator expressionBlock;
-ifCondition: expressionBlock;
+statement: assignment | returnStatement | constDef | varDecl | breakStatement | continueStatement | expression;
+functionCall: nameNode '(' ( expression ( ',' expression )*? )? ')';
+assignment: reference assignmentOperator expression;
 elseBlock: Else statementBlock;
-elseIfBlock: Else If ifCondition statementBlock;
-ifBlock: If ifCondition statementBlock;
+elseIfBlock: Else If expression statementBlock;
+ifBlock: If expression statementBlock;
 ifBlockStatement: ifBlock ( elseIfBlock )*? ( elseBlock )?;
-returnStatement: Return ( expressionBlock )?;
-whileStatement: While '(' whileCondition ')' statementBlock;
-whileCondition: expressionBlock;
+returnStatement: Return ( expression )?;
+whileStatement: While '(' expression ')' statementBlock;
 breakStatement: Break;
 continueStatement: Continue;
 
-funcArgExpression: expressionBlock; // we use that to detect func call args
-expressionBlock: expression; // we use that expression to force parser threat expression as a block
-
 expression
     : '(' expression ')' #bracketExpression
-    | oneArgOperator expression #oneArgExpression
-    | expression multOperator expression #multExpression
-    | expression addOperator expression #addExpression
-    | expression bitMoveOperator expression #bitMoveExpression
-    | expression compOperator expression #compExpression
-    | expression eqOperator expression #eqExpression
-    | expression binAndOperator expression #binAndExpression
-    | expression binOrOperator expression #binOrExpression
-    | expression logAndOperator expression #logAndExpression
-    | expression logOrOperator expression #logOrExpression
-    | value #valExpression
+    | (oper=unaryOperator) expression #unaryExpression
+    | expression (oper=multOperator) expression #multExpression
+    | expression (oper=addOperator) expression #addExpression
+    | expression (oper=bitMoveOperator) expression #bitMoveExpression
+    | expression (oper=compOperator) expression #compExpression
+    | expression (oper=eqOperator) expression #eqExpression
+    | expression (oper=binAndOperator) expression #binAndExpression
+    | expression (oper=binOrOperator) expression #binOrExpression
+    | expression (oper=logAndOperator) expression #logAndExpression
+    | expression (oper=logOrOperator) expression #logOrExpression
+    | value #valueExpression
     ;
 
-arrayIndex : IntegerLiteral | referenceAtom;
-arraySize : IntegerLiteral | referenceAtom;
+arrayIndex : IntegerLiteral | reference;
+arraySize : IntegerLiteral | reference;
 
 value
     : IntegerLiteral #integerLiteralValue
@@ -108,14 +106,14 @@ value
     | StringLiteral #stringLiteralValue
     | Null #nullLiteralValue
     | NoFunc #noFuncLiteralValue
-    | funcCall #funcCallValue
+    | functionCall #functionCallValue
     | reference #referenceValue
     ;
     
 referenceAtom: nameNode ( '[' arrayIndex ']')?;
-reference: referenceAtom ( '.' referenceAtom )?;
+reference: referenceAtom ( '.' referenceAtom )*;
 
-typeReference:  ( Identifier | Void | Int | Float | String | Func | Instance);
+dataType: Identifier | Void | Int | Float | String | Func | Instance;
 
 nameNode: Identifier | While | Break | Continue;
 
@@ -126,7 +124,7 @@ addOperator: '+' | '-';
 bitMoveOperator: '<<' | '>>';
 compOperator: '<' | '>' | '<=' | '>=';
 eqOperator: '==' | '!=';
-oneArgOperator: '-' | '!' | '~' | '+';
+unaryOperator: '-' | '!' | '~' | '+';
 multOperator: '*' | '/' | '%';
 binAndOperator: '&';
 binOrOperator: '|';

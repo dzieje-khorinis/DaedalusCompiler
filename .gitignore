@@ -9,6 +9,7 @@ test/DaedalusCompiler.Tests/output
 test/DaedalusCompiler.Tests/Scripts
 test/DaedalusCompiler.Tests/Scripts.zip
 test/DaedalusCompiler.Tests/config.json
+test/DaedalusCompiler.Tests/TestFiles
 
 /DaedalusLib/bin
 /DaedalusLib/obj

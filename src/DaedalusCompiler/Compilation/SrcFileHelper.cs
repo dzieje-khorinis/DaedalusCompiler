@@ -7,8 +7,7 @@ namespace DaedalusCompiler.Compilation
 {
     public static class SrcFileHelper
     {
-
-        public static string[] GetLines(string srcFilePath)
+        private static string[] GetLines(string srcFilePath)
         {
             string[] lines = File.ReadAllLines(srcFilePath);
             for (int i = 0; i < lines.Length; ++i)
@@ -49,8 +48,7 @@ namespace DaedalusCompiler.Compilation
                 throw new Exception($"Error while loading scripts file paths from SRC file '{srcFilePath}'", exc);
             }
         }
-
-
+        
         private static string GetDirPathInsensitive(string basePath, string relativePath)
         {
             string resultPath = basePath;
@@ -70,7 +68,7 @@ namespace DaedalusCompiler.Compilation
 
                 if (directories.Length > 1)
                 {
-                    throw new DirectoryNotFoundException($"ERROR: Ambigous path '{Path.Combine(resultPath, relativePathPart)}'. Matches {String.Join(";", directories)}");;
+                    throw new DirectoryNotFoundException($"ERROR: Ambiguous path '{Path.Combine(resultPath, relativePathPart)}'. Matches {String.Join(";", directories)}");
                 }
 
                 resultPath = Path.Combine(resultPath, directories.First());
@@ -95,7 +93,7 @@ namespace DaedalusCompiler.Compilation
             List<string> filePaths = GetFilesInsensitive(dirPath, filenamePattern);
             if (filePaths.Count > 1)
             {
-                throw new DirectoryNotFoundException($"ERROR: Ambigous path '{Path.Combine(dirPath, filenamePattern)}'. Matches {String.Join(";", filePaths)}");;
+                throw new DirectoryNotFoundException($"ERROR: Ambiguous path '{Path.Combine(dirPath, filenamePattern)}'. Matches {String.Join(";", filePaths)}");
             }
 
             return filePaths.First();

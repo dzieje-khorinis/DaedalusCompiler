@@ -6,9 +6,15 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\Parser\Output\DaedalusBaseListener.cs" Link="AntlrOutput\DaedalusBaseListener.cs" />
+    <Compile Include="..\Parser\Output\DaedalusBaseVisitor.cs">
+      <Link>AntlrOutput\DaedalusBaseVisitor.cs</Link>
+    </Compile>
     <Compile Include="..\Parser\Output\DaedalusLexer.cs" Link="AntlrOutput\DaedalusLexer.cs" />
     <Compile Include="..\Parser\Output\DaedalusListener.cs" Link="AntlrOutput\DaedalusListener.cs" />
     <Compile Include="..\Parser\Output\DaedalusParser.cs" Link="AntlrOutput\DaedalusParser.cs" />
+    <Compile Include="..\Parser\Output\DaedalusVisitor.cs">
+      <Link>AntlrOutput\DaedalusVisitor.cs</Link>
+    </Compile>
     <None Remove="DaedalusBuiltins\camera.d" />
     <EmbeddedResource Include="DaedalusBuiltins\camera.d">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -49,6 +55,26 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="AntlrOutput\" />
-    <Folder Include="output" />
+  </ItemGroup>
+  <ItemGroup>
+    <_UnmanagedRegistrationCache Remove="obj\DaedalusCompiler.csproj.UnmanagedRegistration.cache" />
+  </ItemGroup>
+  <ItemGroup>
+    <_ResolveComReferenceCache Remove="obj\Debug\netcoreapp2.1\DaedalusCompiler.csproj.ResolveComReference.cache" />
+  </ItemGroup>
+  <ItemGroup>
+    <IntermediateAssembly Remove="obj\Debug\netcoreapp2.1\DaedalusCompiler.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <_DebugSymbolsIntermediatePath Remove="obj\Debug\netcoreapp2.1\DaedalusCompiler.pdb" />
+  </ItemGroup>
+  <ItemGroup>
+    <_DeploymentManifestEntryPoint Remove="obj\Debug\netcoreapp2.1\DaedalusCompiler.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationManifest Remove="obj\Debug\netcoreapp2.1\DaedalusCompiler.dll.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <DeployManifest Remove="obj\Debug\netcoreapp2.1\DaedalusCompiler.application" />
   </ItemGroup>
 </Project>
