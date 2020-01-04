@@ -96,7 +96,7 @@ namespace DaedalusCompiler.Compilation
             }
             else
             {
-                Console.WriteLine($"Runtime {runtimePath} doesn't exist.");
+                if (verbose) Console.WriteLine($"Runtime {runtimePath} doesn't exist.");
             }
 
             
@@ -129,7 +129,7 @@ namespace DaedalusCompiler.Compilation
                 return false;
             }
             
-            Console.WriteLine("parseTrees created");
+            if (verbose) Console.WriteLine("parseTrees created");
 
             SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(parseTrees, externalFilesCount, filesPaths, filesContentsLines, suppressedWarningCodes);
             semanticAnalyzer.Run();
@@ -170,7 +170,7 @@ namespace DaedalusCompiler.Compilation
             AssemblyBuildingVisitor assemblyBuildingVisitor = new AssemblyBuildingVisitor(semanticAnalyzer.SymbolTable);
             assemblyBuildingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
             
-            Console.WriteLine($"parseTrees.Count: {parseTrees.Count}");
+            if (verbose) Console.WriteLine($"parseTrees.Count: {parseTrees.Count}");
             
             Directory.CreateDirectory(_outputDirPath);
             if (generateOutputUnits)

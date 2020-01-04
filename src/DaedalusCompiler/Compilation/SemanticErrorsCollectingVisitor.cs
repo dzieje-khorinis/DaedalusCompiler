@@ -78,12 +78,6 @@ public class SemanticErrorsCollectingVisitor : AbstractSyntaxTreeBaseVisitor
             _wasFilePathDisplayed = false;
             base.VisitFile(node);
         }
-        
-        protected override void VisitInstanceDefinition(InstanceDefinitionNode node)
-        {
-            base.VisitInstanceDefinition(node);
-        }
-
 
         private bool IsAnnotationSuppressed(NodeAnnotation annotation, ASTNode node)
         {
