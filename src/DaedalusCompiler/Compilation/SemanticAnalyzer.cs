@@ -12,14 +12,14 @@ namespace DaedalusCompiler.Compilation
         public Dictionary<string, Symbol> SymbolTable;
         public List<BlockSymbol> SymbolsWithInstructions;
         
-        public SemanticAnalyzer(List<IParseTree> parseTrees, int externalFilesCount, List<string> filesPaths, List<string[]> filesContents, List<HashSet<string>> suppressedWarningCodes)
+        public SemanticAnalyzer(List<IParseTree> parseTrees, List<string> filesPaths, List<string[]> filesContents, List<HashSet<string>> suppressedWarningCodes)
         {
             SymbolTable = null;
             SymbolsWithInstructions = null;
 
             Stopwatch timer = new Stopwatch();
             timer.Start();
-            AbstractSyntaxTree = new AbstractSyntaxTree(parseTrees, externalFilesCount, filesPaths, filesContents, suppressedWarningCodes);
+            AbstractSyntaxTree = new AbstractSyntaxTree(parseTrees, filesPaths, filesContents, suppressedWarningCodes);
             timer.Stop();
             Console.WriteLine($"AbstractSyntaxTree creation time: {timer.Elapsed}");
         }

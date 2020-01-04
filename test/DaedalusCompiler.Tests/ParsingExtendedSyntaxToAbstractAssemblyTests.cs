@@ -143,13 +143,12 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestKeywordThisInsideInstance()
         {
-            ExternalCode = @"
-                func int NPC_IsPlayer(var instance par0) {};
-                func void WLD_PlayEffect(var string par0, var instance par1, var instance par2, var int par3, var int par4, var int par5, var int par6) {};
-                func void NPC_ChangeAttribute(var instance par0, var int par1, var int par2) {};
-                func void CreateInvItems(var instance par0, var int par1, var int par2) {};
-            ";
             Code = @"
+                extern func int NPC_IsPlayer(var instance par0);
+                extern func void WLD_PlayEffect(var string par0, var instance par1, var instance par2, var int par3, var int par4, var int par5, var int par6);
+                extern func void NPC_ChangeAttribute(var instance par0, var int par1, var int par2);
+                extern func void CreateInvItems(var instance par0, var int par1, var int par2);
+
                 const int ATR_STRENGTH =  4;
                 const int ATR_DEXTERITY =  5;
                 const int ATR_INDEX_MAX	=  8;

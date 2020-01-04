@@ -180,10 +180,9 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestInstanceAssignment()
         {
-            ExternalCode = @"
-                func instance HLP_GetNpc(var int par0) {};
-            ";
             Code = @"
+                extern func instance HLP_GetNpc(var int par0);
+                
                 class C_NPC { var int data [200]; };
                 var C_NPC person;
                 
@@ -2849,10 +2848,9 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestNestedIfWithEmptyElse()
         {
-            ExternalCode = @"
-                func int NPC_IsDead(var instance par0) {};
-            ";
             Code = @"
+                extern func int NPC_IsDead(var instance par0);
+
                 class C_NPC { var int data [200]; };
 
                 instance self(C_NPC) {};
@@ -3378,11 +3376,9 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestFuncCallsWithArguments()
         {
-            ExternalCode = @"
-                var instance instance_help;
-                func int WLD_DetectPlayer(var instance par0) {};
-            ";
             Code = @"
+                extern func int WLD_DetectPlayer(var instance par0);
+
                 class C_NPC { var int data [200]; };
 
                 // var void varvoid;
@@ -3563,8 +3559,6 @@ namespace DaedalusCompiler.Tests
             };
             AssertInstructionsMatch();
 
-            char prefix = (char)255;
-            
             Instructions = GetExecBlockInstructions("testfunc");
             ExpectedInstructions = new List<AssemblyElement>
             {
@@ -3662,7 +3656,6 @@ namespace DaedalusCompiler.Tests
             
             ExpectedSymbols = new List<Symbol>
             {
-                Ref($"{prefix}INSTANCE_HELP"),
                 Ref("WLD_DetectPlayer"),
                 Ref("WLD_DetectPlayer.par0"),
                 Ref("C_NPC"),
@@ -3892,10 +3885,9 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestFuncCallsWithAttributeArguments()
         {
-            ExternalCode = @"
-                func int WLD_DetectPlayer(var instance par0) {};
-            ";
             Code = @"
+                extern func int WLD_DetectPlayer(var instance par0);
+
                 class C_NPC {
                     var float varfloat;
                     var int varint;
@@ -4390,10 +4382,9 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestExternalFunc()
         {
-            ExternalCode = @"
-                func float IntToFloat(var int par0) {};
-            ";
             Code = @"
+                extern func float IntToFloat(var int par0);
+
                 func float floatFunc() {};
 
                 func void testFunc() {
@@ -4529,10 +4520,9 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestLazyReferenceExternalFunctionCall()
         {
-            ExternalCode = @"
-                func int NPC_HasNews(var instance par0, var int par1, var instance par2, var instance par3) {};
-            ";
             Code = @"
+                extern func int NPC_HasNews(var instance par0, var int par1, var instance par2, var instance par3);
+
                 class C_NPC { var int data [200]; };
 
                 func int firstFunc(var C_NPC par0, var C_NPC par1, var C_NPC par2) {};
@@ -4977,10 +4967,9 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestLazyReferenceInsideComplexIfCondition()
         {
-            ExternalCode = @"
-                func int NPC_HasItems(var instance par0, var int par1) {};
-            ";
             Code = @"
+                extern func int NPC_HasItems(var instance par0, var int par1);
+
                 class C_NPC { var int data [200]; };
 
                 func int testFunc()
@@ -5066,13 +5055,10 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestNestedFunctionCallsWithLazyFunctionsAsArguments()
         {
-            
-            ExternalCode = $@"
-                var instance instance_help;
-                func void Info_AddChoice(var int par0, var string par1, var func par2) {{}};
-                func int NPC_IsInState(var instance par0, var func par1) {{}};
-            ";
             Code = @"
+                extern func void Info_AddChoice(var int par0, var string par1, var func par2);
+                extern func int NPC_IsInState(var instance par0, var func par1);
+
                 class C_NPC {
                     var int data [200];
                 };
@@ -5132,7 +5118,6 @@ namespace DaedalusCompiler.Tests
             
             ExpectedSymbols = new List<Symbol>
             {
-                Ref($"{prefix}INSTANCE_HELP"),
                 Ref("Info_AddChoice"),
                 Ref("Info_AddChoice.par0"),
                 Ref("Info_AddChoice.par1"),

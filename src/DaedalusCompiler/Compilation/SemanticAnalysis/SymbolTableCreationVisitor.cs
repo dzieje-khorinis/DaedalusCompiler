@@ -10,7 +10,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public readonly Dictionary <string, Symbol> SymbolTable;
         private readonly List<Symbol> _stringConstSymbols;
         
-        private bool _isInExternalFile;
         private int _nextSymbolIndex;
         private int _nextStringSymbolNumber;
         
@@ -29,8 +28,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             SymbolTable = new Dictionary<string, Symbol>();
             _stringConstSymbols = new List<Symbol>();
             
-            _isInExternalFile = false;
-            _nextSymbolIndex = 0;
+            _nextSymbolIndex = 1;
             _nextStringSymbolNumber = 10000;
 
             ConstDefinitionNodes = new List<ConstDefinitionNode>();
@@ -52,12 +50,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
         }
 
-        protected override void VisitFile(FileNode node)
-        {
-            _isInExternalFile = node.IsExternal;
-            base.VisitFile(node);
-        }
-        
         protected override void VisitClassDefinition(ClassDefinitionNode classDefinitionNode)
         {
             string className = classDefinitionNode.NameNode.Value;
@@ -147,7 +139,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                 string parameterTypeName = parameterDeclarationNode.TypeNameCapitalized;
 
                 ParameterSymbol parameterSymbol;
-                if (_isInExternalFile)
+                if (functionSymbol.IsExternal)
                 {
                     parameterSymbol = buildArray
                         ? new ExternalParameterArraySymbol(functionSymbol, parameterTypeName, parameterName, parameterDeclarationNode)
@@ -202,18 +194,9 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         
         private void AddSymbol(Symbol symbol)
         {
-            symbol.Index = _nextSymbolIndex++;
+            bool addSymbolToTable = true;
             
-            if (_isInExternalFile)
-            {
-                symbol.IsExternal = true;
-                
-                if (symbol.Name == "instance_help")
-                {
-                    symbol.Name = $"{(char) 255}{symbol.Name}";
-                    symbol.Path = $"{(char) 255}{symbol.Path.ToUpper()}";
-                }
-            }
+            symbol.Index = _nextSymbolIndex++;
 
             if (SymbolTable.ContainsKey(symbol.Path))
             {
@@ -235,7 +218,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
                 symbol.Node.Annotations.Add(new RedefinedIdentifierError(symbol.Name, previousLocation, location));
 
-                return;
+                addSymbolToTable = false;
             }
 
             string[] keywords = {"break", "continue", "while"};
@@ -255,7 +238,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             switch (symbol)
             {
                 case FunctionSymbol functionSymbol:
-                    //FunctionSymbols.Add(functionSymbol);
                     TypedSymbols.Add(functionSymbol);
                     if (!functionSymbol.IsExternal)
                     {
@@ -267,14 +249,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     TypedSymbols.Add(typedSymbol);
                     break;
                 
-                
                 case SubclassSymbol subclassSymbol:
                     SubclassSymbols.Add(subclassSymbol);
-                    if (!subclassSymbol.IsExternal)
-                    {
-                        SymbolsWithInstructions.Add(subclassSymbol);
-                    }
+                    SymbolsWithInstructions.Add(subclassSymbol);
                     break;
+                
                 case ClassSymbol classSymbol:
                     _classSymbols.Add(classSymbol);
                     break;
@@ -305,8 +284,11 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                     ConstDefinitionNodes.Add(constDefinitionNode);
                     break;
             }
-            
-            SymbolTable[symbol.Path] = symbol;
+
+            if (addSymbolToTable)
+            {
+                SymbolTable[symbol.Path] = symbol;
+            }
         }
         
         

@@ -183,8 +183,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
                         }
                     }
                     break;
-                
-                
+
                 case FunctionDefinitionNode functionDefinitionNode:
                     // look for local variable
                     FunctionSymbol functionSymbol = (FunctionSymbol) functionDefinitionNode.Symbol;

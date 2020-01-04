@@ -83,16 +83,8 @@ namespace DaedalusCompiler.Dat
                     Count = 0;
                     break;
                 
-                case InstanceSymbol instanceSymbol:
-                    if (instanceSymbol.IsExternal)
-                    {
-                        Count = 1; //INSTANCE_HELP
-                    }
-                    else
-                    {
-                        Count = 0;
-                    }
-
+                case InstanceSymbol _:
+                    Count = 0;
                     break;
                 
                 default:
@@ -139,12 +131,7 @@ namespace DaedalusCompiler.Dat
                     Content = constSymbol.Content;
                     break;
                 
-                case VarSymbol varSymbol:
-                    if (varSymbol.IsExternal)
-                    {
-                        Content = varSymbol.BuiltinType == SymbolType.Instance ? new object[] {0} : null;
-                        break;
-                    }
+                case VarSymbol _:
                     Content = new object[Count];
                     for (int i = 0; i < Count; ++i)
                     {
@@ -175,7 +162,6 @@ namespace DaedalusCompiler.Dat
                     break;
 
                 case ParameterSymbol _:
-                    
                     switch (BuiltinType)
                     {
                         case SymbolType.String:
@@ -287,6 +273,29 @@ namespace DaedalusCompiler.Dat
             }
             
             ParentIndex = reader.ReadInt32();
+        }
+
+        public DatSymbol()
+        {
+            Index = 0;
+            Name = $"{(char) 255}INSTANCE_HELP";
+            
+            IsAddressable = false;
+            IsFunction = false;
+
+            OffClsRet = 0;
+            Count = 1;
+            BuiltinType = SymbolType.Instance;
+            Flags = 0;
+            Content = new object[]{0};
+
+            FileIndex = 0;
+            Line = 0;
+            LinesCount = 0;
+            Column = 0;
+            CharsCount = 0;
+
+            ParentIndex = -1;
         }
         
 

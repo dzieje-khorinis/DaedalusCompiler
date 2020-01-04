@@ -1,9 +1,9 @@
 // TODO
+// add usage without initialization warning
+// Instance should be removed from Datatypes once extern keyword is done, parameters to functions shouldn't be of Instance type but of C_NPC , C_Item, etc.
 // doc: added inline var assignments (inside functions / instances/ prototypes)
-// add extern keyword
+// doc: added extern keyword
 // make string concatenation with + using ConcatStrings, if no ConcatString available, print error: cannot concatenate strings, no external function ConcatStrings available
-
-
 
 // make `self` keyword in instances deprecated (it's confusing since we got global `self` instance, which is completely different object), and replace it with `this` keyword (once transpiler is done, self will be unsupported)
 // doc: backward incompability:  slf wasn't special in prototypes/instances, in original compiler you could always write `someundefinedname.varname` and it would work as it was `varname`

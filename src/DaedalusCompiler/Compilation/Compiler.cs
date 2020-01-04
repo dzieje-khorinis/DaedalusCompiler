@@ -54,19 +54,25 @@ namespace DaedalusCompiler.Compilation
 
         public bool CompileFromSrc(
             string srcFilePath,
+            string runtimePath,
+            string outputPath,
             bool verbose = true,
             bool generateOutputUnits = true
         )
         {
+            bool isRunTimePathSpecified = runtimePath != String.Empty;
+            
             var absoluteSrcFilePath = Path.GetFullPath(srcFilePath);
 
             string[] paths = SrcFileHelper.LoadScriptsFilePaths(absoluteSrcFilePath).ToArray();
             string srcFileName = Path.GetFileNameWithoutExtension(absoluteSrcFilePath).ToLower();
-            
-            string runtimePath = Path.Combine(GetBuiltinsPath(), srcFileName + ".d");
-            List<IParseTree> parseTrees = new List<IParseTree>();
 
-            int externalFilesCount = 0;
+            if (!isRunTimePathSpecified)
+            {
+                runtimePath = Path.Combine(GetBuiltinsPath(), srcFileName + ".d");
+            }
+            List<IParseTree> parseTrees = new List<IParseTree>();
+            
             List<string> filesPaths = new List<string>();
             List<string[]> filesContentsLines = new List<string[]>();
             List<string> filesContents = new List<string>();
@@ -76,8 +82,6 @@ namespace DaedalusCompiler.Compilation
             
             if (File.Exists(runtimePath))
             {
-                externalFilesCount++;
-                
                 if (verbose) Console.WriteLine($"[0/{paths.Length}]Parsing runtime: {runtimePath}");
                 
                 string fileContent = GetFileContent(runtimePath);
@@ -94,9 +98,9 @@ namespace DaedalusCompiler.Compilation
                 
                 syntaxErrorsCount += syntaxErrorListener.ErrorsCount;
             }
-            else
+            else if(isRunTimePathSpecified)
             {
-                if (verbose) Console.WriteLine($"Runtime {runtimePath} doesn't exist.");
+                if (verbose) Console.WriteLine($"Specified runtime {runtimePath} doesn't exist.");
             }
 
             
@@ -131,7 +135,7 @@ namespace DaedalusCompiler.Compilation
             
             if (verbose) Console.WriteLine("parseTrees created");
 
-            SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(parseTrees, externalFilesCount, filesPaths, filesContentsLines, suppressedWarningCodes);
+            SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(parseTrees, filesPaths, filesContentsLines, suppressedWarningCodes);
             semanticAnalyzer.Run();
 
             SemanticErrorsCollectingVisitor semanticErrorsCollectingVisitor = new SemanticErrorsCollectingVisitor(
@@ -182,11 +186,14 @@ namespace DaedalusCompiler.Compilation
                 _ouBuilder.SaveOutputUnits(_outputDirPath);
             }
 
-            string datPath = Path.Combine(_outputDirPath, srcFileName + ".dat");
-            
+            if (outputPath == String.Empty)
+            {
+                outputPath = Path.Combine(_outputDirPath, srcFileName + ".dat");
+            }
+
             DatBuilder datBuilder = new DatBuilder(semanticAnalyzer.SymbolTable, semanticAnalyzer.SymbolsWithInstructions);
             DatFile = datBuilder.GetDatFile();
-            DatFile.Save(datPath);
+            DatFile.Save(outputPath);
 
             return true;
         }

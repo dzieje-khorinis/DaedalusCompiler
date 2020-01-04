@@ -42,8 +42,7 @@ namespace DaedalusCompiler.Compilation
         public SymbolFlag Flags;
         
         public object[] Content;
-        public bool IsExternal;
-
+        
         protected Symbol(string name, ASTNode node)
         {
             Index = -1;
@@ -54,7 +53,6 @@ namespace DaedalusCompiler.Compilation
             BuiltinType = SymbolType.Uninitialized;
 
             Content = new object[]{};
-            IsExternal = false;
         }
 
         protected static SymbolType GetBuiltinType(string typeName)
@@ -147,6 +145,8 @@ namespace DaedalusCompiler.Compilation
         public string TypeName { get; set; }
         public Symbol ComplexType { get; set; }
         public int ParametersCount { get; set; }
+        
+        public readonly bool IsExternal;
 
         public FunctionSymbol(string typeName, string name, bool isExternal, ASTNode node) : base(name, node)
         {

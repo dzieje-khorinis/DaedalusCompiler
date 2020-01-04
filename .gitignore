@@ -11,6 +11,7 @@ test/DaedalusCompiler.Tests/Scripts.zip
 test/DaedalusCompiler.Tests/config.json
 test/DaedalusCompiler.Tests/TestFiles
 
+
 /DaedalusLib/bin
 /DaedalusLib/obj
 
@@ -100,6 +101,10 @@ StyleCopReport.xml
 *.pidb
 *.svclog
 *.scc
+
+# ANTLR4 generated files
+*.tokens
+*.interp
 
 # Chutzpah Test files
 _Chutzpah*

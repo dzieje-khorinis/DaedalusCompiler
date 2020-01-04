@@ -50,6 +50,12 @@ public interface IDaedalusVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitInlineDef([NotNull] DaedalusParser.InlineDefContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="DaedalusParser.externFunctionDecl"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitExternFunctionDecl([NotNull] DaedalusParser.ExternFunctionDeclContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="DaedalusParser.functionDef"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

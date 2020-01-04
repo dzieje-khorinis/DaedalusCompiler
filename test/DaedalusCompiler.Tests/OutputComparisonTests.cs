@@ -98,13 +98,13 @@ namespace DaedalusCompiler.Tests
                 string datFileName = Path.GetFileName(datPath).ToLower();
                 bool generateOutputUnits = (datFileName == "gothic.dat");
                 
-                Compiler compiler = new Compiler(outputDirPath, verbose:false, strictSyntax:false, globallySuppressedCodes:new HashSet<string>{"W1", "W2", "W3", "W5"});
+                Compiler compiler = new Compiler(outputDirPath, verbose:false, strictSyntax:false, globallySuppressedCodes:new HashSet<string>{"W1", "W2", "W3", "W4", "W5"});
                 if (generateOutputUnits)
                 {
                     compiler.SetCompilationDateTimeText(compileTime);
                     compiler.SetCompilationUserName(compileUsername);
                 }
-                compiler.CompileFromSrc(srcPath, verbose:false, generateOutputUnits: generateOutputUnits);
+                compiler.CompileFromSrc(srcPath, runtimePath:String.Empty, outputPath:String.Empty, verbose:false, generateOutputUnits: generateOutputUnits);
                 _originalDatFiles[datFileName] = compiler.DatFile;
             }
         }
@@ -187,7 +187,7 @@ namespace DaedalusCompiler.Tests
 
         private void CompareSymbols(List<DatSymbol> expectedSymbols, List<DatSymbol> symbols)
         {
-            HashSet<SymbolType> parentLessTypes = new HashSet<SymbolType>()
+            HashSet<SymbolType> parentLessTypes = new HashSet<SymbolType>
             {
                 SymbolType.Int,
                 SymbolType.Float,

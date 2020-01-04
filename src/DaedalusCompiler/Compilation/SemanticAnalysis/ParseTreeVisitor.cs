@@ -9,17 +9,14 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class ParseTreeVisitor : DaedalusBaseVisitor<ASTNode>
     {
 	    private readonly int _sourceFileNumber;
-	    private readonly bool _isExternal;
-
 	    private readonly List<InheritanceParentReferenceNode> _inheritanceReferenceNodes;
 	    public readonly List<ReferenceNode> ReferenceNodes;
 	    private readonly List<ConstDefinitionNode> _constDefinitionNodes;
 	    private readonly List<IArrayDeclarationNode> _arrayDeclarationNodes;
 
-	    public ParseTreeVisitor(int sourceFileNumber, bool isExternal)
+	    public ParseTreeVisitor(int sourceFileNumber)
 	    {
 		    _sourceFileNumber = sourceFileNumber;
-		    _isExternal = isExternal;
 		    _constDefinitionNodes = new List<ConstDefinitionNode>();
 		    _arrayDeclarationNodes = new List<IArrayDeclarationNode>();
 		    _inheritanceReferenceNodes = new List<InheritanceParentReferenceNode>();
@@ -38,7 +35,15 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 			    
 			    if (childContext is DaedalusParser.InlineDefContext inlineDefContext)
 			    {
-				    definitionNodes.AddRange(((TemporaryNode) Visit(inlineDefContext.GetChild(0))).Nodes);
+				    ASTNode resultNode = Visit(inlineDefContext.GetChild(0));
+				    if (resultNode is TemporaryNode temporaryNode)
+				    {
+					    definitionNodes.AddRange(temporaryNode.Nodes);
+				    }
+				    else
+				    {
+					    definitionNodes.Add((FunctionDefinitionNode)resultNode);
+				    }
 			    }
 			    
 			    else if (childContext is DaedalusParser.BlockDefContext blockDefContext)
@@ -63,10 +68,24 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
 			List<StatementNode> statementNodes = GetStatementNodes(context.statementBlock());
 			
-			return new FunctionDefinitionNode(GetLocation(context), typeNameNode, nameNode, varDeclarationNodes, statementNodes, _isExternal);
+			return new FunctionDefinitionNode(GetLocation(context), typeNameNode, nameNode, varDeclarationNodes, statementNodes, false);
 	    }
 
-		public override ASTNode VisitConstDef([NotNull] DaedalusParser.ConstDefContext context)
+	    public override ASTNode VisitExternFunctionDecl(DaedalusParser.ExternFunctionDeclContext context)
+	    {
+		    NameNode typeNameNode = new NameNode(GetLocation(context.dataType()),context.dataType().GetText());
+		    NameNode nameNode = new NameNode(GetLocation(context.nameNode()),context.nameNode().GetText());
+
+		    List<ParameterDeclarationNode> varDeclarationNodes = new List<ParameterDeclarationNode>();
+		    foreach (DaedalusParser.ParameterDeclContext parameterDeclContext in context.parameterList().parameterDecl())
+		    {
+			    varDeclarationNodes.Add((ParameterDeclarationNode) VisitParameterDecl(parameterDeclContext));
+		    }
+
+		    return new FunctionDefinitionNode(GetLocation(context), typeNameNode, nameNode, varDeclarationNodes, new List<StatementNode>(), true);
+	    }
+
+	    public override ASTNode VisitConstDef([NotNull] DaedalusParser.ConstDefContext context)
 		{
 			return GetConstDefinitionsTemporaryNode(context);
 		}

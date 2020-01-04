@@ -26,33 +26,14 @@ namespace DaedalusCompiler.Tests
             }
         }
 
-        public void RunCode(string code, string externalCode="")
+        public void RunCode(string code)
         {
             List<IParseTree> parseTrees = new List<IParseTree>();
             List<string> filesPaths = new List<string>();
             List<string[]> filesContents = new List<string[]>();
             List<HashSet<string>> suppressedWarningCodes = new List<HashSet<string>>();
-            int externalFilesCount = 0;
-            
+
             _syntaxErrorsCount = 0;
-            
-            if (externalCode != "")
-            {
-                externalFilesCount++;
-                
-                DaedalusParser parser = Compiler.GetParserForText(externalCode);
-                SyntaxErrorListener syntaxErrorListener = new SyntaxErrorListener();
-                parser.AddErrorListener(syntaxErrorListener);
-                parseTrees.Add(parser.daedalusFile());
-                
-                string[] fileContentLines = externalCode.Split(Environment.NewLine);
-                filesPaths.Add("runtime.d");
-                filesContents.Add(fileContentLines);
-                suppressedWarningCodes.Add(Compiler.GetWarningCodesToSuppress(fileContentLines[0]));
-
-                _syntaxErrorsCount += syntaxErrorListener.ErrorsCount;
-            }
-
 
             if (code != "")
             {
@@ -76,7 +57,7 @@ namespace DaedalusCompiler.Tests
                 return;
             }
 
-            SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(parseTrees, externalFilesCount, filesPaths, filesContents, suppressedWarningCodes);
+            SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(parseTrees, filesPaths, filesContents, suppressedWarningCodes);
             semanticAnalyzer.Run();
             SymbolTable = semanticAnalyzer.SymbolTable;
             
