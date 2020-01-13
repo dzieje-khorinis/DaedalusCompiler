@@ -1,24 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using DaedalusCompiler.Dat;
 using DaedalusCompiler.Compilation;
 using System.Diagnostics;
-using System.IO;
 using DaedalusCompiler.Compilation.SemanticAnalysis;
 
 namespace DaedalusCompiler
 {
     class Program
     {
-        private const string version = "0.7.0";
-        private const string compiler_name = "daedalus-compiler";
+        private const string Version = "0.7.0";
+        private const string AppName = "Daedalus Compiler Version";
+        private const string AppSlug = "daedalus-compiler";
 
         static void ShowHelp()
         {
-            Console.WriteLine("Daedalus Compiler Version {0}", version);
-            Console.WriteLine(
-                "usage: {0} file_path [<args>]", compiler_name
-            );
+            Console.WriteLine($"{AppName} {Version}");
+            Console.WriteLine($"usage: {AppSlug} file_path [<args>]");
             Console.WriteLine(
                 "Args description:\n" +
                 "--load-dat          loads Gothic DAT file and analyzes it, in that case file_path should be DAT file\n" +
@@ -94,7 +91,7 @@ namespace DaedalusCompiler
 
             if (getVersion)
             {
-                Console.WriteLine($"v{version}");
+                Console.WriteLine($"v{Version}");
                 return;
             }
 
