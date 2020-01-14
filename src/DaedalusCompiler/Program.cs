@@ -8,7 +8,7 @@ namespace DaedalusCompiler
 {
     class Program
     {
-        private const string Version = "0.7.0";
+        private const string Version = "0.8.0";
         private const string AppName = "Daedalus Compiler Version";
         private const string AppSlug = "daedalus-compiler";
 
