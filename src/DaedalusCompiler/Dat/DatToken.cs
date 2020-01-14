@@ -37,6 +37,7 @@ namespace DaedalusCompiler.Dat
         PushInt = 64,
         PushVar = 65,
         PushInstance = 67,
+        PushNullInstance = 67,
         AssignString = 70,
         AssignStringRef = 71,
         AssignFunc = 72,

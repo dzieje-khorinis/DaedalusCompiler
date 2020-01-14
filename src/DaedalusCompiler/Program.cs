@@ -1,24 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using DaedalusCompiler.Dat;
 using DaedalusCompiler.Compilation;
 using System.Diagnostics;
-using System.IO;
 using DaedalusCompiler.Compilation.SemanticAnalysis;
 
 namespace DaedalusCompiler
 {
     class Program
     {
-        private const string version = "0.7.0";
-        private const string compiler_name = "daedalus-compiler";
+        private const string Version = "0.7.0";
+        private const string AppName = "Daedalus Compiler Version";
+        private const string AppSlug = "daedalus-compiler";
 
         static void ShowHelp()
         {
-            Console.WriteLine("Daedalus Compiler Version {0}", version);
-            Console.WriteLine(
-                "usage: {0} file_path [<args>]", compiler_name
-            );
+            Console.WriteLine($"{AppName} {Version}");
+            Console.WriteLine($"usage: {AppSlug} file_path [<args>]");
             Console.WriteLine(
                 "Args description:\n" +
                 "--load-dat          loads Gothic DAT file and analyzes it, in that case file_path should be DAT file\n" +
@@ -27,6 +24,8 @@ namespace DaedalusCompiler
                 "--strict            use more strict syntax version\n" +
                 "--suppress          suppress warnings globally\n" +
                 "--version           displays version of compiler\n" +
+                "-r|--runtime <path> (optional) custom externals file\n" +
+                "-o|--output <path>  (optional) output .DAT file\n" +
                 "--verbose"
             );
         }
@@ -34,7 +33,6 @@ namespace DaedalusCompiler
         static void HandleOptionsParser(string[] args)
         {
             var loadHelp = false;
-            var loadDat = false;
             var generateOutputUnits = false;
             var verbose = false;
             var strict = false;
@@ -43,11 +41,12 @@ namespace DaedalusCompiler
             bool detectUnused = false;
             bool caseSensitiveCode = false;
             string filePath = String.Empty;
+            string runtimePath = String.Empty;
+            string outputPath = String.Empty;
             HashSet<string> suppressCodes = new HashSet<string>();
 
             var optionSet = new NDesk.Options.OptionSet () {
                 { "h|?|help",   v => loadHelp = true },
-                { "load-dat", v => loadDat = true },
                 { "gen-ou", v => generateOutputUnits = true },
                 { "verbose", v => verbose = true },
                 { "strict", v => strict = true },
@@ -55,6 +54,8 @@ namespace DaedalusCompiler
                 { "case-sensitive-code", v => caseSensitiveCode = true },
                 { "suppress", v => suppressModeOn = true },
                 { "version|v", v => getVersion = true  },
+                { "r|runtime=", v => runtimePath = v},
+                { "o|output=", v => outputPath = v},
                 { "<>", v =>
                     {
                         if (suppressModeOn)
@@ -90,7 +91,7 @@ namespace DaedalusCompiler
 
             if (getVersion)
             {
-                Console.WriteLine($"v{version}");
+                Console.WriteLine($"v{Version}");
                 return;
             }
 
@@ -100,34 +101,16 @@ namespace DaedalusCompiler
             }
             else
             {
-                if (loadDat)
-                {
-                    AnalyzeDATFile(filePath);
-                }
-                else
-                {
-                    CompileDaedalus(filePath, verbose, generateOutputUnits, strict, suppressCodes);
-                }
+                CompileDaedalus(filePath, runtimePath, outputPath, verbose, generateOutputUnits, strict, suppressCodes);
             }
         }
-
-        static void AnalyzeDATFile(string path)
-        {
-            var dat = new DatFile();
-            //dat.Load(path);
-
-            //TODO: Move save to compilation process
-            var fileName = Path.GetFileName(path);
-            fileName = Path.ChangeExtension(fileName, "DAT");
-            dat.Save(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), fileName));
-        }
-
-        static void CompileDaedalus(string path, bool verbose, bool generateOutputUnits, bool strictSyntax, HashSet<string> suppressCodes)
+        
+        static void CompileDaedalus(string path, string runtimePath, string outputPath, bool verbose, bool generateOutputUnits, bool strictSyntax, HashSet<string> suppressCodes)
         {
             var compiler = new Compiler("output", verbose, strictSyntax, suppressCodes);
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
-            bool compiledSuccessfully = compiler.CompileFromSrc(path, verbose, generateOutputUnits);
+            bool compiledSuccessfully = compiler.CompileFromSrc(path, runtimePath, outputPath, verbose, generateOutputUnits);
             if (compiledSuccessfully)
             {
                 Console.WriteLine($"Compilation completed successfully. Total time: {stopwatch.Elapsed}");

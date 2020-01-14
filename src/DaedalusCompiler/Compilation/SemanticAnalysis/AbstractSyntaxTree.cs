@@ -75,7 +75,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         public readonly List<string[]> FilesContents;
         public readonly List<HashSet<string>> SuppressedWarningCodes;
         
-        public AbstractSyntaxTree(List<IParseTree> parseTrees, int externalFilesCount, List<string> filesPaths, List<string[]> filesContents, List<HashSet<string>> suppressedWarningCodes)
+        public AbstractSyntaxTree(List<IParseTree> parseTrees, List<string> filesPaths, List<string[]> filesContents, List<HashSet<string>> suppressedWarningCodes)
         {
             RootNodes = new List<FileNode>();
             ReferenceNodes = new List<ReferenceNode>();
@@ -87,18 +87,12 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             int index = 0;
             foreach (IParseTree parseTree in parseTrees)
             {
-                bool isExternal = index < externalFilesCount;
-                ParseTreeVisitor visitor = new ParseTreeVisitor(index, isExternal);
+                ParseTreeVisitor visitor = new ParseTreeVisitor(index);
                 RootNodes.Add((FileNode) visitor.Visit(parseTree));
                 ReferenceNodes.AddRange(visitor.ReferenceNodes);
                 index++;
             }
-
-            for (int i = 0; i < externalFilesCount; ++i)
-            {
-                RootNodes[i].IsExternal = true;
-            }
-
+            
             for (int i = 0; i < RootNodes.Count; ++i)
             {
                 RootNodes[i].Content = FilesContents[i];
@@ -240,11 +234,10 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
     public class FileNode : ASTNode
     {
         public readonly List<DeclarationNode> DefinitionNodes;
-        public bool IsExternal;
-        
+
         public string[] Content;
 
-        public FileNode(NodeLocation location, List<DeclarationNode> definitionNodes, bool isExternal = false) :
+        public FileNode(NodeLocation location, List<DeclarationNode> definitionNodes) :
             base(location)
         {
             foreach (var node in definitionNodes)
@@ -253,7 +246,6 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             }
             
             DefinitionNodes = definitionNodes;
-            IsExternal = isExternal;
         }
     }
     

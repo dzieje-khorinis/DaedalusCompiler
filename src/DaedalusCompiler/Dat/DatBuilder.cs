@@ -75,11 +75,6 @@ namespace DaedalusCompiler.Dat
                     continue;
                 }
 
-                if (instruction is PushNullInstance)
-                {
-                    instruction = new PushInstance(_symbols.First());
-                }
-
                 int? intParam = null;
                 byte? byteParam = null;
                 switch (instruction)
@@ -115,6 +110,9 @@ namespace DaedalusCompiler.Dat
                         intParam = addressInstruction.Address;
                         break;
                     }
+                    case PushNullInstance _:
+                        intParam = 0;
+                        break;
                 }
                 
                 string tokenName = instruction.GetType().Name;
@@ -139,7 +137,7 @@ namespace DaedalusCompiler.Dat
                 datTokens.AddRange(GetTokens(blockSymbol));
             }
 
-            List<DatSymbol> datSymbols = new List<DatSymbol>();
+            List<DatSymbol> datSymbols = new List<DatSymbol> {new DatSymbol()};
             foreach (Symbol symbol in _symbols)
             {
                 datSymbols.Add(new DatSymbol(symbol));

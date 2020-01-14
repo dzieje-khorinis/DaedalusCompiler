@@ -342,7 +342,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
         }
     }
 
-    public class TooBigArrayIndex : ErrorAnnotation
+    public class TooBigArrayIndexError : ErrorAnnotation
     {
         public override string GetMessage()
         {

@@ -1,8 +1,7 @@
-var instance instance_help;
-func void update_choicebox(var string par0) {};
-func void apply_options_performance() {};
-func void apply_options_video() {};
-func void apply_options_audio() {};
-func void apply_options_game() {};
-func void apply_options_controls() {};
-func int playvideo(var string par0) {};
+extern func void Update_ChoiceBox(var string par0);
+extern func void Apply_Options_Performance();
+extern func void Apply_Options_Video();
+extern func void Apply_Options_Audio();
+extern func void Apply_Options_Game();
+extern func void Apply_Options_controls();
+extern func int PlayVideo(var string par0);

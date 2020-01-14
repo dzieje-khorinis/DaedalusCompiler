@@ -5,24 +5,16 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\Parser\Output\DaedalusBaseListener.cs" Link="AntlrOutput\DaedalusBaseListener.cs" />
     <Compile Include="..\Parser\Output\DaedalusBaseVisitor.cs">
       <Link>AntlrOutput\DaedalusBaseVisitor.cs</Link>
     </Compile>
     <Compile Include="..\Parser\Output\DaedalusLexer.cs" Link="AntlrOutput\DaedalusLexer.cs" />
-    <Compile Include="..\Parser\Output\DaedalusListener.cs" Link="AntlrOutput\DaedalusListener.cs" />
     <Compile Include="..\Parser\Output\DaedalusParser.cs" Link="AntlrOutput\DaedalusParser.cs" />
     <Compile Include="..\Parser\Output\DaedalusVisitor.cs">
       <Link>AntlrOutput\DaedalusVisitor.cs</Link>
     </Compile>
     <None Remove="DaedalusBuiltins\camera.d" />
-    <EmbeddedResource Include="DaedalusBuiltins\camera.d">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
     <None Remove="DaedalusBuiltins\fight.d" />
-    <EmbeddedResource Include="DaedalusBuiltins\fight.d">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
     <None Remove="DaedalusBuiltins\gothic.d" />
     <EmbeddedResource Include="DaedalusBuiltins\gothic.d">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -32,21 +24,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <None Remove="DaedalusBuiltins\music.d" />
-    <EmbeddedResource Include="DaedalusBuiltins\music.d">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
     <None Remove="DaedalusBuiltins\particlefx.d" />
-    <EmbeddedResource Include="DaedalusBuiltins\particlefx.d">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
     <None Remove="DaedalusBuiltins\sfx.d" />
-    <EmbeddedResource Include="DaedalusBuiltins\sfx.d">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
     <None Remove="DaedalusBuiltins\visualfx.d" />
-    <EmbeddedResource Include="DaedalusBuiltins\visualfx.d">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Antlr4.Runtime.Standard" Version="4.7.1.1" />

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.SymbolStore;
 
 namespace DaedalusCompiler.Compilation.SemanticAnalysis
 {
@@ -11,7 +12,25 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
             {
                 if (declarationNode.Usages.Count == 0)
                 {
-                    // TODO check if it's Daedalus builtin
+                    /*
+                     * TODO there are problems with detecting unused symbols:
+                     * 1. We need to know what .ZENs there are since, there could be INIT_ZENNAME and STARTUP_ZENNAME function for each .ZEN.
+                     * 2. We need to check every .ZEN for function usages
+                     * 3  We need to ignore routine functions like Rtn_something_1500, because they are referenced by partial string ("something" in this case)
+                     * 4. We need to have list of symbols used internally by the engine.
+                     * Current solution is temporary one (ignoring every symbol but local variables and parameters)
+                     */
+                    if (declarationNode is ParameterDeclarationNode parameterDeclarationNode &&
+                        parameterDeclarationNode.ParentNode is FunctionDefinitionNode functionDefinitionNode &&
+                        functionDefinitionNode.IsExternal)
+                    {
+                        continue;
+                    }
+                    
+                    if (!(declarationNode is VarDeclarationNode varDeclarationNode && varDeclarationNode.ParentNode is FunctionDefinitionNode))
+                    {
+                        continue;
+                    }
                     declarationNode.NameNode.Annotations.Add(new UnusedSymbolWarning());
                     continue;
                 }

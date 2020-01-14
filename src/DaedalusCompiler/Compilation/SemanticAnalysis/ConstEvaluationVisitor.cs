@@ -217,7 +217,7 @@ namespace DaedalusCompiler.Compilation.SemanticAnalysis
 
                             if (arrayIndexValue.Value > 255)
                             {
-                                arrayIndexNode.Annotations.Add(new TooBigArrayIndex());//+
+                                arrayIndexNode.Annotations.Add(new TooBigArrayIndexError());//+
                                 return new UndefinedValue();
                             }
                         }

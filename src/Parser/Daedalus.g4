@@ -19,6 +19,7 @@ NoFunc: 'nofunc' | 'NoFunc' | 'NOFUNC';
 While: 'while';
 Break: 'break';
 Continue: 'continue';
+Extern: 'extern';
 
 Identifier : IdStart IdContinue*;
 IntegerLiteral : Digit+;
@@ -43,10 +44,10 @@ fragment Exponent : [eE] [+-]? Digit+;
 
 //parser
 daedalusFile:  (blockDef | inlineDef)*? EOF;
-blockDef : (functionDef  | classDef | prototypeDef | instanceDef)';'?;
-inlineDef :  (constDef | varDecl | instanceDecl )';';
+blockDef : (functionDef | classDef | prototypeDef | instanceDef)';'?;
+inlineDef :  (externFunctionDecl | constDef | varDecl | instanceDecl)';'; 
 
-
+externFunctionDecl: Extern Func dataType nameNode parameterList;
 functionDef: Func dataType nameNode parameterList statementBlock;
 constDef: Const dataType (constValueDef | constArrayDef) (',' (constValueDef | constArrayDef) )*;
 classDef: Class nameNode '{' ( varDecl ';' )*? '}';
