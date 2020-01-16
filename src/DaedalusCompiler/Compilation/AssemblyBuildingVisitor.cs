@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DaedalusCompiler.Compilation.SemanticAnalysis;
+using Commmon.SemanticAnalysis;
+using Common;
+
 
 namespace DaedalusCompiler.Compilation
 {

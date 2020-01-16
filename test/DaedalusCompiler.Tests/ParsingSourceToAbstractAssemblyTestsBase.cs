@@ -1,9 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DaedalusCompiler.Compilation;
-using DaedalusCompiler.Compilation.SemanticAnalysis;
+using Commmon.SemanticAnalysis;
+using Common;
 using Xunit;
+using AssemblyElement = Common.AssemblyElement;
+using BlockSymbol = Common.BlockSymbol;
+using PushArrayVar = Common.PushArrayVar;
+using Symbol = Common.Symbol;
+using SymbolInstruction = Common.SymbolInstruction;
+using ValueInstruction = Common.ValueInstruction;
 
 namespace DaedalusCompiler.Tests
 {

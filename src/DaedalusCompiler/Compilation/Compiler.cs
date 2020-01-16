@@ -4,9 +4,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using Antlr4.Runtime.Tree;
-using DaedalusCompiler.Compilation.SemanticAnalysis;
+using Commmon;
+using Commmon.SemanticAnalysis;
+using Common;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
@@ -29,20 +30,6 @@ namespace DaedalusCompiler.Compilation
             _strictSyntax = strictSyntax;
             _globallySuppressedCodes = globallySuppressedCodes;
             DatFile = null;
-        }
-
-        public static HashSet<string> GetWarningCodesToSuppress(string line)
-        {
-            string ws = @"(?:[ \t])*";
-            string newline = @"(?:\r\n?|\n)";
-            RegexOptions options = RegexOptions.IgnoreCase | RegexOptions.Multiline;
-            string suppressWarningsPattern = $@"//!{ws}suppress{ws}:((?:{ws}[a-zA-Z0-9]+)+){ws}{newline}?$";
-            MatchCollection matches = Regex.Matches(line, suppressWarningsPattern, options);
-            foreach (Match match in matches)
-            {
-                return match.Groups[1].Value.Split(" ").Where(s => !s.Equals(String.Empty)).ToHashSet();
-            }
-            return new HashSet<string>();
         }
 
         private string GetBuiltinsPath()
@@ -94,7 +81,7 @@ namespace DaedalusCompiler.Compilation
                 string[] fileContentLines = fileContent.Split(Environment.NewLine);
                 filesPaths.Add(runtimePath);
                 filesContentsLines.Add(fileContentLines);
-                suppressedWarningCodes.Add(GetWarningCodesToSuppress(fileContentLines[0]));
+                suppressedWarningCodes.Add(SemanticErrorsCollectingVisitor.GetWarningCodesToSuppress(fileContentLines[0]));
                 
                 syntaxErrorsCount += syntaxErrorListener.ErrorsCount;
             }
@@ -119,7 +106,7 @@ namespace DaedalusCompiler.Compilation
                 filesPaths.Add(paths[i]);
                 filesContentsLines.Add(fileContentLines);
                 filesContents.Add(fileContent);
-                suppressedWarningCodes.Add(GetWarningCodesToSuppress(fileContentLines[0]));
+                suppressedWarningCodes.Add(SemanticErrorsCollectingVisitor.GetWarningCodesToSuppress(fileContentLines[0]));
                 
                 syntaxErrorsCount += syntaxErrorListener.ErrorsCount;
             }
@@ -134,8 +121,14 @@ namespace DaedalusCompiler.Compilation
             }
             
             if (verbose) Console.WriteLine("parseTrees created");
-
-            SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(parseTrees, filesPaths, filesContentsLines, suppressedWarningCodes);
+            
+            SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(
+                parseTrees,
+                new DaedalusParseTreeVisitor(),
+                filesPaths,
+                filesContentsLines,
+                suppressedWarningCodes
+            );
             semanticAnalyzer.Run();
 
             SemanticErrorsCollectingVisitor semanticErrorsCollectingVisitor = new SemanticErrorsCollectingVisitor(

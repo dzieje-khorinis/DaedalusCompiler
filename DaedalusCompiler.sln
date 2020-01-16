@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DaedalusCompiler", "src\Dae
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DaedalusCompiler.Tests", "test\DaedalusCompiler.Tests\DaedalusCompiler.Tests.csproj", "{DAB76604-058D-470F-8F1D-CD1E6EA04C1F}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Common", "src\Common\Common.shproj", "{BDF3058C-8455-4A46-8405-AF5F427D32B1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

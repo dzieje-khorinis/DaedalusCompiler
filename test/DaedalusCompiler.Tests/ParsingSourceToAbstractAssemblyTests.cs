@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using DaedalusCompiler.Compilation;
-using DaedalusCompiler.Compilation.SemanticAnalysis;
+﻿using System.Collections.Generic;
+using Common;
 using Xunit;
 
 

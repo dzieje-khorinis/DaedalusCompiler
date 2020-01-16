@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using Antlr4.Runtime.Tree;
+using Commmon;
+using Commmon.SemanticAnalysis;
+using Common;
 using DaedalusCompiler.Compilation;
-using DaedalusCompiler.Compilation.SemanticAnalysis;
+
 
 namespace DaedalusCompiler.Tests
 {
@@ -45,7 +48,7 @@ namespace DaedalusCompiler.Tests
                 string[] fileContentLines = code.Split(Environment.NewLine);
                 filesPaths.Add("test.d");
                 filesContents.Add(fileContentLines);
-                suppressedWarningCodes.Add(Compiler.GetWarningCodesToSuppress(fileContentLines[0]));
+                suppressedWarningCodes.Add(SemanticErrorsCollectingVisitor.GetWarningCodesToSuppress(fileContentLines[0]));
 
                 _syntaxErrorsCount += syntaxErrorListener.ErrorsCount;
             }
@@ -57,7 +60,13 @@ namespace DaedalusCompiler.Tests
                 return;
             }
 
-            SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(parseTrees, filesPaths, filesContents, suppressedWarningCodes);
+            SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(
+                parseTrees,
+                new DaedalusParseTreeVisitor(),
+                filesPaths,
+                filesContents,
+                suppressedWarningCodes
+            );
             semanticAnalyzer.Run();
             SymbolTable = semanticAnalyzer.SymbolTable;
             

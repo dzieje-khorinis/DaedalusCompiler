@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>7F10FC27-802C-4989-A8F9-8F0B23539704</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Common</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)AssemblyElement.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grammars\Output\DaedalusBaseVisitor.cs" Link="AntlrOutput\DaedalusBaseVisitor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grammars\Output\DaedalusLexer.cs" Link="AntlrOutput\DaedalusLexer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grammars\Output\DaedalusParser.cs" Link="AntlrOutput\DaedalusParser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grammars\Output\DaedalusVisitor.cs" Link="AntlrOutput\DaedalusVisitor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalysis\AbstractSyntaxTree.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalysis\AbstractSyntaxTreeBaseGenericVisitor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalysis\AbstractSyntaxTreeBaseVisitor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalysis\ConstEvaluationHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalysis\ConstEvaluationVisitor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalysis\DaedalusParseTreeVisitor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalysis\DeclarationUsagesChecker.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalysis\ErrorLogger.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalysis\ICommonDaedalusParseTreeVisitor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalysis\InheritanceResolver.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalysis\NodeAnnotation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalysis\ReferenceResolvingVisitor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalysis\RemainingAnnotationsAdditionVisitor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalysis\RemainingSyntaxErrorsDetectionVisitor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalysis\SymbolTableCreationVisitor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalysis\TypeCheckingVisitor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalysis\TypeCompabilityChecker.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalysis\TypeResolver.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalysis\UninitializedSymbolUsageDetectionVisitor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalyzer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SemanticErrorsCollectingVisitor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SrcFileHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Symbol.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SyntaxErrorListener.cs" />
+  </ItemGroup>
+</Project>
