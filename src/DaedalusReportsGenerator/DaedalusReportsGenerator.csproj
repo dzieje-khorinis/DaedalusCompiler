@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <VersionPrefix>1.0.1</VersionPrefix>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Antlr4.Runtime.Standard" Version="4.7.1.1" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.5.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <_UnmanagedRegistrationCache Remove="obj\DaedalusReportsGenerator.csproj.UnmanagedRegistration.cache" />
+  </ItemGroup>
+  <ItemGroup>
+    <_ResolveComReferenceCache Remove="obj\Debug\netcoreapp2.1\DaedalusReportsGenerator.csproj.ResolveComReference.cache" />
+  </ItemGroup>
+  <ItemGroup>
+    <IntermediateAssembly Remove="obj\Debug\netcoreapp2.1\DaedalusReportsGenerator.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <_DebugSymbolsIntermediatePath Remove="obj\Debug\netcoreapp2.1\DaedalusReportsGenerator.pdb" />
+  </ItemGroup>
+  <ItemGroup>
+    <_DeploymentManifestEntryPoint Remove="obj\Debug\netcoreapp2.1\DaedalusReportsGenerator.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationManifest Remove="obj\Debug\netcoreapp2.1\DaedalusReportsGenerator.dll.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <DeployManifest Remove="obj\Debug\netcoreapp2.1\DaedalusReportsGenerator.application" />
+  </ItemGroup>
+  <Import Project="..\Common\Common.projitems" Label="Shared" />
+</Project>

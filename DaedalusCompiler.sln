@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DaedalusCompiler.Tests", "t
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Common", "src\Common\Common.shproj", "{BDF3058C-8455-4A46-8405-AF5F427D32B1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DaedalusReportsGenerator", "src\DaedalusReportsGenerator\DaedalusReportsGenerator.csproj", "{C77C5912-9459-41F7-B42C-8B53A5EF0C34}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +25,10 @@ Global
 		{DAB76604-058D-470F-8F1D-CD1E6EA04C1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DAB76604-058D-470F-8F1D-CD1E6EA04C1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DAB76604-058D-470F-8F1D-CD1E6EA04C1F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C77C5912-9459-41F7-B42C-8B53A5EF0C34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C77C5912-9459-41F7-B42C-8B53A5EF0C34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C77C5912-9459-41F7-B42C-8B53A5EF0C34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C77C5912-9459-41F7-B42C-8B53A5EF0C34}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
