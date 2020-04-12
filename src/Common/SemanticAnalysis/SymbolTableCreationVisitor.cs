@@ -4,7 +4,7 @@ using System.Linq;
 using Common;
 
 
-namespace Commmon.SemanticAnalysis
+namespace Common.SemanticAnalysis
 {
     public class SymbolTableCreationVisitor : AbstractSyntaxTreeBaseVisitor
     {

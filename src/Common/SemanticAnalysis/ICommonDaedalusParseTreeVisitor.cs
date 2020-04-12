@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Commmon.SemanticAnalysis
+namespace Common.SemanticAnalysis
 {
     public interface ICommonDaedalusParseTreeVisitor
     {

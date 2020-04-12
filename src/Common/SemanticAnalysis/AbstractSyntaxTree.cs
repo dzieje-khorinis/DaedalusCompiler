@@ -5,7 +5,7 @@ using System.Linq;
 using Antlr4.Runtime.Tree;
 using Common;
 
-namespace Commmon.SemanticAnalysis
+namespace Common.SemanticAnalysis
 {
     public enum UnaryOperator
     {

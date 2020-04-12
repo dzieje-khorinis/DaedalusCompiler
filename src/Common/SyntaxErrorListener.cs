@@ -1,22 +1,67 @@
+using System.Collections.Generic;
+using System;
 using System.IO;
 using Antlr4.Runtime;
+using Common.SemanticAnalysis;
 
-namespace Commmon
+namespace Common
 {
+    public class SyntaxError
+    {
+        public int LineNo;
+        public int ColumnNo;
+        public string Message;
+
+        public void Print(string fileName, string line, ErrorLogger errorLogger) {
+            errorLogger.LogLine($"{fileName}:{LineNo}:{ColumnNo}: {Message}");
+            errorLogger.LogLine(line.Replace("\t", "    "));
+            errorLogger.LogLine(GetErrorPointerLine(line));
+        }
+
+        private string GetErrorPointerLine(string line)
+        {
+            string[] buffer = new string[ColumnNo + 1];
+
+            for (int i = 0; i < ColumnNo + 1; i++)
+            {
+                if (line[i] == '\t')
+                {
+                    buffer[i] = "    ";
+                }
+                else
+                {
+                    buffer[i] = " ";
+                }
+            }
+            buffer[ColumnNo] = "^";
+            
+            return String.Join("", buffer);
+        }
+    }
+
+
     public class SyntaxErrorListener : BaseErrorListener
     {
-        public int ErrorsCount;
+        public List<SyntaxError> SyntaxErrors;
+
+        public SyntaxErrorListener() : base() {
+            SyntaxErrors = new List<SyntaxError>();
+        }
         
         public override void SyntaxError(
             TextWriter output,
             IRecognizer recognizer,
             IToken offendingSymbol,
-            int line,
-            int charPositionInLine,
-            string msg,
+            int lineNo,
+            int columnNo,
+            string message,
             RecognitionException e)
         {
-            ErrorsCount++;
+            SyntaxErrors.Add(new SyntaxError {
+                LineNo=lineNo,
+                ColumnNo=columnNo,
+                Message=message,
+            });
         }
     }
 }

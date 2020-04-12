@@ -5,9 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Antlr4.Runtime.Tree;
-using Commmon;
-using Commmon.SemanticAnalysis;
 using Common;
+using Common.SemanticAnalysis;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
@@ -64,8 +63,9 @@ namespace DaedalusCompiler.Compilation
             List<string[]> filesContentsLines = new List<string[]>();
             List<string> filesContents = new List<string>();
             List<HashSet<string>> suppressedWarningCodes = new List<HashSet<string>>();
-            
+
             int syntaxErrorsCount = 0;
+            List<List<SyntaxError>> syntaxErrorsPerFile = new List<List<SyntaxError>>();
             
             if (File.Exists(runtimePath))
             {
@@ -75,15 +75,16 @@ namespace DaedalusCompiler.Compilation
                 DaedalusParser parser = GetParserForText(fileContent);
                 
                 SyntaxErrorListener syntaxErrorListener = new SyntaxErrorListener();
+                parser.RemoveErrorListeners();
                 parser.AddErrorListener(syntaxErrorListener);
                 parseTrees.Add(parser.daedalusFile());
+                syntaxErrorsCount += syntaxErrorListener.SyntaxErrors.Count();
+                syntaxErrorsPerFile.Add(syntaxErrorListener.SyntaxErrors);
                 
                 string[] fileContentLines = fileContent.Split(Environment.NewLine);
                 filesPaths.Add(runtimePath);
                 filesContentsLines.Add(fileContentLines);
                 suppressedWarningCodes.Add(SemanticErrorsCollectingVisitor.GetWarningCodesToSuppress(fileContentLines[0]));
-                
-                syntaxErrorsCount += syntaxErrorListener.ErrorsCount;
             }
             else if(isRunTimePathSpecified)
             {
@@ -91,31 +92,47 @@ namespace DaedalusCompiler.Compilation
             }
 
             
+            int start_i = filesPaths.Count();
+
             for (int i = 0; i < paths.Length; i++)
             {
                 if (verbose) Console.WriteLine($"[{i + 1}/{paths.Length}]Parsing: {paths[i]}");
                 
                 string fileContent = GetFileContent(paths[i]);
                 DaedalusParser parser = GetParserForText(fileContent);
-                
+
                 SyntaxErrorListener syntaxErrorListener = new SyntaxErrorListener();
+                parser.RemoveErrorListeners();
                 parser.AddErrorListener(syntaxErrorListener);
                 parseTrees.Add(parser.daedalusFile());
+                syntaxErrorsCount += syntaxErrorListener.SyntaxErrors.Count();
+                syntaxErrorsPerFile.Add(syntaxErrorListener.SyntaxErrors);
 
                 string[] fileContentLines = fileContent.Split(Environment.NewLine);
                 filesPaths.Add(paths[i]);
                 filesContentsLines.Add(fileContentLines);
                 filesContents.Add(fileContent);
+
                 suppressedWarningCodes.Add(SemanticErrorsCollectingVisitor.GetWarningCodesToSuppress(fileContentLines[0]));
-                
-                syntaxErrorsCount += syntaxErrorListener.ErrorsCount;
             }
-            
-            
+             
             StdErrorLogger logger = new StdErrorLogger();
             
             if (syntaxErrorsCount > 0)
             {
+                for(int i=0; i<syntaxErrorsPerFile.Count(); ++i) {
+                    List<SyntaxError> syntaxErrors = syntaxErrorsPerFile[i];
+                    if (syntaxErrors.Count() > 0) {
+                        string filePath = filesPaths[i];
+                        string fileName = Path.GetFileName(filePath);
+                        logger.LogLine(filePath);
+                        foreach(SyntaxError syntaxError in syntaxErrors) {
+                            string line = filesContentsLines[i][syntaxError.LineNo-1];
+                            syntaxError.Print(fileName, line, logger);
+                        }
+                    }
+                }
+
                 logger.LogLine($"{syntaxErrorsCount} syntax {(syntaxErrorsCount == 1 ? "error" : "errors")} generated.");
                 return false;
             }

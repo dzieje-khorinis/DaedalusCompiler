@@ -1,5 +1,5 @@
 using System;
-using Commmon.SemanticAnalysis;
+using Common.SemanticAnalysis;
 using Common;
 
 namespace DaedalusCompiler.Compilation

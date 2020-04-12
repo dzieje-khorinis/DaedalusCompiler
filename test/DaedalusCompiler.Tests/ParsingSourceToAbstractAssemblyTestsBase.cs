@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Commmon.SemanticAnalysis;
+using Common.SemanticAnalysis;
 using Common;
 using Xunit;
 using AssemblyElement = Common.AssemblyElement;

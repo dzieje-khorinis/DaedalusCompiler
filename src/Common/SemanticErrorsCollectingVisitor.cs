@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Commmon.SemanticAnalysis;
+using Common.SemanticAnalysis;
 
-namespace Commmon
+namespace Common
 {
     
 public enum FilePathDisplayStatus

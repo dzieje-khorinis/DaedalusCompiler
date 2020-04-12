@@ -5,7 +5,7 @@ using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 
 
-namespace Commmon.SemanticAnalysis
+namespace Common.SemanticAnalysis
 {
     public class DaedalusParseTreeVisitor : DaedalusBaseVisitor<ASTNode>, ICommonDaedalusParseTreeVisitor
     {

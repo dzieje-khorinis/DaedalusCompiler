@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Common;
 
-namespace Commmon.SemanticAnalysis
+namespace Common.SemanticAnalysis
 {
     public class IncompatibleTypesException : Exception
     {
@@ -29,11 +29,11 @@ namespace Commmon.SemanticAnalysis
                     _visitedNodesValuesCache[node] = new UndefinedValue();
                     if (node is ReferenceNode referenceNode)
                     {
-                        Console.WriteLine($"Add InfiniteReferenceLoopUndefinedValue to referenceNode {referenceNode.Name}");
+                        // Console.WriteLine($"Add InfiniteReferenceLoopUndefinedValue to referenceNode {referenceNode.Name}");
                     }
                     else
                     {
-                        Console.WriteLine($"Add InfiniteReferenceLoopUndefinedValue to {node.GetType().ToString().Split(".").Last()}");
+                        // Console.WriteLine($"Add InfiniteReferenceLoopUndefinedValue to {node.GetType().ToString().Split(".").Last()}");
                     }
                 }
                 return _visitedNodesValuesCache[node];

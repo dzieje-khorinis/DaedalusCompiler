@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Commmon
+namespace Common
 {
     public static class SrcFileHelper
     {

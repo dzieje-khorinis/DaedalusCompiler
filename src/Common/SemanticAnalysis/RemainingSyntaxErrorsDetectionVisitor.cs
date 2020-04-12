@@ -1,4 +1,4 @@
-namespace Commmon.SemanticAnalysis
+namespace Common.SemanticAnalysis
 {
     /// <summary>
     /// Some Daedalus syntax shouldn't be allowed.

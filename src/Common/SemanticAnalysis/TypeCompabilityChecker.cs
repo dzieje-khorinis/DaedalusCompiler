@@ -9,7 +9,7 @@
  */
 
 
-namespace Commmon.SemanticAnalysis
+namespace Common.SemanticAnalysis
 {
     public class Data
     {

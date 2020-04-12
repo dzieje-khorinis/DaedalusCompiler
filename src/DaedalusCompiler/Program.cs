@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using DaedalusCompiler.Compilation;
 using System.Diagnostics;
-using Commmon.SemanticAnalysis;
+using Common.SemanticAnalysis;
 
 
 namespace DaedalusCompiler

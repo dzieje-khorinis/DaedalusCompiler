@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Antlr4.Runtime.Tree;
-using Commmon.SemanticAnalysis;
+using Common.SemanticAnalysis;
 
 
 namespace Common
@@ -37,7 +37,7 @@ namespace Common
             }
             
             timer.Stop();
-            Console.WriteLine($"AbstractSyntaxTree creation time: {timer.Elapsed}");
+            // Console.WriteLine($"AbstractSyntaxTree creation time: {timer.Elapsed}");
         }
 
 

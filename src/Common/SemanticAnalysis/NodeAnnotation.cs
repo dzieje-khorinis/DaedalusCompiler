@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Common;
 
-namespace Commmon.SemanticAnalysis
+namespace Common.SemanticAnalysis
 {
     public abstract class NodeAnnotation
     {
