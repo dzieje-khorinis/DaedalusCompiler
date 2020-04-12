@@ -14,18 +14,18 @@ namespace DaedalusCompiler.Compilation
     public class Compiler
     {
         private readonly OutputUnitsBuilder _ouBuilder;
-        private readonly string _outputDirPath;
+        private readonly string _outputPathOuDir;
         private readonly bool _strictSyntax;
         private readonly HashSet<string> _globallySuppressedCodes;
 
         public DatFile DatFile;
         
 
-        public Compiler(string outputDirPath, bool verbose, bool strictSyntax, HashSet<string> globallySuppressedCodes)
+        public Compiler(string outputPathOuDir, bool verbose, bool strictSyntax, HashSet<string> globallySuppressedCodes)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             _ouBuilder = new OutputUnitsBuilder(verbose);
-            _outputDirPath = outputDirPath;
+            _outputPathOuDir = outputPathOuDir;
             _strictSyntax = strictSyntax;
             _globallySuppressedCodes = globallySuppressedCodes;
             DatFile = null;
@@ -41,7 +41,7 @@ namespace DaedalusCompiler.Compilation
         public bool CompileFromSrc(
             string srcFilePath,
             string runtimePath,
-            string outputPath,
+            string outputPathDat,
             bool verbose = true,
             bool generateOutputUnits = true
         )
@@ -186,24 +186,19 @@ namespace DaedalusCompiler.Compilation
             
             if (verbose) Console.WriteLine($"parseTrees.Count: {parseTrees.Count}");
             
-            Directory.CreateDirectory(_outputDirPath);
+            
             if (generateOutputUnits)
             {
                 foreach (string filesContent in filesContents)
                 {
                     _ouBuilder.ParseText(filesContent);
                 }
-                _ouBuilder.SaveOutputUnits(_outputDirPath);
-            }
-
-            if (outputPath == String.Empty)
-            {
-                outputPath = Path.Combine(_outputDirPath, srcFileName + ".dat");
+                _ouBuilder.SaveOutputUnits(_outputPathOuDir);
             }
 
             DatBuilder datBuilder = new DatBuilder(semanticAnalyzer.SymbolTable, semanticAnalyzer.SymbolsWithInstructions);
             DatFile = datBuilder.GetDatFile();
-            DatFile.Save(outputPath);
+            DatFile.Save(outputPathDat);
 
             return true;
         }

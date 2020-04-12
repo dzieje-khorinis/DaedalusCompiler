@@ -29,7 +29,7 @@ namespace DaedalusCompiler.Tests
         };
         private string _datPath = "Scripts/_compiled/*.dat";
         private string _ouPath = "Scripts/Content/Cutscene/ou.*";
-        private string _outputPath = "output";
+        private string _outputPathOuDir = "output";
         
         private Dictionary<string, string> _srcPathToDatPath;
 
@@ -91,21 +91,27 @@ namespace DaedalusCompiler.Tests
                 _srcPathToDatPath[srcPath] = datPath;
             }
             
-            string outputDirPath = Path.Combine(_scriptsPath, _outputPath);
+            string outputPathOuDir = Path.Combine(_scriptsPath, _outputPathOuDir);
+            Directory.CreateDirectory(outputPathOuDir);
+
             foreach(KeyValuePair<string, string> entry in _srcPathToDatPath)
             {
                 string srcPath = entry.Key;
                 string datPath = entry.Value;
                 string datFileName = Path.GetFileName(datPath).ToLower();
+
+                string srcFileName = Path.GetFileNameWithoutExtension(srcPath).ToLower();
+                string outputPathDat = Path.Combine(outputPathOuDir, srcFileName + ".dat");
+
                 bool generateOutputUnits = (datFileName == "gothic.dat");
                 
-                Compiler compiler = new Compiler(outputDirPath, verbose:false, strictSyntax:false, globallySuppressedCodes:new HashSet<string>{"W1", "W2", "W3", "W4", "W5"});
+                Compiler compiler = new Compiler(outputPathOuDir, verbose:false, strictSyntax:false, globallySuppressedCodes:new HashSet<string>{"W1", "W2", "W3", "W4", "W5"});
                 if (generateOutputUnits)
                 {
                     compiler.SetCompilationDateTimeText(compileTime);
                     compiler.SetCompilationUserName(compileUsername);
                 }
-                compiler.CompileFromSrc(srcPath, runtimePath:String.Empty, outputPath:String.Empty, verbose:false, generateOutputUnits: generateOutputUnits);
+                compiler.CompileFromSrc(srcPath, runtimePath:String.Empty, outputPathDat:outputPathDat, verbose:false, generateOutputUnits: generateOutputUnits);
                 _originalDatFiles[datFileName] = compiler.DatFile;
             }
         }
@@ -144,7 +150,7 @@ namespace DaedalusCompiler.Tests
 
         private void CompareDats()
         {
-            string outputDirPath = Path.Combine(_scriptsPath, _outputPath);
+            string outputDirPath = Path.Combine(_scriptsPath, _outputPathOuDir);
             List<string> alreadyLoaded = new List<string>();
             foreach (KeyValuePair<string, string> entry in _srcPathToDatPath)
             {
@@ -171,7 +177,7 @@ namespace DaedalusCompiler.Tests
 
         private void CompareOuFiles()
         {
-            string outputDirPath = Path.Combine(_scriptsPath, _outputPath);
+            string outputDirPath = Path.Combine(_scriptsPath, _outputPathOuDir);
             
             string ouCslFileName = "ou.csl";
             string ouBinFileName = "ou.bin";
