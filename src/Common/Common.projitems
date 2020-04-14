@@ -14,6 +14,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)Grammars\Output\DaedalusLexer.cs" Link="AntlrOutput\DaedalusLexer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Grammars\Output\DaedalusParser.cs" Link="AntlrOutput\DaedalusParser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Grammars\Output\DaedalusVisitor.cs" Link="AntlrOutput\DaedalusVisitor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grammars\Output\ZenBaseVisitor.cs" Link="AntlrOutput\ZenBaseVisitor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grammars\Output\ZenLexer.cs" Link="AntlrOutput\ZenLexer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grammars\Output\ZenParser.cs" Link="AntlrOutput\ZenParser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grammars\Output\ZenVisitor.cs" Link="AntlrOutput\ZenVisitor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalysis\AbstractSyntaxTree.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalysis\AbstractSyntaxTreeBaseGenericVisitor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SemanticAnalysis\AbstractSyntaxTreeBaseVisitor.cs" />

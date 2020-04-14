@@ -3,7 +3,7 @@ This is repo with Daedalus ( Gothic I, II scripting language ) compiler.
 Project is using internally ANTL4 for parsing source code.
 The compiler itself is written in .NET Core C#.
 
-You can listen about our compiler on below video. Video has bad audio quality, we encourage you to turn on subtitles, on the current moment we have subtitles for Polish, German and English
+You can listen about our compiler on below video. Video has bad audio quality, we encourage you to turn on subtitles, on the current moment we have subtitles for Polish, German and English language.
 
 [![](screen_it_days.jpg)](http://www.youtube.com/watch?v=naPydcbJezw)
 ## Download
