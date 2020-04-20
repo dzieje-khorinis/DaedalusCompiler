@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Text.RegularExpressions;
 using System;
 using System.Collections.Generic;
@@ -8,9 +7,10 @@ namespace Common.SemanticAnalysis
 {
     public class DeclarationUsagesChecker
     {
-        private readonly Dictionary <string, Symbol> _symbolTable;
+        private readonly Dictionary<string, Symbol> _symbolTable;
 
-        private HashSet<string> _engineUsedSymbols = new HashSet<string> {
+        private readonly HashSet<string> _engineUsedSymbols = new HashSet<string>
+        {
             // functions
             "B_ASSESSMAGIC",
             "B_REFRESHARMOR",
@@ -146,12 +146,12 @@ namespace Common.SemanticAnalysis
             "VIEW_TIME_PER_CHAR",
         };
 
-        private HashSet<string> _onStateFuncs = new HashSet<string>();
+        private readonly HashSet<string> _onStateFuncs = new HashSet<string>();
 
-        private HashSet<string> _conditionFuncs = new HashSet<string>();
-        private HashSet<string> _scriptFuncs = new HashSet<string>();
+        private readonly HashSet<string> _conditionFuncs = new HashSet<string>();
+        private readonly HashSet<string> _scriptFuncs = new HashSet<string>();
 
-        private HashSet<string> _focusNames = new HashSet<string>();
+        private readonly HashSet<string> _focusNames = new HashSet<string>();
 
         /*
         It does look like some triggers have Daedalus function associated with them.
@@ -163,21 +163,23 @@ namespace Common.SemanticAnalysis
         public DeclarationUsagesChecker(Dictionary<string, Symbol> symbolTable, List<ZenFileNode> zenFileNodes)
         {
             _symbolTable = symbolTable;
-            foreach(ZenFileNode zenFileNode in zenFileNodes)
+            foreach (ZenFileNode zenFileNode in zenFileNodes)
             {
                 if (zenFileNode.VobTree == null)
                 {
                     continue;
                 }
-                foreach(ZenNode zenNode in zenFileNode.VobTree.Children)
+
+                foreach (ZenNode zenNode in zenFileNode.VobTree.Children)
                 {
                     if (zenNode is ZenAttrNode)
                     {
                         continue;
                     }
+
                     ZenBlockNode blockNode = (ZenBlockNode) zenNode;
 
-                    foreach(ZenNode childNode in blockNode.Children)
+                    foreach (ZenNode childNode in blockNode.Children)
                     {
                         if (childNode is ZenBlockNode)
                         {
@@ -191,7 +193,7 @@ namespace Common.SemanticAnalysis
                             continue;
                         }
 
-                        switch(attrNode.Name.ToUpper())
+                        switch (attrNode.Name.ToUpper())
                         {
                             case "ONSTATEFUNC":
                                 _onStateFuncs.Add(attrNode.TextValue + "_S1");
@@ -205,7 +207,6 @@ namespace Common.SemanticAnalysis
                             case "FOCUSNAME":
                                 _focusNames.Add(attrNode.TextValue);
                                 break;
-                            
                         }
                     }
                 }
@@ -214,357 +215,38 @@ namespace Common.SemanticAnalysis
 
         public void Check(List<DeclarationNode> declarationNodes)
         {
-            //GET FROM ZEN
-            // onStateFuncs + _S1
-            // conditionFuncs
-            // scriptFuncs
-            // focusNames
-            // plus, there are like 3 func that are the same as Trigger vobName
-
-
-            // HashSet<string> onStateFuncs = new HashSet<string> {
-            //     "MAKERUNE_S1",
-            //     "SMITHWEAPON_S1",
-            //     "BOOKSTAND_MILTEN_03_S1",
-            //     "SLEEPABIT_S1",
-            //     "BOOKSTAND_MILTEN_02_S1",
-            //     "BOOKSTAND_MILTEN_01_S1",
-            //     "EVT_OC_MAINGATE_FUNC_S1",
-            //     "POTIONALCHEMY_S1",
-            //     "BOOKSTAND_ENGOR_01_S1",
-            //     "B_SPAWN_SKELETON_S1",
-            //     "PRAYIDOL_S1",
-            //     "EVT_TRUHE_OW_01_S1",
-            //     "USE_BOOKSTANDALCHEMY2_S1",
-            //     "USE_BOOKSTANDANIMALS2_S1",
-            //     "USE_BOOKSTANDALCHEMY3_S1",
-            //     "USE_BOOKSTANDANIMALS1_S1",
-            //     "PRAYSHRINE_S1",
-            //     "USE_BOOKSTANDHISTORY2_S1",
-            //     "USE_BOOKSTANDALCHEMY1_S1",
-            //     "USE_BOOKSTANDHISTORY1_S1",
-            //     "USE_BOOKSTANDDEMENTOR_S1",
-            //     "EVT_VINOSKELLEREI_FUNC_S1",
-            //     "EVT_ORKOBERST_SWITCH_S1",
-            //     "USE_BOOKSTAND_KREISE_01_S1",
-            //     "USE_BOOKSTAND_KREISE_05_S1",
-            //     "USE_BOOKSTAND_KREISE_06_S1",
-            //     "USE_BOOKSTAND_KREISE_04_S1",
-            //     "USE_BOOKSTAND_KREISE_03_S1",
-            //     "USE_FINALDRAGONEQUIPMENT_S1",
-            //     "USE_BOOKSTANDHISTORY3_S1",
-            //     "USE_BOOKSTANDANIMALS3_S1",
-            //     "EVT_OPEN_DOOR_LIBRARY_S1",
-            //     "USE_BOOKSTAND_KREISE_02_S1",
-            //     "USE_BOOKSTAND_01_S1",
-            //     "EVT_MONASTERY_SECRETLIBRARY_S1",
-            //     "B_SCGETTREASURE_S1",
-            //     "PRAYIDOL_S1",
-            //     "GOLDHACKEN_S1",
-            //     "OPEN_ADANOSTEMPELCHEST_02_FUNC_S1",
-            //     "OPEN_ADANOSTEMPELCHEST_01_FUNC_S1",
-            //     "USE_BOOKSTANDMAYAHIERCHARY_02_S1",
-            //     "USE_BOOKSTANDMAYAHIERCHARY_01_S1",
-            //     "USE_BOOKSTANDMAYAHIERCHARY_03_S1",
-            //     "USE_BOOKSTANDMAYAHIERCHARY_04_S1",
-            //     "USE_BOOKSTANDMAYAHIERCHARY_05_S1",
-            //     "GREGISBACK_S1",
-            //     "B_OPENGREGSDOOR_S1",
-            //     "USE_BOOKSTAND_ADDON_BL_S1",
-            // };
-
-            // HashSet<string> scriptFuncs = new HashSet<string> {
-            //     "ENTER_OLDWORLD_FIRSTTIME_TRIGGER",
-            //     "EVT_CAVALORNSGOBBOS_FUNC",
-            //     "EVT_FINAL_DOOR_SAY_01",
-            //     "EVT_UNDEADDRAGONDEAD_ENDSITUATION",
-            //     "EVT_UNDEADDRAGON_TRAP_01_FUNC",
-            //     "EVT_UNDEADDRAGON_TRAP_02_FUNC",
-            //     "EVT_UNDEADDRAGON_TRAP_03_FUNC",
-            //     "EVT_KEYMASTER_03",
-            //     "EVT_LEFT_ROOM_02_SKEL_05",
-            //     "EVT_LEFT_ROOM_02_SKEL_04",
-            //     "EVT_LEFT_ROOM_02_SKEL_03",
-            //     "EVT_LEFT_ROOM_02_SKEL_02",
-            //     "EVT_LEFT_ROOM_02_SKEL_01",
-            //     "EVT_RIGHT_UP_02_SKEL_03",
-            //     "EVT_RIGHT_UP_02_SKEL_02",
-            //     "EVT_RIGHT_UP_02_SKEL_01",
-            //     "EVT_RIGHT_UP_01_SKEL_02",
-            //     "EVT_RIGHT_UP_01_SKEL_01",
-            //     "EVT_RIGHT_ROOM_01_SKEL_02",
-            //     "EVT_RIGHT_ROOM_01_SKEL_01",
-            //     "EVT_RIGHT_DOWN_01_SKEL_01",
-            //     "EVT_RIGHT_DOWN_01_SKEL_02",
-            //     "EVT_RIGHT_DOWN_01_SKEL_03",
-            //     "EVT_RIGHT_DOWN_01_SKEL_04",
-            //     "EVT_RIGHT_ROOM_02_SKEL_02",
-            //     "EVT_RIGHT_ROOM_02_SKEL_01",
-            //     "EVT_KEYMASTER_01",
-            //     "EVT_KEYMASTER_02",
-            //     "EVT_LEFT_UP_01_SPAWNNEW",
-            //     "EVT_KEYMASTER_04",
-            //     "EVT_LEFT_DOWN_01_SKEL_03",
-            //     "EVT_LEFT_DOWN_01_SKEL_01",
-            //     "EVT_LEFT_DOWN_01_SKEL_02",
-            //     "EVT_ARCHOLDEAD_FUNC",
-            //     "EVT_ORNAMENT_SWITCH_FOREST_01_FUNC",
-            //     "EVT_TELEPORTSTATION_FUNC",
-            //     "EVT_DIBRIDGE_OPEN_FUNC",
-            //     "EVT_ORKOBERST",
-            //     "ENTER_DI_FIRSTTIME_TRIGGER",
-            //     "EVT_SC_ENTER_LIBRARY",
-            //     "EVT_ORNAMENT_SWITCH_FARM_01_FUNC",
-            //     "EVT_CRYPT_FINAL",
-            //     "EVT_CRYPT_02_ENTRANCE",
-            //     "EVT_CRYPT_02",
-            //     "EVT_CRYPT_01_ENTRANCE",
-            //     "EVT_CRYPT_01",
-            //     "EVT_CRYPT_03",
-            //     "EVT_CRYPT_03_ENTRANCE",
-            //     "EVT_ORNAMENT_SWITCH_BIGFARM_01_FUNC",
-            //     "B_EVENT_PORTAL_FIRST_EARTHQUAKE",
-            //     "B_MAGECAVETRIGGER",
-            //     "EVT_TROLL_GRAVE_01",
-            //     "B_ADDON_PORTAL_ACTIVATED",
-            //     "ADW_PORTALTEMPEL_FOCUS_FUNC",
-            //     "VALLEY_SHOWCASE_TRIGGERSCRIPT_FUNC",
-            //     "B_FUNCTION_TOUCH_AND_GET_KILLED",
-            //     "EVT_RAVEN_AWAKE_FUNC",
-            //     "ADW_ADANOSTEMPEL_STONEGRD_TRIGG_FUNC_02",
-            //     "ADW_ADANOSTEMPEL_STONEGRD_TRIGG_FUNC_01",
-            //     "SC_COMESINTO_CANYONLIBRARY_FUNC",
-            //     "B_GIVESTUNTBONUS_FUNC",
-            //     "ENTER_ADDONWORLD_FIRSTTIME_TRIGGER_FUNC",
-            //     "EVT_ADDON_ADANOSDOOR_ENTRANCE_VOICESCRIPT",
-            //     "B_RAVENSESCAPEINTOTEMPELAVI",
-            // };
-
-            // HashSet<string> focusNames = new HashSet<string> {
-            //     "MOBNAME_CHEST",
-            //     "MOBNAME_BBQ_SCAV",
-            //     "MOBNAME_RUNEMAKER",
-            //     "MOBNAME_ANVIL",
-            //     "MOBNAME_CAULDRON",
-            //     "MOBNAME_BOOKSTAND",
-            //     "MOBNAME_DOOR",
-            //     "MOBNAME_BENCH",
-            //     "MOBNAME_BARBQ_SCAV",
-            //     "MOBNAME_BED",
-            //     "MOBNAME_CHAIR",
-            //     "MOBNAME_WATERPIPE",
-            //     "MOBNAME_THRONE",
-            //     "MOBNAME_BUCKET",
-            //     "MOBNAME_GRINDSTONE",
-            //     "MOBNAME_FORGE",
-            //     "MOBNAME_SWITCH",
-            //     "MOBNAME_LAB",
-            //     "MOBNAME_GRAVE_09",
-            //     "MOBNAME_STOVE",
-            //     "MOBNAME_ADDON_IDOL",
-            //     "MOBNAME_ORE",
-            //     "TORCH",
-            //     "CAMP",
-            //     "TORCH",
-            //     "MOBNAME_INNOS",
-            //     "MOBNAME_SAW",
-            //     "MOBNAME_CITY",
-            //     "MOBNAME_BOOKSBOARD",
-            //     "MOBNAME_ARMCHAIR",
-            //     "MOBNAME_GRAVE_18",
-            //     "MOBNAME_DRAGONDOOR",
-            //     "MOBNAME_BOOKBOARD",
-            //     "MOBNAME_PRISON",
-            //     "MOBNAME_PAN",
-            //     "MOBNAME_GRAVE_33",
-            //     "MOBNAME_GRAVE_32",
-            //     "MOBNAME_GRAVE_31",
-            //     "MOBNAME_GRAVE_30",
-            //     "MOBNAME_GRAVE_29",
-            //     "MOBNAME_GRAVE_28",
-            //     "MOBNAME_CITY2",
-            //     "MOBNAME_LIGHTHOUSE",
-            //     "MOBNAME_WHEEL",
-            //     "MOBNAME_GR_PEASANT",
-            //     "MOBNAME_MONASTERY",
-            //     "MOBNAME_PASSOW",
-            //     "MOBNAME_TAVERN",
-            //     "CHEST",
-            //     "MOBNAME_TAVERN_01",
-            //     "MOBNAME_SEAT",
-            //     "MOBNAME_GRAVE_04",
-            //     "MOBNAME_GRAVE_23",
-            //     "MOBNAME_GRAVE_24",
-            //     "MOBNAME_GRAVE_25",
-            //     "MOBNAME_GRAVE_26",
-            //     "MOBNAME_GRAVE_27",
-            //     "MOBNAME_GRAVE_20",
-            //     "MOBNAME_GRAVE_21",
-            //     "MOBNAME_GRAVE_19",
-            //     "MOBNAME_GRAVE_17",
-            //     "MOBNAME_GRAVE_22",
-            //     "MOBNAME_ADDON_ORNAMENTSWITCH",
-            //     "MOBNAME_VORRATSKAMMER",
-            //     "MOBNAME_MONASTERY2",
-            //     "MOBNAME_LEVER",
-            //     "MOBNAME_ALMANACH",
-            //     "MOBNAME_LAB",
-            //     "MOBNAME_DOOR",
-            //     "MOBNAME_WINEMAKER",
-            //     "MOBNAME_LIBRARYLEVER",
-            //     "MOBNAME_BIBLIOTHEK",
-            //     "MOBNAME_SCHATZKAMMER",
-            //     "MOBNAME_IGARAZ",
-            //     "CHEST",
-            //     "MOBNAME_BBQ_SHEEP",
-            //     "MOBNAME_REPAIR",
-            //     "MOBNAME_GRAVE_10",
-            //     "MOBNAME_GRAVETEAM_13",
-            //     "MOBNAME_GRAVETEAM_14",
-            //     "MOBNAME_GRAVETEAM_12",
-            //     "MOBNAME_GRAVETEAM_11",
-            //     "MOBNAME_GR_PEASANT2",
-            //     "MOBNAME_GRAVETEAM_04",
-            //     "MOBNAME_GRAVETEAM_09",
-            //     "MOBNAME_GRAVETEAM_08",
-            //     "MOBNAME_GRAVETEAM_06",
-            //     "MOBNAME_GRAVETEAM_03",
-            //     "MOBNAME_GRAVETEAM_07",
-            //     "MOBNAME_GRAVETEAM_05",
-            //     "MOBNAME_GRAVETEAM_01",
-            //     "MOBNAME_GRAVETEAM_02",
-            //     "MOBNAME_GRAVETEAM_10",
-            //     "MOBNAME_GRAVE_11",
-            //     "MOBNAME_GRAVE_07",
-            //     "MOBNAME_GRAVE_03",
-            //     "MOBNAME_GRAVE_12",
-            //     "MOBNAME_GRAVE_14",
-            //     "MOBNAME_GRAVE_13",
-            //     "MOBNAME_GRAVETEAM_16",
-            //     "MOBNAME_GRAVETEAM_15",
-            //     "MOBNAME_INCITY03",
-            //     "MOBNAME_INCITY04",
-            //     "MOBNAME_INCITY05",
-            //     "MOBNAME_INCITY02",
-            //     "MOBNAME_SECRETSWITCH",
-            //     "MOBNAME_BOOK",
-            //     "MOBNAME_MIX_01",
-            //     "MOBNAME_MIX_02",
-            //     "MOBNAME_SMITH_01",
-            //     "MOBNAME_BAR_01",
-            //     "MOBNAME_BAR_02",
-            //     "MOBNAME_HOTEL_02",
-            //     "MOBNAME_HOTEL_01",
-            //     "MOBNAME_BOW_01",
-            //     "MOBNAME_INCITY01",
-            //     "MOBNAME_SALANDRIL",
-            //     "MOBNAME_ADDON_SOCKEL",
-            //     "MOBNAME_ADDON_GOLD",
-            //     "MOBNAME_ADDON_STONEBOOK",
-            //     "MOBNAME_ADDON_TELEPORT_02",
-            //     "MOBNAME_ADDON_TELEPORT_03",
-            //     "MOBNAME_ADDON_TELEPORT_04",
-            //     "MOBNAME_ADDON_TELEPORT_05",
-            //     "MOBNAME_ADDON_TELEPORT_01",
-            //     "MOBNAME_ADDON_FORTUNO",
-            // };
-
-            /*
-            It does look like some triggers have Daedalus function associated with them
-            BUT ONLY 3 of them, so I guess it's not important to have triggerVobNames;
-            */
-            // HashSet<string> triggerVobNames = new HashSet<string>
-            // {
-            //     "EVT_OC_MAINGATE_TRIGGER",
-            //     "EVT_UNDEADDRAGON_TRAP_01_TRIGGERIN",
-            //     "EVT_UNDEADDRAGON_TRAP_02_TRIGGERIN",
-            //     "EVT_UNDEADDRAGON_TRAP_03_TRIGGERIN",
-            //     "EVT_KEYMASTER_TRIGGERMASTER_SPAWN_04",
-            //     "EVT_KEYMASTER_TRIGGERMASTER_SPAWN_03",
-            //     "EVT_LEFT_UP_ROOM_02_TRIGGERMASTER_SPAWN_01",
-            //     "EVT_RIGHT_UP_02_TRIGGERMASTER_SPAWN_01",
-            //     "EVT_RIGHT_UP_01_TRIGGERMASTER_SPAWN_01",
-            //     "EVT_RIGHT_DOWN_01_TRIGGERMASTER_SPAWN_01",
-            //     "EVT_RIGHT_DOWN_01_TRIGGERMASTER_SPAWN_02",
-            //     "EVT_RIGHT_UP_01_TRIGGERMASTER_SPAWN_02",
-            //     "EVT_KEYMASTER_TRIGGERMASTER_SPAWN_01",
-            //     "EVT_KEYMASTER_TRIGGERMASTER_SPAWN_02",
-            //     "EVT_LEFT_DOWN_01_TRIGGERMASTER_SPAWN_01",
-            //     "ISLE_BIGBRIDGE_FAR_TRIGGER_02",
-            //     "ISLE_BIGBRIDGE_FAR_TRIGGER_01",
-            //     "EVT_DOOR_PALSECRETCHAMBERTRIGGER",
-            //     "EVT_CRYPT_ROOM_MIDDLE_ALLOPEN",
-            //     "EVT_CRYPT_ROOM_02_TRIGGERENTRANCE",
-            //     "EVT_CRYPT_02_TRIGGER",
-            //     "EVT_CRYPT_ROOM_01_TRIGGERENTRANCE",
-            //     "EVT_CRYPT_01_TRIGGER",
-            //     "EVT_CRYPT_03_TRIGGER",
-            //     "EVT_CRYPT_ROOM_03_TRIGGERENTRANCE",
-            //     "NW_THIEVES_ISLAND_SPEAR_TRIGGER_01",
-            //     "EVT_NW_TROLLAREA_TEMPELDOOR_MASTER_01",
-            //     "EVT_ADDON_TROLLPORTAL_MASTER_01",
-            //     "EVT_ADDON_TROLLPORTAL_CAMERAMASTER_01",
-            //     "EVT_ADDON_TROLLPORTAL_PFX_MASTER_01",
-            //     "EVT_ADANOS_ROOM03_MASTER_05",
-            //     "EVT_ADANOS_ROOM03_MASTER_04",
-            //     "EVT_ADANOS_ROOM04_MASTER_01",
-            //     "EVT_ADANOS_ROOM03_MASTER_03",
-            //     "EVT_ADANOS_ROOM03_MASTER_01",
-            //     "EVT_ADANOS_ROOM03_TOUCHTRIGGER_01_01",
-            //     "EVT_ADANOS_ROOM02_MASTER_00",
-            //     "EVT_ADANOS_ROOM02_TOUCHTRIGGER_00_01",
-            //     "EVT_ADANOS_ROOM03_TRAPMASTER_04",
-            //     "EVT_ADANOS_ROOM03_TRAPMASTER_03",
-            //     "EVT_ADANOS_ROOM02_MASTER_02",
-            //     "EVT_ADANOS_ROOM02_MASTER_01",
-            //     "EVT_ADANOS_ROOM01_MASTER_01",
-            //     "EVT_ADANOS_ROOM01_MASTER_02",
-            //     "EVT_ADANOS_ROOM02_MASTER_03",
-            //     "EVT_ADANOS_ROOM02_MASTER_04",
-            //     "EVT_ADANOS_ROOM02_MASTER_05",
-            //     "EVT_ADANOS_ROOM02_TOUCHTRIGGER_05_01",
-            //     "EVT_ADANOS_ROOM03_TRAPMASTER_01",
-            //     "EVT_ADANOS_ROOM03_TRAPMASTER_02",
-            //     "EVT_ADANOS_ROOM03_MASTER_02",
-            //     "EVT_ADANOS_ROOM05_MASTER_01",
-            //     "EVT_ADANOS_ROOM05_TOUCHTRIGGER_05_01",
-            //     "EVT_ADANOS_ROOM05_TOUCHTRIGGER_05_02",
-            //     "EVT_ADANOS_ROOM06_MASTER_01",
-            //     "EVT_ADDON_LSTTMP_DOORMASTER_01",
-            // };
-
-            // HashSet<string> Result = new HashSet<string>();
-
             foreach (DeclarationNode declarationNode in declarationNodes)
             {
                 if (declarationNode.Usages.Count == 0)
-                {                   
-                    // ignore symbols used by engine
+                {
+                    // Ignore symbols used by engine
                     if (_engineUsedSymbols.Contains(declarationNode.NameNode.Value.ToUpper()))
                     {
                         continue;
                     }
 
-                    
                     // Ignore unused parameters of functions used by engine
                     if (declarationNode is ParameterDeclarationNode parameterDeclarationNode)
                     {
-                        FunctionDefinitionNode functionDefinitionNode = (FunctionDefinitionNode) parameterDeclarationNode.ParentNode;
+                        FunctionDefinitionNode functionDefinitionNode =
+                            (FunctionDefinitionNode) parameterDeclarationNode.ParentNode;
 
-                        if (functionDefinitionNode.IsExternal) {
-                             continue;
+                        if (functionDefinitionNode.IsExternal)
+                        {
+                            continue;
                         }
 
                         string parentNameUpper = functionDefinitionNode.NameNode.Value.ToUpper();
-                        if (_engineUsedSymbols.Contains(parentNameUpper)) {
+                        if (_engineUsedSymbols.Contains(parentNameUpper))
+                        {
                             continue;
                         }
 
-                        if (parentNameUpper.StartsWith("SPELL_CAST_")) {
+                        if (parentNameUpper.StartsWith("SPELL_CAST_"))
+                        {
                             continue;
                         }
                     }
-
 
                     if (declarationNode is FunctionDefinitionNode funcDefinitionNode)
                     {
@@ -585,7 +267,8 @@ namespace Common.SemanticAnalysis
                         // if there is function <NAME> that is registered state.
                         Regex stateRegex = new Regex("^([a-zA-Z_][a-zA-Z0-9_]*)_(LOOP|END)$");
                         Match match = stateRegex.Match(nameUpper);
-                        if (match.Success && _symbolTable.ContainsKey(match.Groups[0].Value)) {
+                        if (match.Success && _symbolTable.ContainsKey(match.Groups[0].Value))
+                        {
                             continue;
                         }
 
@@ -602,7 +285,8 @@ namespace Common.SemanticAnalysis
                             continue;
                         }
 
-                        if (nameUpper.EndsWith("_S1") && _onStateFuncs.Contains(nameUpper)) {
+                        if (nameUpper.EndsWith("_S1") && _onStateFuncs.Contains(nameUpper))
+                        {
                             continue;
                         }
 
@@ -612,41 +296,14 @@ namespace Common.SemanticAnalysis
                         }
                     }
 
-                    if (declarationNode is InstanceDefinitionNode instanceDefinitionNode)
+                    if (declarationNode is InstanceDefinitionNode)
                     {
-                        // actually we can just ignore all instances, since almost always
+                        // We can just ignore all instances, since almost always
                         // they can be used even without explicit reference in code
                         continue;
-
-                        // ClassSymbol baseClassSymbol = ((InstanceSymbol)instanceDefinitionNode.Symbol).BaseClassSymbol;
-                        // string baseClassNameUpper = baseClassSymbol.Name.ToUpper();
-
-                        // // C_INFO instances (dialogue options) are always assigned to NPC and can be used
-                        // if (baseClassNameUpper == "C_INFO")
-                        // {
-                        //     continue;
-                        // }
-
-                        // // C_ITEM and C_SPELL instances can be always be spawned using codes
-                        // // if wanted to search for unused items, should also search in Zen
-                        // if (baseClassNameUpper == "C_ITEM" || baseClassNameUpper == "C_SPELL")
-                        // {
-                        //     continue;
-                        // }
-
-                        // // C_SVM classes are referenced by number (I think voice attr on NPC)
-                        // if (baseClassNameUpper == "C_SVM")
-                        // {
-                        //     continue;
-                        // }
-
-                        // if (baseClassNameUpper == "C_GILVALUES")
-                        // {
-                        //     continue;
-                        // }
                     }
 
-                    // some consts are used inside Zen in "focusName" attribute
+                    // Some constants are used inside Zen in "focusName" attribute
                     if (declarationNode is ConstDefinitionNode constDefinitionNode)
                     {
                         if (_focusNames.Contains(constDefinitionNode.NameNode.Value.ToUpper()))
@@ -655,14 +312,12 @@ namespace Common.SemanticAnalysis
                         }
                     }
 
-                    // Result.Add(declarationNode.NameNode.Value.ToUpper());
                     declarationNode.NameNode.Annotations.Add(new UnusedSymbolWarning());
                     continue;
                 }
 
-
                 string declaredName = declarationNode.NameNode.Value;
-                
+
                 foreach (ASTNode node in declarationNode.Usages)
                 {
                     string usedName;
@@ -684,16 +339,11 @@ namespace Common.SemanticAnalysis
 
                     if (usedName != declaredName)
                     {
-                        node.Annotations.Add(new NamesNotMatchingCaseWiseWarning(declarationNode.NameNode.Location, declaredName, usedName));
+                        node.Annotations.Add(new NamesNotMatchingCaseWiseWarning(declarationNode.NameNode.Location,
+                            declaredName, usedName));
                     }
                 }
             }
-
-            // Console.WriteLine($"Count: {Result.Count}");
-            // foreach(string name in Result)
-            // {
-            //     Console.WriteLine(name);
-            // }
         }
     }
 }

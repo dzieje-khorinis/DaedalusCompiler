@@ -1,8 +1,6 @@
 using System.Linq;
-using System.IO.Compression;
 using System;
 using System.Collections.Generic;
-using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 
@@ -15,7 +13,7 @@ namespace Common.Zen
         const string WayNet = "WayNet";
         const string EndMarker = "EndMarker";
 
-        public static DateTime GetDateTime(string date, string time)
+        private static DateTime GetDateTime(string date, string time)
         {
             string[] d = date.Split('.');
             string[] t = time.Split(':');
@@ -29,13 +27,14 @@ namespace Common.Zen
         {
             ZenParser.HeadContext headCtx = ctx.head();
 
-            ZenFileNode fileNode = new ZenFileNode {
-                Version=int.Parse(headCtx.version.Text),
-                Type=headCtx.zenType.Text,
-                SaveGame=int.Parse(headCtx.saveGame.Text),
-                DateTime=GetDateTime(headCtx.date.Text, headCtx.time.Text),
-                User=headCtx.user.Text,
-                ObjectsCount=int.Parse(headCtx.objectsCount.Text),
+            ZenFileNode fileNode = new ZenFileNode
+            {
+                Version = int.Parse(headCtx.version.Text),
+                Type = headCtx.zenType.Text,
+                SaveGame = int.Parse(headCtx.saveGame.Text),
+                DateTime = GetDateTime(headCtx.date.Text, headCtx.time.Text),
+                User = headCtx.user.Text,
+                ObjectsCount = int.Parse(headCtx.objectsCount.Text),
             };
 
             foreach (IParseTree childCtx in ctx.body.children) //ctx.body is oCWorld
@@ -45,11 +44,11 @@ namespace Common.Zen
                     switch (blockCtx.blockName().GetText())
                     {
                         case VobTree:
-                            fileNode.VobTree = (ZenBlockNode)VisitBlock(blockCtx);
+                            fileNode.VobTree = (ZenBlockNode) VisitBlock(blockCtx);
                             break;
 
                         case WayNet:
-                            fileNode.WayNet = (ZenBlockNode)VisitBlock(blockCtx);
+                            fileNode.WayNet = (ZenBlockNode) VisitBlock(blockCtx);
                             break;
 
                         case EndMarker:
@@ -60,22 +59,25 @@ namespace Common.Zen
                     }
                 }
             }
+
             return fileNode;
         }
 
 
         public override ZenNode VisitBlock([NotNull] ZenParser.BlockContext ctx)
         {
-            ZenBlockNode blockNode = new ZenBlockNode {
-                BlockName=ctx.blockName().GetText(),
-                ClassPath=ctx.classPath().GetText(),
-                LeftIndex=int.Parse(ctx.leftIndex.Text),
-                RightIndex=int.Parse(ctx.rightIndex.Text),
+            ZenBlockNode blockNode = new ZenBlockNode
+            {
+                BlockName = ctx.blockName().GetText(),
+                ClassPath = ctx.classPath().GetText(),
+                LeftIndex = int.Parse(ctx.leftIndex.Text),
+                RightIndex = int.Parse(ctx.rightIndex.Text),
             };
 
-            foreach(IParseTree childCtx in ctx.children)
+            foreach (IParseTree childCtx in ctx.children)
             {
-                switch (childCtx) {
+                switch (childCtx)
+                {
                     case ZenParser.BlockContext blockContext:
                         blockNode.Children.Add(VisitBlock(blockContext));
                         break;
@@ -84,6 +86,7 @@ namespace Common.Zen
                         break;
                 }
             }
+
             return blockNode;
         }
 
@@ -93,17 +96,20 @@ namespace Common.Zen
             string type = rside[0];
             string textValue = rside[1];
             Object value = GetValue(type, textValue);
-            
-            return new ZenAttrNode {
-                Name=ctx.Name().GetText(),
-                Type=type,
-                TextValue=textValue,
-                Value=value,
+
+            return new ZenAttrNode
+            {
+                Name = ctx.Name().GetText(),
+                Type = type,
+                TextValue = textValue,
+                Value = value,
             };
         }
 
-        private Object GetValue(string type, string textValue) {
-            switch(type) {
+        private Object GetValue(string type, string textValue)
+        {
+            switch (type)
+            {
                 case "bool":
                     return int.Parse(textValue) == 1;
                 case "color":
@@ -155,14 +161,14 @@ namespace Common.Zen
 
         public int LeftIndex;
         public int RightIndex;
-        public List<ZenNode> Children;
+        public readonly List<ZenNode> Children;
 
         public ZenBlockNode()
         {
             Children = new List<ZenNode>();
         }
     }
-    
+
     public class ZenAttrNode : ZenNode
     {
         public string Name;
