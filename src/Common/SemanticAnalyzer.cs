@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Antlr4.Runtime.Tree;
 using Common.SemanticAnalysis;
-
+using Common.Zen;
 
 namespace Common
 {
@@ -13,7 +13,10 @@ namespace Common
         public Dictionary<string, Symbol> SymbolTable;
         public List<BlockSymbol> SymbolsWithInstructions;
         
+        private List<ZenFileNode> _zenFileNodes;
+
         public SemanticAnalyzer(
+            List<ZenFileNode> zenFileNodes,
             List<IParseTree> parseTrees,
             AbstractParseTreeVisitor<ASTNode> visitor,
             List<string> filesPaths,
@@ -21,6 +24,7 @@ namespace Common
             List<HashSet<string>> suppressedWarningCodes
         )
         {
+            _zenFileNodes = zenFileNodes;
             SymbolTable = null;
             SymbolsWithInstructions = null;
 
@@ -102,7 +106,7 @@ namespace Common
             
             // UnusedSymbolWarning
             // NamesNotMatchingCaseWiseWarning
-            DeclarationUsagesChecker declarationUsagesChecker = new DeclarationUsagesChecker();
+            DeclarationUsagesChecker declarationUsagesChecker = new DeclarationUsagesChecker(SymbolTable, _zenFileNodes);
             declarationUsagesChecker.Check(symbolTableCreationVisitor.DeclarationNodes);
             
             // UsageOfNonInitializedVariableWarning

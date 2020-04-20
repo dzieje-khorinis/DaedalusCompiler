@@ -15,12 +15,20 @@ namespace Common
         public void Print(string fileName, string line, ErrorLogger errorLogger) {
             errorLogger.LogLine($"{fileName}:{LineNo}:{ColumnNo}: {Message}");
             errorLogger.LogLine(line.Replace("\t", "    "));
-            errorLogger.LogLine(GetErrorPointerLine(line));
+            if (ColumnNo >= 0)
+            {
+                errorLogger.LogLine(GetErrorPointerLine(line));
+            }
+            
         }
 
         private string GetErrorPointerLine(string line)
         {
             string[] buffer = new string[ColumnNo + 1];
+
+            if (ColumnNo == 0) {
+                return "^";
+            }
 
             for (int i = 0; i < ColumnNo + 1; i++)
             {

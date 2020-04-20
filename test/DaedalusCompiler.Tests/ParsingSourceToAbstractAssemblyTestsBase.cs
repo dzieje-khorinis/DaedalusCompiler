@@ -15,6 +15,7 @@ namespace DaedalusCompiler.Tests
 {
     public class ParsingSourceToAbstractAssemblyTestsBase
     {
+        protected string Zen;
         protected string Code;
         protected List<AssemblyElement> Instructions;
         protected List<AssemblyElement> ExpectedInstructions;
@@ -51,7 +52,7 @@ namespace DaedalusCompiler.Tests
             _parsed = true;
             StringBufforErrorLogger logger = new StringBufforErrorLogger();
             _testsHelper = new TestsHelper(logger, false, false);
-            _testsHelper.RunCode(Code);
+            _testsHelper.RunCode(Code, Zen);
         }
         
         protected List<AssemblyElement> GetExecBlockInstructions(string execBlockName)

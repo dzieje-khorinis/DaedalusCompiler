@@ -111,7 +111,7 @@ namespace DaedalusCompiler.Tests
                     compiler.SetCompilationDateTimeText(compileTime);
                     compiler.SetCompilationUserName(compileUsername);
                 }
-                compiler.CompileFromSrc(srcPath, runtimePath:String.Empty, outputPathDat:outputPathDat, verbose:false, generateOutputUnits: generateOutputUnits);
+                compiler.CompileFromSrc(new List<string>(), srcPath, runtimePath:String.Empty, outputPathDat:outputPathDat, verbose:false, generateOutputUnits: generateOutputUnits);
                 _originalDatFiles[datFileName] = compiler.DatFile;
             }
         }

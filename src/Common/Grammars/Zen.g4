@@ -46,7 +46,7 @@ fragment Letter:
 fragment Digit: [0-9];
 fragment FirstChar: Letter | '_';
 fragment NextChar: FirstChar | Digit | [-\\.];
-fragment Type: 'int' | 'bool' | 'color' | 'string' | 'float' | 'vec3' | 'rawFloat' | 'enum' | 'raw';
+fragment Type: 'bool' | 'color' | 'enum' | 'float' | 'int' | 'raw' | 'rawFloat' | 'string' |  'vec3';
 
 
 // Parser rules
@@ -65,7 +65,7 @@ head:
 ;
 
 block:
-    '[' blockName classPath Int Int ']'
+    '[' blockName classPath (leftIndex=Int) (rightIndex=Int) ']'
         (block | attr)*
     '[]'
 ;

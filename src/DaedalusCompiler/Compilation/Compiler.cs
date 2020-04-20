@@ -7,6 +7,7 @@ using System.Text;
 using Antlr4.Runtime.Tree;
 using Common;
 using Common.SemanticAnalysis;
+using Common.Zen;
 using DaedalusCompiler.Dat;
 
 namespace DaedalusCompiler.Compilation
@@ -39,6 +40,7 @@ namespace DaedalusCompiler.Compilation
         }
 
         public bool CompileFromSrc(
+            List<string> zenPaths,
             string srcFilePath,
             string runtimePath,
             string outputPathDat,
@@ -46,6 +48,13 @@ namespace DaedalusCompiler.Compilation
             bool generateOutputUnits = true
         )
         {
+            ZenLoader zenLoader = new ZenLoader(zenPaths, verbose);
+            if (zenLoader.Load() != 0)
+            {
+                return false;
+            }
+            List<ZenFileNode> zenFileNodes = zenLoader.ZenFileNodes;
+
             bool isRunTimePathSpecified = runtimePath != String.Empty;
             
             var absoluteSrcFilePath = Path.GetFullPath(srcFilePath);
@@ -140,6 +149,7 @@ namespace DaedalusCompiler.Compilation
             if (verbose) Console.WriteLine("parseTrees created");
             
             SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(
+                zenFileNodes,
                 parseTrees,
                 new DaedalusParseTreeVisitor(),
                 filesPaths,

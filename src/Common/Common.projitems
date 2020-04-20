@@ -9,6 +9,7 @@
     <Import_RootNamespace>Common</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)AssemblyInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AssemblyElement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Grammars\Output\DaedalusBaseVisitor.cs" Link="AntlrOutput\DaedalusBaseVisitor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Grammars\Output\DaedalusLexer.cs" Link="AntlrOutput\DaedalusLexer.cs" />
@@ -42,5 +43,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)SrcFileHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Symbol.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SyntaxErrorListener.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Zen\ZenLoader.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Zen\ZenParseTreeVisitor.cs" />
   </ItemGroup>
 </Project>

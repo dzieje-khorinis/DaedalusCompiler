@@ -211,6 +211,8 @@ public partial class ZenParser : Parser {
 	}
 
 	public partial class BlockContext : ParserRuleContext {
+		public IToken leftIndex;
+		public IToken rightIndex;
 		public BlockNameContext blockName() {
 			return GetRuleContext<BlockNameContext>(0);
 		}
@@ -256,8 +258,12 @@ public partial class ZenParser : Parser {
 			State = 34; Match(T__0);
 			State = 35; blockName();
 			State = 36; classPath();
-			State = 37; Match(Int);
-			State = 38; Match(Int);
+			{
+			State = 37; _localctx.leftIndex = Match(Int);
+			}
+			{
+			State = 38; _localctx.rightIndex = Match(Int);
+			}
 			State = 39; Match(T__1);
 			State = 44;
 			ErrorHandler.Sync(this);

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Antlr4.Runtime.Tree;
 using Common;
 using Common.SemanticAnalysis;
+using Common.Zen;
 using DaedalusCompiler.Compilation;
 
 
@@ -31,8 +32,15 @@ namespace DaedalusCompiler.Tests
             }
         }
 
-        public void RunCode(string code)
+        public void RunCode(string code, string zenContent)
         {
+            ZenLoader zenLoader = new ZenLoader();
+            if (zenLoader.Load(zenContent) != 0)
+            {
+                return;
+            }
+            List<ZenFileNode> zenFileNodes = zenLoader.ZenFileNodes;
+
             List<IParseTree> parseTrees = new List<IParseTree>();
             List<string> filesPaths = new List<string>();
             List<string[]> filesContentsLines = new List<string[]>();
@@ -77,6 +85,7 @@ namespace DaedalusCompiler.Tests
             }
 
             SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(
+                zenFileNodes,
                 parseTrees,
                 new DaedalusParseTreeVisitor(),
                 filesPaths,
