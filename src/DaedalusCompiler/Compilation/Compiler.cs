@@ -152,7 +152,7 @@ namespace DaedalusCompiler.Compilation
                 return false;
             }
 
-            if (verbose) Console.WriteLine("parseTrees created");
+            //if (verbose) Console.WriteLine("parseTrees created");
 
             SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(
                 zenFileNodes,
@@ -201,9 +201,8 @@ namespace DaedalusCompiler.Compilation
             AssemblyBuildingVisitor assemblyBuildingVisitor = new AssemblyBuildingVisitor(semanticAnalyzer.SymbolTable);
             assemblyBuildingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
 
-            if (verbose) Console.WriteLine($"parseTrees.Count: {parseTrees.Count}");
-
-
+            //if (verbose) Console.WriteLine($"parseTrees.Count: {parseTrees.Count}");
+            
             if (generateOutputUnits)
             {
                 foreach (string filesContent in filesContents)

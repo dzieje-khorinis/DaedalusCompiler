@@ -7,8 +7,6 @@ namespace Common.SemanticAnalysis
 {
     public class RemainingAnnotationsAdditionVisitor : AbstractSyntaxTreeBaseVisitor
     {
-        private readonly HashSet<string> _initializedSymbolsPaths;
-
         private readonly Dictionary<string, Symbol> _symbolTable;
         
         private static readonly Dictionary<string, int> Class2RequiredSize = new Dictionary<string, int>

@@ -193,19 +193,21 @@ namespace Common.SemanticAnalysis
                             continue;
                         }
 
+                        string textValueUpper = attrNode.TextValue.ToUpper();
+                        
                         switch (attrNode.Name.ToUpper())
                         {
                             case "ONSTATEFUNC":
-                                _onStateFuncs.Add(attrNode.TextValue + "_S1");
+                                _onStateFuncs.Add(textValueUpper + "_S1");
                                 break;
                             case "CONDITIONFUNC":
-                                _conditionFuncs.Add(attrNode.TextValue);
+                                _conditionFuncs.Add(textValueUpper);
                                 break;
                             case "SCRIPTFUNC":
-                                _scriptFuncs.Add(attrNode.TextValue);
+                                _scriptFuncs.Add(textValueUpper);
                                 break;
                             case "FOCUSNAME":
-                                _focusNames.Add(attrNode.TextValue);
+                                _focusNames.Add(textValueUpper);
                                 break;
                         }
                     }
@@ -217,6 +219,12 @@ namespace Common.SemanticAnalysis
         {
             foreach (DeclarationNode declarationNode in declarationNodes)
             {
+                // Ignore attributes of a class
+                if (declarationNode is VarDeclarationNode && declarationNode.ParentNode is ClassDefinitionNode)
+                {
+                    continue;
+                }
+
                 if (declarationNode.Usages.Count == 0)
                 {
                     // Ignore symbols used by engine
@@ -285,6 +293,11 @@ namespace Common.SemanticAnalysis
                             continue;
                         }
 
+                        if (_conditionFuncs.Contains(nameUpper))
+                        {
+                            continue;
+                        }
+
                         if (nameUpper.EndsWith("_S1") && _onStateFuncs.Contains(nameUpper))
                         {
                             continue;
@@ -315,7 +328,11 @@ namespace Common.SemanticAnalysis
                     declarationNode.NameNode.Annotations.Add(new UnusedSymbolWarning());
                     continue;
                 }
-
+            }
+            
+            
+            foreach (DeclarationNode declarationNode in declarationNodes)
+            {
                 string declaredName = declarationNode.NameNode.Value;
 
                 foreach (ASTNode node in declarationNode.Usages)
@@ -344,6 +361,7 @@ namespace Common.SemanticAnalysis
                     }
                 }
             }
+            
         }
     }
 }
