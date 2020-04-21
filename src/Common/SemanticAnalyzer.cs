@@ -13,17 +13,18 @@ namespace Common
         public Dictionary<string, Symbol> SymbolTable;
         public List<BlockSymbol> SymbolsWithInstructions;
         
-        private List<ZenFileNode> _zenFileNodes;
+        private readonly List<ZenFileNode> _zenFileNodes;
 
         public SemanticAnalyzer(
             List<ZenFileNode> zenFileNodes,
             List<IParseTree> parseTrees,
-            AbstractParseTreeVisitor<ASTNode> visitor,
             List<string> filesPaths,
             List<string[]> filesContents,
             List<HashSet<string>> suppressedWarningCodes
         )
         {
+            DaedalusParseTreeVisitor visitor = new DaedalusParseTreeVisitor();
+            
             _zenFileNodes = zenFileNodes;
             SymbolTable = null;
             SymbolsWithInstructions = null;

@@ -87,7 +87,6 @@ namespace DaedalusCompiler.Tests
             SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(
                 zenFileNodes,
                 parseTrees,
-                new DaedalusParseTreeVisitor(),
                 filesPaths,
                 filesContentsLines,
                 suppressedWarningCodes

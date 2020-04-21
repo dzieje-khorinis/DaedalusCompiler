@@ -12,13 +12,13 @@ namespace DaedalusCompiler
     static class Program
     {
         private const string Version = "0.8.0";
-        private const string AppName = "Daedalus Compiler Version";
+        private const string AppName = "Daedalus Compiler";
         private const string AppSlug = "daedalus-compiler";
 
         static void ShowHelp()
         {
             Console.WriteLine($"{AppName} {Version}");
-            Console.WriteLine($"usage: {AppSlug} file_path [<optional args>]");
+            Console.WriteLine($"usage: {AppSlug} SRC_FILE_PATH [<optional args>]");
             Console.WriteLine(
                 "Optional args description:\n" +
                 "-r|--runtime FILE_PATH         daedalus externals path (default: g2nk builtins dependant on .src file name)\n" +
@@ -179,9 +179,20 @@ namespace DaedalusCompiler
             {
                 CreateDirectory(outputPathOuDir);
                 CreateDirectory(outputPathDat, isFilePath: true);
-                Compiler compiler = new Compiler(outputPathOuDir, verbose, strictSyntax, suppressCodes);
-                compiledSuccessfully = compiler.CompileFromSrc(zenPaths, srcFilePath, runtimePath, outputPathDat,
-                    verbose, generateOutputUnits);
+                CompilationOptions compilationOptions = new CompilationOptions
+                {
+                    SrcFilePath = srcFilePath,
+                    RuntimePath = runtimePath,
+                    OutputPathDat = outputPathDat,
+                    GenerateOutputUnits = generateOutputUnits,
+                    OutputPathOuDir = outputPathOuDir,
+                    ZenPaths = zenPaths,
+                    StrictSyntax = strictSyntax,
+                    GloballySuppressedCodes = suppressCodes,
+                    Verbose = verbose
+                };
+                Compiler compiler = new Compiler(compilationOptions);
+                compiledSuccessfully = compiler.Compile();
             }
             catch (Exception ex)
             {

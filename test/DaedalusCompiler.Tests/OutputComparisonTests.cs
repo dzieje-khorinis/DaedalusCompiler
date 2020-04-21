@@ -104,14 +104,26 @@ namespace DaedalusCompiler.Tests
                 string outputPathDat = Path.Combine(outputPathOuDir, srcFileName + ".dat");
 
                 bool generateOutputUnits = (datFileName == "gothic.dat");
-                
-                Compiler compiler = new Compiler(outputPathOuDir, verbose:false, strictSyntax:false, globallySuppressedCodes:new HashSet<string>{"W1", "W2", "W3", "W4", "W5"});
+
+                CompilationOptions compilationOptions = new CompilationOptions
+                {
+                    SrcFilePath = srcPath,
+                    RuntimePath = String.Empty,
+                    OutputPathDat = outputPathDat,
+                    GenerateOutputUnits = generateOutputUnits,
+                    OutputPathOuDir = outputPathOuDir,
+                    ZenPaths = new List<string>(),
+                    StrictSyntax = false,
+                    GloballySuppressedCodes = new HashSet<string>{"W1", "W2", "W3", "W4", "W5"},
+                    Verbose = false,
+                };
+                Compiler compiler = new Compiler(compilationOptions);
                 if (generateOutputUnits)
                 {
                     compiler.SetCompilationDateTimeText(compileTime);
                     compiler.SetCompilationUserName(compileUsername);
                 }
-                compiler.CompileFromSrc(new List<string>(), srcPath, runtimePath:String.Empty, outputPathDat:outputPathDat, verbose:false, generateOutputUnits: generateOutputUnits);
+                compiler.Compile();
                 _originalDatFiles[datFileName] = compiler.DatFile;
             }
         }

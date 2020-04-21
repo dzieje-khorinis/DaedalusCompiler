@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using Antlr4.Runtime.Tree;
 using Common;
@@ -14,63 +13,94 @@ namespace DaedalusCompiler.Compilation
 {
     public class Compiler
     {
-        private readonly OutputUnitsBuilder _ouBuilder;
+        private readonly List<string> _scriptPaths;
+        private readonly string _runtimePath;
+        private readonly string _outputPathDat;
+        private readonly bool _generateOutputUnits;
         private readonly string _outputPathOuDir;
+        private readonly List<string> _zenPaths;
         private readonly bool _strictSyntax;
         private readonly HashSet<string> _globallySuppressedCodes;
+        private readonly bool _verbose;
 
+        private readonly OutputUnitsBuilder _ouBuilder;
         public DatFile DatFile;
+        private readonly StdErrorLogger _errorLogger;
 
-
-        public Compiler(string outputPathOuDir, bool verbose, bool strictSyntax,
-            HashSet<string> globallySuppressedCodes)
+        public Compiler(CompilationOptions options)
         {
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            _ouBuilder = new OutputUnitsBuilder(verbose);
-            _outputPathOuDir = outputPathOuDir;
-            _strictSyntax = strictSyntax;
-            _globallySuppressedCodes = globallySuppressedCodes;
+            _scriptPaths = new List<string>();
+            
+            string absoluteSrcFilePath = Path.GetFullPath(options.SrcFilePath);
+
+            _runtimePath = options.RuntimePath;
+            if (_runtimePath == String.Empty)
+            {
+                string srcFileNameLowerWithoutExtension = Path.GetFileNameWithoutExtension(absoluteSrcFilePath).ToLower();
+                _runtimePath = Path.Combine(GetBuiltinsPath(), srcFileNameLowerWithoutExtension + ".d");
+            }
+    
+            if (File.Exists(_runtimePath))
+            {
+                _scriptPaths.Add(_runtimePath);
+            }
+            else
+            {
+                if (_verbose && options.RuntimePath != String.Empty)
+                {
+                    Console.WriteLine($"Specified runtime {_runtimePath} doesn't exist.");
+                }
+                _runtimePath = null;
+            }
+            
+            _scriptPaths.AddRange(SrcFileHelper.LoadScriptsFilePaths(absoluteSrcFilePath));
+
+            _outputPathDat = options.OutputPathDat;
+            _generateOutputUnits = options.GenerateOutputUnits;
+            _outputPathOuDir = options.OutputPathOuDir;
+            _zenPaths = options.ZenPaths;
+            _strictSyntax = options.StrictSyntax;
+            _globallySuppressedCodes = options.GloballySuppressedCodes;
+            _verbose = options.Verbose;
+
+
+            if (_generateOutputUnits)
+            {
+                _ouBuilder = new OutputUnitsBuilder(_verbose);
+            }
+
             DatFile = null;
+            _errorLogger = new StdErrorLogger();
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         }
 
-        private string GetBuiltinsPath()
+        public bool Compile()
         {
-            string programStartPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-
-            return Path.Combine(Path.GetDirectoryName(programStartPath), "DaedalusBuiltins");
-        }
-
-        public bool CompileFromSrc(
-            List<string> zenPaths,
-            string srcFilePath,
-            string runtimePath,
-            string outputPathDat,
-            bool verbose = true,
-            bool generateOutputUnits = true
-        )
-        {
-            ZenLoader zenLoader = new ZenLoader(zenPaths, verbose);
-            if (zenLoader.Load() != 0)
+            ParseResult parseResult = Parse();
+            if (parseResult == null)
             {
                 return false;
             }
 
-            List<ZenFileNode> zenFileNodes = zenLoader.ZenFileNodes;
-
-            bool isRunTimePathSpecified = runtimePath != String.Empty;
-
-            var absoluteSrcFilePath = Path.GetFullPath(srcFilePath);
-
-            string[] paths = SrcFileHelper.LoadScriptsFilePaths(absoluteSrcFilePath).ToArray();
-            string srcFileName = Path.GetFileNameWithoutExtension(absoluteSrcFilePath).ToLower();
-
-            if (!isRunTimePathSpecified)
+            AnalyzeResult analyzeResult = Analyze(parseResult);
+            if (analyzeResult == null)
             {
-                runtimePath = Path.Combine(GetBuiltinsPath(), srcFileName + ".d");
+                return false;
+            }
+
+            Generate(analyzeResult);
+            return true;
+        }
+
+        public ParseResult Parse()
+        {
+            ZenLoader zenLoader = new ZenLoader(_zenPaths, _verbose);
+            if (zenLoader.Load() != 0)
+            {
+                return null;
             }
 
             List<IParseTree> parseTrees = new List<IParseTree>();
-
             List<string> filesPaths = new List<string>();
             List<string[]> filesContentsLines = new List<string[]>();
             List<string> filesContents = new List<string>();
@@ -78,12 +108,18 @@ namespace DaedalusCompiler.Compilation
 
             int syntaxErrorsCount = 0;
             List<List<SyntaxError>> syntaxErrorsPerFile = new List<List<SyntaxError>>();
-
-            if (File.Exists(runtimePath))
+            
+            int runtimeIndex = -1;
+            if (File.Exists(_runtimePath))
             {
-                if (verbose) Console.WriteLine($"[0/{paths.Length}]Parsing runtime: {runtimePath}");
+                runtimeIndex = 0;
+            }
+            
+            for (int i = 0; i < _scriptPaths.Count; i++)
+            {
+                if (_verbose) Console.WriteLine($"[{i + 1}/{_scriptPaths.Count}]Parsing{(runtimeIndex==i ? " runtime":"")}: {_scriptPaths[i]}");
 
-                string fileContent = GetFileContent(runtimePath);
+                string fileContent = GetFileContent(_scriptPaths[i]);
                 DaedalusParser parser = GetParserForText(fileContent);
 
                 SyntaxErrorListener syntaxErrorListener = new SyntaxErrorListener();
@@ -94,40 +130,13 @@ namespace DaedalusCompiler.Compilation
                 syntaxErrorsPerFile.Add(syntaxErrorListener.SyntaxErrors);
 
                 string[] fileContentLines = fileContent.Split(Environment.NewLine);
-                filesPaths.Add(runtimePath);
-                filesContentsLines.Add(fileContentLines);
-                suppressedWarningCodes.Add(
-                    SemanticErrorsCollectingVisitor.GetWarningCodesToSuppress(fileContentLines[0]));
-            }
-            else if (isRunTimePathSpecified)
-            {
-                if (verbose) Console.WriteLine($"Specified runtime {runtimePath} doesn't exist.");
-            }
-
-            for (int i = 0; i < paths.Length; i++)
-            {
-                if (verbose) Console.WriteLine($"[{i + 1}/{paths.Length}]Parsing: {paths[i]}");
-
-                string fileContent = GetFileContent(paths[i]);
-                DaedalusParser parser = GetParserForText(fileContent);
-
-                SyntaxErrorListener syntaxErrorListener = new SyntaxErrorListener();
-                parser.RemoveErrorListeners();
-                parser.AddErrorListener(syntaxErrorListener);
-                parseTrees.Add(parser.daedalusFile());
-                syntaxErrorsCount += syntaxErrorListener.SyntaxErrors.Count;
-                syntaxErrorsPerFile.Add(syntaxErrorListener.SyntaxErrors);
-
-                string[] fileContentLines = fileContent.Split(Environment.NewLine);
-                filesPaths.Add(paths[i]);
+                filesPaths.Add(_scriptPaths[i]);
                 filesContentsLines.Add(fileContentLines);
                 filesContents.Add(fileContent);
 
                 suppressedWarningCodes.Add(
                     SemanticErrorsCollectingVisitor.GetWarningCodesToSuppress(fileContentLines[0]));
             }
-
-            StdErrorLogger logger = new StdErrorLogger();
 
             if (syntaxErrorsCount > 0)
             {
@@ -138,29 +147,39 @@ namespace DaedalusCompiler.Compilation
                     {
                         string filePath = filesPaths[i];
                         string fileName = Path.GetFileName(filePath);
-                        logger.LogLine(filePath);
+                        _errorLogger.LogLine(filePath);
                         foreach (SyntaxError syntaxError in syntaxErrors)
                         {
                             string line = filesContentsLines[i][syntaxError.LineNo - 1];
-                            syntaxError.Print(fileName, line, logger);
+                            syntaxError.Print(fileName, line, _errorLogger);
                         }
                     }
                 }
 
-                logger.LogLine(
+                _errorLogger.LogLine(
                     $"{syntaxErrorsCount} syntax {(syntaxErrorsCount == 1 ? "error" : "errors")} generated.");
-                return false;
+                return null;
             }
 
-            //if (verbose) Console.WriteLine("parseTrees created");
+            return new ParseResult
+            {
+                ZenFileNodes = zenLoader.ZenFileNodes,
+                ParseTrees = parseTrees,
+                FilesPaths = filesPaths,
+                FilesContentsLines = filesContentsLines,
+                FilesContents = filesContents,
+                SuppressedWarningCodes = suppressedWarningCodes
+            };
+        }
 
+        public AnalyzeResult Analyze(ParseResult options)
+        {
             SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(
-                zenFileNodes,
-                parseTrees,
-                new DaedalusParseTreeVisitor(),
-                filesPaths,
-                filesContentsLines,
-                suppressedWarningCodes
+                options.ZenFileNodes,
+                options.ParseTrees,
+                options.FilesPaths,
+                options.FilesContentsLines,
+                options.SuppressedWarningCodes
             );
             semanticAnalyzer.Run();
 
@@ -173,6 +192,7 @@ namespace DaedalusCompiler.Compilation
 
             int errorsCount = semanticErrorsCollectingVisitor.ErrorsCount;
             int warningsCount = semanticErrorsCollectingVisitor.WarningsCount;
+
             string error = errorsCount == 1 ? "error" : "errors";
             string warning = warningsCount == 1 ? "warning" : "warnings";
 
@@ -180,32 +200,41 @@ namespace DaedalusCompiler.Compilation
             {
                 if (warningsCount > 0)
                 {
-                    logger.LogLine($"{errorsCount} {error}, {warningsCount} {warning} generated.");
+                    _errorLogger.LogLine($"{errorsCount} {error}, {warningsCount} {warning} generated.");
                 }
                 else
                 {
-                    logger.LogLine($"{errorsCount} {error} generated.");
+                    _errorLogger.LogLine($"{errorsCount} {error} generated.");
                 }
 
-                return false;
+                return null;
             }
 
             if (warningsCount > 0)
             {
-                logger.LogLine($"{warningsCount} {warning} generated.");
+                _errorLogger.LogLine($"{warningsCount} {warning} generated.");
             }
 
-            SymbolUpdatingVisitor symbolUpdatingVisitor = new SymbolUpdatingVisitor();
-            symbolUpdatingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
-
-            AssemblyBuildingVisitor assemblyBuildingVisitor = new AssemblyBuildingVisitor(semanticAnalyzer.SymbolTable);
-            assemblyBuildingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
-
-            //if (verbose) Console.WriteLine($"parseTrees.Count: {parseTrees.Count}");
-            
-            if (generateOutputUnits)
+            return new AnalyzeResult
             {
-                foreach (string filesContent in filesContents)
+                AbstractSyntaxTree = semanticAnalyzer.AbstractSyntaxTree,
+                SymbolTable = semanticAnalyzer.SymbolTable,
+                SymbolsWithInstructions = semanticAnalyzer.SymbolsWithInstructions,
+                FilesContents = options.FilesContents,
+            };
+        }
+
+        public void Generate(AnalyzeResult options)
+        {
+            SymbolUpdatingVisitor symbolUpdatingVisitor = new SymbolUpdatingVisitor();
+            symbolUpdatingVisitor.VisitTree(options.AbstractSyntaxTree);
+
+            AssemblyBuildingVisitor assemblyBuildingVisitor = new AssemblyBuildingVisitor(options.SymbolTable);
+            assemblyBuildingVisitor.VisitTree(options.AbstractSyntaxTree);
+
+            if (_generateOutputUnits)
+            {
+                foreach (string filesContent in options.FilesContents)
                 {
                     _ouBuilder.ParseText(filesContent);
                 }
@@ -213,12 +242,17 @@ namespace DaedalusCompiler.Compilation
                 _ouBuilder.SaveOutputUnits(_outputPathOuDir);
             }
 
-            DatBuilder datBuilder =
-                new DatBuilder(semanticAnalyzer.SymbolTable, semanticAnalyzer.SymbolsWithInstructions);
+            DatBuilder datBuilder = new DatBuilder(options.SymbolTable, options.SymbolsWithInstructions);
             DatFile = datBuilder.GetDatFile();
-            DatFile.Save(outputPathDat);
+            DatFile.Save(_outputPathDat);
+        }
 
-            return true;
+
+        private string GetBuiltinsPath()
+        {
+            string programStartPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+
+            return Path.Combine(Path.GetDirectoryName(programStartPath), "DaedalusBuiltins");
         }
 
         public void SetCompilationDateTimeText(string compilationDateTimeText)
@@ -243,5 +277,36 @@ namespace DaedalusCompiler.Compilation
             CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
             return new DaedalusParser(commonTokenStream);
         }
+    }
+
+    public class CompilationOptions
+    {
+        public string SrcFilePath;
+        public string RuntimePath;
+        public string OutputPathDat;
+        public bool GenerateOutputUnits;
+        public string OutputPathOuDir;
+        public List<string> ZenPaths;
+        public bool StrictSyntax;
+        public HashSet<string> GloballySuppressedCodes;
+        public bool Verbose;
+    }
+
+    public class ParseResult
+    {
+        public List<ZenFileNode> ZenFileNodes;
+        public List<IParseTree> ParseTrees;
+        public List<string> FilesPaths;
+        public List<string[]> FilesContentsLines;
+        public List<string> FilesContents;
+        public List<HashSet<string>> SuppressedWarningCodes;
+    }
+
+    public class AnalyzeResult
+    {
+        public AbstractSyntaxTree AbstractSyntaxTree;
+        public Dictionary<string, Symbol> SymbolTable;
+        public List<BlockSymbol> SymbolsWithInstructions;
+        public List<string> FilesContents;
     }
 }
