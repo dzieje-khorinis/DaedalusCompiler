@@ -27,14 +27,6 @@ namespace Common.SemanticAnalysis
                 {
                     node.Annotations.Add(new InfiniteConstReferenceLoopError());
                     _visitedNodesValuesCache[node] = new UndefinedValue();
-                    if (node is ReferenceNode referenceNode)
-                    {
-                        // Console.WriteLine($"Add InfiniteReferenceLoopUndefinedValue to referenceNode {referenceNode.Name}");
-                    }
-                    else
-                    {
-                        // Console.WriteLine($"Add InfiniteReferenceLoopUndefinedValue to {node.GetType().ToString().Split(".").Last()}");
-                    }
                 }
                 return _visitedNodesValuesCache[node];
             }

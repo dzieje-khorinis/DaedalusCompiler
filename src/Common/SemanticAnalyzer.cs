@@ -28,9 +28,7 @@ namespace Common
             _zenFileNodes = zenFileNodes;
             SymbolTable = null;
             SymbolsWithInstructions = null;
-
-            Stopwatch timer = new Stopwatch();
-            timer.Start();
+            
             AbstractSyntaxTree = new AbstractSyntaxTree(filesPaths, filesContents, suppressedWarningCodes);
             
             int index = 0;
@@ -40,9 +38,6 @@ namespace Common
                 AbstractSyntaxTree.Extend(parseTree, visitor, index);
                 index++;
             }
-            
-            timer.Stop();
-            // Console.WriteLine($"AbstractSyntaxTree creation time: {timer.Elapsed}");
         }
 
 
