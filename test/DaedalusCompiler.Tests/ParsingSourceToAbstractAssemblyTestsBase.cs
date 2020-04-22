@@ -1,14 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DaedalusCompiler.Compilation;
-using DaedalusCompiler.Compilation.SemanticAnalysis;
+using Common.SemanticAnalysis;
+using Common;
 using Xunit;
+using AssemblyElement = Common.AssemblyElement;
+using BlockSymbol = Common.BlockSymbol;
+using PushArrayVar = Common.PushArrayVar;
+using Symbol = Common.Symbol;
+using SymbolInstruction = Common.SymbolInstruction;
+using ValueInstruction = Common.ValueInstruction;
 
 namespace DaedalusCompiler.Tests
 {
     public class ParsingSourceToAbstractAssemblyTestsBase
     {
+        protected string Zen;
         protected string Code;
         protected List<AssemblyElement> Instructions;
         protected List<AssemblyElement> ExpectedInstructions;
@@ -45,7 +52,7 @@ namespace DaedalusCompiler.Tests
             _parsed = true;
             StringBufforErrorLogger logger = new StringBufforErrorLogger();
             _testsHelper = new TestsHelper(logger, false, false);
-            _testsHelper.RunCode(Code);
+            _testsHelper.RunCode(Code, Zen);
         }
         
         protected List<AssemblyElement> GetExecBlockInstructions(string execBlockName)

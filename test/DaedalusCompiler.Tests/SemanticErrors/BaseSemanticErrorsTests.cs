@@ -1,6 +1,5 @@
 using System;
-using System.Collections.Generic;
-using DaedalusCompiler.Compilation.SemanticAnalysis;
+using Common.SemanticAnalysis;
 using Xunit;
 
 
@@ -9,10 +8,17 @@ namespace DaedalusCompiler.Tests.SemanticErrors
     public class BaseSemanticErrorsTests
     {
         protected string Code;
+        protected string Zen;
         protected string ExpectedCompilationOutput;
-        private void ParseData()
+        
+        private static string PreProcessText(string text)
         {
-            string[] codeLines = Code.Trim().Split(Environment.NewLine);
+            if (text == null)
+            {
+                return null;
+            }
+
+            string[] codeLines = text.Trim().Split(Environment.NewLine);
 
             for (int i = 1; i < codeLines.Length; ++i)
             {
@@ -25,7 +31,13 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                     codeLines[i] = "";
                 }
             }
-            Code = string.Join(Environment.NewLine, codeLines);
+            return string.Join(Environment.NewLine, codeLines);
+        }
+
+        private void ParseData()
+        {
+            Code = PreProcessText(Code);
+            Zen = PreProcessText(Zen);
 
             string[] compilationOutputLines = ExpectedCompilationOutput.Trim().Split(Environment.NewLine);
             for (int i = 1; i < compilationOutputLines.Length; ++i)
@@ -40,7 +52,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
             ParseData();
             StringBufforErrorLogger logger = new StringBufforErrorLogger();
             TestsHelper testsHelper = new TestsHelper(logger, strictSyntax, detectUnused);
-            testsHelper.RunCode(Code);
+            testsHelper.RunCode(Code, Zen);
             Assert.Equal(ExpectedCompilationOutput, logger.GetBuffer().Trim());
         }
     }

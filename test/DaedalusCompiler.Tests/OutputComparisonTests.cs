@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using Common;
 using DaedalusCompiler.Compilation;
 using DaedalusCompiler.Dat;
 using Xunit;
@@ -28,7 +29,7 @@ namespace DaedalusCompiler.Tests
         };
         private string _datPath = "Scripts/_compiled/*.dat";
         private string _ouPath = "Scripts/Content/Cutscene/ou.*";
-        private string _outputPath = "output";
+        private string _outputPathOuDir = "output";
         
         private Dictionary<string, string> _srcPathToDatPath;
 
@@ -90,21 +91,39 @@ namespace DaedalusCompiler.Tests
                 _srcPathToDatPath[srcPath] = datPath;
             }
             
-            string outputDirPath = Path.Combine(_scriptsPath, _outputPath);
+            string outputPathOuDir = Path.Combine(_scriptsPath, _outputPathOuDir);
+            Directory.CreateDirectory(outputPathOuDir);
+
             foreach(KeyValuePair<string, string> entry in _srcPathToDatPath)
             {
                 string srcPath = entry.Key;
                 string datPath = entry.Value;
                 string datFileName = Path.GetFileName(datPath).ToLower();
+
+                string srcFileName = Path.GetFileNameWithoutExtension(srcPath).ToLower();
+                string outputPathDat = Path.Combine(outputPathOuDir, srcFileName + ".dat");
+
                 bool generateOutputUnits = (datFileName == "gothic.dat");
-                
-                Compiler compiler = new Compiler(outputDirPath, verbose:false, strictSyntax:false, globallySuppressedCodes:new HashSet<string>{"W1", "W2", "W3", "W4", "W5"});
+
+                CompilationOptions compilationOptions = new CompilationOptions
+                {
+                    SrcFilePath = srcPath,
+                    RuntimePath = String.Empty,
+                    OutputPathDat = outputPathDat,
+                    GenerateOutputUnits = generateOutputUnits,
+                    OutputPathOuDir = outputPathOuDir,
+                    ZenPaths = new List<string>(),
+                    StrictSyntax = false,
+                    GloballySuppressedCodes = new HashSet<string>{"W1", "W2", "W3", "W4", "W5"},
+                    Verbose = false,
+                };
+                Compiler compiler = new Compiler(compilationOptions);
                 if (generateOutputUnits)
                 {
                     compiler.SetCompilationDateTimeText(compileTime);
                     compiler.SetCompilationUserName(compileUsername);
                 }
-                compiler.CompileFromSrc(srcPath, runtimePath:String.Empty, outputPath:String.Empty, verbose:false, generateOutputUnits: generateOutputUnits);
+                compiler.Compile();
                 _originalDatFiles[datFileName] = compiler.DatFile;
             }
         }
@@ -143,7 +162,7 @@ namespace DaedalusCompiler.Tests
 
         private void CompareDats()
         {
-            string outputDirPath = Path.Combine(_scriptsPath, _outputPath);
+            string outputDirPath = Path.Combine(_scriptsPath, _outputPathOuDir);
             List<string> alreadyLoaded = new List<string>();
             foreach (KeyValuePair<string, string> entry in _srcPathToDatPath)
             {
@@ -170,7 +189,7 @@ namespace DaedalusCompiler.Tests
 
         private void CompareOuFiles()
         {
-            string outputDirPath = Path.Combine(_scriptsPath, _outputPath);
+            string outputDirPath = Path.Combine(_scriptsPath, _outputPathOuDir);
             
             string ouCslFileName = "ou.csl";
             string ouBinFileName = "ou.bin";

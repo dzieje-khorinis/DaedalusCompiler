@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Common;
 using DaedalusCompiler.Compilation;
 
 namespace DaedalusCompiler.Dat

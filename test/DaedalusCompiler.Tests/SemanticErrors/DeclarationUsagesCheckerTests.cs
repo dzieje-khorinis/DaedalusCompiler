@@ -5,6 +5,110 @@ namespace DaedalusCompiler.Tests.SemanticErrors
     public class DeclarationUsagesCheckerTests : BaseSemanticErrorsTests
     {
         [Fact]
+        public void TestUnusedSymbol()
+        {
+            Zen = @"
+                ZenGin Archive
+                ver 1
+                zCArchiverGeneric
+                ASCII
+                saveGame 0
+                date 20.4.2020 21:37:00
+                user kisioj
+                END
+                objects 4
+                END
+
+                [% oCWorld:zCWorld 64513 0]
+                    [VobTree % 0 0]
+                        childs0=int:1
+                        [% zCVob 52224 1]
+                            onStateFunc=string:func1
+                            conditionFunc=string:func2
+                            scriptFunc=string:func3
+                            focusName=string:const2
+                        []
+                        childs1=int:1
+                        [% zCVob 52224 2]
+                            focusName=string:const3
+                        []
+                    []
+                    [EndMarker % 0 0]
+                    []
+                []
+            ";
+            
+            Code = @"
+                class Test { var int a; }
+                class C_NPC { var int data [200]; }
+
+                prototype Human1(C_NPC) {}
+                prototype Human2(C_NPC) {}
+
+                instance Person1(C_NPC) {}
+                instance Person2(Human2) {}
+
+                var int a;
+                var int b;
+                var int c;
+
+                func void G_PickLock (var int a, var int b) {}
+
+                func void func1_S1() {}
+                func void func2_S1() {}
+
+                func void func1(var int a, var int b) {
+                    a = 1;
+                };
+                func void func2() {
+                    b = 2;
+                };
+                func void func3() {};
+                func void func4() {};
+
+                const int const1 = 0;
+                const int const2 = 0;
+                const int const3 = 0;
+            ";
+
+            ExpectedCompilationOutput = @"
+                test.d: In prototype 'Human1':
+                test.d:4:10: warning W3: unused symbol
+                prototype Human1(C_NPC) {}
+                          ^
+                test.d: In global scope:
+                test.d:10:8: warning W3: unused symbol
+                var int a;
+                        ^
+                test.d:12:8: warning W3: unused symbol
+                var int c;
+                        ^
+                test.d: In function 'func2_S1':
+                test.d:17:10: warning W3: unused symbol
+                func void func2_S1() {}
+                          ^
+                test.d: In function 'func1':
+                test.d:19:10: warning W3: unused symbol
+                func void func1(var int a, var int b) {
+                          ^
+                test.d:19:35: warning W3: unused symbol
+                func void func1(var int a, var int b) {
+                                                   ^
+                test.d: In function 'func4':
+                test.d:26:10: warning W3: unused symbol
+                func void func4() {};
+                          ^
+                test.d: In global scope:
+                test.d:28:10: warning W3: unused symbol
+                const int const1 = 0;
+                          ^
+                8 warnings generated.
+            ";
+
+            AssertCompilationOutputMatch(detectUnused:true);
+        }
+        
+        [Fact]
         public void TestNamesNotMatchingCaseWise()
         {
             Code = @"
@@ -60,7 +164,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
 
 
             Code = @"
-                //! suppress: W5
+                //! suppress: W3 W5
 
                 class NPC {
                     var int str;
