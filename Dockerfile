@@ -1,4 +1,4 @@
-FROM microsoft/dotnet:2-runtime
+FROM mcr.microsoft.com/dotnet/core/runtime:2.1-alpine
 RUN mkdir -p /usr/compiler-runtime
 RUN mkdir -p /usr/workspace
 WORKDIR /usr/workspace
