@@ -11,7 +11,7 @@ namespace DaedalusCompiler
 {
     static class Program
     {
-        private const string Version = "0.9.1";
+        private const string Version = "0.9.2";
         private const string AppName = "Daedalus Compiler";
         private const string AppSlug = "daedalus-compiler";
 
