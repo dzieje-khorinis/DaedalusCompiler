@@ -28,7 +28,7 @@ namespace DaedalusCompiler
                 "-u|--output-ou DIR_PATH        .ou files directory path (used only if --gen-ou flag is provided)\n\n" +
                 
                 "-x|--strict                    use more strict syntax version (warnings become errors)\n" +
-                "-i|--case-sensitive-code       symbol usage must match definition case-sensitive\n" +
+                "-c|--case-sensitive-code       symbol usage must match definition case-sensitive\n" +
                 "-s|--suppress WCODE:[WCODE...] colon separated warning codes, to suppress warnings globally\n\n" +
 
                 "-d|--detect-unused             unused symbols generate warnings\n" +

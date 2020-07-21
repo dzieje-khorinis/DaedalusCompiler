@@ -2,6 +2,9 @@ using System.Collections.Generic;
 using System;
 using System.IO;
 using Antlr4.Runtime;
+using Antlr4.Runtime.Atn;
+using Antlr4.Runtime.Dfa;
+using Antlr4.Runtime.Sharpen;
 using Common.SemanticAnalysis;
 
 namespace Common
@@ -70,6 +73,40 @@ namespace Common
                 ColumnNo=columnNo,
                 Message=message,
             });
+        }
+        
+        public override void ReportAmbiguity(
+            Parser recognizer,
+            DFA dfa,
+            int startIndex,
+            int stopIndex,
+            bool exact,
+            BitSet ambigAlts,
+            ATNConfigSet configs)
+        {
+            Console.WriteLine("Dupa blada");
+        }
+
+        public override void ReportAttemptingFullContext(
+            Parser recognizer,
+            DFA dfa,
+            int startIndex,
+            int stopIndex,
+            BitSet conflictingAlts,
+            SimulatorState conflictState)
+        {
+            Console.WriteLine("Dupa blada");
+        }
+
+        public override void ReportContextSensitivity(
+            Parser recognizer,
+            DFA dfa,
+            int startIndex,
+            int stopIndex,
+            int prediction,
+            SimulatorState acceptState)
+        {
+            Console.WriteLine("Dupa blada");
         }
     }
 }

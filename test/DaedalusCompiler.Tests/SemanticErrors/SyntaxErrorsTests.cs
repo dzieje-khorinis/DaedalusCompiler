@@ -26,5 +26,23 @@ namespace DaedalusCompiler.Tests.SemanticErrors
             AssertCompilationOutputMatch();
         }
         
+        [Fact]
+        public void TestUnexpectedChatacterSyntaxError()
+        {
+            Code = @"
+                :
+            ";
+
+            ExpectedCompilationOutput = @"
+                test.d
+                test.d:1:0: extraneous input ':' expecting {<EOF>, Const, Var, Func, Class, Prototype, Instance, 'extern'}
+                :
+                ^
+                1 syntax error generated.
+            ";
+
+            AssertCompilationOutputMatch();
+        }
+        
     }
 }

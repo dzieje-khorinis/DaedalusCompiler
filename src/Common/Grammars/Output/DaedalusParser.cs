@@ -44,7 +44,7 @@ public partial class DaedalusParser : Parser {
 		String=40, Class=41, Void=42, Return=43, Float=44, Prototype=45, Instance=46, 
 		Null=47, NoFunc=48, While=49, Break=50, Continue=51, Extern=52, Identifier=53, 
 		IntegerLiteral=54, FloatLiteral=55, StringLiteral=56, Whitespace=57, Newline=58, 
-		BlockComment=59, LineComment=60;
+		BlockComment=59, LineComment=60, UnexpectedCharacter=61;
 	public const int
 		RULE_daedalusFile = 0, RULE_blockDef = 1, RULE_inlineDef = 2, RULE_externFunctionDecl = 3, 
 		RULE_functionDef = 4, RULE_constDef = 5, RULE_classDef = 6, RULE_prototypeDef = 7, 
@@ -91,7 +91,7 @@ public partial class DaedalusParser : Parser {
 		"If", "Int", "Else", "Func", "String", "Class", "Void", "Return", "Float", 
 		"Prototype", "Instance", "Null", "NoFunc", "While", "Break", "Continue", 
 		"Extern", "Identifier", "IntegerLiteral", "FloatLiteral", "StringLiteral", 
-		"Whitespace", "Newline", "BlockComment", "LineComment"
+		"Whitespace", "Newline", "BlockComment", "LineComment", "UnexpectedCharacter"
 	};
 	public static readonly IVocabulary DefaultVocabulary = new Vocabulary(_LiteralNames, _SymbolicNames);
 
@@ -3444,7 +3444,7 @@ public partial class DaedalusParser : Parser {
 
 	private static char[] _serializedATN = {
 		'\x3', '\x608B', '\xA72A', '\x8133', '\xB9ED', '\x417C', '\x3BE7', '\x7786', 
-		'\x5964', '\x3', '>', '\x1E6', '\x4', '\x2', '\t', '\x2', '\x4', '\x3', 
+		'\x5964', '\x3', '?', '\x1E6', '\x4', '\x2', '\t', '\x2', '\x4', '\x3', 
 		'\t', '\x3', '\x4', '\x4', '\t', '\x4', '\x4', '\x5', '\t', '\x5', '\x4', 
 		'\x6', '\t', '\x6', '\x4', '\a', '\t', '\a', '\x4', '\b', '\t', '\b', 
 		'\x4', '\t', '\t', '\t', '\x4', '\n', '\t', '\n', '\x4', '\v', '\t', '\v', 

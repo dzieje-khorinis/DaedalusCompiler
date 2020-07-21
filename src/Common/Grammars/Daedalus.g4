@@ -31,6 +31,8 @@ Newline : ('\r''\n'?| '\n') -> skip;
 BlockComment :   '/*' .*? '*/' -> skip;
 LineComment :   '//' ~[\r\n]* -> skip ;
 
+UnexpectedCharacter : . ;
+
 // fragments
 fragment IdStart : GermanCharacter | [a-zA-Z_];
 fragment IdContinue : IdStart | Digit | SpecialCharacter;
