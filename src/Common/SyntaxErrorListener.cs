@@ -74,39 +74,5 @@ namespace Common
                 Message=message,
             });
         }
-        
-        public override void ReportAmbiguity(
-            Parser recognizer,
-            DFA dfa,
-            int startIndex,
-            int stopIndex,
-            bool exact,
-            BitSet ambigAlts,
-            ATNConfigSet configs)
-        {
-            Console.WriteLine("Dupa blada");
-        }
-
-        public override void ReportAttemptingFullContext(
-            Parser recognizer,
-            DFA dfa,
-            int startIndex,
-            int stopIndex,
-            BitSet conflictingAlts,
-            SimulatorState conflictState)
-        {
-            Console.WriteLine("Dupa blada");
-        }
-
-        public override void ReportContextSensitivity(
-            Parser recognizer,
-            DFA dfa,
-            int startIndex,
-            int stopIndex,
-            int prediction,
-            SimulatorState acceptState)
-        {
-            Console.WriteLine("Dupa blada");
-        }
     }
 }
