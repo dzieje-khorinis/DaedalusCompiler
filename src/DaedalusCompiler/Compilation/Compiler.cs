@@ -22,6 +22,8 @@ namespace DaedalusCompiler.Compilation
         private readonly bool _strictSyntax;
         private readonly HashSet<string> _globallySuppressedCodes;
         private readonly bool _verbose;
+        private readonly string _srcEncoding;
+        private readonly string _builtinsPath;
 
         private readonly OutputUnitsBuilder _ouBuilder;
         public DatFile DatFile;
@@ -62,6 +64,8 @@ namespace DaedalusCompiler.Compilation
             _strictSyntax = options.StrictSyntax;
             _globallySuppressedCodes = options.GloballySuppressedCodes;
             _verbose = options.Verbose;
+            _srcEncoding = options.SrcEncoding ?? "Windows-1250";
+            _builtinsPath = options.BuiltinPath;
 
 
             if (_generateOutputUnits)
@@ -250,9 +254,9 @@ namespace DaedalusCompiler.Compilation
 
         private string GetBuiltinsPath()
         {
-            string programStartPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-
-            return Path.Combine(Path.GetDirectoryName(programStartPath), "DaedalusBuiltins");
+            return string.IsNullOrEmpty(_builtinsPath)
+                ? Path.Combine(AppContext.BaseDirectory, "DaedalusBuiltins")
+                : _builtinsPath;;
         }
 
         public void SetCompilationDateTimeText(string compilationDateTimeText)
@@ -267,7 +271,7 @@ namespace DaedalusCompiler.Compilation
 
         private string GetFileContent(string filePath)
         {
-            return File.ReadAllText(filePath, Encoding.GetEncoding(1250));
+            return File.ReadAllText(filePath, Encoding.GetEncoding(_srcEncoding));
         }
 
         public static DaedalusParser GetParserForText(string input)
@@ -290,6 +294,8 @@ namespace DaedalusCompiler.Compilation
         public bool StrictSyntax;
         public HashSet<string> GloballySuppressedCodes;
         public bool Verbose;
+        public string SrcEncoding;
+        public string BuiltinPath;
     }
 
     public class ParseResult

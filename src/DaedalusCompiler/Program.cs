@@ -24,6 +24,9 @@ namespace DaedalusCompiler
                 "-r|--runtime FILE_PATH         daedalus externals path (default: g2nk builtins dependant on .src file name)\n" +
                 "-o|--output-dat FILE_PATH      .DAT file path(default: \"output\" dir in working directory)\n\n" +
                 
+                "-e|--builtinsPath FOLDER_PATH  path to builtin gothic methods definitions, default \"DaedalusBuiltins\" in compiler exe dir\n\n" +
+                "-e|--encoding FILE_PATH        .D files encoding (default: \"Windows-1250\", ex. \"UTF8\")\n\n" +
+                
                 "-g|--gen-ou                    generate extra output units files (ou.cls and ou.bin)\n" +
                 "-u|--output-ou DIR_PATH        .ou files directory path (used only if --gen-ou flag is provided)\n\n" +
                 
@@ -74,12 +77,15 @@ namespace DaedalusCompiler
             var verbose = false;
             var strict = false;
             var getVersion = false;
-            bool detectUnused = false;
-            bool caseSensitiveCode = false;
-            string srcFilePath = String.Empty;
-            string runtimePath = String.Empty;
-            string outputPathDat = String.Empty;
-            string outputPathOuDir = "output";
+            var detectUnused = false;
+            var caseSensitiveCode = false;
+            var srcFilePath = string.Empty;
+            var runtimePath = string.Empty;
+            var outputPathDat = string.Empty;
+            var builtinsPath = string.Empty;
+            var outputPathOuDir = "output";
+            var encoding = "Windows-1250";
+
             List<string> zenPaths = new List<string>();
 
             HashSet<string> suppressCodes = new HashSet<string>();
@@ -90,6 +96,9 @@ namespace DaedalusCompiler
 
                 {"r|runtime=", v => runtimePath = v},
                 {"o|output-dat=", v => outputPathDat = v},
+                
+                {"b|builtins=", v => builtinsPath = v},
+                {"e|encoding=", v => encoding = v},
 
                 {"g|gen-ou", v => generateOutputUnits = true},
                 {"u|output-ou=", v => outputPathOuDir = v},
@@ -163,18 +172,17 @@ namespace DaedalusCompiler
             else
             {
                 CompileDaedalus(zenPaths, srcFilePath, runtimePath, outputPathDat, outputPathOuDir, verbose,
-                    generateOutputUnits, strict, suppressCodes);
+                    generateOutputUnits, strict, suppressCodes, encoding, builtinsPath);
             }
         }
 
-        static void CompileDaedalus(List<string> zenPaths, string srcFilePath, string runtimePath, string outputPathDat,
+        public static void CompileDaedalus(List<string> zenPaths, string srcFilePath, string runtimePath, string outputPathDat,
             string outputPathOuDir, bool verbose, bool generateOutputUnits, bool strictSyntax,
-            HashSet<string> suppressCodes)
+            HashSet<string> suppressCodes, string encoding, string builtinPath)
         {
             bool compiledSuccessfully = false;
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
-
             try
             {
                 CreateDirectory(outputPathOuDir);
@@ -189,7 +197,9 @@ namespace DaedalusCompiler
                     ZenPaths = zenPaths,
                     StrictSyntax = strictSyntax,
                     GloballySuppressedCodes = suppressCodes,
-                    Verbose = verbose
+                    Verbose = verbose,
+                    SrcEncoding = encoding,
+                    BuiltinPath = builtinPath
                 };
                 Compiler compiler = new Compiler(compilationOptions);
                 compiledSuccessfully = compiler.Compile();
