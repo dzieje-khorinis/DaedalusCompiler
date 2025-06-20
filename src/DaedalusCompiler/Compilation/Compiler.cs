@@ -2,28 +2,22 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Antlr4.Runtime.Tree;
 using Common;
 using Common.SemanticAnalysis;
 using Common.Zen;
 using DaedalusCompiler.Dat;
+using DaedalusCompiler.Resources;
 
 namespace DaedalusCompiler.Compilation
 {
     public class Compiler
     {
-        private readonly List<string> _scriptPaths;
-        private readonly string _runtimePath;
-        private readonly string _outputPathDat;
-        private readonly bool _generateOutputUnits;
-        private readonly string _outputPathOuDir;
-        private readonly List<string> _zenPaths;
-        private readonly bool _strictSyntax;
-        private readonly HashSet<string> _globallySuppressedCodes;
-        private readonly bool _verbose;
-        private readonly string _srcEncoding;
-        private readonly string _builtinsPath;
+        private readonly List<ScriptResource> _scriptResources = new();
+
+        private readonly CompilationOptions _compilerOptions;
 
         private readonly OutputUnitsBuilder _ouBuilder;
         public DatFile DatFile;
@@ -31,46 +25,15 @@ namespace DaedalusCompiler.Compilation
 
         public Compiler(CompilationOptions options)
         {
-            _scriptPaths = new List<string>();
-            
-            string absoluteSrcFilePath = Path.GetFullPath(options.SrcFilePath);
+            _compilerOptions = options;
+            var absoluteSrcFilePath = Path.GetFullPath(options.SrcFilePath);
+            AddBuiltinTypesToScriptList(absoluteSrcFilePath);
+            var scriptPaths = SrcFileHelper.LoadScriptsFilePaths(absoluteSrcFilePath);
+            _scriptResources.AddRange(scriptPaths.Select(ScriptResource.Of));
 
-            _runtimePath = options.RuntimePath;
-            if (_runtimePath == String.Empty)
+            if (_compilerOptions.GenerateOutputUnits)
             {
-                string srcFileNameLowerWithoutExtension = Path.GetFileNameWithoutExtension(absoluteSrcFilePath).ToLower();
-                _runtimePath = Path.Combine(GetBuiltinsPath(), srcFileNameLowerWithoutExtension + ".d");
-            }
-    
-            if (File.Exists(_runtimePath))
-            {
-                _scriptPaths.Add(_runtimePath);
-            }
-            else
-            {
-                if (_verbose && options.RuntimePath != String.Empty)
-                {
-                    Console.WriteLine($"Specified runtime {_runtimePath} doesn't exist.");
-                }
-                _runtimePath = null;
-            }
-            
-            _scriptPaths.AddRange(SrcFileHelper.LoadScriptsFilePaths(absoluteSrcFilePath));
-
-            _outputPathDat = options.OutputPathDat;
-            _generateOutputUnits = options.GenerateOutputUnits;
-            _outputPathOuDir = options.OutputPathOuDir;
-            _zenPaths = options.ZenPaths;
-            _strictSyntax = options.StrictSyntax;
-            _globallySuppressedCodes = options.GloballySuppressedCodes;
-            _verbose = options.Verbose;
-            _srcEncoding = options.SrcEncoding ?? "Windows-1250";
-            _builtinsPath = options.BuiltinPath;
-
-
-            if (_generateOutputUnits)
-            {
-                _ouBuilder = new OutputUnitsBuilder(_verbose);
+                _ouBuilder = new OutputUnitsBuilder(_compilerOptions.Verbose);
             }
 
             DatFile = null;
@@ -98,7 +61,7 @@ namespace DaedalusCompiler.Compilation
 
         public ParseResult Parse()
         {
-            ZenLoader zenLoader = new ZenLoader(_zenPaths, _verbose);
+            ZenLoader zenLoader = new ZenLoader(_compilerOptions.ZenPaths, _compilerOptions.Verbose);
             if (zenLoader.Load() != 0)
             {
                 return null;
@@ -112,18 +75,15 @@ namespace DaedalusCompiler.Compilation
 
             int syntaxErrorsCount = 0;
             List<List<SyntaxError>> syntaxErrorsPerFile = new List<List<SyntaxError>>();
-            
-            int runtimeIndex = -1;
-            if (File.Exists(_runtimePath))
-            {
-                runtimeIndex = 0;
-            }
-            
-            for (int i = 0; i < _scriptPaths.Count; i++)
-            {
-                if (_verbose) Console.WriteLine($"[{i + 1}/{_scriptPaths.Count}]Parsing{(runtimeIndex==i ? " runtime":"")}: {_scriptPaths[i]}");
 
-                string fileContent = GetFileContent(_scriptPaths[i]);
+            for (int i = 0; i < _scriptResources.Count; i++)
+            {
+                var scriptResource = _scriptResources[i];
+                if (_compilerOptions.Verbose)
+                    Console.WriteLine(
+                        $"[{i + 1}/{_scriptResources.Count}]Parsing{(scriptResource.IsBuiltIn ? " runtime" : "")}: {scriptResource.Path}");
+
+                string fileContent = GetFileContent(scriptResource);
                 DaedalusParser parser = GetParserForText(fileContent);
 
                 SyntaxErrorListener syntaxErrorListener = new SyntaxErrorListener();
@@ -134,7 +94,7 @@ namespace DaedalusCompiler.Compilation
                 syntaxErrorsPerFile.Add(syntaxErrorListener.SyntaxErrors);
 
                 string[] fileContentLines = fileContent.Split(Environment.NewLine);
-                filesPaths.Add(_scriptPaths[i]);
+                filesPaths.Add(scriptResource.Path);
                 filesContentsLines.Add(fileContentLines);
                 filesContents.Add(fileContent);
 
@@ -189,8 +149,8 @@ namespace DaedalusCompiler.Compilation
 
             SemanticErrorsCollectingVisitor semanticErrorsCollectingVisitor = new SemanticErrorsCollectingVisitor(
                 new StdErrorLogger(),
-                _strictSyntax,
-                _globallySuppressedCodes);
+                _compilerOptions.StrictSyntax,
+                _compilerOptions.GloballySuppressedCodes);
 
             semanticErrorsCollectingVisitor.VisitTree(semanticAnalyzer.AbstractSyntaxTree);
 
@@ -236,28 +196,21 @@ namespace DaedalusCompiler.Compilation
             AssemblyBuildingVisitor assemblyBuildingVisitor = new AssemblyBuildingVisitor(options.SymbolTable);
             assemblyBuildingVisitor.VisitTree(options.AbstractSyntaxTree);
 
-            if (_generateOutputUnits)
+            if (_compilerOptions.GenerateOutputUnits)
             {
                 foreach (string filesContent in options.FilesContents)
                 {
                     _ouBuilder.ParseText(filesContent);
                 }
 
-                _ouBuilder.SaveOutputUnits(_outputPathOuDir);
+                _ouBuilder.SaveOutputUnits(_compilerOptions.OutputPathOuDir);
             }
 
             DatBuilder datBuilder = new DatBuilder(options.SymbolTable, options.SymbolsWithInstructions);
             DatFile = datBuilder.GetDatFile();
-            DatFile.Save(_outputPathDat);
+            DatFile.Save(_compilerOptions.OutputPathDat, Encoding.GetEncoding(_compilerOptions.DstEncoding));
         }
 
-
-        private string GetBuiltinsPath()
-        {
-            return string.IsNullOrEmpty(_builtinsPath)
-                ? Path.Combine(AppContext.BaseDirectory, "DaedalusBuiltins")
-                : _builtinsPath;;
-        }
 
         public void SetCompilationDateTimeText(string compilationDateTimeText)
         {
@@ -269,9 +222,11 @@ namespace DaedalusCompiler.Compilation
             _ouBuilder.SetGenerationUserName(userName);
         }
 
-        private string GetFileContent(string filePath)
+        private string GetFileContent(ScriptResource scriptResource)
         {
-            return File.ReadAllText(filePath, Encoding.GetEncoding(_srcEncoding));
+            return scriptResource.IsBuiltIn
+                ? ResourcesHelper.Get(scriptResource.Path)
+                : File.ReadAllText(scriptResource.Path, Encoding.GetEncoding(_compilerOptions.SrcEncoding));
         }
 
         public static DaedalusParser GetParserForText(string input)
@@ -281,21 +236,54 @@ namespace DaedalusCompiler.Compilation
             CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
             return new DaedalusParser(commonTokenStream);
         }
+
+        private void AddBuiltinTypesToScriptList(string srcPath)
+        {
+            if (_compilerOptions.SkipBuiltinTypes) return;
+            switch (Path.GetFileNameWithoutExtension(srcPath).ToLower())
+            {
+                case "menu":
+                    _scriptResources.Add(MenuD);
+                    break;
+                case "gothic":
+                    _scriptResources.Add(GothicD);
+                    break;
+            }
+        }
+
+        private static readonly ScriptResource MenuD = new()
+        {
+            IsBuiltIn = true,
+            Path = ResourcesHelper.GetPath(ResourceType.MenuD)
+        };
+
+        private static readonly ScriptResource GothicD = new()
+        {
+            IsBuiltIn = true,
+            Path = ResourcesHelper.GetPath(ResourceType.GothicD)
+        };
     }
+
 
     public class CompilationOptions
     {
-        public string SrcFilePath;
-        public string RuntimePath;
-        public string OutputPathDat;
-        public bool GenerateOutputUnits;
-        public string OutputPathOuDir;
-        public List<string> ZenPaths;
-        public bool StrictSyntax;
-        public HashSet<string> GloballySuppressedCodes;
-        public bool Verbose;
-        public string SrcEncoding;
-        public string BuiltinPath;
+        public string SrcFilePath = string.Empty;
+        public string OutputPathDat = string.Empty;
+        public bool GenerateOutputUnits = false;
+        public string OutputPathOuDir = "output";
+        public List<string> ZenPaths = new();
+        public bool StrictSyntax = false;
+        public bool SkipBuiltinTypes = false;
+
+        public HashSet<string> GloballySuppressedCodes = new()
+        {
+            NamesNotMatchingCaseWiseWarning.WCode,
+            UnusedSymbolWarning.WCode
+        };
+
+        public bool Verbose = false;
+        public string SrcEncoding = "Windows-1250";
+        public string DstEncoding = "Windows-1250";
     }
 
     public class ParseResult
@@ -314,5 +302,12 @@ namespace DaedalusCompiler.Compilation
         public Dictionary<string, Symbol> SymbolTable;
         public List<BlockSymbol> SymbolsWithInstructions;
         public List<string> FilesContents;
+    }
+
+    public class ScriptResource
+    {
+        public string Path;
+        public bool IsBuiltIn;
+        public static ScriptResource Of(string path) => new() { Path = path };
     }
 }

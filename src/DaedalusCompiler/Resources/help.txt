@@ -1,0 +1,52 @@
+Optional args description:
+-ie|--input-encoding ENCODING  .D files encoding (default: "Windows-1250", ex. "UTF8")
+
+-o|--output-dat FILE_PATH      .DAT file path(default: "output" dir in working directory)
+-oe|--output-encoding ENCODING .DAT file encoding (default: "Windows-1250", ex. "UTF8")
+
+-g|--gen-ou                    generate extra output units files (ou.cls and ou.bin)
+-u|--output-ou DIR_PATH        .ou files directory path (used only if --gen-ou flag is provided)
+
+-t|--skip-types                by default compiler add methods definitions for basic gothic types(only for gothic.src and menu.src), 
+-x|--strict                    use more strict syntax version (warnings become errors)
+-c|--case-sensitive-code       symbol usage must match definition case-sensitive
+-s|--suppress WCODE:[WCODE...] colon separated warning codes, to suppress warnings globally
+
+-d|--detect-unused             unused symbols generate warnings
+-z|--zen-paths PATH:[PATH...]  ASCII Zens paths, auto enables --detect-unused flag, wildcard * supported in file name
+
+--version                      displays version of compiler
+-v|--verbose
+
+
+Usage:
+
+In examples below, "gdc" command ([g]othic [d]aedalus [c]ompiler) is alias to run this compiler.
+How can I create this alias? For example, on Linux/MacOS:
+
+If you want to run code directly from cloned repository: 
+   $ alias gdc='dotnet run --project /path/to/DaedalusCompiler.csproj --' 
+
+If you want to run last release: 
+   $ alias gdc='dotnet /path/to/DaedalusCompiler/DaedalusCompiler.dll' 
+
+If you want to run last release (docker): 
+   $ alias gdc='docker run -v "$(pwd)":/usr/workspace dziejekhorinis/daedalus-compiler' 
+
+
+Examples:
+
+generate Gothic.dat file from Gothic.src file in output directory:
+   $ gdc /path/to/Gothic.src
+
+generate result.dat file from Gothic.src file in custom directory, using custom runtime:
+   $ gdc /path/to/Gothic.src --runtime /path/to/runtime.d --output-dat /path/to/result.dat
+
+generate ou.csl, ou.bin and Gothic.dat in output directory, ignore warnings W1 and W2:
+   $ gdc /path/to/Gothic.src --gen-ou --suppress W1:W2
+
+generate Gothic.dat in 'Scripts/_compiled', ou.csl and ou.bin in 'Scripts/Content/Cutscene':
+   $ gdc /path/to/Gothic.src --output-dat "Scripts/_compiled/Gothic.dat" --gen-ou --output-ou "Scripts/Content/Cutscene"
+
+generate Gothic.dat, enable unused symbol detection, provide zen paths to make that detection more accurate':
+   $ gdc /path/to/Gothic.src --zen-paths="/path/to/zens/*.zen" 

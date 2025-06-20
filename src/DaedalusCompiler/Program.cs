@@ -1,11 +1,11 @@
-﻿using System.Linq;
-using System.IO;
-using System;
-using System.Collections.Generic;
-using DaedalusCompiler.Compilation;
+﻿using System;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using Common.SemanticAnalysis;
-
+using DaedalusCompiler.Compilation;
+using DaedalusCompiler.Resources;
+using NDesk.Options;
 
 namespace DaedalusCompiler
 {
@@ -15,109 +15,64 @@ namespace DaedalusCompiler
         private const string AppName = "Daedalus Compiler";
         private const string AppSlug = "daedalus-compiler";
 
-        static void ShowHelp()
+        private static void ShowHelpAndExit()
         {
             Console.WriteLine($"{AppName} {Version}");
             Console.WriteLine($"usage: {AppSlug} SRC_FILE_PATH [<optional args>]");
-            Console.WriteLine(
-                "Optional args description:\n" +
-                "-r|--runtime FILE_PATH         daedalus externals path (default: g2nk builtins dependant on .src file name)\n" +
-                "-o|--output-dat FILE_PATH      .DAT file path(default: \"output\" dir in working directory)\n\n" +
-                
-                "-e|--builtinsPath FOLDER_PATH  path to builtin gothic methods definitions, default \"DaedalusBuiltins\" in compiler exe dir\n\n" +
-                "-e|--encoding FILE_PATH        .D files encoding (default: \"Windows-1250\", ex. \"UTF8\")\n\n" +
-                
-                "-g|--gen-ou                    generate extra output units files (ou.cls and ou.bin)\n" +
-                "-u|--output-ou DIR_PATH        .ou files directory path (used only if --gen-ou flag is provided)\n\n" +
-                
-                "-x|--strict                    use more strict syntax version (warnings become errors)\n" +
-                "-c|--case-sensitive-code       symbol usage must match definition case-sensitive\n" +
-                "-s|--suppress WCODE:[WCODE...] colon separated warning codes, to suppress warnings globally\n\n" +
-
-                "-d|--detect-unused             unused symbols generate warnings\n" +
-                "-z|--zen-paths PATH:[PATH...]  ASCII Zens paths, auto enables --detect-unused flag, wildcard * supported in file name\n\n" +
-                
-                "--version                      displays version of compiler\n" +
-                "-v|--verbose\n\n\n" +
-
-                "Usage:\n\n" +
-
-                "In examples below, \"gdc\" command ([g]othic [d]aedalus [c]ompiler) is alias to run this compiler.\n" +
-                "How can I create this alias? For example, on Linux/MacOS:\n\n" +
-                "If you want to run code directly from cloned repository: \n" + 
-                "   $ alias gdc='dotnet run --project /path/to/DaedalusCompiler.csproj --' \n\n" +
-                "If you want to run last release: \n" + 
-                "   $ alias gdc='dotnet /path/to/DaedalusCompiler/DaedalusCompiler.dll' \n\n" +
-                "If you want to run last release (docker): \n" + 
-                "   $ alias gdc='docker run -v \"$(pwd)\":/usr/workspace dziejekhorinis/daedalus-compiler' \n\n\n" +
-
-                "Examples:\n\n" +
-
-                "generate Gothic.dat file from Gothic.src file in output directory:\n" +
-                "   $ gdc /path/to/Gothic.src\n\n" +
-
-                "generate result.dat file from Gothic.src file in custom directory, using custom runtime:\n" +
-                "   $ gdc /path/to/Gothic.src --runtime /path/to/runtime.d --output-dat /path/to/result.dat\n\n" +
-
-                "generate ou.csl, ou.bin and Gothic.dat in output directory, ignore warnings W1 and W2:\n" +
-                "   $ gdc /path/to/Gothic.src --gen-ou --suppress W1:W2\n\n" +
-
-                "generate Gothic.dat in 'Scripts/_compiled', ou.csl and ou.bin in 'Scripts/Content/Cutscene':\n" +
-                "   $ gdc /path/to/Gothic.src --output-dat \"Scripts/_compiled/Gothic.dat\" --gen-ou --output-ou \"Scripts/Content/Cutscene\"\n\n" +
-
-                "generate Gothic.dat, enable unused symbol detection, provide zen paths to make that detection more accurate':\n" +
-                "   $ gdc /path/to/Gothic.src --zen-paths=\"/path/to/zens/*.zen\" \n"
-            );
+            Console.WriteLine(ResourcesHelper.Get(ResourceType.HelpTxt));
+            Environment.Exit(0);
         }
 
         static void HandleOptionsParser(string[] args)
         {
-            var loadHelp = false;
-            var generateOutputUnits = false;
-            var verbose = false;
-            var strict = false;
-            var getVersion = false;
-            var detectUnused = false;
-            var caseSensitiveCode = false;
-            var srcFilePath = string.Empty;
-            var runtimePath = string.Empty;
-            var outputPathDat = string.Empty;
-            var builtinsPath = string.Empty;
-            var outputPathOuDir = "output";
-            var encoding = "Windows-1250";
+            CompilationOptions options = new CompilationOptions();
 
-            List<string> zenPaths = new List<string>();
 
-            HashSet<string> suppressCodes = new HashSet<string>();
-
-            var optionSet = new NDesk.Options.OptionSet()
+            var optionSet = new OptionSet()
             {
-                {"h|?|help", v => loadHelp = true},
+                { "h|?|help", _ => ShowHelpAndExit() },
 
-                {"r|runtime=", v => runtimePath = v},
-                {"o|output-dat=", v => outputPathDat = v},
-                
-                {"b|builtins=", v => builtinsPath = v},
-                {"e|encoding=", v => encoding = v},
+                { "ie|input-encoding=", v => options.SrcEncoding = v },
 
-                {"g|gen-ou", v => generateOutputUnits = true},
-                {"u|output-ou=", v => outputPathOuDir = v},
+                { "o|output-dat=", v => options.OutputPathDat = v },
+                { "oe|output-encoding=", v => options.DstEncoding = v },
 
-                {"x|strict", v => strict = true},
-                {"i|case-sensitive-code", v => caseSensitiveCode = true},
-                {"s|suppress=", v => suppressCodes = v.Split(':').ToHashSet()},
+                { "g|gen-ou", _ => options.GenerateOutputUnits = true },
+                { "u|output-ou=", v => options.OutputPathOuDir = v },
 
-                {"d|detect-unused", v => detectUnused = true},
-                {"z|zen-paths=", v => zenPaths = v.Split(':').ToList()},
+                {
+                    "i|case-sensitive-code",
+                    _ => options.GloballySuppressedCodes.Remove(NamesNotMatchingCaseWiseWarning.WCode)
+                },
+                {
+                    "s|suppress=", v => v.Split(':').ToList().ForEach(code => options.GloballySuppressedCodes.Add(code))
+                },
 
-                {"version", v => getVersion = true},
-                {"v|verbose", v => verbose = true},
+                { "d|detect-unused", _ => options.GloballySuppressedCodes.Remove(UnusedSymbolWarning.WCode) },
+                {
+                    "z|zen-paths=", v =>
+                    {
+                        options.ZenPaths = v.Split(':').ToList();
+                        options.GloballySuppressedCodes.Remove(UnusedSymbolWarning.WCode);
+                    }
+                },
+
+                { "skip-types", _ => options.SkipBuiltinTypes = true },
+                { "x|strict", _ => options.StrictSyntax = true },
+                {
+                    "version", _ =>
+                    {
+                        Console.WriteLine($"v{Version}");
+                        Environment.Exit(1);
+                    }
+                },
+                { "v|verbose", _ => options.Verbose = true },
                 {
                     "<>", v =>
                     {
-                        if (srcFilePath == String.Empty)
+                        if (options.SrcFilePath == string.Empty)
                         {
-                            srcFilePath = v;
+                            options.SrcFilePath = v;
                         }
                         else
                         {
@@ -132,97 +87,67 @@ namespace DaedalusCompiler
             {
                 optionSet.Parse(args);
             }
-            catch (NDesk.Options.OptionException e)
+            catch (OptionException e)
             {
-                Console.WriteLine(e.Message);
-                return;
+                ExitFailed(e.Message);
             }
 
-            if (zenPaths.Count > 0)
+
+            if (string.IsNullOrEmpty(options.SrcFilePath))
             {
-                detectUnused = true;
+                ShowHelpAndExit();
             }
 
-            if (!caseSensitiveCode)
+
+            if (options.OutputPathDat == string.Empty)
             {
-                suppressCodes.Add(NamesNotMatchingCaseWiseWarning.WCode);
+                var srcFileName = Path.GetFileNameWithoutExtension(options.OutputPathDat).ToLower();
+                options.OutputPathDat = Path.Combine("output", srcFileName + ".dat");
             }
 
-            if (!detectUnused)
-            {
-                suppressCodes.Add(UnusedSymbolWarning.WCode);
-            }
-
-            if (getVersion)
-            {
-                Console.WriteLine($"v{Version}");
-                return;
-            }
-
-            if (outputPathDat == String.Empty)
-            {
-                string srcFileName = Path.GetFileNameWithoutExtension(srcFilePath).ToLower();
-                outputPathDat = Path.Combine("output", srcFileName + ".dat");
-            }
-
-            if (loadHelp || srcFilePath == String.Empty)
-            {
-                ShowHelp();
-            }
-            else
-            {
-                CompileDaedalus(zenPaths, srcFilePath, runtimePath, outputPathDat, outputPathOuDir, verbose,
-                    generateOutputUnits, strict, suppressCodes, encoding, builtinsPath);
-            }
+            CompileDaedalus(options);
         }
 
-        public static void CompileDaedalus(List<string> zenPaths, string srcFilePath, string runtimePath, string outputPathDat,
-            string outputPathOuDir, bool verbose, bool generateOutputUnits, bool strictSyntax,
-            HashSet<string> suppressCodes, string encoding, string builtinPath)
+        private static void CompileDaedalus(CompilationOptions compilationOptions)
         {
-            bool compiledSuccessfully = false;
-            Stopwatch stopwatch = new Stopwatch();
+            var stopwatch = new Stopwatch();
             stopwatch.Start();
             try
             {
-                CreateDirectory(outputPathOuDir);
-                CreateDirectory(outputPathDat, isFilePath: true);
-                CompilationOptions compilationOptions = new CompilationOptions
-                {
-                    SrcFilePath = srcFilePath,
-                    RuntimePath = runtimePath,
-                    OutputPathDat = outputPathDat,
-                    GenerateOutputUnits = generateOutputUnits,
-                    OutputPathOuDir = outputPathOuDir,
-                    ZenPaths = zenPaths,
-                    StrictSyntax = strictSyntax,
-                    GloballySuppressedCodes = suppressCodes,
-                    Verbose = verbose,
-                    SrcEncoding = encoding,
-                    BuiltinPath = builtinPath
-                };
-                Compiler compiler = new Compiler(compilationOptions);
-                compiledSuccessfully = compiler.Compile();
+                CreateDirectory(compilationOptions.OutputPathOuDir);
+                CreateDirectory(compilationOptions.OutputPathDat, isFilePath: true);
+                var compiler = new Compiler(compilationOptions);
+                PrintCompilationResult(compiler.Compile(), stopwatch.Elapsed);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                PrintCompilationResult(false, stopwatch.Elapsed);
             }
+        }
 
-            if (compiledSuccessfully)
+        static void PrintCompilationResult(bool compilationResult, TimeSpan timeElapsed)
+        {
+            if (compilationResult)
             {
-                Console.WriteLine($"Compilation completed successfully. Total time: {stopwatch.Elapsed}");
+                Console.WriteLine($"Compilation completed successfully. Total time: {timeElapsed}");
+                Environment.Exit(0);
             }
             else
             {
-                Console.WriteLine($"Compilation FAILED. Total time: {stopwatch.Elapsed}");
-                Environment.Exit(1);
+                ExitFailed($"Compilation FAILED. Total time: {timeElapsed}");
             }
+        }
+
+        static void ExitFailed(string message)
+        {
+            Console.WriteLine(message);
+            Environment.Exit(1);
         }
 
         static void CreateDirectory(string directoryPath, bool isFilePath = false)
         {
-            if (directoryPath == String.Empty)
+            if (directoryPath == string.Empty)
             {
                 return;
             }
@@ -238,8 +163,7 @@ namespace DaedalusCompiler
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ERROR: {ex.Message}");
-                Environment.Exit(1);
+                ExitFailed($"ERROR: {ex.Message}");
             }
         }
 

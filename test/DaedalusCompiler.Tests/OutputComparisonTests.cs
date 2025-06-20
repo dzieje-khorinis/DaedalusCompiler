@@ -108,7 +108,6 @@ namespace DaedalusCompiler.Tests
                 CompilationOptions compilationOptions = new CompilationOptions
                 {
                     SrcFilePath = srcPath,
-                    RuntimePath = String.Empty,
                     OutputPathDat = outputPathDat,
                     GenerateOutputUnits = generateOutputUnits,
                     OutputPathOuDir = outputPathOuDir,

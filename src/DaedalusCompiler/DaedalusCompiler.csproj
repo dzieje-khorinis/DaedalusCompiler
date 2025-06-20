@@ -5,20 +5,9 @@
     <TargetFrameworks>net6.0</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="DaedalusBuiltins\camera.d" />
-    <None Remove="DaedalusBuiltins\fight.d" />
-    <None Remove="DaedalusBuiltins\gothic.d" />
-    <EmbeddedResource Include="DaedalusBuiltins\gothic.d">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <None Remove="DaedalusBuiltins\menu.d" />
-    <EmbeddedResource Include="DaedalusBuiltins\menu.d">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <None Remove="DaedalusBuiltins\music.d" />
-    <None Remove="DaedalusBuiltins\particlefx.d" />
-    <None Remove="DaedalusBuiltins\sfx.d" />
-    <None Remove="DaedalusBuiltins\visualfx.d" />
+    <EmbeddedResource Include="Resources\gothic.d" />
+    <EmbeddedResource Include="Resources\menu.d" />
+    <EmbeddedResource Include="Resources\help.txt" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Antlr4.Runtime.Standard" Version="4.7.1.1" />

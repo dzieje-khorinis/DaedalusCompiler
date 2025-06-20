@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 
 namespace DaedalusCompiler.Dat
@@ -39,11 +40,11 @@ namespace DaedalusCompiler.Dat
             DatTokens = LoadDatTokens(reader);
         }
 
-        public void Save(string path)
+        public void Save(string path, Encoding encoding)
         {
             using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write))
             {
-                var writer = new DatBinaryWriter(stream);
+                var writer = new DatBinaryWriter(stream, encoding);
 
                 WriteToStreamProgram(writer);
             }
