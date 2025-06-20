@@ -10,26 +10,28 @@ namespace DaedalusCompiler.Dat
     /// </summary>
     public class DatBinaryWriter
     {
-        private readonly Stream output;
+        private readonly Stream _output;
+        private readonly Encoding _encoding;
 
-        public DatBinaryWriter(Stream output)
+        public DatBinaryWriter(Stream output, Encoding encoding)
         {
-            this.output = output;
+            _output = output;
+            _encoding = encoding;
         }
 
         public void Write(byte[] value)
         {
-            output.Write(value, 0, value.Length);
+            _output.Write(value, 0, value.Length);
         }
 
         public void Write(byte value)
         {
-            output.WriteByte(value);
+            _output.WriteByte(value);
         }
 
         public void Write(char value)
         {
-            output.WriteByte((byte)value);
+            _output.WriteByte((byte)value);
         }
 
         public void Write(int value)
@@ -49,7 +51,7 @@ namespace DaedalusCompiler.Dat
 
         public void Write(string value)
         {
-            var bytes = Encoding.GetEncoding(1250).GetBytes(value).Concat(new byte[] { 0x0A }).ToArray();
+            var bytes = _encoding.GetBytes(value).Concat(new byte[] { 0x0A }).ToArray();
 
             // handling for special char FF
             if (bytes[0] == 0x79)
