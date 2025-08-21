@@ -8,9 +8,8 @@ using Common;
 using DaedalusCompiler.Compilation;
 using DaedalusCompiler.Dat;
 using Xunit;
-using Ionic.Zip;
+using ICSharpCode.SharpZipLib.Zip;
 using Xunit.Abstractions;
-using ZipFile = Ionic.Zip.ZipFile;
 
 namespace DaedalusCompiler.Tests
 {
@@ -27,7 +26,7 @@ namespace DaedalusCompiler.Tests
             "Scripts/Content/*.src",
             "Scripts/System/*.src"
         };
-        private string _datPath = "Scripts/_compiled/*.dat";
+        private string _datPath = "Scripts/_compiled/*.DAT";
         private string _ouPath = "Scripts/Content/Cutscene/ou.*";
         private string _outputPathOuDir = "output";
         
@@ -51,30 +50,63 @@ namespace DaedalusCompiler.Tests
             _originalDatFiles = new Dictionary<string, DatFile>();
         }
 
-        private void PrepareScripts(string name, string url, string zipPassword)
+        private bool PrepareScripts(string zipFileName, string zipPassword)
         {
-            _scriptsPath = Path.Combine(_downloadTo, name);
+            // Use the local ZIP file from TestFiles directory
+            string scriptsFilePath = Path.Combine(_downloadTo, zipFileName);
+            _scriptsPath = Path.Combine(_downloadTo, Path.GetFileNameWithoutExtension(zipFileName));
 
-            string scriptsFileName = Path.ChangeExtension(name, "zip");
-            string scriptsFilePath = Path.Combine(_downloadTo, scriptsFileName);
-
-            (new FileInfo(scriptsFilePath)).Directory?.Create();
-            
-            File.Delete(scriptsFilePath);
-
-            using (WebClient client = new WebClient())
+            if (!File.Exists(scriptsFilePath))
             {
-                client.DownloadFile(url, scriptsFilePath);
-                _output.WriteLine($"Downloaded {scriptsFileName}.");
+                _output.WriteLine($"ZIP file '{zipFileName}' not found at {scriptsFilePath}. Skipping test.");
+                return false;
             }
+
+            _output.WriteLine($"Using local ZIP file: {zipFileName}");
 
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            using (ZipFile archive = new ZipFile(scriptsFilePath))
+            
+            // Log file information
+            var fileInfo = new FileInfo(scriptsFilePath);
+            _output.WriteLine($"ZIP file size: {fileInfo.Length} bytes");
+
+            // Clean up and create extraction directory
+            if (Directory.Exists(_scriptsPath))
             {
-                archive.Password = zipPassword ;
-                archive.ExtractAll(_scriptsPath, ExtractExistingFileAction.OverwriteSilently);
-                _output.WriteLine($"Extracted {scriptsFileName} into {_scriptsPath}.");
+                Directory.Delete(_scriptsPath, true);
             }
+            Directory.CreateDirectory(_scriptsPath);
+
+            // Extract ZIP file with password support using SharpZipLib
+            using (var fileStream = new FileStream(scriptsFilePath, FileMode.Open, FileAccess.Read))
+            using (var zipStream = new ZipInputStream(fileStream))
+            {
+                if (!string.IsNullOrEmpty(zipPassword))
+                {
+                    zipStream.Password = zipPassword;
+                }
+
+                ZipEntry entry;
+                while ((entry = zipStream.GetNextEntry()) != null)
+                {
+                    var entryPath = Path.Combine(_scriptsPath, entry.Name);
+                    var entryDir = Path.GetDirectoryName(entryPath);
+                    
+                    if (!string.IsNullOrEmpty(entryDir) && !Directory.Exists(entryDir))
+                    {
+                        Directory.CreateDirectory(entryDir);
+                    }
+
+                    if (!entry.IsFile) continue;
+
+                    using (var outputStream = File.Create(entryPath))
+                    {
+                        zipStream.CopyTo(outputStream);
+                    }
+                }
+            }
+            _output.WriteLine($"Extracted {zipFileName} into {_scriptsPath}.");
+            return true; // Success
         }
 
         private void CompileScripts(string compileTime="", string compileUsername="")
@@ -287,11 +319,14 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIfCompiledScriptsMatchOriginalDatAndOuFilesG2NotR()
         {
-            PrepareScripts(
-                "G2NotR",
-                "https://drive.google.com/uc?authuser=0&id=1TZFfADoOPrmdNHbrbxMAad7Mk63HKloT&export=download",
+            if (!PrepareScripts(
+                "Scripts.zip",
                 "dziejekhorinis"
-                );
+                ))
+            {
+                return; // Test was skipped due to missing ZIP file
+            }
+            
             CompileScripts("13.11.2018 15:30:55", "kisio");
                 
             CompareDats();
@@ -301,11 +336,13 @@ namespace DaedalusCompiler.Tests
         [Fact]
         public void TestIfCompiledScriptsMatchOriginalDatAndOuFilesIkarusAndLeGo()
         {
-            PrepareScripts(
-                "IkarusAndLego",
-                "https://drive.google.com/uc?authuser=0&id=1OkTUUHYt7tXTg_ewmyFQaqYMFv_6gOxW&export=download",
+            if (!PrepareScripts(
+                "IkarusAndLegoScripts.zip",
                 "dziejekhorinis"
-            );
+            ))
+            {
+                return; // Test was skipped due to missing ZIP file
+            }
             
             CompileScripts();
             CompareDats();

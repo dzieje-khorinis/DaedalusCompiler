@@ -1,7 +1,7 @@
 # Daedalus Compiler  [![Build](https://circleci.com/gh/dzieje-khorinis/DaedalusCompiler.png)](https://github.com/dzieje-khorinis/DaedalusCompiler)
 This is repo with Daedalus ( Gothic I, II scripting language ) compiler.
-Project is using internally ANTL4 for parsing source code.
-The compiler itself is written in .NET Core C#.
+Project is using internally ANTLR4 for parsing source code.
+The compiler itself is written in .NET 8 C# with modern features like nullable reference types and single-file publishing.
 
 You can listen about our compiler on below video. Video has bad audio quality, we encourage you to turn on subtitles, on the current moment we have subtitles for Polish, German and English language.
 
@@ -9,7 +9,7 @@ You can listen about our compiler on below video. Video has bad audio quality, w
 ## Download
 [Download](https://github.com/dzieje-khorinis/DaedalusCompiler/releases/latest) latest version of the tool
 ## Requirements
-* Installed .NET Core 2+ runtime
+* Installed .NET 8+ runtime
 
 ## Standard Usage
 * Download & unpack [latest release](https://github.com/dzieje-khorinis/DaedalusCompiler/releases/latest).
@@ -51,8 +51,22 @@ $ gdc /path/to/Gothic.src --output-dat "Scripts/_compiled/Gothic.dat" --gen-ou -
 $ gdc /path/to/Gothic.src --zen-paths="/path/to/zens/*.zen" 
 ```
 
+## Modern .NET 8 Features
 
-## Usage with docker ( .NET Core runtime not needed )
+This upgraded version includes several modern .NET 8 features:
+* **Single-file deployment**: Publish as a single executable file
+* **Nullable reference types**: Enhanced null safety and better IntelliSense
+* **Improved performance**: Better startup time and runtime performance
+* **ReadyToRun compilation**: Faster application startup
+
+### Publishing as a single executable
+```sh
+dotnet publish -c Release -r win-x64 --self-contained
+dotnet publish -c Release -r linux-x64 --self-contained
+dotnet publish -c Release -r osx-x64 --self-contained
+```
+
+## Usage with docker ( .NET 8 runtime not needed )
 Our compiler is available on docker hub, if you have installed docker you should be able to run compiler with:
 
 
@@ -66,9 +80,9 @@ Path which is argument of docker run is relative to folder where we made mount.
 docker run -v "$(pwd)":/usr/workspace dziejekhorinis/daedalus-compiler ./Gothic.src
 ```
 ## Configure development environment
-Project uses ANTLR4 and .NET Core C#. 
+Project uses ANTLR4 and .NET 8 C#. 
 
-For .NET Core C# it is recomended to use Visual Studio 2017.
+For .NET 8 C# it is recommended to use Visual Studio 2022 or later, or Visual Studio Code with the C# extension.
 
 For ANTLR4 you can use InteliJ or Visual Studio Code.
 

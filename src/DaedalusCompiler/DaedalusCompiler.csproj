@@ -2,49 +2,30 @@
   <PropertyGroup>
     <VersionPrefix>1.0.1</VersionPrefix>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>12.0</LangVersion>
+    
+    <!-- Modern .NET 8 features -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>false</SelfContained>
+    <PublishReadyToRun>true</PublishReadyToRun>
   </PropertyGroup>
+
   <ItemGroup>
-    <None Remove="DaedalusBuiltins\camera.d" />
-    <None Remove="DaedalusBuiltins\fight.d" />
-    <None Remove="DaedalusBuiltins\gothic.d" />
-    <EmbeddedResource Include="DaedalusBuiltins\gothic.d">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <None Remove="DaedalusBuiltins\menu.d" />
-    <EmbeddedResource Include="DaedalusBuiltins\menu.d">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <None Remove="DaedalusBuiltins\music.d" />
-    <None Remove="DaedalusBuiltins\particlefx.d" />
-    <None Remove="DaedalusBuiltins\sfx.d" />
-    <None Remove="DaedalusBuiltins\visualfx.d" />
+    <Content Include="DaedalusBuiltins\gothic.d">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DaedalusBuiltins\menu.d">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
+
   <ItemGroup>
-    <PackageReference Include="Antlr4.Runtime.Standard" Version="4.7.1.1" />
-    <PackageReference Include="NDesk.Options.Core" Version="1.2.5" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.5.0" />
+    <PackageReference Include="Antlr4.Runtime.Standard" Version="4.13.1" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
   </ItemGroup>
-  <ItemGroup>
-    <_UnmanagedRegistrationCache Remove="obj\DaedalusCompiler.csproj.UnmanagedRegistration.cache" />
-  </ItemGroup>
-  <ItemGroup>
-    <_ResolveComReferenceCache Remove="obj\Debug\netcoreapp2.1\DaedalusCompiler.csproj.ResolveComReference.cache" />
-  </ItemGroup>
-  <ItemGroup>
-    <IntermediateAssembly Remove="obj\Debug\netcoreapp2.1\DaedalusCompiler.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <_DebugSymbolsIntermediatePath Remove="obj\Debug\netcoreapp2.1\DaedalusCompiler.pdb" />
-  </ItemGroup>
-  <ItemGroup>
-    <_DeploymentManifestEntryPoint Remove="obj\Debug\netcoreapp2.1\DaedalusCompiler.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <ApplicationManifest Remove="obj\Debug\netcoreapp2.1\DaedalusCompiler.dll.manifest" />
-  </ItemGroup>
-  <ItemGroup>
-    <DeployManifest Remove="obj\Debug\netcoreapp2.1\DaedalusCompiler.application" />
-  </ItemGroup>
+
   <Import Project="..\Common\Common.projitems" Label="Shared" />
 </Project>

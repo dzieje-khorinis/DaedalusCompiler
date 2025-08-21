@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
@@ -348,7 +349,7 @@ namespace Common.SemanticAnalysis
 
 		public override ASTNode VisitFloatLiteralValue([NotNull] DaedalusParser.FloatLiteralValueContext context)
 		{
-			return new FloatLiteralNode(GetLocation(context), float.Parse(context.GetText()));
+			return new FloatLiteralNode(GetLocation(context), float.Parse(context.GetText(), CultureInfo.InvariantCulture));
 		}
 
 		public override ASTNode VisitStringLiteralValue([NotNull] DaedalusParser.StringLiteralValueContext context)

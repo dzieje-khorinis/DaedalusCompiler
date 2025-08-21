@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using DaedalusCompiler.Compilation;
 using System.Diagnostics;
 using Common.SemanticAnalysis;
+using System.CommandLine;
+using System.CommandLine.Invocation;
 
 
 namespace DaedalusCompiler
@@ -69,102 +71,142 @@ namespace DaedalusCompiler
 
         static void HandleOptionsParser(string[] args)
         {
-            var loadHelp = false;
-            var generateOutputUnits = false;
-            var verbose = false;
-            var strict = false;
-            var getVersion = false;
-            bool detectUnused = false;
-            bool caseSensitiveCode = false;
-            string srcFilePath = String.Empty;
-            string runtimePath = String.Empty;
-            string outputPathDat = String.Empty;
-            string outputPathOuDir = "output";
-            List<string> zenPaths = new List<string>();
+            // Create argument for the source file path
+            var srcFileArgument = new Argument<string?>(
+                name: "srcFile",
+                description: "Path to the .src file to compile"
+            );
 
-            HashSet<string> suppressCodes = new HashSet<string>();
+            // Create options
+            var runtimeOption = new Option<string?>(
+                aliases: new[] { "-r", "--runtime" },
+                description: "Daedalus externals path (default: g2nk builtins dependant on .src file name)"
+            );
 
-            var optionSet = new NDesk.Options.OptionSet()
+            var outputDatOption = new Option<string?>(
+                aliases: new[] { "-o", "--output-dat" },
+                description: ".DAT file path (default: \"output\" dir in working directory)"
+            );
+
+            var genOuOption = new Option<bool>(
+                aliases: new[] { "-g", "--gen-ou" },
+                description: "Generate extra output units files (ou.cls and ou.bin)"
+            );
+
+            var outputOuOption = new Option<string>(
+                aliases: new[] { "-u", "--output-ou" },
+                description: ".ou files directory path (used only if --gen-ou flag is provided)",
+                getDefaultValue: () => "output"
+            );
+
+            var strictOption = new Option<bool>(
+                aliases: new[] { "-x", "--strict" },
+                description: "Use more strict syntax version (warnings become errors)"
+            );
+
+            var caseSensitiveOption = new Option<bool>(
+                aliases: new[] { "-c", "--case-sensitive-code" },
+                description: "Symbol usage must match definition case-sensitive"
+            );
+
+            var suppressOption = new Option<string?>(
+                aliases: new[] { "-s", "--suppress" },
+                description: "Colon separated warning codes, to suppress warnings globally"
+            );
+
+            var detectUnusedOption = new Option<bool>(
+                aliases: new[] { "-d", "--detect-unused" },
+                description: "Unused symbols generate warnings"
+            );
+
+            var zenPathsOption = new Option<string?>(
+                aliases: new[] { "-z", "--zen-paths" },
+                description: "ASCII Zens paths, auto enables --detect-unused flag, wildcard * supported in file name"
+            );
+
+            var verboseOption = new Option<bool>(
+                aliases: new[] { "-v", "--verbose" },
+                description: "Enable verbose output"
+            );
+
+            // Create root command (System.CommandLine automatically provides --version)
+            var rootCommand = new RootCommand($"{AppName} {Version}")
             {
-                {"h|?|help", v => loadHelp = true},
-
-                {"r|runtime=", v => runtimePath = v},
-                {"o|output-dat=", v => outputPathDat = v},
-
-                {"g|gen-ou", v => generateOutputUnits = true},
-                {"u|output-ou=", v => outputPathOuDir = v},
-
-                {"x|strict", v => strict = true},
-                {"i|case-sensitive-code", v => caseSensitiveCode = true},
-                {"s|suppress=", v => suppressCodes = v.Split(':').ToHashSet()},
-
-                {"d|detect-unused", v => detectUnused = true},
-                {"z|zen-paths=", v => zenPaths = v.Split(':').ToList()},
-
-                {"version", v => getVersion = true},
-                {"v|verbose", v => verbose = true},
-                {
-                    "<>", v =>
-                    {
-                        if (srcFilePath == String.Empty)
-                        {
-                            srcFilePath = v;
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Invalid positional argument: '{v}'");
-                            Environment.Exit(1);
-                        }
-                    }
-                },
+                srcFileArgument,
+                runtimeOption,
+                outputDatOption,
+                genOuOption,
+                outputOuOption,
+                strictOption,
+                caseSensitiveOption,
+                suppressOption,
+                detectUnusedOption,
+                zenPathsOption,
+                verboseOption
             };
 
-            try
+            // Set the handler using the modern System.CommandLine approach
+            rootCommand.SetHandler((InvocationContext context) =>
             {
-                optionSet.Parse(args);
-            }
-            catch (NDesk.Options.OptionException e)
-            {
-                Console.WriteLine(e.Message);
-                return;
-            }
+                var srcFile = context.ParseResult.GetValueForArgument(srcFileArgument);
+                var runtime = context.ParseResult.GetValueForOption(runtimeOption);
+                var outputDat = context.ParseResult.GetValueForOption(outputDatOption);
+                var genOu = context.ParseResult.GetValueForOption(genOuOption);
+                var outputOu = context.ParseResult.GetValueForOption(outputOuOption);
+                var strict = context.ParseResult.GetValueForOption(strictOption);
+                var caseSensitive = context.ParseResult.GetValueForOption(caseSensitiveOption);
+                var suppress = context.ParseResult.GetValueForOption(suppressOption);
+                var detectUnused = context.ParseResult.GetValueForOption(detectUnusedOption);
+                var zenPaths = context.ParseResult.GetValueForOption(zenPathsOption);
+                var verbose = context.ParseResult.GetValueForOption(verboseOption);
 
-            if (zenPaths.Count > 0)
-            {
-                detectUnused = true;
-            }
+                if (string.IsNullOrEmpty(srcFile))
+                {
+                    ShowHelp();
+                    return;
+                }
 
-            if (!caseSensitiveCode)
-            {
-                suppressCodes.Add(NamesNotMatchingCaseWiseWarning.WCode);
-            }
+                // Process zen paths
+                List<string> zenPathsList = new List<string>();
+                if (!string.IsNullOrEmpty(zenPaths))
+                {
+                    zenPathsList = zenPaths.Split(':').ToList();
+                    detectUnused = true; // Auto enable detect-unused when zen paths are provided
+                }
 
-            if (!detectUnused)
-            {
-                suppressCodes.Add(UnusedSymbolWarning.WCode);
-            }
+                // Process suppress codes
+                HashSet<string> suppressCodes = new HashSet<string>();
+                if (!string.IsNullOrEmpty(suppress))
+                {
+                    suppressCodes = suppress.Split(':').ToHashSet();
+                }
 
-            if (getVersion)
-            {
-                Console.WriteLine($"v{Version}");
-                return;
-            }
+                // Add default suppress codes based on options
+                if (!caseSensitive)
+                {
+                    suppressCodes.Add(NamesNotMatchingCaseWiseWarning.WCode);
+                }
 
-            if (outputPathDat == String.Empty)
-            {
-                string srcFileName = Path.GetFileNameWithoutExtension(srcFilePath).ToLower();
-                outputPathDat = Path.Combine("output", srcFileName + ".dat");
-            }
+                if (!detectUnused)
+                {
+                    suppressCodes.Add(UnusedSymbolWarning.WCode);
+                }
 
-            if (loadHelp || srcFilePath == String.Empty)
-            {
-                ShowHelp();
-            }
-            else
-            {
-                CompileDaedalus(zenPaths, srcFilePath, runtimePath, outputPathDat, outputPathOuDir, verbose,
-                    generateOutputUnits, strict, suppressCodes);
-            }
+                // Set default output path if not provided
+                string finalOutputDat = outputDat ?? "";
+                if (string.IsNullOrEmpty(finalOutputDat))
+                {
+                    string srcFileName = Path.GetFileNameWithoutExtension(srcFile).ToLower();
+                    finalOutputDat = Path.Combine("output", srcFileName + ".dat");
+                }
+
+                // Compile
+                CompileDaedalus(zenPathsList, srcFile, runtime ?? "", finalOutputDat, outputOu, 
+                    verbose, genOu, strict, suppressCodes);
+            });
+
+            // Parse and invoke
+            rootCommand.Invoke(args);
         }
 
         static void CompileDaedalus(List<string> zenPaths, string srcFilePath, string runtimePath, string outputPathDat,
