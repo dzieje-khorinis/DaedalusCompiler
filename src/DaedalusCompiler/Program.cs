@@ -2,6 +2,7 @@
 using System.IO;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using DaedalusCompiler.Compilation;
 using System.Diagnostics;
 using Common.SemanticAnalysis;
@@ -13,7 +14,7 @@ namespace DaedalusCompiler
 {
     static class Program
     {
-        private const string Version = "0.9.2";
+        private static readonly string Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "unknown";
         private const string AppName = "Daedalus Compiler";
         private const string AppSlug = "daedalus-compiler";
 

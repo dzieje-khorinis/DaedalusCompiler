@@ -1,4 +1,4 @@
-# Daedalus Compiler  [![Build](https://circleci.com/gh/dzieje-khorinis/DaedalusCompiler.png)](https://github.com/dzieje-khorinis/DaedalusCompiler)
+# Daedalus Compiler  [![CI](https://github.com/dzieje-khorinis/DaedalusCompiler/actions/workflows/ci.yml/badge.svg)](https://github.com/dzieje-khorinis/DaedalusCompiler/actions/workflows/ci.yml) [![Release](https://github.com/dzieje-khorinis/DaedalusCompiler/actions/workflows/release.yml/badge.svg)](https://github.com/dzieje-khorinis/DaedalusCompiler/actions/workflows/release.yml)
 This is repo with Daedalus ( Gothic I, II scripting language ) compiler.
 Project is using internally ANTLR4 for parsing source code.
 The compiler itself is written in .NET 8 C# with modern features like nullable reference types and single-file publishing.
