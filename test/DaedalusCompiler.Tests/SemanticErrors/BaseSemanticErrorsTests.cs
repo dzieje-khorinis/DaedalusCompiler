@@ -18,7 +18,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 return null;
             }
 
-            string[] codeLines = text.Trim().Split(Environment.NewLine);
+            string[] codeLines = text.Trim().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
             for (int i = 1; i < codeLines.Length; ++i)
             {
@@ -39,7 +39,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
             Code = PreProcessText(Code);
             Zen = PreProcessText(Zen);
 
-            string[] compilationOutputLines = ExpectedCompilationOutput.Trim().Split(Environment.NewLine);
+            string[] compilationOutputLines = ExpectedCompilationOutput.Trim().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
             for (int i = 1; i < compilationOutputLines.Length; ++i)
             {
                 compilationOutputLines[i] = compilationOutputLines[i].Substring(16);
