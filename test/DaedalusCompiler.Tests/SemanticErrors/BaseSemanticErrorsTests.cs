@@ -53,7 +53,16 @@ namespace DaedalusCompiler.Tests.SemanticErrors
             StringBufforErrorLogger logger = new StringBufforErrorLogger();
             TestsHelper testsHelper = new TestsHelper(logger, strictSyntax, detectUnused);
             testsHelper.RunCode(Code, Zen);
-            Assert.Equal(ExpectedCompilationOutput, logger.GetBuffer().Trim());
+            
+            string actualOutput = logger.GetBuffer().Trim();
+            string expectedOutput = ExpectedCompilationOutput;
+            
+            // Use Assert.True with detailed message to show full strings
+            Assert.True(expectedOutput == actualOutput, 
+                $"Compilation output mismatch!\n\n" +
+                $"EXPECTED:\n{expectedOutput}\n\n" +
+                $"ACTUAL:\n{actualOutput}\n\n" +
+                $"Platform: {Environment.OSVersion.Platform}");
         }
     }
 }
