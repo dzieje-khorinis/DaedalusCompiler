@@ -3,6 +3,7 @@
     <VersionPrefix>1.0.1</VersionPrefix>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>gdc</AssemblyName>
     <Nullable>enable</Nullable>
     <LangVersion>12.0</LangVersion>
     

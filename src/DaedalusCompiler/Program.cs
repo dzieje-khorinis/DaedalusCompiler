@@ -39,17 +39,6 @@ namespace DaedalusCompiler
                 "--version                      displays version of compiler\n" +
                 "-v|--verbose\n\n\n" +
 
-                "Usage:\n\n" +
-
-                "In examples below, \"gdc\" command ([g]othic [d]aedalus [c]ompiler) is alias to run this compiler.\n" +
-                "How can I create this alias? For example, on Linux/MacOS:\n\n" +
-                "If you want to run code directly from cloned repository: \n" + 
-                "   $ alias gdc='dotnet run --project /path/to/DaedalusCompiler.csproj --' \n\n" +
-                "If you want to run last release: \n" + 
-                "   $ alias gdc='dotnet /path/to/DaedalusCompiler/DaedalusCompiler.dll' \n\n" +
-                "If you want to run last release (docker): \n" + 
-                "   $ alias gdc='docker run -v \"$(pwd)\":/usr/workspace dziejekhorinis/daedalus-compiler' \n\n\n" +
-
                 "Examples:\n\n" +
 
                 "generate Gothic.dat file from Gothic.src file in output directory:\n" +
