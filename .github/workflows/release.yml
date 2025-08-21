@@ -57,13 +57,14 @@ jobs:
     
     - name: Extract version from tag
       id: extract_version
+      shell: bash
       run: |
         if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
           VERSION=${GITHUB_REF#refs/tags/v}
           echo "Building version: $VERSION"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
         else
-          echo "version=0.9.2" >> $GITHUB_OUTPUT
+          echo "version=0.0.1" >> $GITHUB_OUTPUT
         fi
     
     - name: Setup .NET
