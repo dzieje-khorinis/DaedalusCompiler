@@ -29,7 +29,7 @@ jobs:
       run: dotnet build --no-restore --configuration Release
       
     - name: Test
-      run: dotnet test --no-build --configuration Release --filter "DaedalusCompiler.Tests.SemanticErrors.DeclarationUsagesCheckerTests.TestUnusedSymbol" --verbosity detailed --logger trx --results-directory "TestResults-${{ matrix.os }}"
+      run: dotnet test --no-build --configuration Release --verbosity normal --logger trx --results-directory "TestResults-${{ matrix.os }}"
       
     - name: Upload test results
       uses: actions/upload-artifact@v4
