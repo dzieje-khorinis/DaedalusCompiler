@@ -1,7 +1,6 @@
 using System.Text.RegularExpressions;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Common.Zen;
 
 namespace Common.SemanticAnalysis
@@ -165,17 +164,10 @@ namespace Common.SemanticAnalysis
         {
             _symbolTable = symbolTable;
             
-            // Debug ZEN parsing on Windows
-            Console.WriteLine($"=== ZEN PARSING DEBUG ===");
-            Console.WriteLine($"ZenFileNodes count: {zenFileNodes?.Count ?? -1}");
-            
             foreach (ZenFileNode zenFileNode in zenFileNodes)
             {
-                Console.WriteLine($"ZenFileNode: VobTree={zenFileNode.VobTree != null}, Children={zenFileNode.VobTree?.Children?.Count ?? -1}");
-                
                 if (zenFileNode.VobTree == null)
                 {
-                    Console.WriteLine("  Skipping: VobTree is null");
                     continue;
                 }
 
@@ -202,38 +194,26 @@ namespace Common.SemanticAnalysis
                             continue;
                         }
 
-                        string textValueUpper = attrNode.TextValue.ToUpper();
+                        string textValueUpper = attrNode.TextValue.Trim().ToUpper();
                         
                         switch (attrNode.Name.ToUpper())
                         {
                             case "ONSTATEFUNC":
                                 _onStateFuncs.Add(textValueUpper + "_S1");
-                                Console.WriteLine($"  Found onStateFunc: {attrNode.TextValue} -> {textValueUpper}_S1");
                                 break;
                             case "CONDITIONFUNC":
                                 _conditionFuncs.Add(textValueUpper);
-                                Console.WriteLine($"  Found conditionFunc: {attrNode.TextValue} -> {textValueUpper}");
                                 break;
                             case "SCRIPTFUNC":
                                 _scriptFuncs.Add(textValueUpper);
-                                Console.WriteLine($"  Found scriptFunc: {attrNode.TextValue} -> {textValueUpper}");
                                 break;
                             case "FOCUSNAME":
                                 _focusNames.Add(textValueUpper);
-                                Console.WriteLine($"  Found focusName: {attrNode.TextValue} -> {textValueUpper}");
                                 break;
                         }
                     }
                 }
             }
-            
-            // Debug summary
-            Console.WriteLine($"=== ZEN PARSING SUMMARY ===");
-            Console.WriteLine($"OnStateFuncs: [{string.Join(", ", _onStateFuncs)}]");
-            Console.WriteLine($"ConditionFuncs: [{string.Join(", ", _conditionFuncs)}]");
-            Console.WriteLine($"ScriptFuncs: [{string.Join(", ", _scriptFuncs)}]");
-            Console.WriteLine($"FocusNames: [{string.Join(", ", _focusNames)}]");
-            Console.WriteLine($"=== END ZEN DEBUG ===");
         }
 
         public void Check(List<DeclarationNode> declarationNodes)
