@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Antlr4.Runtime.Tree;
 using Common.SemanticAnalysis;
 using Common.Zen;
@@ -103,7 +104,16 @@ namespace Common
             // UnusedSymbolWarning
             // NamesNotMatchingCaseWiseWarning
             DeclarationUsagesChecker declarationUsagesChecker = new DeclarationUsagesChecker(SymbolTable, _zenFileNodes);
-            declarationUsagesChecker.Check(symbolTableCreationVisitor.DeclarationNodes);
+            
+            // Sort DeclarationNodes for deterministic cross-platform behavior
+            var sortedDeclarationNodes = symbolTableCreationVisitor.DeclarationNodes
+                .OrderBy(node => node.Location.FileIndex)
+                .ThenBy(node => node.Location.Line)
+                .ThenBy(node => node.Location.Column)
+                .ThenBy(node => node.NameNode.Value)
+                .ToList();
+            
+            declarationUsagesChecker.Check(sortedDeclarationNodes);
             
             // UsageOfNonInitializedVariableWarning
             UninitializedSymbolUsageDetectionVisitor uninitializedSymbolUsageDetectionVisitor = new UninitializedSymbolUsageDetectionVisitor();
