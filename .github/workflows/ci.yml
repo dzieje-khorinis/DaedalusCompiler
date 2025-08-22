@@ -28,9 +28,136 @@ jobs:
     - name: Build
       run: dotnet build --no-restore --configuration Release
       
-    - name: Test
+    - name: Test (Unit Tests)
       run: dotnet test --no-build --configuration Release --verbosity normal --logger trx --results-directory "TestResults-${{ matrix.os }}"
       
+    - name: Publish Build Artifacts
+      run: dotnet publish src/DaedalusCompiler/DaedalusCompiler.csproj --configuration Release --output ./artifacts
+      
+    - name: Install 7zip for password-protected archives
+      shell: bash
+      run: |
+        if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+          sudo apt-get update && sudo apt-get install -y p7zip-full
+        elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+          brew install p7zip
+        elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          choco install 7zip
+        fi
+        
+    - name: E2E Test - Compile Gothic Scripts with Build Artifacts
+      shell: bash
+      run: |
+        cd test/DaedalusCompiler.Tests/TestFiles
+        
+        # Set compiler path based on OS
+        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          COMPILER="../../../artifacts/gdc.exe"
+          echo "Windows detected - using gdc.exe"
+        else
+          COMPILER="../../../artifacts/gdc"
+          chmod +x "$COMPILER"
+          echo "Unix-like OS detected - using gdc with execute permissions"
+        fi
+        
+        echo "Testing E2E with build artifact: $COMPILER"
+        
+        # Verify compiler exists and is executable
+        if [ ! -f "$COMPILER" ]; then
+          echo "❌ Compiler binary not found at: $COMPILER"
+          ls -la ../../../artifacts/
+          exit 1
+        fi
+        
+        # Test compiler version/help (quick validation it works)
+        echo "Verifying compiler binary..."
+        "$COMPILER" --help > /dev/null 2>&1 || echo "⚠️ Compiler help command failed (may be normal)"
+        
+        # Extract Gothic scripts from ZIP
+        echo "=== Extracting Gothic Scripts ==="
+        if [ ! -d "Scripts/Scripts" ]; then
+          echo "Extracting Scripts.zip..."
+          7z x -p"dziejekhorinis" Scripts.zip -y
+        fi
+        
+        # Test compilation of extracted Gothic scripts
+        echo "=== E2E Test: Gothic Scripts ==="
+        cd Scripts/Scripts
+        
+        # Test 1: Relative path compilation
+        if [ -f "System/SFX.src" ]; then
+          echo "Testing SFX.src compilation with relative path..."
+          "$COMPILER" System/SFX.src --verbose
+          if [ $? -eq 0 ]; then
+            echo "✅ Relative path test passed - Gothic SFX.src compiled successfully"
+            RELATIVE_PATH_SUCCESS=true
+          else
+            echo "⚠️ SFX.src failed with relative path, trying ParticleFX.src..."
+            "$COMPILER" System/ParticleFX.src --verbose
+            if [ $? -eq 0 ]; then
+              echo "✅ Relative path test passed - Gothic ParticleFX.src compiled successfully"
+              RELATIVE_PATH_SUCCESS=true
+            else
+              echo "❌ Relative path test failed"
+              RELATIVE_PATH_SUCCESS=false
+            fi
+          fi
+        else
+          echo "⚠️ Expected script files not found in extraction"
+          exit 1
+        fi
+        
+        # Test 2: Absolute path compilation  
+        ABSOLUTE_SFX_PATH="$(pwd)/System/SFX.src"
+        ABSOLUTE_PFX_PATH="$(pwd)/System/ParticleFX.src"
+        
+        echo "Current working directory: $(pwd)"
+        echo "Absolute SFX path: $ABSOLUTE_SFX_PATH"
+        echo "Testing SFX.src compilation with absolute path..."
+        
+        # Verify the absolute path file exists
+        if [ ! -f "$ABSOLUTE_SFX_PATH" ]; then
+          echo "❌ Absolute path file not found: $ABSOLUTE_SFX_PATH"
+          ls -la System/
+          exit 1
+        fi
+        
+        "$COMPILER" "$ABSOLUTE_SFX_PATH" --verbose
+        if [ $? -eq 0 ]; then
+          echo "✅ Absolute path test passed - Gothic SFX.src compiled successfully"
+          ABSOLUTE_PATH_SUCCESS=true
+        else
+          echo "⚠️ SFX.src failed with absolute path, trying ParticleFX.src..."
+          echo "Absolute PFX path: $ABSOLUTE_PFX_PATH"
+          
+          # Verify the fallback file exists
+          if [ ! -f "$ABSOLUTE_PFX_PATH" ]; then
+            echo "❌ Absolute fallback file not found: $ABSOLUTE_PFX_PATH"
+            echo "❌ Absolute path test failed - no suitable script found"
+            ABSOLUTE_PATH_SUCCESS=false
+          else
+            "$COMPILER" "$ABSOLUTE_PFX_PATH" --verbose
+            if [ $? -eq 0 ]; then
+              echo "✅ Absolute path test passed - Gothic ParticleFX.src compiled successfully"
+              ABSOLUTE_PATH_SUCCESS=true
+            else
+              echo "❌ Absolute path test failed"
+              ABSOLUTE_PATH_SUCCESS=false
+            fi
+          fi
+        fi
+        
+        # Validate both tests passed
+        if [ "$RELATIVE_PATH_SUCCESS" = true ] && [ "$ABSOLUTE_PATH_SUCCESS" = true ]; then
+          echo "🎉 E2E tests completed successfully!"
+          echo "✅ Both relative and absolute path compilation verified"
+        else
+          echo "❌ E2E tests failed - path handling issues detected"
+          echo "Relative path success: $RELATIVE_PATH_SUCCESS"
+          echo "Absolute path success: $ABSOLUTE_PATH_SUCCESS"
+          exit 1
+        fi
+        
     - name: Upload test results
       uses: actions/upload-artifact@v4
       if: always()

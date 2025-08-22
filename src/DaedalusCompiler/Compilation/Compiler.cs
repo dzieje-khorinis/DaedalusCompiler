@@ -250,9 +250,10 @@ namespace DaedalusCompiler.Compilation
 
         private string GetBuiltinsPath()
         {
-            string programStartPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            // Use AppContext.BaseDirectory instead of Assembly.Location for single-file app compatibility
+            string programDirectory = System.AppContext.BaseDirectory;
 
-            return Path.Combine(Path.GetDirectoryName(programStartPath), "DaedalusBuiltins");
+            return Path.Combine(programDirectory, "DaedalusBuiltins");
         }
 
         public void SetCompilationDateTimeText(string compilationDateTimeText)
