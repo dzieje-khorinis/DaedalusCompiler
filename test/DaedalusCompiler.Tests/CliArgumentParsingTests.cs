@@ -32,7 +32,7 @@ namespace DaedalusCompiler.Tests
             // Assert
             Assert.Equal("test.src", result.SrcFilePath);
             Assert.Equal(string.Empty, result.RuntimePath);
-            Assert.Equal("output/test.dat", result.OutputPathDat);
+            Assert.Equal(Path.Combine("output", "test.dat"), result.OutputPathDat);
             Assert.Equal("output", result.OutputPathOu);
             Assert.False(result.GenerateOutputUnits);
             Assert.False(result.Strict);
@@ -63,7 +63,7 @@ namespace DaedalusCompiler.Tests
             // Assert
             Assert.Equal("gothic.src", result.SrcFilePath);
             Assert.Equal("runtime.d", result.RuntimePath);
-            Assert.Equal("custom/gothic.dat", result.OutputPathDat);
+            Assert.Equal(Path.Combine("custom", "gothic.dat"), result.OutputPathDat);
             Assert.Equal("customou", result.OutputPathOu);
             Assert.True(result.GenerateOutputUnits);
             Assert.True(result.Strict);
@@ -178,11 +178,11 @@ namespace DaedalusCompiler.Tests
         }
 
         [Theory]
-        [InlineData("Gothic.src", "output/gothic.dat")]
-        [InlineData("FIGHT.SRC", "output/fight.dat")]
-        [InlineData("Menu.SRC", "output/menu.dat")]
-        [InlineData("/full/path/Camera.src", "output/camera.dat")]
-        public void TestOutputPathGenerationVariations(string srcFile, string expectedOutput)
+        [InlineData("Gothic.src", "gothic.dat")]
+        [InlineData("FIGHT.SRC", "fight.dat")]
+        [InlineData("Menu.SRC", "menu.dat")]
+        [InlineData("/full/path/Camera.src", "camera.dat")]
+        public void TestOutputPathGenerationVariations(string srcFile, string expectedFileName)
         {
             // Act
             var result = Program.ProcessCliArguments(
@@ -198,7 +198,8 @@ namespace DaedalusCompiler.Tests
                 zenPaths: null,
                 verbose: false);
 
-            // Assert
+            // Assert - Use Path.Combine for cross-platform compatibility
+            var expectedOutput = Path.Combine("output", expectedFileName);
             Assert.Equal(expectedOutput, result.OutputPathDat);
         }
 
@@ -220,7 +221,7 @@ namespace DaedalusCompiler.Tests
                 verbose: false);
 
             // Assert
-            Assert.Equal("custom/path/myfile.dat", result.OutputPathDat);
+            Assert.Equal(Path.Combine("custom", "path", "myfile.dat"), result.OutputPathDat);
         }
 
         [Fact]
