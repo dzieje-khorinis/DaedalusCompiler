@@ -63,7 +63,7 @@ namespace DaedalusCompiler.Tests
             // Assert
             Assert.Equal("gothic.src", result.SrcFilePath);
             Assert.Equal("runtime.d", result.RuntimePath);
-            Assert.Equal(Path.Combine("custom", "gothic.dat"), result.OutputPathDat);
+            Assert.Equal("custom/gothic.dat", result.OutputPathDat);
             Assert.Equal("customou", result.OutputPathOu);
             Assert.True(result.GenerateOutputUnits);
             Assert.True(result.Strict);
@@ -221,7 +221,8 @@ namespace DaedalusCompiler.Tests
                 verbose: false);
 
             // Assert
-            Assert.Equal(Path.Combine("custom", "path", "myfile.dat"), result.OutputPathDat);
+            // Custom output paths should be preserved exactly as provided by the user
+            Assert.Equal("custom/path/myfile.dat", result.OutputPathDat);
         }
 
         [Fact]
