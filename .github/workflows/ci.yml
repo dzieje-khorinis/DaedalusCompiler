@@ -34,7 +34,6 @@ jobs:
     - name: Publish Build Artifacts
       shell: bash
       run: |
-        echo "Publishing DaedalusCompiler as self-contained..."
         # Create self-contained deployment for the current platform
         if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
           dotnet publish src/DaedalusCompiler/DaedalusCompiler.csproj --configuration Release --output ./artifacts --self-contained true --runtime win-x64 --property:PublishSingleFile=true
@@ -42,30 +41,6 @@ jobs:
           dotnet publish src/DaedalusCompiler/DaedalusCompiler.csproj --configuration Release --output ./artifacts --self-contained true --runtime osx-x64 --property:PublishSingleFile=true
         else
           dotnet publish src/DaedalusCompiler/DaedalusCompiler.csproj --configuration Release --output ./artifacts --self-contained true --runtime linux-x64 --property:PublishSingleFile=true
-        fi
-        echo "Artifacts directory contents:"
-        ls -la ./artifacts/
-        echo "Looking for gdc/gdc.exe in artifacts..."
-        find ./artifacts/ -name "gdc*" -type f || echo "No gdc files found"
-        
-        # Quick validation of the published binary
-        echo "Testing published binary..."
-        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-          if [ -f "./artifacts/gdc.exe" ]; then
-            echo "Validating Windows binary..."
-            ./artifacts/gdc.exe --help > /dev/null 2>&1 && echo "✅ Windows binary works" || echo "⚠️ Windows binary validation failed"
-          fi
-        else
-          if [ -f "./artifacts/gdc" ]; then
-            echo "Validating Unix binary..."
-            chmod +x ./artifacts/gdc
-            echo "Binary file info:"
-            file ./artifacts/gdc || echo "file command failed"
-            echo "Binary dependencies:"
-            ldd ./artifacts/gdc 2>/dev/null || echo "ldd failed (this is normal for static binaries)"
-            echo "Testing binary execution:"
-            ./artifacts/gdc --help > /dev/null 2>&1 && echo "✅ Unix binary works" || echo "⚠️ Unix binary validation failed"
-          fi
         fi
       
     - name: Install 7zip for password-protected archives
@@ -84,120 +59,41 @@ jobs:
       run: |
         cd test/DaedalusCompiler.Tests/TestFiles
         
-        # Set compiler path based on OS and find the actual binary using ABSOLUTE paths
-        # Store the absolute path to avoid working directory issues
+        # Set compiler path using absolute paths to avoid working directory issues
         ARTIFACTS_DIR="$(cd ../../../artifacts && pwd)"
-        echo "Absolute artifacts directory: $ARTIFACTS_DIR"
         
         if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-          # Try to find the Windows executable
-          if [ -f "$ARTIFACTS_DIR/gdc.exe" ]; then
-            COMPILER="$ARTIFACTS_DIR/gdc.exe"
-          elif [ -f "$ARTIFACTS_DIR/DaedalusCompiler.exe" ]; then
-            COMPILER="$ARTIFACTS_DIR/DaedalusCompiler.exe"
-          else
-            # Final fallback: try to find any .exe file in artifacts
-            echo "⚠️ Standard executable names not found, searching for any .exe file..."
-            FOUND_EXEC=$(find "$ARTIFACTS_DIR/" -name "*.exe" -type f 2>/dev/null | head -1)
-            if [ -n "$FOUND_EXEC" ] && [ -f "$FOUND_EXEC" ]; then
-              COMPILER="$FOUND_EXEC"
-              echo "Found executable: $COMPILER"
-            else
-              echo "❌ Could not find any .exe file in artifacts"
-              ls -la "$ARTIFACTS_DIR/"
-              exit 1
-            fi
-          fi
-          echo "Windows detected - using: $COMPILER"
+          COMPILER="$ARTIFACTS_DIR/gdc.exe"
         else
-          # Try to find the Unix executable
-          if [ -f "$ARTIFACTS_DIR/gdc" ]; then
-            COMPILER="$ARTIFACTS_DIR/gdc"
-          elif [ -f "$ARTIFACTS_DIR/DaedalusCompiler" ]; then
-            COMPILER="$ARTIFACTS_DIR/DaedalusCompiler"
-          else
-            # Final fallback: try to find any executable file in artifacts
-            echo "⚠️ Standard executable names not found, searching for any executable..."
-            FOUND_EXEC=$(find "$ARTIFACTS_DIR/" -type f -executable 2>/dev/null | head -1)
-            if [ -n "$FOUND_EXEC" ] && [ -f "$FOUND_EXEC" ]; then
-              COMPILER="$FOUND_EXEC"
-              echo "Found executable: $COMPILER"
-            else
-              echo "❌ Could not find any executable in artifacts"
-              ls -la "$ARTIFACTS_DIR/"
-              exit 1
-            fi
-          fi
+          COMPILER="$ARTIFACTS_DIR/gdc"
           chmod +x "$COMPILER"
-          echo "Unix-like OS detected - using: $COMPILER"
         fi
         
-        echo "Testing E2E with build artifact: $COMPILER"
-        
-        # Debug: Show current directory and verify compiler
-        echo "Current directory: $(pwd)"
-        echo "Artifacts directory: $ARTIFACTS_DIR"
-        ls -la "$ARTIFACTS_DIR/"
-        
-        # Verify compiler exists and is executable
+        # Verify compiler exists
         if [ ! -f "$COMPILER" ]; then
           echo "❌ Compiler binary not found at: $COMPILER"
-          echo "Available files in artifacts:"
-          ls -la "$ARTIFACTS_DIR/"
           exit 1
         fi
         
-        # Test compiler version/help (quick validation it works)
-        echo "Verifying compiler binary..."
-        echo "Compiler path being tested: $COMPILER"
-        echo "File existence check: [ -f \"$COMPILER\" ] = $([ -f "$COMPILER" ] && echo "true" || echo "false")"
-        echo "File executable check: [ -x \"$COMPILER\" ] = $([ -x "$COMPILER" ] && echo "true" || echo "false")"
-        
-        # Try to run with detailed error output
-        echo "Testing compiler execution..."
-        if "$COMPILER" --help > /dev/null 2>&1; then
-          echo "✅ Compiler validation successful"
-        else
-          echo "⚠️ Compiler validation failed, trying with detailed output:"
-          "$COMPILER" --help 2>&1 || echo "Execution failed"
-        fi
-        
         # Extract Gothic scripts from ZIP
-        echo "=== Extracting Gothic Scripts ==="
         if [ ! -d "Scripts/Scripts" ]; then
-          echo "Extracting Scripts.zip..."
           7z x -p"dziejekhorinis" Scripts.zip -y
         fi
         
         # Test compilation of extracted Gothic scripts
-        echo "=== E2E Test: Gothic Scripts ==="
         cd Scripts/Scripts
         
         # Test 1: Relative path compilation
         if [ -f "System/SFX.src" ]; then
-          echo "Testing SFX.src compilation with relative path..."
-          echo "Command: $COMPILER System/SFX.src --verbose"
-          echo "Working directory: $(pwd)"
-          
-          "$COMPILER" System/SFX.src --verbose 2>&1
-          COMPILE_EXIT_CODE=$?
-          if [ $COMPILE_EXIT_CODE -eq 0 ]; then
-            echo "✅ Relative path test passed - Gothic SFX.src compiled successfully"
+          if "$COMPILER" System/SFX.src > /dev/null 2>&1; then
+            RELATIVE_PATH_SUCCESS=true
+          elif "$COMPILER" System/ParticleFX.src > /dev/null 2>&1; then
             RELATIVE_PATH_SUCCESS=true
           else
-            echo "⚠️ SFX.src failed with relative path (exit code: $COMPILE_EXIT_CODE), trying ParticleFX.src..."
-            "$COMPILER" System/ParticleFX.src --verbose 2>&1
-            COMPILE_EXIT_CODE=$?
-            if [ $COMPILE_EXIT_CODE -eq 0 ]; then
-              echo "✅ Relative path test passed - Gothic ParticleFX.src compiled successfully"
-              RELATIVE_PATH_SUCCESS=true
-            else
-              echo "❌ Relative path test failed (exit code: $COMPILE_EXIT_CODE)"
-              RELATIVE_PATH_SUCCESS=false
-            fi
+            RELATIVE_PATH_SUCCESS=false
           fi
         else
-          echo "⚠️ Expected script files not found in extraction"
+          echo "❌ Expected script files not found in extraction"
           exit 1
         fi
         
@@ -205,52 +101,24 @@ jobs:
         ABSOLUTE_SFX_PATH="$(pwd)/System/SFX.src"
         ABSOLUTE_PFX_PATH="$(pwd)/System/ParticleFX.src"
         
-        echo "Current working directory: $(pwd)"
-        echo "Absolute SFX path: $ABSOLUTE_SFX_PATH"
-        echo "Testing SFX.src compilation with absolute path..."
-        
-        # Verify the absolute path file exists
         if [ ! -f "$ABSOLUTE_SFX_PATH" ]; then
-          echo "❌ Absolute path file not found: $ABSOLUTE_SFX_PATH"
-          ls -la System/
+          echo "❌ Script files not found"
           exit 1
         fi
         
-        "$COMPILER" "$ABSOLUTE_SFX_PATH" --verbose 2>&1
-        COMPILE_EXIT_CODE=$?
-        if [ $COMPILE_EXIT_CODE -eq 0 ]; then
-          echo "✅ Absolute path test passed - Gothic SFX.src compiled successfully"
+        if "$COMPILER" "$ABSOLUTE_SFX_PATH" > /dev/null 2>&1; then
+          ABSOLUTE_PATH_SUCCESS=true
+        elif [ -f "$ABSOLUTE_PFX_PATH" ] && "$COMPILER" "$ABSOLUTE_PFX_PATH" > /dev/null 2>&1; then
           ABSOLUTE_PATH_SUCCESS=true
         else
-          echo "⚠️ SFX.src failed with absolute path (exit code: $COMPILE_EXIT_CODE), trying ParticleFX.src..."
-          echo "Absolute PFX path: $ABSOLUTE_PFX_PATH"
-          
-          # Verify the fallback file exists
-          if [ ! -f "$ABSOLUTE_PFX_PATH" ]; then
-            echo "❌ Absolute fallback file not found: $ABSOLUTE_PFX_PATH"
-            echo "❌ Absolute path test failed - no suitable script found"
-            ABSOLUTE_PATH_SUCCESS=false
-          else
-            "$COMPILER" "$ABSOLUTE_PFX_PATH" --verbose 2>&1
-            COMPILE_EXIT_CODE=$?
-            if [ $COMPILE_EXIT_CODE -eq 0 ]; then
-              echo "✅ Absolute path test passed - Gothic ParticleFX.src compiled successfully"
-              ABSOLUTE_PATH_SUCCESS=true
-            else
-              echo "❌ Absolute path test failed (exit code: $COMPILE_EXIT_CODE)"
-              ABSOLUTE_PATH_SUCCESS=false
-            fi
-          fi
+          ABSOLUTE_PATH_SUCCESS=false
         fi
         
         # Validate both tests passed
         if [ "$RELATIVE_PATH_SUCCESS" = true ] && [ "$ABSOLUTE_PATH_SUCCESS" = true ]; then
-          echo "🎉 E2E tests completed successfully!"
-          echo "✅ Both relative and absolute path compilation verified"
+          echo "✅ E2E tests passed"
         else
-          echo "❌ E2E tests failed - path handling issues detected"
-          echo "Relative path success: $RELATIVE_PATH_SUCCESS"
-          echo "Absolute path success: $ABSOLUTE_PATH_SUCCESS"
+          echo "❌ E2E tests failed"
           exit 1
         fi
         
