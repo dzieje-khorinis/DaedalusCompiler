@@ -32,6 +32,7 @@ jobs:
       run: dotnet test --no-build --configuration Release --verbosity normal --logger trx --results-directory "TestResults-${{ matrix.os }}"
       
     - name: Publish Build Artifacts
+      shell: bash
       run: |
         echo "Publishing DaedalusCompiler as self-contained..."
         # Create self-contained deployment for the current platform
