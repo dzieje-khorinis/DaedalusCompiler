@@ -129,7 +129,7 @@ namespace DaedalusCompiler.Compilation
                 syntaxErrorsCount += syntaxErrorListener.SyntaxErrors.Count;
                 syntaxErrorsPerFile.Add(syntaxErrorListener.SyntaxErrors);
 
-                string[] fileContentLines = fileContent.Split(Environment.NewLine);
+                string[] fileContentLines = fileContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
                 filesPaths.Add(_scriptPaths[i]);
                 filesContentsLines.Add(fileContentLines);
                 filesContents.Add(fileContent);
@@ -250,9 +250,10 @@ namespace DaedalusCompiler.Compilation
 
         private string GetBuiltinsPath()
         {
-            string programStartPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            // Use AppContext.BaseDirectory instead of Assembly.Location for single-file app compatibility
+            string programDirectory = System.AppContext.BaseDirectory;
 
-            return Path.Combine(Path.GetDirectoryName(programStartPath), "DaedalusBuiltins");
+            return Path.Combine(programDirectory, "DaedalusBuiltins");
         }
 
         public void SetCompilationDateTimeText(string compilationDateTimeText)

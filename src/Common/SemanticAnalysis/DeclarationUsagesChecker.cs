@@ -163,6 +163,7 @@ namespace Common.SemanticAnalysis
         public DeclarationUsagesChecker(Dictionary<string, Symbol> symbolTable, List<ZenFileNode> zenFileNodes)
         {
             _symbolTable = symbolTable;
+            
             foreach (ZenFileNode zenFileNode in zenFileNodes)
             {
                 if (zenFileNode.VobTree == null)
@@ -193,7 +194,7 @@ namespace Common.SemanticAnalysis
                             continue;
                         }
 
-                        string textValueUpper = attrNode.TextValue.ToUpper();
+                        string textValueUpper = attrNode.TextValue.Trim().ToUpper();
                         
                         switch (attrNode.Name.ToUpper())
                         {

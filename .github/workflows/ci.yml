@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+      
+    - name: Test (Unit Tests)
+      run: dotnet test --no-build --configuration Release --verbosity normal --logger trx --results-directory "TestResults-${{ matrix.os }}"
+      
+    - name: Publish Build Artifacts
+      shell: bash
+      run: |
+        # Create self-contained deployment for the current platform
+        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          dotnet publish src/DaedalusCompiler/DaedalusCompiler.csproj --configuration Release --output ./artifacts --self-contained true --runtime win-x64 --property:PublishSingleFile=true
+        elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+          dotnet publish src/DaedalusCompiler/DaedalusCompiler.csproj --configuration Release --output ./artifacts --self-contained true --runtime osx-x64 --property:PublishSingleFile=true
+        else
+          dotnet publish src/DaedalusCompiler/DaedalusCompiler.csproj --configuration Release --output ./artifacts --self-contained true --runtime linux-x64 --property:PublishSingleFile=true
+        fi
+      
+    - name: Install 7zip for password-protected archives
+      shell: bash
+      run: |
+        if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+          sudo apt-get update && sudo apt-get install -y p7zip-full
+        elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+          brew install p7zip
+        elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          choco install 7zip
+        fi
+        
+    - name: E2E Test - Compile Gothic Scripts with Build Artifacts
+      shell: bash
+      run: |
+        cd test/DaedalusCompiler.Tests/TestFiles
+        
+        # Set compiler path using absolute paths to avoid working directory issues
+        ARTIFACTS_DIR="$(cd ../../../artifacts && pwd)"
+        
+        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          COMPILER="$ARTIFACTS_DIR/gdc.exe"
+        else
+          COMPILER="$ARTIFACTS_DIR/gdc"
+          chmod +x "$COMPILER"
+        fi
+        
+        # Verify compiler exists
+        if [ ! -f "$COMPILER" ]; then
+          echo "❌ Compiler binary not found at: $COMPILER"
+          exit 1
+        fi
+        
+        # Extract Gothic scripts from ZIP
+        if [ ! -d "Scripts/Scripts" ]; then
+          7z x -p"dziejekhorinis" Scripts.zip -y
+        fi
+        
+        # Test compilation of extracted Gothic scripts
+        cd Scripts/Scripts
+        
+        # Test 1: Relative path compilation
+        if [ -f "System/SFX.src" ]; then
+          if "$COMPILER" System/SFX.src > /dev/null 2>&1; then
+            RELATIVE_PATH_SUCCESS=true
+          elif "$COMPILER" System/ParticleFX.src > /dev/null 2>&1; then
+            RELATIVE_PATH_SUCCESS=true
+          else
+            RELATIVE_PATH_SUCCESS=false
+          fi
+        else
+          echo "❌ Expected script files not found in extraction"
+          exit 1
+        fi
+        
+        # Test 2: Absolute path compilation  
+        ABSOLUTE_SFX_PATH="$(pwd)/System/SFX.src"
+        ABSOLUTE_PFX_PATH="$(pwd)/System/ParticleFX.src"
+        
+        if [ ! -f "$ABSOLUTE_SFX_PATH" ]; then
+          echo "❌ Script files not found"
+          exit 1
+        fi
+        
+        if "$COMPILER" "$ABSOLUTE_SFX_PATH" > /dev/null 2>&1; then
+          ABSOLUTE_PATH_SUCCESS=true
+        elif [ -f "$ABSOLUTE_PFX_PATH" ] && "$COMPILER" "$ABSOLUTE_PFX_PATH" > /dev/null 2>&1; then
+          ABSOLUTE_PATH_SUCCESS=true
+        else
+          ABSOLUTE_PATH_SUCCESS=false
+        fi
+        
+        # Validate both tests passed
+        if [ "$RELATIVE_PATH_SUCCESS" = true ] && [ "$ABSOLUTE_PATH_SUCCESS" = true ]; then
+          echo "✅ E2E tests passed"
+        else
+          echo "❌ E2E tests failed"
+          exit 1
+        fi
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.os }}
+        path: TestResults-${{ matrix.os }}/*.trx

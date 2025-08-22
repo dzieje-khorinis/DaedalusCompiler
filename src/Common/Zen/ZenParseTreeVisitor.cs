@@ -1,6 +1,7 @@
 using System.Linq;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 
@@ -117,17 +118,17 @@ namespace Common.Zen
                 case "enum":
                     return int.Parse(textValue);
                 case "float":
-                    return float.Parse(textValue);
+                    return float.Parse(textValue, CultureInfo.InvariantCulture);
                 case "int":
                     return int.Parse(textValue);
                 case "raw":
                     return textValue;
                 case "rawFloat":
-                    return textValue.Trim().Split(' ').Select(float.Parse).ToList();
+                    return textValue.Trim().Split(' ').Select(x => float.Parse(x, CultureInfo.InvariantCulture)).ToList();
                 case "string":
                     return textValue;
                 case "vec3":
-                    return textValue.Trim().Split(' ').Select(float.Parse).ToList();
+                    return textValue.Trim().Split(' ').Select(x => float.Parse(x, CultureInfo.InvariantCulture)).ToList();
 
                 default:
                     return textValue;

@@ -1,30 +1,56 @@
-# Daedalus Compiler  [![Build](https://circleci.com/gh/dzieje-khorinis/DaedalusCompiler.png)](https://github.com/dzieje-khorinis/DaedalusCompiler)
+# Daedalus Compiler  [![CI](https://github.com/dzieje-khorinis/DaedalusCompiler/actions/workflows/ci.yml/badge.svg)](https://github.com/dzieje-khorinis/DaedalusCompiler/actions/workflows/ci.yml) [![Release](https://github.com/dzieje-khorinis/DaedalusCompiler/actions/workflows/release.yml/badge.svg)](https://github.com/dzieje-khorinis/DaedalusCompiler/actions/workflows/release.yml)
 This is repo with Daedalus ( Gothic I, II scripting language ) compiler.
-Project is using internally ANTL4 for parsing source code.
-The compiler itself is written in .NET Core C#.
+Project is using internally ANTLR4 for parsing source code.
+The compiler itself is written in .NET 8 C# with modern features like nullable reference types and single-file publishing.
 
 You can listen about our compiler on below video. Video has bad audio quality, we encourage you to turn on subtitles, on the current moment we have subtitles for Polish, German and English language.
 
 [![](screen_it_days.jpg)](http://www.youtube.com/watch?v=naPydcbJezw)
-## Download
-[Download](https://github.com/dzieje-khorinis/DaedalusCompiler/releases/latest) latest version of the tool
-## Requirements
-* Installed .NET Core 2+ runtime
+## Installation
 
-## Standard Usage
-* Download & unpack [latest release](https://github.com/dzieje-khorinis/DaedalusCompiler/releases/latest).
-* Use **dotnet** runtime to run the Compiler:
-```
-$ dotnet /path/to/DaedalusCompiler/DaedalusCompiler.dll
-```
-* Make alias for easy usage. Recommended alias is `gdc` (`g`othic `d`aedalus `c`ompiler). 
+### 🚀 Quick Install (Recommended)
 
-For example in Linux and MacOS type:
-```
-$ alias gdc='dotnet /path/to/DaedalusCompiler/DaedalusCompiler.dll'
+Install the latest version with a single command:
+
+```bash
+# Linux & macOS
+curl -fsSL https://raw.githubusercontent.com/dzieje-khorinis/DaedalusCompiler/main/install.sh | bash
+
+# Or with wget
+wget -qO- https://raw.githubusercontent.com/dzieje-khorinis/DaedalusCompiler/main/install.sh | bash
 ```
 
-#### Example usage:
+**Note: Quick Install supports Linux and macOS. On Windows, please use Manual Download below.**
+
+The installer will:
+- ✅ Automatically detect your OS and architecture (Linux/macOS, x64/ARM64)
+- ✅ Download the appropriate self-contained binary
+- ✅ Install to `/usr/local/bin` (or `~/.local/bin` if no sudo access)
+- ✅ Configure your PATH automatically
+- ✅ No .NET runtime required!
+
+After installation, the `gdc` command will be available in your terminal.
+
+### 📦 Manual Download
+
+Alternatively, [download the latest release](https://github.com/dzieje-khorinis/DaedalusCompiler/releases/latest) manually:
+
+1. Download the appropriate binary for your platform:
+   - `gdc-linux-x64` / `gdc-linux-arm64` (Linux)
+   - `gdc-macos-x64` / `gdc-macos-arm64` (macOS)  
+   - `gdc-windows-x64.exe` / `gdc-windows-arm64.exe` (Windows)
+
+2. Make it executable and move to a directory in your PATH:
+```bash
+# Linux & macOS
+chmod +x gdc-*
+sudo mv gdc-* /usr/local/bin/gdc
+
+# Windows (PowerShell as Administrator)
+Move-Item gdc-windows-*.exe C:\Windows\System32\gdc.exe
+```
+
+## Example usage:
 
 * generate `Gothic.dat` file from `Gothic.src` file in output directory:
 ```
@@ -51,24 +77,10 @@ $ gdc /path/to/Gothic.src --output-dat "Scripts/_compiled/Gothic.dat" --gen-ou -
 $ gdc /path/to/Gothic.src --zen-paths="/path/to/zens/*.zen" 
 ```
 
-
-## Usage with docker ( .NET Core runtime not needed )
-Our compiler is available on docker hub, if you have installed docker you should be able to run compiler with:
-
-
-```sh
-docker run -v "$(pwd)":/usr/workspace dziejekhorinis/daedalus-compiler <path-to-gothic-src>
-```
-Path which is argument of docker run is relative to folder where we made mount.
-
-#### Example usage:
-```sh
-docker run -v "$(pwd)":/usr/workspace dziejekhorinis/daedalus-compiler ./Gothic.src
-```
 ## Configure development environment
-Project uses ANTLR4 and .NET Core C#. 
+Project uses ANTLR4 and .NET 8 C#. 
 
-For .NET Core C# it is recomended to use Visual Studio 2017.
+For .NET 8 C# it is recommended to use Visual Studio 2022 or later, or Visual Studio Code with the C# extension.
 
 For ANTLR4 you can use InteliJ or Visual Studio Code.
 

@@ -9,7 +9,8 @@ test/DaedalusCompiler.Tests/output
 test/DaedalusCompiler.Tests/Scripts
 test/DaedalusCompiler.Tests/Scripts.zip
 test/DaedalusCompiler.Tests/config.json
-test/DaedalusCompiler.Tests/TestFiles
+test/DaedalusCompiler.Tests/TestFiles/IkarusAndLegoScripts
+test/DaedalusCompiler.Tests/TestFiles/Scripts
 test/DaedalusCompiler.Tests/Output
 
 /DaedalusLib/bin
@@ -348,3 +349,5 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
+
+output/

@@ -1,0 +1,151 @@
+name: Release
+
+on:
+  release:
+    types: [created]
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build for ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          # Linux builds
+          - name: linux-x64
+            os: ubuntu-latest
+            runtime: linux-x64
+            artifact_name: gdc-linux-x64
+            file_extension: ""
+          - name: linux-arm64
+            os: ubuntu-latest
+            runtime: linux-arm64
+            artifact_name: gdc-linux-arm64
+            file_extension: ""
+          
+          # Windows builds
+          - name: windows-x64
+            os: windows-latest
+            runtime: win-x64
+            artifact_name: gdc-windows-x64
+            file_extension: ".exe"
+          - name: windows-arm64
+            os: windows-latest
+            runtime: win-arm64
+            artifact_name: gdc-windows-arm64
+            file_extension: ".exe"
+          
+          # macOS builds
+          - name: macos-x64
+            os: macos-latest
+            runtime: osx-x64
+            artifact_name: gdc-macos-x64
+            file_extension: ""
+          - name: macos-arm64
+            os: macos-latest
+            runtime: osx-arm64
+            artifact_name: gdc-macos-arm64
+            file_extension: ""
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Extract version from tag
+      id: extract_version
+      shell: bash
+      run: |
+        if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "Building version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+        else
+          echo "version=0.0.1" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Run tests
+      run: dotnet test --configuration Release --verbosity normal
+      
+    - name: Publish
+      shell: bash
+      run: |
+        dotnet publish src/DaedalusCompiler/DaedalusCompiler.csproj \
+          --configuration Release \
+          --runtime ${{ matrix.runtime }} \
+          --self-contained true \
+          --output ./publish/${{ matrix.runtime }} \
+          -p:PublishSingleFile=true \
+          -p:PublishTrimmed=true \
+          -p:TrimMode=partial \
+          -p:Version=${{ steps.extract_version.outputs.version }}
+      
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: ./publish/${{ matrix.runtime }}/gdc${{ matrix.file_extension }}
+
+  release: 
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+        
+    - name: Display structure of downloaded files
+      shell: bash
+      run: ls -la artifacts/
+      
+    - name: Rename binaries for release
+      shell: bash
+      run: |
+        # Create staging directory and extract binaries
+        mkdir -p staging
+        cp artifacts/gdc-linux-x64/gdc staging/gdc-linux-x64
+        cp artifacts/gdc-linux-arm64/gdc staging/gdc-linux-arm64
+        cp artifacts/gdc-windows-x64/gdc.exe staging/gdc-windows-x64.exe
+        cp artifacts/gdc-windows-arm64/gdc.exe staging/gdc-windows-arm64.exe
+        cp artifacts/gdc-macos-x64/gdc staging/gdc-macos-x64
+        cp artifacts/gdc-macos-arm64/gdc staging/gdc-macos-arm64
+        
+        # Clear artifacts directory and move binaries back
+        rm -rf artifacts/*
+        mv staging/* artifacts/
+        rmdir staging
+        
+        # Verify final structure
+        echo "Final artifacts structure:"
+        ls -la artifacts/
+      
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          artifacts/gdc-linux-x64
+          artifacts/gdc-linux-arm64
+          artifacts/gdc-windows-x64.exe
+          artifacts/gdc-windows-arm64.exe
+          artifacts/gdc-macos-x64
+          artifacts/gdc-macos-arm64
+        generate_release_notes: true
+        draft: false
+        prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

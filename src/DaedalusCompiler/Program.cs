@@ -2,16 +2,35 @@
 using System.IO;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using DaedalusCompiler.Compilation;
 using System.Diagnostics;
 using Common.SemanticAnalysis;
+using System.CommandLine;
+using System.CommandLine.Invocation;
 
 
 namespace DaedalusCompiler
 {
-    static class Program
+    /// <summary>
+    /// Represents the parsed CLI arguments for compilation
+    /// </summary>
+    public class CompilationParameters
     {
-        private const string Version = "0.9.2";
+        public List<string> ZenPaths { get; set; } = new List<string>();
+        public string SrcFilePath { get; set; } = string.Empty;
+        public string RuntimePath { get; set; } = string.Empty;
+        public string OutputPathDat { get; set; } = string.Empty;
+        public string OutputPathOu { get; set; } = string.Empty;
+        public bool Verbose { get; set; }
+        public bool GenerateOutputUnits { get; set; }
+        public bool Strict { get; set; }
+        public HashSet<string> SuppressCodes { get; set; } = new HashSet<string>();
+    }
+
+    public static class Program
+    {
+        private static readonly string Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "unknown";
         private const string AppName = "Daedalus Compiler";
         private const string AppSlug = "daedalus-compiler";
 
@@ -37,17 +56,6 @@ namespace DaedalusCompiler
                 "--version                      displays version of compiler\n" +
                 "-v|--verbose\n\n\n" +
 
-                "Usage:\n\n" +
-
-                "In examples below, \"gdc\" command ([g]othic [d]aedalus [c]ompiler) is alias to run this compiler.\n" +
-                "How can I create this alias? For example, on Linux/MacOS:\n\n" +
-                "If you want to run code directly from cloned repository: \n" + 
-                "   $ alias gdc='dotnet run --project /path/to/DaedalusCompiler.csproj --' \n\n" +
-                "If you want to run last release: \n" + 
-                "   $ alias gdc='dotnet /path/to/DaedalusCompiler/DaedalusCompiler.dll' \n\n" +
-                "If you want to run last release (docker): \n" + 
-                "   $ alias gdc='docker run -v \"$(pwd)\":/usr/workspace dziejekhorinis/daedalus-compiler' \n\n\n" +
-
                 "Examples:\n\n" +
 
                 "generate Gothic.dat file from Gothic.src file in output directory:\n" +
@@ -67,104 +75,199 @@ namespace DaedalusCompiler
             );
         }
 
-        static void HandleOptionsParser(string[] args)
+        /// <summary>
+        /// Processes CLI arguments into compilation parameters. Extracted for testability.
+        /// </summary>
+        /// <param name="srcFile">Source file path</param>
+        /// <param name="runtime">Runtime path</param>
+        /// <param name="outputDat">Output DAT path</param>
+        /// <param name="genOu">Generate output units flag</param>
+        /// <param name="outputOu">Output OU directory</param>
+        /// <param name="strict">Strict mode flag</param>
+        /// <param name="caseSensitive">Case sensitive flag</param>
+        /// <param name="suppress">Suppress codes string</param>
+        /// <param name="detectUnused">Detect unused flag</param>
+        /// <param name="zenPaths">Zen paths string</param>
+        /// <param name="verbose">Verbose flag</param>
+        /// <returns>Processed compilation parameters</returns>
+        public static CompilationParameters ProcessCliArguments(
+            string? srcFile,
+            string? runtime,
+            string? outputDat,
+            bool genOu,
+            string outputOu,
+            bool strict,
+            bool caseSensitive,
+            string? suppress,
+            bool detectUnused,
+            string? zenPaths,
+            bool verbose)
         {
-            var loadHelp = false;
-            var generateOutputUnits = false;
-            var verbose = false;
-            var strict = false;
-            var getVersion = false;
-            bool detectUnused = false;
-            bool caseSensitiveCode = false;
-            string srcFilePath = String.Empty;
-            string runtimePath = String.Empty;
-            string outputPathDat = String.Empty;
-            string outputPathOuDir = "output";
-            List<string> zenPaths = new List<string>();
-
-            HashSet<string> suppressCodes = new HashSet<string>();
-
-            var optionSet = new NDesk.Options.OptionSet()
+            var parameters = new CompilationParameters
             {
-                {"h|?|help", v => loadHelp = true},
-
-                {"r|runtime=", v => runtimePath = v},
-                {"o|output-dat=", v => outputPathDat = v},
-
-                {"g|gen-ou", v => generateOutputUnits = true},
-                {"u|output-ou=", v => outputPathOuDir = v},
-
-                {"x|strict", v => strict = true},
-                {"i|case-sensitive-code", v => caseSensitiveCode = true},
-                {"s|suppress=", v => suppressCodes = v.Split(':').ToHashSet()},
-
-                {"d|detect-unused", v => detectUnused = true},
-                {"z|zen-paths=", v => zenPaths = v.Split(':').ToList()},
-
-                {"version", v => getVersion = true},
-                {"v|verbose", v => verbose = true},
-                {
-                    "<>", v =>
-                    {
-                        if (srcFilePath == String.Empty)
-                        {
-                            srcFilePath = v;
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Invalid positional argument: '{v}'");
-                            Environment.Exit(1);
-                        }
-                    }
-                },
+                SrcFilePath = srcFile ?? string.Empty,
+                RuntimePath = runtime ?? string.Empty,
+                GenerateOutputUnits = genOu,
+                OutputPathOu = outputOu,
+                Strict = strict,
+                Verbose = verbose
             };
 
-            try
+            // Process zen paths
+            if (!string.IsNullOrEmpty(zenPaths))
             {
-                optionSet.Parse(args);
-            }
-            catch (NDesk.Options.OptionException e)
-            {
-                Console.WriteLine(e.Message);
-                return;
+                parameters.ZenPaths = zenPaths.Split(':').ToList();
+                detectUnused = true; // Auto enable detect-unused when zen paths are provided
             }
 
-            if (zenPaths.Count > 0)
+            // Process suppress codes
+            if (!string.IsNullOrEmpty(suppress))
             {
-                detectUnused = true;
+                parameters.SuppressCodes = suppress.Split(':').ToHashSet();
             }
 
-            if (!caseSensitiveCode)
+            // Add default suppress codes based on options
+            if (!caseSensitive)
             {
-                suppressCodes.Add(NamesNotMatchingCaseWiseWarning.WCode);
+                parameters.SuppressCodes.Add(NamesNotMatchingCaseWiseWarning.WCode);
             }
 
             if (!detectUnused)
             {
-                suppressCodes.Add(UnusedSymbolWarning.WCode);
+                parameters.SuppressCodes.Add(UnusedSymbolWarning.WCode);
             }
 
-            if (getVersion)
+            // Set default output path if not provided
+            if (string.IsNullOrEmpty(outputDat))
             {
-                Console.WriteLine($"v{Version}");
-                return;
-            }
-
-            if (outputPathDat == String.Empty)
-            {
-                string srcFileName = Path.GetFileNameWithoutExtension(srcFilePath).ToLower();
-                outputPathDat = Path.Combine("output", srcFileName + ".dat");
-            }
-
-            if (loadHelp || srcFilePath == String.Empty)
-            {
-                ShowHelp();
+                string srcFileName = Path.GetFileNameWithoutExtension(parameters.SrcFilePath).ToLower();
+                parameters.OutputPathDat = Path.Combine("output", srcFileName + ".dat");
             }
             else
             {
-                CompileDaedalus(zenPaths, srcFilePath, runtimePath, outputPathDat, outputPathOuDir, verbose,
-                    generateOutputUnits, strict, suppressCodes);
+                parameters.OutputPathDat = outputDat;
             }
+
+            return parameters;
+        }
+
+        static void HandleOptionsParser(string[] args)
+        {
+            // Create argument for the source file path
+            var srcFileArgument = new Argument<string?>(
+                name: "srcFile",
+                description: "Path to the .src file to compile"
+            );
+
+            // Create options
+            var runtimeOption = new Option<string?>(
+                aliases: new[] { "-r", "--runtime" },
+                description: "Daedalus externals path (default: g2nk builtins dependant on .src file name)"
+            );
+
+            var outputDatOption = new Option<string?>(
+                aliases: new[] { "-o", "--output-dat" },
+                description: ".DAT file path (default: \"output\" dir in working directory)"
+            );
+
+            var genOuOption = new Option<bool>(
+                aliases: new[] { "-g", "--gen-ou" },
+                description: "Generate extra output units files (ou.cls and ou.bin)"
+            );
+
+            var outputOuOption = new Option<string>(
+                aliases: new[] { "-u", "--output-ou" },
+                description: ".ou files directory path (used only if --gen-ou flag is provided)",
+                getDefaultValue: () => "output"
+            );
+
+            var strictOption = new Option<bool>(
+                aliases: new[] { "-x", "--strict" },
+                description: "Use more strict syntax version (warnings become errors)"
+            );
+
+            var caseSensitiveOption = new Option<bool>(
+                aliases: new[] { "-c", "--case-sensitive-code" },
+                description: "Symbol usage must match definition case-sensitive"
+            );
+
+            var suppressOption = new Option<string?>(
+                aliases: new[] { "-s", "--suppress" },
+                description: "Colon separated warning codes, to suppress warnings globally"
+            );
+
+            var detectUnusedOption = new Option<bool>(
+                aliases: new[] { "-d", "--detect-unused" },
+                description: "Unused symbols generate warnings"
+            );
+
+            var zenPathsOption = new Option<string?>(
+                aliases: new[] { "-z", "--zen-paths" },
+                description: "ASCII Zens paths, auto enables --detect-unused flag, wildcard * supported in file name"
+            );
+
+            var verboseOption = new Option<bool>(
+                aliases: new[] { "-v", "--verbose" },
+                description: "Enable verbose output"
+            );
+
+            // Create root command (System.CommandLine automatically provides --version)
+            var rootCommand = new RootCommand($"{AppName} {Version}")
+            {
+                srcFileArgument,
+                runtimeOption,
+                outputDatOption,
+                genOuOption,
+                outputOuOption,
+                strictOption,
+                caseSensitiveOption,
+                suppressOption,
+                detectUnusedOption,
+                zenPathsOption,
+                verboseOption
+            };
+
+            // Set the handler using the modern System.CommandLine approach
+            rootCommand.SetHandler((InvocationContext context) =>
+            {
+                var srcFile = context.ParseResult.GetValueForArgument(srcFileArgument);
+                var runtime = context.ParseResult.GetValueForOption(runtimeOption);
+                var outputDat = context.ParseResult.GetValueForOption(outputDatOption);
+                var genOu = context.ParseResult.GetValueForOption(genOuOption);
+                var outputOu = context.ParseResult.GetValueForOption(outputOuOption);
+                var strict = context.ParseResult.GetValueForOption(strictOption);
+                var caseSensitive = context.ParseResult.GetValueForOption(caseSensitiveOption);
+                var suppress = context.ParseResult.GetValueForOption(suppressOption);
+                var detectUnused = context.ParseResult.GetValueForOption(detectUnusedOption);
+                var zenPaths = context.ParseResult.GetValueForOption(zenPathsOption);
+                var verbose = context.ParseResult.GetValueForOption(verboseOption);
+
+                if (string.IsNullOrEmpty(srcFile))
+                {
+                    ShowHelp();
+                    return;
+                }
+
+                // Process CLI arguments using extracted method
+                var parameters = ProcessCliArguments(
+                    srcFile, runtime, outputDat, genOu, outputOu, strict, 
+                    caseSensitive, suppress, detectUnused, zenPaths, verbose);
+
+                // Compile
+                CompileDaedalus(
+                    parameters.ZenPaths, 
+                    parameters.SrcFilePath, 
+                    parameters.RuntimePath, 
+                    parameters.OutputPathDat, 
+                    parameters.OutputPathOu,
+                    parameters.Verbose, 
+                    parameters.GenerateOutputUnits, 
+                    parameters.Strict, 
+                    parameters.SuppressCodes);
+            });
+
+            // Parse and invoke
+            rootCommand.Invoke(args);
         }
 
         static void CompileDaedalus(List<string> zenPaths, string srcFilePath, string runtimePath, string outputPathDat,
