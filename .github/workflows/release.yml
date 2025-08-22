@@ -79,6 +79,7 @@ jobs:
       run: dotnet test --configuration Release --verbosity normal
       
     - name: Publish
+      shell: bash
       run: |
         dotnet publish src/DaedalusCompiler/DaedalusCompiler.csproj \
           --configuration Release \
@@ -109,9 +110,11 @@ jobs:
         path: artifacts
         
     - name: Display structure of downloaded files
+      shell: bash
       run: ls -la artifacts/
       
     - name: Rename binaries for release
+      shell: bash
       run: |
         mv artifacts/gdc-linux-x64/gdc artifacts/gdc-linux-x64
         mv artifacts/gdc-linux-arm64/gdc artifacts/gdc-linux-arm64
