@@ -18,7 +18,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
                 return null;
             }
 
-            string[] codeLines = text.Trim().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            string[] codeLines = text.Trim().Split(Environment.NewLine);
 
             for (int i = 1; i < codeLines.Length; ++i)
             {
@@ -39,7 +39,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
             Code = PreProcessText(Code);
             Zen = PreProcessText(Zen);
 
-            string[] compilationOutputLines = ExpectedCompilationOutput.Trim().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            string[] compilationOutputLines = ExpectedCompilationOutput.Trim().Split(Environment.NewLine);
             for (int i = 1; i < compilationOutputLines.Length; ++i)
             {
                 compilationOutputLines[i] = compilationOutputLines[i].Substring(16);
@@ -53,16 +53,7 @@ namespace DaedalusCompiler.Tests.SemanticErrors
             StringBufforErrorLogger logger = new StringBufforErrorLogger();
             TestsHelper testsHelper = new TestsHelper(logger, strictSyntax, detectUnused);
             testsHelper.RunCode(Code, Zen);
-            
-            string actualOutput = logger.GetBuffer().Trim();
-            string expectedOutput = ExpectedCompilationOutput;
-            
-            // Use Assert.True with detailed message to show full strings
-            Assert.True(expectedOutput == actualOutput, 
-                $"Compilation output mismatch!\n\n" +
-                $"EXPECTED:\n{expectedOutput}\n\n" +
-                $"ACTUAL:\n{actualOutput}\n\n" +
-                $"Platform: {Environment.OSVersion.Platform}");
+            Assert.Equal(ExpectedCompilationOutput, logger.GetBuffer().Trim());
         }
     }
 }
