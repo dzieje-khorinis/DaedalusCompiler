@@ -36,11 +36,11 @@ jobs:
         echo "Publishing DaedalusCompiler as self-contained..."
         # Create self-contained deployment for the current platform
         if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-          dotnet publish src/DaedalusCompiler/DaedalusCompiler.csproj --configuration Release --output ./artifacts --self-contained true --runtime win-x64
+          dotnet publish src/DaedalusCompiler/DaedalusCompiler.csproj --configuration Release --output ./artifacts --self-contained true --runtime win-x64 --property:PublishSingleFile=true
         elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-          dotnet publish src/DaedalusCompiler/DaedalusCompiler.csproj --configuration Release --output ./artifacts --self-contained true --runtime osx-x64
+          dotnet publish src/DaedalusCompiler/DaedalusCompiler.csproj --configuration Release --output ./artifacts --self-contained true --runtime osx-x64 --property:PublishSingleFile=true
         else
-          dotnet publish src/DaedalusCompiler/DaedalusCompiler.csproj --configuration Release --output ./artifacts --self-contained true --runtime linux-x64
+          dotnet publish src/DaedalusCompiler/DaedalusCompiler.csproj --configuration Release --output ./artifacts --self-contained true --runtime linux-x64 --property:PublishSingleFile=true
         fi
         echo "Artifacts directory contents:"
         ls -la ./artifacts/
@@ -131,7 +131,9 @@ jobs:
         
         # Debug: Show current directory and artifacts structure
         echo "Current directory: $(pwd)"
+        echo "Absolute path: $(pwd -P)"
         echo "Looking for artifacts at: ../../../artifacts/"
+        echo "Absolute artifacts path: $(cd ../../../ && pwd)/artifacts"
         ls -la ../../../ || echo "Parent directory listing failed"
         ls -la ../../../artifacts/ || echo "Artifacts directory not found or empty"
         
@@ -139,17 +141,50 @@ jobs:
         echo "Searching for gdc binaries..."
         find ../../../ -name "gdc*" -type f 2>/dev/null || echo "No gdc binaries found in search"
         
+        # Check if the file actually exists and what its properties are
+        if [ -f "../../../artifacts/gdc" ]; then
+          echo "File exists at ../../../artifacts/gdc"
+          echo "File permissions: $(ls -la ../../../artifacts/gdc)"
+          echo "File type: $(file ../../../artifacts/gdc)"
+          echo "Absolute path test:"
+          ABS_COMPILER="$(cd ../../../artifacts && pwd)/gdc"
+          echo "Absolute compiler path: $ABS_COMPILER"
+          [ -f "$ABS_COMPILER" ] && echo "✅ Absolute path exists" || echo "❌ Absolute path missing"
+        else
+          echo "❌ File does not exist at ../../../artifacts/gdc"
+        fi
+        
         # Verify compiler exists and is executable
         if [ ! -f "$COMPILER" ]; then
           echo "❌ Compiler binary not found at: $COMPILER"
           echo "Available files in artifacts:"
           ls -la ../../../artifacts/ || echo "Artifacts directory does not exist"
-          exit 1
+          
+          # Try to use absolute path as fallback
+          echo "Attempting absolute path fallback..."
+          if [ -f "../../../artifacts/gdc" ]; then
+            ABS_COMPILER="$(cd ../../../artifacts && pwd)/gdc"
+            echo "Using absolute path: $ABS_COMPILER"
+            COMPILER="$ABS_COMPILER"
+          else
+            exit 1
+          fi
         fi
         
         # Test compiler version/help (quick validation it works)
         echo "Verifying compiler binary..."
-        "$COMPILER" --help > /dev/null 2>&1 || echo "⚠️ Compiler help command failed (may be normal)"
+        echo "Compiler path being tested: $COMPILER"
+        echo "File existence check: [ -f \"$COMPILER\" ] = $([ -f "$COMPILER" ] && echo "true" || echo "false")"
+        echo "File executable check: [ -x \"$COMPILER\" ] = $([ -x "$COMPILER" ] && echo "true" || echo "false")"
+        
+        # Try to run with detailed error output
+        echo "Testing compiler execution..."
+        if "$COMPILER" --help > /dev/null 2>&1; then
+          echo "✅ Compiler validation successful"
+        else
+          echo "⚠️ Compiler validation failed, trying with detailed output:"
+          "$COMPILER" --help 2>&1 || echo "Execution failed"
+        fi
         
         # Extract Gothic scripts from ZIP
         echo "=== Extracting Gothic Scripts ==="
@@ -165,18 +200,23 @@ jobs:
         # Test 1: Relative path compilation
         if [ -f "System/SFX.src" ]; then
           echo "Testing SFX.src compilation with relative path..."
-          "$COMPILER" System/SFX.src --verbose
-          if [ $? -eq 0 ]; then
+          echo "Command: $COMPILER System/SFX.src --verbose"
+          echo "Working directory: $(pwd)"
+          
+          "$COMPILER" System/SFX.src --verbose 2>&1
+          COMPILE_EXIT_CODE=$?
+          if [ $COMPILE_EXIT_CODE -eq 0 ]; then
             echo "✅ Relative path test passed - Gothic SFX.src compiled successfully"
             RELATIVE_PATH_SUCCESS=true
           else
-            echo "⚠️ SFX.src failed with relative path, trying ParticleFX.src..."
-            "$COMPILER" System/ParticleFX.src --verbose
-            if [ $? -eq 0 ]; then
+            echo "⚠️ SFX.src failed with relative path (exit code: $COMPILE_EXIT_CODE), trying ParticleFX.src..."
+            "$COMPILER" System/ParticleFX.src --verbose 2>&1
+            COMPILE_EXIT_CODE=$?
+            if [ $COMPILE_EXIT_CODE -eq 0 ]; then
               echo "✅ Relative path test passed - Gothic ParticleFX.src compiled successfully"
               RELATIVE_PATH_SUCCESS=true
             else
-              echo "❌ Relative path test failed"
+              echo "❌ Relative path test failed (exit code: $COMPILE_EXIT_CODE)"
               RELATIVE_PATH_SUCCESS=false
             fi
           fi
@@ -200,12 +240,13 @@ jobs:
           exit 1
         fi
         
-        "$COMPILER" "$ABSOLUTE_SFX_PATH" --verbose
-        if [ $? -eq 0 ]; then
+        "$COMPILER" "$ABSOLUTE_SFX_PATH" --verbose 2>&1
+        COMPILE_EXIT_CODE=$?
+        if [ $COMPILE_EXIT_CODE -eq 0 ]; then
           echo "✅ Absolute path test passed - Gothic SFX.src compiled successfully"
           ABSOLUTE_PATH_SUCCESS=true
         else
-          echo "⚠️ SFX.src failed with absolute path, trying ParticleFX.src..."
+          echo "⚠️ SFX.src failed with absolute path (exit code: $COMPILE_EXIT_CODE), trying ParticleFX.src..."
           echo "Absolute PFX path: $ABSOLUTE_PFX_PATH"
           
           # Verify the fallback file exists
@@ -214,12 +255,13 @@ jobs:
             echo "❌ Absolute path test failed - no suitable script found"
             ABSOLUTE_PATH_SUCCESS=false
           else
-            "$COMPILER" "$ABSOLUTE_PFX_PATH" --verbose
-            if [ $? -eq 0 ]; then
+            "$COMPILER" "$ABSOLUTE_PFX_PATH" --verbose 2>&1
+            COMPILE_EXIT_CODE=$?
+            if [ $COMPILE_EXIT_CODE -eq 0 ]; then
               echo "✅ Absolute path test passed - Gothic ParticleFX.src compiled successfully"
               ABSOLUTE_PATH_SUCCESS=true
             else
-              echo "❌ Absolute path test failed"
+              echo "❌ Absolute path test failed (exit code: $COMPILE_EXIT_CODE)"
               ABSOLUTE_PATH_SUCCESS=false
             fi
           fi
