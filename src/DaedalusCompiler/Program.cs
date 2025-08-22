@@ -12,7 +12,23 @@ using System.CommandLine.Invocation;
 
 namespace DaedalusCompiler
 {
-    static class Program
+    /// <summary>
+    /// Represents the parsed CLI arguments for compilation
+    /// </summary>
+    public class CompilationParameters
+    {
+        public List<string> ZenPaths { get; set; } = new List<string>();
+        public string SrcFilePath { get; set; } = string.Empty;
+        public string RuntimePath { get; set; } = string.Empty;
+        public string OutputPathDat { get; set; } = string.Empty;
+        public string OutputPathOu { get; set; } = string.Empty;
+        public bool Verbose { get; set; }
+        public bool GenerateOutputUnits { get; set; }
+        public bool Strict { get; set; }
+        public HashSet<string> SuppressCodes { get; set; } = new HashSet<string>();
+    }
+
+    public static class Program
     {
         private static readonly string Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "unknown";
         private const string AppName = "Daedalus Compiler";
@@ -57,6 +73,82 @@ namespace DaedalusCompiler
                 "generate Gothic.dat, enable unused symbol detection, provide zen paths to make that detection more accurate':\n" +
                 "   $ gdc /path/to/Gothic.src --zen-paths=\"/path/to/zens/*.zen\" \n"
             );
+        }
+
+        /// <summary>
+        /// Processes CLI arguments into compilation parameters. Extracted for testability.
+        /// </summary>
+        /// <param name="srcFile">Source file path</param>
+        /// <param name="runtime">Runtime path</param>
+        /// <param name="outputDat">Output DAT path</param>
+        /// <param name="genOu">Generate output units flag</param>
+        /// <param name="outputOu">Output OU directory</param>
+        /// <param name="strict">Strict mode flag</param>
+        /// <param name="caseSensitive">Case sensitive flag</param>
+        /// <param name="suppress">Suppress codes string</param>
+        /// <param name="detectUnused">Detect unused flag</param>
+        /// <param name="zenPaths">Zen paths string</param>
+        /// <param name="verbose">Verbose flag</param>
+        /// <returns>Processed compilation parameters</returns>
+        public static CompilationParameters ProcessCliArguments(
+            string? srcFile,
+            string? runtime,
+            string? outputDat,
+            bool genOu,
+            string outputOu,
+            bool strict,
+            bool caseSensitive,
+            string? suppress,
+            bool detectUnused,
+            string? zenPaths,
+            bool verbose)
+        {
+            var parameters = new CompilationParameters
+            {
+                SrcFilePath = srcFile ?? string.Empty,
+                RuntimePath = runtime ?? string.Empty,
+                GenerateOutputUnits = genOu,
+                OutputPathOu = outputOu,
+                Strict = strict,
+                Verbose = verbose
+            };
+
+            // Process zen paths
+            if (!string.IsNullOrEmpty(zenPaths))
+            {
+                parameters.ZenPaths = zenPaths.Split(':').ToList();
+                detectUnused = true; // Auto enable detect-unused when zen paths are provided
+            }
+
+            // Process suppress codes
+            if (!string.IsNullOrEmpty(suppress))
+            {
+                parameters.SuppressCodes = suppress.Split(':').ToHashSet();
+            }
+
+            // Add default suppress codes based on options
+            if (!caseSensitive)
+            {
+                parameters.SuppressCodes.Add(NamesNotMatchingCaseWiseWarning.WCode);
+            }
+
+            if (!detectUnused)
+            {
+                parameters.SuppressCodes.Add(UnusedSymbolWarning.WCode);
+            }
+
+            // Set default output path if not provided
+            if (string.IsNullOrEmpty(outputDat))
+            {
+                string srcFileName = Path.GetFileNameWithoutExtension(parameters.SrcFilePath).ToLower();
+                parameters.OutputPathDat = Path.Combine("output", srcFileName + ".dat");
+            }
+            else
+            {
+                parameters.OutputPathDat = outputDat;
+            }
+
+            return parameters;
         }
 
         static void HandleOptionsParser(string[] args)
@@ -156,43 +248,22 @@ namespace DaedalusCompiler
                     return;
                 }
 
-                // Process zen paths
-                List<string> zenPathsList = new List<string>();
-                if (!string.IsNullOrEmpty(zenPaths))
-                {
-                    zenPathsList = zenPaths.Split(':').ToList();
-                    detectUnused = true; // Auto enable detect-unused when zen paths are provided
-                }
-
-                // Process suppress codes
-                HashSet<string> suppressCodes = new HashSet<string>();
-                if (!string.IsNullOrEmpty(suppress))
-                {
-                    suppressCodes = suppress.Split(':').ToHashSet();
-                }
-
-                // Add default suppress codes based on options
-                if (!caseSensitive)
-                {
-                    suppressCodes.Add(NamesNotMatchingCaseWiseWarning.WCode);
-                }
-
-                if (!detectUnused)
-                {
-                    suppressCodes.Add(UnusedSymbolWarning.WCode);
-                }
-
-                // Set default output path if not provided
-                string finalOutputDat = outputDat ?? "";
-                if (string.IsNullOrEmpty(finalOutputDat))
-                {
-                    string srcFileName = Path.GetFileNameWithoutExtension(srcFile).ToLower();
-                    finalOutputDat = Path.Combine("output", srcFileName + ".dat");
-                }
+                // Process CLI arguments using extracted method
+                var parameters = ProcessCliArguments(
+                    srcFile, runtime, outputDat, genOu, outputOu, strict, 
+                    caseSensitive, suppress, detectUnused, zenPaths, verbose);
 
                 // Compile
-                CompileDaedalus(zenPathsList, srcFile, runtime ?? "", finalOutputDat, outputOu, 
-                    verbose, genOu, strict, suppressCodes);
+                CompileDaedalus(
+                    parameters.ZenPaths, 
+                    parameters.SrcFilePath, 
+                    parameters.RuntimePath, 
+                    parameters.OutputPathDat, 
+                    parameters.OutputPathOu,
+                    parameters.Verbose, 
+                    parameters.GenerateOutputUnits, 
+                    parameters.Strict, 
+                    parameters.SuppressCodes);
             });
 
             // Parse and invoke
