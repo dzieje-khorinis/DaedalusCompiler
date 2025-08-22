@@ -33,12 +33,39 @@ jobs:
       
     - name: Publish Build Artifacts
       run: |
-        echo "Publishing DaedalusCompiler..."
-        dotnet publish src/DaedalusCompiler/DaedalusCompiler.csproj --configuration Release --output ./artifacts
+        echo "Publishing DaedalusCompiler as self-contained..."
+        # Create self-contained deployment for the current platform
+        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          dotnet publish src/DaedalusCompiler/DaedalusCompiler.csproj --configuration Release --output ./artifacts --self-contained true --runtime win-x64
+        elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+          dotnet publish src/DaedalusCompiler/DaedalusCompiler.csproj --configuration Release --output ./artifacts --self-contained true --runtime osx-x64
+        else
+          dotnet publish src/DaedalusCompiler/DaedalusCompiler.csproj --configuration Release --output ./artifacts --self-contained true --runtime linux-x64
+        fi
         echo "Artifacts directory contents:"
         ls -la ./artifacts/
         echo "Looking for gdc/gdc.exe in artifacts..."
         find ./artifacts/ -name "gdc*" -type f || echo "No gdc files found"
+        
+        # Quick validation of the published binary
+        echo "Testing published binary..."
+        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          if [ -f "./artifacts/gdc.exe" ]; then
+            echo "Validating Windows binary..."
+            ./artifacts/gdc.exe --help > /dev/null 2>&1 && echo "✅ Windows binary works" || echo "⚠️ Windows binary validation failed"
+          fi
+        else
+          if [ -f "./artifacts/gdc" ]; then
+            echo "Validating Unix binary..."
+            chmod +x ./artifacts/gdc
+            echo "Binary file info:"
+            file ./artifacts/gdc || echo "file command failed"
+            echo "Binary dependencies:"
+            ldd ./artifacts/gdc 2>/dev/null || echo "ldd failed (this is normal for static binaries)"
+            echo "Testing binary execution:"
+            ./artifacts/gdc --help > /dev/null 2>&1 && echo "✅ Unix binary works" || echo "⚠️ Unix binary validation failed"
+          fi
+        fi
       
     - name: Install 7zip for password-protected archives
       shell: bash
