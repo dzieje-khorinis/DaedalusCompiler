@@ -93,7 +93,7 @@ namespace Common.Zen
 
         private IParseTree Parse(string zenContent)
         {
-            string[] fileContentLines = zenContent.Split(Environment.NewLine);
+            string[] fileContentLines = zenContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
             _filesContentsLines.Add(fileContentLines);
 
             AntlrInputStream inputStream = new AntlrInputStream(zenContent);
