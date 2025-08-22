@@ -32,7 +32,13 @@ jobs:
       run: dotnet test --no-build --configuration Release --verbosity normal --logger trx --results-directory "TestResults-${{ matrix.os }}"
       
     - name: Publish Build Artifacts
-      run: dotnet publish src/DaedalusCompiler/DaedalusCompiler.csproj --configuration Release --output ./artifacts
+      run: |
+        echo "Publishing DaedalusCompiler..."
+        dotnet publish src/DaedalusCompiler/DaedalusCompiler.csproj --configuration Release --output ./artifacts
+        echo "Artifacts directory contents:"
+        ls -la ./artifacts/
+        echo "Looking for gdc/gdc.exe in artifacts..."
+        find ./artifacts/ -name "gdc*" -type f || echo "No gdc files found"
       
     - name: Install 7zip for password-protected archives
       shell: bash
@@ -50,22 +56,67 @@ jobs:
       run: |
         cd test/DaedalusCompiler.Tests/TestFiles
         
-        # Set compiler path based on OS
+        # Set compiler path based on OS and find the actual binary
         if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-          COMPILER="../../../artifacts/gdc.exe"
-          echo "Windows detected - using gdc.exe"
+          # Try to find the Windows executable
+          if [ -f "../../../artifacts/gdc.exe" ]; then
+            COMPILER="../../../artifacts/gdc.exe"
+          elif [ -f "../../../artifacts/DaedalusCompiler.exe" ]; then
+            COMPILER="../../../artifacts/DaedalusCompiler.exe"
+          else
+            # Final fallback: try to find any .exe file in artifacts
+            echo "⚠️ Standard executable names not found, searching for any .exe file..."
+            FOUND_EXEC=$(find ../../../artifacts/ -name "*.exe" -type f 2>/dev/null | head -1)
+            if [ -n "$FOUND_EXEC" ] && [ -f "$FOUND_EXEC" ]; then
+              COMPILER="$FOUND_EXEC"
+              echo "Found executable: $COMPILER"
+            else
+              echo "❌ Could not find any .exe file in artifacts"
+              ls -la ../../../artifacts/
+              exit 1
+            fi
+          fi
+          echo "Windows detected - using: $COMPILER"
         else
-          COMPILER="../../../artifacts/gdc"
+          # Try to find the Unix executable
+          if [ -f "../../../artifacts/gdc" ]; then
+            COMPILER="../../../artifacts/gdc"
+          elif [ -f "../../../artifacts/DaedalusCompiler" ]; then
+            COMPILER="../../../artifacts/DaedalusCompiler"
+          else
+            # Final fallback: try to find any executable file in artifacts
+            echo "⚠️ Standard executable names not found, searching for any executable..."
+            FOUND_EXEC=$(find ../../../artifacts/ -type f -executable 2>/dev/null | head -1)
+            if [ -n "$FOUND_EXEC" ] && [ -f "$FOUND_EXEC" ]; then
+              COMPILER="$FOUND_EXEC"
+              echo "Found executable: $COMPILER"
+            else
+              echo "❌ Could not find any executable in artifacts"
+              ls -la ../../../artifacts/
+              exit 1
+            fi
+          fi
           chmod +x "$COMPILER"
-          echo "Unix-like OS detected - using gdc with execute permissions"
+          echo "Unix-like OS detected - using: $COMPILER"
         fi
         
         echo "Testing E2E with build artifact: $COMPILER"
         
+        # Debug: Show current directory and artifacts structure
+        echo "Current directory: $(pwd)"
+        echo "Looking for artifacts at: ../../../artifacts/"
+        ls -la ../../../ || echo "Parent directory listing failed"
+        ls -la ../../../artifacts/ || echo "Artifacts directory not found or empty"
+        
+        # Try to find any gdc binaries
+        echo "Searching for gdc binaries..."
+        find ../../../ -name "gdc*" -type f 2>/dev/null || echo "No gdc binaries found in search"
+        
         # Verify compiler exists and is executable
         if [ ! -f "$COMPILER" ]; then
           echo "❌ Compiler binary not found at: $COMPILER"
-          ls -la ../../../artifacts/
+          echo "Available files in artifacts:"
+          ls -la ../../../artifacts/ || echo "Artifacts directory does not exist"
           exit 1
         fi
         
