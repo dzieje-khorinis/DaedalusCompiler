@@ -83,43 +83,47 @@ jobs:
       run: |
         cd test/DaedalusCompiler.Tests/TestFiles
         
-        # Set compiler path based on OS and find the actual binary
+        # Set compiler path based on OS and find the actual binary using ABSOLUTE paths
+        # Store the absolute path to avoid working directory issues
+        ARTIFACTS_DIR="$(cd ../../../artifacts && pwd)"
+        echo "Absolute artifacts directory: $ARTIFACTS_DIR"
+        
         if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
           # Try to find the Windows executable
-          if [ -f "../../../artifacts/gdc.exe" ]; then
-            COMPILER="../../../artifacts/gdc.exe"
-          elif [ -f "../../../artifacts/DaedalusCompiler.exe" ]; then
-            COMPILER="../../../artifacts/DaedalusCompiler.exe"
+          if [ -f "$ARTIFACTS_DIR/gdc.exe" ]; then
+            COMPILER="$ARTIFACTS_DIR/gdc.exe"
+          elif [ -f "$ARTIFACTS_DIR/DaedalusCompiler.exe" ]; then
+            COMPILER="$ARTIFACTS_DIR/DaedalusCompiler.exe"
           else
             # Final fallback: try to find any .exe file in artifacts
             echo "⚠️ Standard executable names not found, searching for any .exe file..."
-            FOUND_EXEC=$(find ../../../artifacts/ -name "*.exe" -type f 2>/dev/null | head -1)
+            FOUND_EXEC=$(find "$ARTIFACTS_DIR/" -name "*.exe" -type f 2>/dev/null | head -1)
             if [ -n "$FOUND_EXEC" ] && [ -f "$FOUND_EXEC" ]; then
               COMPILER="$FOUND_EXEC"
               echo "Found executable: $COMPILER"
             else
               echo "❌ Could not find any .exe file in artifacts"
-              ls -la ../../../artifacts/
+              ls -la "$ARTIFACTS_DIR/"
               exit 1
             fi
           fi
           echo "Windows detected - using: $COMPILER"
         else
           # Try to find the Unix executable
-          if [ -f "../../../artifacts/gdc" ]; then
-            COMPILER="../../../artifacts/gdc"
-          elif [ -f "../../../artifacts/DaedalusCompiler" ]; then
-            COMPILER="../../../artifacts/DaedalusCompiler"
+          if [ -f "$ARTIFACTS_DIR/gdc" ]; then
+            COMPILER="$ARTIFACTS_DIR/gdc"
+          elif [ -f "$ARTIFACTS_DIR/DaedalusCompiler" ]; then
+            COMPILER="$ARTIFACTS_DIR/DaedalusCompiler"
           else
             # Final fallback: try to find any executable file in artifacts
             echo "⚠️ Standard executable names not found, searching for any executable..."
-            FOUND_EXEC=$(find ../../../artifacts/ -type f -executable 2>/dev/null | head -1)
+            FOUND_EXEC=$(find "$ARTIFACTS_DIR/" -type f -executable 2>/dev/null | head -1)
             if [ -n "$FOUND_EXEC" ] && [ -f "$FOUND_EXEC" ]; then
               COMPILER="$FOUND_EXEC"
               echo "Found executable: $COMPILER"
             else
               echo "❌ Could not find any executable in artifacts"
-              ls -la ../../../artifacts/
+              ls -la "$ARTIFACTS_DIR/"
               exit 1
             fi
           fi
@@ -129,46 +133,17 @@ jobs:
         
         echo "Testing E2E with build artifact: $COMPILER"
         
-        # Debug: Show current directory and artifacts structure
+        # Debug: Show current directory and verify compiler
         echo "Current directory: $(pwd)"
-        echo "Absolute path: $(pwd -P)"
-        echo "Looking for artifacts at: ../../../artifacts/"
-        echo "Absolute artifacts path: $(cd ../../../ && pwd)/artifacts"
-        ls -la ../../../ || echo "Parent directory listing failed"
-        ls -la ../../../artifacts/ || echo "Artifacts directory not found or empty"
-        
-        # Try to find any gdc binaries
-        echo "Searching for gdc binaries..."
-        find ../../../ -name "gdc*" -type f 2>/dev/null || echo "No gdc binaries found in search"
-        
-        # Check if the file actually exists and what its properties are
-        if [ -f "../../../artifacts/gdc" ]; then
-          echo "File exists at ../../../artifacts/gdc"
-          echo "File permissions: $(ls -la ../../../artifacts/gdc)"
-          echo "File type: $(file ../../../artifacts/gdc)"
-          echo "Absolute path test:"
-          ABS_COMPILER="$(cd ../../../artifacts && pwd)/gdc"
-          echo "Absolute compiler path: $ABS_COMPILER"
-          [ -f "$ABS_COMPILER" ] && echo "✅ Absolute path exists" || echo "❌ Absolute path missing"
-        else
-          echo "❌ File does not exist at ../../../artifacts/gdc"
-        fi
+        echo "Artifacts directory: $ARTIFACTS_DIR"
+        ls -la "$ARTIFACTS_DIR/"
         
         # Verify compiler exists and is executable
         if [ ! -f "$COMPILER" ]; then
           echo "❌ Compiler binary not found at: $COMPILER"
           echo "Available files in artifacts:"
-          ls -la ../../../artifacts/ || echo "Artifacts directory does not exist"
-          
-          # Try to use absolute path as fallback
-          echo "Attempting absolute path fallback..."
-          if [ -f "../../../artifacts/gdc" ]; then
-            ABS_COMPILER="$(cd ../../../artifacts && pwd)/gdc"
-            echo "Using absolute path: $ABS_COMPILER"
-            COMPILER="$ABS_COMPILER"
-          else
-            exit 1
-          fi
+          ls -la "$ARTIFACTS_DIR/"
+          exit 1
         fi
         
         # Test compiler version/help (quick validation it works)
