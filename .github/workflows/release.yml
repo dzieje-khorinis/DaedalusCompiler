@@ -116,12 +116,25 @@ jobs:
     - name: Rename binaries for release
       shell: bash
       run: |
-        mv artifacts/gdc-linux-x64/gdc artifacts/gdc-linux-x64
-        mv artifacts/gdc-linux-arm64/gdc artifacts/gdc-linux-arm64
-        mv artifacts/gdc-windows-x64/gdc.exe artifacts/gdc-windows-x64.exe
-        mv artifacts/gdc-windows-arm64/gdc.exe artifacts/gdc-windows-arm64.exe
-        mv artifacts/gdc-macos-x64/gdc artifacts/gdc-macos-x64
-        mv artifacts/gdc-macos-arm64/gdc artifacts/gdc-macos-arm64
+        # Extract binaries from directories to avoid name conflicts
+        cp artifacts/gdc-linux-x64/gdc artifacts/gdc-linux-x64
+        cp artifacts/gdc-linux-arm64/gdc artifacts/gdc-linux-arm64
+        cp artifacts/gdc-windows-x64/gdc.exe artifacts/gdc-windows-x64.exe
+        cp artifacts/gdc-windows-arm64/gdc.exe artifacts/gdc-windows-arm64.exe
+        cp artifacts/gdc-macos-x64/gdc artifacts/gdc-macos-x64
+        cp artifacts/gdc-macos-arm64/gdc artifacts/gdc-macos-arm64
+        
+        # Remove the artifact directories
+        rm -rf artifacts/gdc-linux-x64/
+        rm -rf artifacts/gdc-linux-arm64/
+        rm -rf artifacts/gdc-windows-x64/
+        rm -rf artifacts/gdc-windows-arm64/
+        rm -rf artifacts/gdc-macos-x64/
+        rm -rf artifacts/gdc-macos-arm64/
+        
+        # Verify final structure
+        echo "Final artifacts structure:"
+        ls -la artifacts/
       
     - name: Create Release
       uses: softprops/action-gh-release@v2
