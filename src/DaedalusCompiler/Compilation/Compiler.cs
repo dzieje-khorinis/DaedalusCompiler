@@ -129,7 +129,7 @@ namespace DaedalusCompiler.Compilation
                 syntaxErrorsCount += syntaxErrorListener.SyntaxErrors.Count;
                 syntaxErrorsPerFile.Add(syntaxErrorListener.SyntaxErrors);
 
-                string[] fileContentLines = fileContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                string[] fileContentLines = fileContent.Split(Environment.NewLine);
                 filesPaths.Add(_scriptPaths[i]);
                 filesContentsLines.Add(fileContentLines);
                 filesContents.Add(fileContent);

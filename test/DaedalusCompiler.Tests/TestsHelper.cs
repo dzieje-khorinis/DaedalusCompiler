@@ -58,7 +58,7 @@ namespace DaedalusCompiler.Tests
                 _syntaxErrorsCount += syntaxErrorListener.SyntaxErrors.Count;
                 _syntaxErrorsPerFile.Add(syntaxErrorListener.SyntaxErrors);
                 
-                string[] fileContentLines = code.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                string[] fileContentLines = code.Split(Environment.NewLine);
                 filesPaths.Add("test.d");
                 filesContentsLines.Add(fileContentLines);
                 suppressedWarningCodes.Add(SemanticErrorsCollectingVisitor.GetWarningCodesToSuppress(fileContentLines[0]));
